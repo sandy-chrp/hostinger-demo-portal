@@ -1,0 +1,322 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block admin_title %}Add Permission{% endblock %}
+{% block page_title %}Add New Permission{% endblock %}
+
+{% block admin_extra_css %}
+<style>
+    .permission-example {
+        background: #f8f9fa;
+        border-left: 3px solid #087fc2;
+        padding: 0.75rem;
+        margin-top: 0.5rem;
+        border-radius: 0.25rem;
+    }
+    .permission-example strong {
+        color: #087fc2;
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="mb-1">Add New Permission</h2>
+            <p class="text-muted mb-0">Create a new system permission dynamically</p>
+        </div>
+        <a href="{% url 'accounts:permission_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Permissions
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Left: Form -->
+        <div class="col-12 col-lg-7">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-key me-2"></i>Permission Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="permissionForm">
+                        {% csrf_token %}
+
+                        <!-- Permission Name -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Permission Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="name" 
+                                   id="name"
+                                   class="form-control" 
+                                   placeholder="e.g., View Customers"
+                                   value="{{ form_data.name|default:'' }}"
+                                   required>
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i> Human-readable display name
+                            </small>
+                        </div>
+
+                        <!-- Code Name (Auto-generated) -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Code Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="code_name" 
+                                   id="code_name"
+                                   class="form-control" 
+                                   placeholder="e.g., view_customers"
+                                   pattern="[a-z_]+"
+                                   title="Lowercase letters and underscores only"
+                                   value="{{ form_data.code_name|default:'' }}"
+                                   required>
+                            <small class="text-muted">
+                                <i class="fas fa-code"></i> Unique identifier (auto-generated from name)
+                            </small>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Description</label>
+                            <textarea name="description" 
+                                      class="form-control" 
+                                      rows="3"
+                                      placeholder="Describe what this permission allows users to do">{{ form_data.description|default:'' }}</textarea>
+                            <small class="text-muted">
+                                Help other admins understand this permission's purpose
+                            </small>
+                        </div>
+
+                        <!-- Module Selection -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Module <span class="text-danger">*</span>
+                            </label>
+                            <select name="module" id="module" class="form-select" required>
+                                <option value="">-- Select Module --</option>
+                                
+                                <!-- Existing Modules -->
+                                <optgroup label="Core Modules">
+                                    <option value="Customer Management" {% if form_data.module == 'Customer Management' %}selected{% endif %}>Customer Management</option>
+                                    <option value="Demo Management" {% if form_data.module == 'Demo Management' %}selected{% endif %}>Demo Management</option>
+                                    <option value="Demo Requests" {% if form_data.module == 'Demo Requests' %}selected{% endif %}>Demo Requests</option>
+                                    <option value="Business Categories" {% if form_data.module == 'Business Categories' %}selected{% endif %}>Business Categories</option>
+                                    <option value="Enquiries" {% if form_data.module == 'Enquiries' %}selected{% endif %}>Enquiries</option>
+                                    <option value="Notifications" {% if form_data.module == 'Notifications' %}selected{% endif %}>Notifications</option>
+                                    <option value="Analytics & Reports" {% if form_data.module == 'Analytics & Reports' %}selected{% endif %}>Analytics & Reports</option>
+                                    <option value="Settings" {% if form_data.module == 'Settings' %}selected{% endif %}>Settings</option>
+                                    <option value="System Administration" {% if form_data.module == 'System Administration' %}selected{% endif %}>System Administration</option>
+                                </optgroup>
+                                
+                                <!-- Custom Modules from Database -->
+                                {% if custom_modules %}
+                                <optgroup label="Custom Modules">
+                                    {% for custom_module in custom_modules %}
+                                    <option value="{{ custom_module }}" {% if form_data.module == custom_module %}selected{% endif %}>
+                                        {{ custom_module }}
+                                    </option>
+                                    {% endfor %}
+                                </optgroup>
+                                {% endif %}
+                                
+                                <!-- Add New Custom Module -->
+                                <optgroup label="Other">
+                                    <option value="__custom__" {% if form_data.module == '__custom__' %}selected{% endif %}>
+                                        ➕ Add New Module...
+                                    </option>
+                                </optgroup>
+                            </select>
+                            <small class="text-muted">
+                                Group related permissions together
+                            </small>
+                        </div>
+
+                        <!-- Custom Module Name (Hidden by default) -->
+                        <div class="mb-3" id="customModuleDiv" style="display: none;">
+                            <label class="form-label fw-bold">
+                                New Module Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="custom_module_name" 
+                                   id="custom_module_name"
+                                   class="form-control" 
+                                   placeholder="e.g., Inventory Management"
+                                   value="{{ form_data.custom_module_name|default:'' }}">
+                            <small class="text-muted">
+                                <i class="fas fa-plus-circle"></i> Enter your new module name
+                            </small>
+                        </div>
+
+                        <!-- Active Status -->
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   name="is_active" 
+                                   id="is_active" 
+                                   {% if not form_data or form_data.is_active == 'on' %}checked{% endif %}>
+                            <label class="form-check-label fw-bold" for="is_active">
+                                Active Permission
+                            </label>
+                            <br>
+                            <small class="text-muted">
+                                Inactive permissions won't be available for assignment
+                            </small>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'accounts:permission_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Create Permission
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Examples & Guidelines -->
+        <div class="col-12 col-lg-5">
+            
+            <!-- Quick Guide -->
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Quick Guide
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-primary">Common Permission Patterns:</h6>
+                    
+                    <div class="permission-example">
+                        <strong>View:</strong> view_customers, view_demos<br>
+                        <small>Allows viewing list and details</small>
+                    </div>
+                    
+                    <div class="permission-example">
+                        <strong>Add:</strong> add_customer, add_demo<br>
+                        <small>Allows creating new records</small>
+                    </div>
+                    
+                    <div class="permission-example">
+                        <strong>Edit:</strong> edit_customer, edit_demo<br>
+                        <small>Allows modifying existing records</small>
+                    </div>
+                    
+                    <div class="permission-example">
+                        <strong>Delete:</strong> delete_customer, delete_demo<br>
+                        <small>Allows removing records</small>
+                    </div>
+                    
+                    <div class="permission-example">
+                        <strong>Approve:</strong> approve_customer, approve_demo_request<br>
+                        <small>Allows approval workflows</small>
+                    </div>
+                    
+                    <div class="permission-example">
+                        <strong>Manage:</strong> manage_settings, manage_roles<br>
+                        <small>Full control over a feature</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Best Practices -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-check-circle me-2"></i>Best Practices
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Use descriptive, action-oriented names</li>
+                        <li>Keep code names lowercase with underscores</li>
+                        <li>Group related permissions in same module</li>
+                        <li>Write clear descriptions for future reference</li>
+                        <li>Follow consistent naming patterns</li>
+                        <li>Test permissions before assigning to roles</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('name');
+    const codeNameInput = document.getElementById('code_name');
+    const moduleSelect = document.getElementById('module');
+    const customModuleDiv = document.getElementById('customModuleDiv');
+    const customModuleInput = document.getElementById('custom_module_name');
+
+    // Auto-generate code_name from name
+    nameInput.addEventListener('input', function() {
+        const name = this.value;
+        const codeName = name
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, '')  // Remove special chars
+            .trim()
+            .replace(/\s+/g, '_');  // Replace spaces with underscore
+        
+        codeNameInput.value = codeName;
+    });
+
+    // Show/hide custom module input
+    moduleSelect.addEventListener('change', function() {
+        if (this.value === '__custom__') {
+            customModuleDiv.style.display = 'block';
+            customModuleInput.required = true;
+            customModuleInput.focus();
+        } else {
+            customModuleDiv.style.display = 'none';
+            customModuleInput.required = false;
+        }
+    });
+
+    // Validate code_name format
+    codeNameInput.addEventListener('input', function() {
+        const value = this.value;
+        const valid = /^[a-z_]*$/.test(value);
+        
+        if (!valid && value) {
+            this.setCustomValidity('Only lowercase letters and underscores allowed');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+
+    // Form submission validation
+    document.getElementById('permissionForm').addEventListener('submit', function(e) {
+        const module = moduleSelect.value;
+        const customModule = customModuleInput.value.trim();
+        
+        if (module === '__custom__' && !customModule) {
+            e.preventDefault();
+            alert('Please enter a custom module name');
+            customModuleInput.focus();
+            return false;
+        }
+    });
+
+    // Trigger change event on page load if custom module was selected
+    if (moduleSelect.value === '__custom__') {
+        moduleSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endblock %}

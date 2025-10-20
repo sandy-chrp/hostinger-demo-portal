@@ -1,0 +1,499 @@
+<!-- templates/customers/contact_sales.html -->
+{% extends 'customers/base.html' %}
+{% load static %}
+
+{% block customer_title %}Contact Sales Team - Customer Portal{% endblock %}
+{% block page_title %}Contact Sales Team{% endblock %}
+
+{% block customer_extra_css %}
+<style>
+    .contact-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .contact-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: var(--spacing-xl);
+    }
+
+    .contact-form-section {
+        background: white;
+        padding: var(--spacing-xl);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--gray-200);
+    }
+
+    .form-header {
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .form-header h3 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .form-header p {
+        color: var(--gray-600);
+        font-size: 0.95rem;
+    }
+
+    .form-group {
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: var(--spacing-sm);
+        display: block;
+        font-size: 0.9rem;
+    }
+
+    .required::after {
+        content: " *";
+        color: var(--danger-color);
+    }
+
+    .form-control, .form-select {
+        border: 2px solid var(--gray-300);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+        outline: none;
+    }
+
+    .char-count {
+        text-align: right;
+        font-size: 0.8rem;
+        color: var(--gray-500);
+        margin-top: var(--spacing-xs);
+    }
+
+    .priority-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-sm);
+    }
+
+    .priority-btn {
+        padding: var(--spacing-md);
+        border: 2px solid var(--gray-300);
+        border-radius: var(--radius-lg);
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .priority-btn:hover {
+        border-color: var(--primary-color);
+        background: rgba(30, 60, 114, 0.05);
+    }
+
+    .priority-btn input {
+        display: none;
+    }
+
+    .priority-btn:has(input:checked) {
+        border-color: var(--primary-color);
+        background: rgba(30, 60, 114, 0.1);
+    }
+
+    .priority-btn:has(input:checked) .priority-content {
+        color: var(--primary-color);
+    }
+
+    .priority-icon {
+        font-size: 2rem;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .priority-icon i {
+        display: block;
+    }
+
+    .priority-btn:has(input:checked) .priority-icon {
+        transform: scale(1.1);
+    }
+
+    .priority-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 2px;
+    }
+
+    .priority-time {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+    }
+
+    .submit-btn {
+        background: var(--gradient-primary);
+        color: white;
+        border: none;
+        padding: var(--spacing-md) var(--spacing-xl);
+        border-radius: var(--radius-lg);
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-sm);
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .contact-info-section {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-lg);
+    }
+
+    .info-card {
+        background: white;
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+    }
+
+    .info-card h4 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: var(--spacing-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .phone-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+    .phone-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--spacing-md);
+        background: var(--gray-50);
+        border-radius: var(--radius-md);
+        border-left: 3px solid var(--primary-color);
+        transition: all 0.3s ease;
+    }
+
+    .phone-item:hover {
+        background: rgba(30, 60, 114, 0.05);
+        transform: translateX(3px);
+    }
+
+    .phone-label {
+        font-weight: 600;
+        color: var(--gray-700);
+        font-size: 0.9rem;
+    }
+
+    .phone-number {
+        color: var(--primary-color);
+        font-weight: 700;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .phone-number:hover {
+        color: var(--secondary-color);
+        text-decoration: none;
+    }
+
+    .email-link {
+        color: var(--primary-color);
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .email-link:hover {
+        color: var(--secondary-color);
+        text-decoration: underline;
+    }
+
+    .address-content {
+        background: var(--gray-50);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        line-height: 1.8;
+        color: var(--gray-700);
+    }
+
+    .address-content strong {
+        color: var(--dark-color);
+        display: block;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .business-hours {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .hours-item {
+        display: flex;
+        justify-content: space-between;
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: var(--gray-50);
+        border-radius: var(--radius-md);
+    }
+
+    .hours-day {
+        font-weight: 600;
+        color: var(--gray-700);
+    }
+
+    .hours-time {
+        color: var(--gray-600);
+    }
+
+    .response-badge {
+        background: var(--gradient-primary);
+        color: white;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-lg);
+        text-align: center;
+        margin-top: var(--spacing-lg);
+    }
+
+    .response-badge strong {
+        font-size: 1.75rem;
+        display: block;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    @media (max-width: 992px) {
+        .contact-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .priority-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block customer_content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'customers:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Contact Sales</li>
+    </ol>
+</nav>
+
+<div class="contact-wrapper">
+    <div class="contact-grid">
+        <!-- Left: Contact Form -->
+        <div class="contact-form-section">
+            <div class="form-header">
+                <h3><i class="fas fa-envelope me-2"></i>Send Us a Message</h3>
+                <p>Our sales team will get back to you based on the priority level selected</p>
+            </div>
+
+            <form method="post" id="contactForm">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="subject" class="form-label required">Subject</label>
+                    <input type="text" class="form-control" id="subject" name="subject" 
+                           placeholder="What can we help you with?" required maxlength="200">
+                </div>
+
+                <div class="form-group">
+                    <label for="message" class="form-label required">Message</label>
+                    <textarea class="form-control" id="message" name="message" rows="7" 
+                              placeholder="Tell us about your business needs, requirements, budget, timeline..."
+                              required maxlength="1000"></textarea>
+                    <div class="char-count" id="charCount">0 / 1000</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Priority Level</label>
+                    <div class="priority-grid">
+                        <label class="priority-btn">
+                            <input type="radio" name="priority" value="normal" checked>
+                            <div class="priority-content">
+                                <div class="priority-icon"><i class="fas fa-clock text-primary"></i></div>
+                                <div class="priority-label">Normal</div>
+                                <div class="priority-time">24-48 hrs</div>
+                            </div>
+                        </label>
+
+                        <label class="priority-btn">
+                            <input type="radio" name="priority" value="high">
+                            <div class="priority-content">
+                                <div class="priority-icon"><i class="fas fa-exclamation-circle text-warning"></i></div>
+                                <div class="priority-label">High</div>
+                                <div class="priority-time">4-8 hrs</div>
+                            </div>
+                        </label>
+
+                        <label class="priority-btn">
+                            <input type="radio" name="priority" value="urgent">
+                            <div class="priority-content">
+                                <div class="priority-icon"><i class="fas fa-exclamation-triangle text-danger"></i></div>
+                                <div class="priority-label">Urgent</div>
+                                <div class="priority-time">2-4 hrs</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <i class="fas fa-paper-plane"></i>
+                    Send Message
+                </button>
+            </form>
+        </div>
+
+        <!-- Right: Contact Information -->
+        <div class="contact-info-section">
+            <!-- Call Us -->
+            <div class="info-card">
+                <h4><i class="fas fa-phone-alt"></i> Call Us</h4>
+                <div class="phone-list">
+                    <div class="phone-item">
+                        <span class="phone-label">Sales Inquiries</span>
+                        <a href="tel:+918008987948" class="phone-number">+91 8008 987 948</a>
+                    </div>
+                    <div class="phone-item">
+                        <span class="phone-label">HR Inquiries</span>
+                        <a href="tel:+919704344092" class="phone-number">+91 9704 344 092</a>
+                    </div>
+                    <div class="phone-item">
+                        <span class="phone-label">Customer Support</span>
+                        <a href="tel:+919145967635" class="phone-number">+91 9145 967 635</a>
+                    </div>
+                    <div class="phone-item">
+                        <span class="phone-label">General Info</span>
+                        <a href="tel:+917569031694" class="phone-number">+91 7569 031 694</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="info-card">
+                <h4><i class="fas fa-envelope"></i> Email Us</h4>
+                <div class="address-content">
+                    <a href="mailto:sales@chrp-india.com" class="email-link">reach@chrp-india.com</a><br><br>
+                    We respond to all emails within 24 hours during business days
+                </div>
+            </div>
+
+            <!-- Business Hours -->
+            {% comment %} <div class="info-card">
+                <h4><i class="fas fa-clock"></i> Business Hours</h4>
+                <div class="business-hours">
+                    <div class="hours-item">
+                        <span class="hours-day">Monday - Friday</span>
+                        <span class="hours-time">9:00 AM - 6:00 PM</span>
+                    </div>
+                    <div class="hours-item">
+                        <span class="hours-day">Saturday</span>
+                        <span class="hours-time">10:00 AM - 4:00 PM</span>
+                    </div>
+                    <div class="hours-item">
+                        <span class="hours-day">Sunday</span>
+                        <span class="hours-time">Closed</span>
+                    </div>
+                </div>
+            </div> {% endcomment %}
+
+            <!-- Office Address -->
+            <div class="info-card">
+                <h4><i class="fas fa-map-marker-alt"></i> Visit Our Office</h4>
+                <div class="address-content">
+                    <strong>CHRP-INDIA PVT. LTD.</strong>
+                    #302, 3rd Floor, Elite Plaza<br>
+                    Building no. #6-3-679/303<br>
+                    Durga Nagar, Somajiguda<br>
+                    Hyderabad - 500082<br>
+                    Telangana, India
+                </div>
+            </div>
+
+            <!-- Response Time Badge -->
+            <div class="response-badge">
+                <strong>24 Hours</strong>
+                <div>Average Response Time</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block customer_extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('contactForm');
+    const message = document.getElementById('message');
+    const charCount = document.getElementById('charCount');
+    const submitBtn = document.getElementById('submitBtn');
+
+    message.addEventListener('input', function() {
+        const count = this.value.length;
+        charCount.textContent = `${count} / 1000`;
+        if (count > 900) charCount.style.color = 'var(--danger-color)';
+        else if (count > 700) charCount.style.color = 'var(--warning-color)';
+        else charCount.style.color = 'var(--gray-500)';
+    });
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const subject = document.getElementById('subject').value.trim();
+        const msg = message.value.trim();
+
+        if (subject.length < 5) {
+            alert('Subject must be at least 5 characters');
+            return;
+        }
+
+        if (msg.length < 20) {
+            alert('Message must be at least 20 characters');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
+
+        this.submit();
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,734 @@
+<!-- templates/admin/notifications/notifications.html -->
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block admin_title %}Notifications Management{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block admin_extra_css %}
+<style>
+    body {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    /* Stats Overview */
+    .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-box {
+        background: white;
+        border-radius: 10px;
+        padding: 1.25rem 1rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        border-left: 4px solid;
+        transition: all 0.3s ease;
+    }
+
+    .stat-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    .stat-box.total { border-left-color: #087fc2; }
+    .stat-box.unread { border-left-color: #dc2626; }
+    .stat-box.today { border-left-color: #06b6d4; }
+    .stat-box.sent { border-left-color: #10b981; }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        line-height: 1;
+        color: #1f2937;
+    }
+
+    .stat-text {
+        color: #6b7280;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Filter Section */
+    .filter-panel {
+        background: white;
+        border-radius: 10px;
+        padding: 1.25rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-panel .form-label {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .filter-panel .form-select,
+    .filter-panel .form-control {
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+        padding: 0.625rem 0.875rem;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .filter-panel .form-select:focus,
+    .filter-panel .form-control:focus {
+        border-color: #087fc2;
+        box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
+        outline: none;
+    }
+
+    /* Notifications Container */
+    .notifications-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
+
+    .container-header {
+        background: #f8fafc;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .header-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .header-title i {
+        color: #087fc2;
+    }
+
+    .header-toolbar {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: 2px solid #e5e7eb;
+        background: white;
+        color: #1f2937;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .toolbar-btn:hover {
+        border-color: #087fc2;
+        color: #087fc2;
+        background: #f0f9ff;
+    }
+
+    .toolbar-btn.danger:hover {
+        border-color: #dc2626;
+        color: #dc2626;
+        background: #fee2e2;
+    }
+
+    /* Notification Item */
+    .notif-item {
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.2s;
+        position: relative;
+    }
+
+    .notif-item:last-child {
+        border-bottom: none;
+    }
+
+    .notif-item.unread {
+        background: #f0f9ff;
+        border-left: 4px solid #087fc2;
+    }
+
+    .notif-item.unread::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 8px;
+        height: 8px;
+        background: #087fc2;
+        border-radius: 50%;
+        margin-left: -4px;
+    }
+
+    .notif-item:hover {
+        background: #f8fafc;
+    }
+
+    .notif-item.collapsed .notif-content {
+        display: none;
+    }
+
+    .notif-head {
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .notif-select {
+        margin-top: 0.25rem;
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: #087fc2;
+        flex-shrink: 0;
+    }
+
+    .notif-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .notif-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .notif-heading {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+    }
+
+    .collapse-icon {
+        color: #9ca3af;
+        font-size: 0.875rem;
+        transition: transform 0.2s;
+    }
+
+    .notif-item.collapsed .collapse-icon {
+        transform: rotate(-90deg);
+    }
+
+    .notif-timestamp {
+        color: #6b7280;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .notif-badges {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .type-badge {
+        display: inline-block;
+        padding: 0.25rem 0.65rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .type-new_customer { background: #dbeafe; color: #1e40af; }
+    .type-demo_request { background: #fef3c7; color: #92400e; }
+    .type-demo_cancellation { background: #fee2e2; color: #991b1b; }
+    .type-enquiry { background: #e0e7ff; color: #3730a3; }
+    .type-milestone { background: #d1fae5; color: #065f46; }
+    .type-system_announcement { background: #e9d5ff; color: #6b21a8; }
+
+    .email-indicator {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .notif-content {
+        padding: 0 1.25rem 1rem;
+        margin-left: calc(18px + 1rem);
+        animation: expandDown 0.2s ease;
+    }
+
+    @keyframes expandDown {
+        from {
+            opacity: 0;
+            max-height: 0;
+        }
+        to {
+            opacity: 1;
+            max-height: 500px;
+        }
+    }
+
+    .notif-text {
+        color: #4b5563;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        font-size: 0.9375rem;
+    }
+
+    .user-details {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: #f0f9ff;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: #1f2937;
+        border: 1px solid #bae6fd;
+    }
+
+    .user-details i {
+        color: #087fc2;
+        font-size: 1.25rem;
+        margin-right: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .user-details strong {
+        margin-right: 0.5rem;
+        color: #1f2937;
+    }
+
+    .user-details .email {
+        color: #6b7280;
+        font-size: 0.85rem;
+    }
+
+    .notif-actions-row {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: 2px solid;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .action-btn.primary {
+        border-color: #087fc2;
+        color: #087fc2;
+    }
+
+    .action-btn.primary:hover {
+        background: #087fc2;
+        color: white;
+    }
+
+    .action-btn.danger {
+        border-color: #dc2626;
+        color: #dc2626;
+    }
+
+    .action-btn.danger:hover {
+        background: #dc2626;
+        color: white;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6b7280;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: #d1d5db;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h4 {
+        color: #1f2937;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Pagination */
+    .pagination-wrapper {
+        padding: 1rem 1.5rem;
+        background: #f8fafc;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .pagination {
+        margin: 0;
+    }
+
+    .page-link {
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        color: #1f2937;
+        padding: 0.5rem 0.875rem;
+        font-weight: 500;
+    }
+
+    .page-link:hover {
+        background: #f3f4f6;
+        border-color: #087fc2;
+        color: #087fc2;
+    }
+
+    .page-item.active .page-link {
+        background: #087fc2;
+        border-color: #087fc2;
+        color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .stats-overview {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .notif-top {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .notif-content {
+            margin-left: 0;
+            padding-left: 1.25rem;
+        }
+
+        .header-toolbar {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .toolbar-btn span {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+
+<!-- Statistics Overview -->
+<div class="stats-overview">
+    <div class="stat-box total">
+        <div class="stat-value">{{ stats.total_notifications|default:"0" }}</div>
+        <div class="stat-text">Total</div>
+    </div>
+    
+    <div class="stat-box unread">
+        <div class="stat-value">{{ stats.unread_notifications|default:"0" }}</div>
+        <div class="stat-text">Unread</div>
+    </div>
+    
+    <div class="stat-box today">
+        <div class="stat-value">{{ stats.today_notifications|default:"0" }}</div>
+        <div class="stat-text">Today</div>
+    </div>
+    
+    <div class="stat-box sent">
+        <div class="stat-value">{{ stats.email_sent|default:"0" }}</div>
+        <div class="stat-text">Sent</div>
+    </div>
+</div>
+
+<!-- Filter Panel -->
+<div class="filter-panel">
+    <form method="get" class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label">Type</label>
+            <select name="type" class="form-select" onchange="this.form.submit()">
+                <option value="all">All Types</option>
+                {% for type_value, type_label in notification_types %}
+                <option value="{{ type_value }}" {% if filter_type == type_value %}selected{% endif %}>
+                    {{ type_label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="col-md-2">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="all">All</option>
+                <option value="read" {% if filter_status == 'read' %}selected{% endif %}>Read</option>
+                <option value="unread" {% if filter_status == 'unread' %}selected{% endif %}>Unread</option>
+            </select>
+        </div>
+        
+        <div class="col-md-5">
+            <label class="form-label">Search</label>
+            <input type="text" name="q" class="form-control" 
+                   placeholder="Search..." 
+                   value="{{ search_query }}">
+        </div>
+        
+        <div class="col-md-2">
+            <label class="form-label">&nbsp;</label>
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Notifications List -->
+<div class="notifications-container">
+    <div class="container-header">
+        <h3 class="header-title">
+            <i class="fas fa-bell"></i>
+            Notifications
+        </h3>
+        <div class="header-toolbar">
+            <button type="button" class="toolbar-btn" onclick="toggleAllRead()">
+                <i class="fas fa-compress-alt" id="toggleIcon"></i>
+                <span id="toggleText">Collapse</span>
+            </button>
+            <button type="button" class="toolbar-btn" onclick="selectAll()">
+                <i class="fas fa-check-square"></i>
+                <span>Select</span>
+            </button>
+            <button type="button" class="toolbar-btn danger" onclick="bulkDelete()">
+                <i class="fas fa-trash"></i>
+                <span>Delete</span>
+            </button>
+        </div>
+    </div>
+    
+    <div>
+        <form id="bulkForm" method="post" action="{% url 'core:admin_bulk_notification_actions' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" id="bulkAction">
+            
+            {% for notification in notifications %}
+            <div class="notif-item {% if notification.is_read %}collapsed{% else %}unread{% endif %}" 
+                 data-id="{{ notification.id }}"
+                 data-status="{% if notification.is_read %}read{% else %}unread{% endif %}">
+                
+                <div class="notif-head" onclick="toggleItem({{ notification.id }})">
+                    <input type="checkbox" name="notification_ids" value="{{ notification.id }}" 
+                           class="notif-select" onclick="event.stopPropagation();">
+                    
+                    <div class="notif-info">
+                        <div class="notif-top">
+                            <div class="notif-heading">
+                                {{ notification.title }}
+                                <i class="fas fa-chevron-down collapse-icon"></i>
+                            </div>
+                            <span class="notif-timestamp">{{ notification.created_at|timesince }} ago</span>
+                        </div>
+                        
+                        <div class="notif-badges">
+                            <span class="type-badge type-{{ notification.notification_type }}">
+                                {{ notification.get_notification_type_display }}
+                            </span>
+                            {% if notification.email_sent %}
+                            <span class="email-indicator">
+                                <i class="fas fa-check"></i> Sent
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="notif-content">
+                    <p class="notif-text">{{ notification.message }}</p>
+                    
+                    {% if notification.user %}
+                    <div class="user-details">
+                        <i class="fas fa-user-circle"></i>
+                        <strong>User:</strong> 
+                        {{ notification.user.get_full_name|default:"Unknown" }}
+                        <span class="email">({{ notification.user.email }})</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="notif-actions-row">
+                        {% if not notification.is_read %}
+                        <button type="button" class="action-btn primary"
+                                onclick="event.stopPropagation(); markRead({{ notification.id }})">
+                            <i class="fas fa-check"></i> Mark Read
+                        </button>
+                        {% endif %}
+                        <button type="button" class="action-btn danger"
+                                onclick="event.stopPropagation(); deleteItem({{ notification.id }})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h4>No Notifications</h4>
+                <p>You're all caught up!</p>
+            </div>
+            {% endfor %}
+        </form>
+    </div>
+    
+    {% if notifications.has_other_pages %}
+    <div class="pagination-wrapper">
+        <nav>
+            <ul class="pagination mb-0 justify-content-center">
+                {% if notifications.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ notifications.previous_page_number }}&type={{ filter_type }}&status={{ filter_status }}&q={{ search_query }}">
+                        Previous
+                    </a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">{{ notifications.number }} / {{ notifications.paginator.num_pages }}</span>
+                </li>
+                
+                {% if notifications.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ notifications.next_page_number }}&type={{ filter_type }}&status={{ filter_status }}&q={{ search_query }}">
+                        Next
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+function toggleItem(id) {
+    const item = document.querySelector(`[data-id="${id}"]`);
+    if (item) {
+        item.classList.toggle('collapsed');
+    }
+}
+
+function toggleAllRead() {
+    const readItems = document.querySelectorAll('[data-status="read"]');
+    const icon = document.getElementById('toggleIcon');
+    const text = document.getElementById('toggleText');
+    const anyExpanded = Array.from(readItems).some(item => !item.classList.contains('collapsed'));
+    
+    readItems.forEach(item => {
+        if (anyExpanded) {
+            item.classList.add('collapsed');
+        } else {
+            item.classList.remove('collapsed');
+        }
+    });
+    
+    if (anyExpanded) {
+        icon.className = 'fas fa-compress-alt';
+        text.textContent = 'Collapse';
+    } else {
+        icon.className = 'fas fa-expand-alt';
+        text.textContent = 'Expand';
+    }
+}
+
+function selectAll() {
+    const checkboxes = document.querySelectorAll('.notif-select');
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    checkboxes.forEach(cb => cb.checked = !allChecked);
+}
+
+function bulkDelete() {
+    const checked = document.querySelectorAll('.notif-select:checked');
+    if (checked.length === 0) {
+        alert('⚠️ Select notifications first');
+        return;
+    }
+    if (confirm(`Delete ${checked.length} notification(s)?`)) {
+        document.getElementById('bulkAction').value = 'delete';
+        document.getElementById('bulkForm').submit();
+    }
+}
+
+function markRead(id) {
+    fetch(`/notifications/api/admin/${id}/read/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getToken(),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => data.success ? location.reload() : alert('Error'))
+    .catch(() => alert('Error'));
+}
+
+function deleteItem(id) {
+    if (confirm('Delete notification?')) {
+        fetch(`/notifications/api/admin/${id}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(r => r.json())
+        .then(data => data.success ? location.reload() : alert('Error'))
+        .catch(() => alert('Error'));
+    }
+}
+
+function getToken() {
+    const cookie = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
+    return cookie ? decodeURIComponent(cookie.split('=')[1]) : null;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "emails/base.html" %}
+
+{% block email_title %}Demo Assigned to You{% endblock %}
+
+{% block email_content %}
+<div class="email-greeting">
+    Hi {{ employee_name }}! 👋
+</div>
+
+<div class="email-content">
+    <p>You have been assigned to handle a new demo request. Please review the details below and prepare accordingly.</p>
+</div>
+
+<!-- Demo Details Card -->
+<div class="notification-card info">
+    <h3>📋 Demo Request Details</h3>
+    <p style="margin-top: 10px;">A new demo has been assigned to you. Here are the complete details:</p>
+</div>
+
+<!-- Information Table -->
+<table class="info-table">
+    <tr>
+        <td><strong>Demo Title:</strong></td>
+        <td>{{ demo_title }}</td>
+    </tr>
+    <tr>
+        <td><strong>Customer Name:</strong></td>
+        <td>{{ customer_name }}</td>
+    </tr>
+    <tr>
+        <td><strong>Customer Email:</strong></td>
+        <td>{{ customer_email }}</td>
+    </tr>
+    {% if customer_phone %}
+    <tr>
+        <td><strong>Customer Phone:</strong></td>
+        <td>{{ customer_phone }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+        <td><strong>Scheduled Date:</strong></td>
+        <td><strong style="color: #1e3c72;">{{ requested_date }}</strong></td>
+    </tr>
+    <tr>
+        <td><strong>Scheduled Time:</strong></td>
+        <td><strong style="color: #1e3c72;">{{ requested_time }}</strong></td>
+    </tr>
+    <tr>
+        <td><strong>Assigned By:</strong></td>
+        <td>{{ assigned_by }}</td>
+    </tr>
+    <tr>
+        <td><strong>Request ID:</strong></td>
+        <td>#{{ request_id }}</td>
+    </tr>
+</table>
+
+<!-- Demo Description -->
+{% if demo_description %}
+<div class="info-box">
+    <p><strong>📝 Demo Description:</strong></p>
+    <p>{{ demo_description }}</p>
+</div>
+{% endif %}
+
+<!-- Action Button -->
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{ site_url }}/employee/demo-requests/{{ request_id }}/" class="email-button">
+        View Full Details →
+    </a>
+</div>
+
+<div class="divider"></div>
+
+<!-- Important Reminders -->
+<div class="alert alert-warning">
+    <strong>⚠️ Important Reminders</strong>
+    <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+        <li>Review the demo request details carefully before the scheduled date</li>
+        <li>Prepare all necessary materials and presentation content in advance</li>
+        <li>Contact the customer if you need any clarification or additional information</li>
+        <li>Update the request status in the system after completing the demo</li>
+        <li>If you need to reschedule, inform the admin team as soon as possible</li>
+    </ul>
+</div>
+
+<!-- Closing Message -->
+<div class="email-content">
+    <p>If you have any questions or need support, please don't hesitate to contact the admin team.</p>
+    
+    <p style="margin-top: 25px;">
+        Best regards,<br>
+        <strong style="color: #1e3c72;">CHRP India Demo Portal Team</strong>
+    </p>
+</div>
+
+<!-- Additional Info Box -->
+<div class="notification-card success">
+    <h3>✅ Next Steps</h3>
+    <p>
+        1. Click the button above to view complete details<br>
+        2. Prepare your demo materials<br>
+        3. Contact the customer to confirm attendance<br>
+        4. Update status after demo completion
+    </p>
+</div>
+{% endblock %}

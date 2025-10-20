@@ -1,0 +1,199 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block admin_title %}Roles{% endblock %}
+{% block page_title %}Roles{% endblock %}
+
+{% block admin_extra_css %}
+<style>
+    /* Mobile table scrolling */
+    @media (max-width: 768px) {
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .table td, .table th {
+            white-space: nowrap;
+        }
+        .btn-group-sm .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="mb-1">Role Management</h2>
+            <p class="text-muted mb-0">Manage user roles and permissions</p>
+        </div>
+        <a href="{% url 'accounts:role_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Role
+        </a>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get">
+                <div class="row g-3">
+                    <div class="col-12 col-md-5">
+                        <input type="text" name="q" class="form-control" 
+                               placeholder="Search by name..." value="{{ query }}">
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <select name="status" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                            <option value="system" {% if status_filter == 'system' %}selected{% endif %}>System</option>
+                            <option value="custom" {% if status_filter == 'custom' %}selected{% endif %}>Custom</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <button type="submit" class="btn btn-secondary w-100">
+                            <i class="fas fa-search"></i> <span class="d-none d-md-inline">Search</span>
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <a href="{% url 'accounts:role_list' %}" class="btn btn-outline-secondary w-100">
+                            Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th class="d-none d-md-table-cell">Description</th>
+                            {% comment %} <th class="text-center">Priority</th> {% endcomment %}
+                            {% comment %} <th class="text-center">Users</th> {% endcomment %}
+                            {% comment %} <th class="text-center d-none d-lg-table-cell">Permissions</th> {% endcomment %}
+                            {% comment %} <th class="text-center d-none d-md-table-cell">Type</th> {% endcomment %}
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for role in roles %}
+                        <tr>
+                            <td>
+                                <strong>{{ role.name }}</strong>
+                                <small class="d-block d-md-none text-muted">
+                                    {{ role.description|truncatewords:5|default:"-" }}
+                                </small>
+                            </td>
+                            <td class="text-muted d-none d-md-table-cell">
+                                {{ role.description|truncatewords:8|default:"-" }}
+                            </td>
+                            {% comment %} <td class="text-center">
+                                <span class="badge bg-info">{{ role.priority }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success">{{ role.users_count }}</span>
+                            </td>
+                            <td class="text-center d-none d-lg-table-cell">
+                                <span class="badge bg-primary">{{ role.permissions_count }}</span>
+                            </td> {% endcomment %}
+                            <td class="text-center d-none d-md-table-cell">
+                                {% if role.is_system_role %}
+                                    <span class="badge bg-warning text-dark">System</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Custom</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if role.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'accounts:role_detail' role.id %}" 
+                                       class="btn btn-info" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'accounts:role_edit' role.id %}" 
+                                       class="btn btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% if not role.is_system_role %}
+                                    <a href="{% url 'accounts:role_delete' role.id %}" 
+                                       class="btn btn-danger" 
+                                       onclick="return confirm('Delete this role?')"
+                                       title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                No roles found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if roles.has_other_pages %}
+            <nav class="p-3 border-top">
+                <ul class="pagination justify-content-center mb-0 flex-wrap">
+                    {% if roles.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ roles.previous_page_number }}&q={{ query }}&status={{ status_filter }}">
+                            <i class="fas fa-chevron-left"></i>
+                            <span class="d-none d-md-inline ms-1">Previous</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in roles.paginator.page_range %}
+                        {% if num == roles.number %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > roles.number|add:'-3' and num < roles.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}&q={{ query }}&status={{ status_filter }}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if roles.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ roles.next_page_number }}&q={{ query }}&status={{ status_filter }}">
+                            <span class="d-none d-md-inline me-1">Next</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

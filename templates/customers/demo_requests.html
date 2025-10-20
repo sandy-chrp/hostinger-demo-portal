@@ -1,0 +1,943 @@
+<!-- templates/customers/demo_requests.html - Collapsible Accordion Style with Dropdown Filter -->
+{% extends 'customers/base.html' %}
+{% load static %}
+
+{% block customer_title %}My Demo Requests - Customer Portal{% endblock %}
+{% block page_title %}My Demo Requests{% endblock %}
+
+{% block customer_extra_css %}
+<style>
+    /* Filter Bar with Dropdown */
+    .filter-bar {
+        background: white;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: var(--spacing-md);
+        border: 1px solid var(--gray-200);
+    }
+
+    .dropdown-toggle {
+        font-weight: 600;
+        padding: 0.65rem 1.25rem;
+        border-radius: var(--radius-md);
+        border: 2px solid var(--primary-color);
+        background: white;
+        color: var(--primary-color);
+        transition: all 0.3s ease;
+        min-width: 200px;
+    }
+
+    .dropdown-toggle:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .dropdown-toggle:focus {
+        box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.2);
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .dropdown-menu {
+        border: none;
+        border-radius: var(--radius-lg);
+        padding: 0.5rem;
+        margin-top: 0.5rem;
+        box-shadow: var(--shadow-lg);
+        min-width: 280px;
+    }
+
+    .dropdown-item {
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-md);
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+        transition: all 0.2s ease;
+    }
+
+    .dropdown-item:hover {
+        background: var(--gray-100);
+        transform: translateX(4px);
+    }
+
+    .dropdown-item.active {
+        background: var(--gradient-primary);
+        color: white;
+    }
+
+    .dropdown-item.active i {
+        color: white !important;
+    }
+
+    .dropdown-item.active .badge {
+        background: rgba(255, 255, 255, 0.3) !important;
+        color: white !important;
+    }
+
+    .dropdown-divider {
+        margin: 0.5rem 0;
+        border-color: var(--gray-200);
+    }
+
+    /* Collapsible Card */
+    .request-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: var(--spacing-sm);
+        border: 1px solid var(--gray-200);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .request-card:hover {
+        box-shadow: var(--shadow-md);
+    }
+
+    .request-card.collapsed {
+        box-shadow: var(--shadow-xs);
+    }
+
+    /* Clickable Header */
+    .request-header {
+        padding: var(--spacing-md);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #f9fafb, #ffffff);
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.2s ease;
+    }
+
+    .request-header:hover {
+        background: linear-gradient(135deg, #f3f4f6, #f9fafb);
+    }
+
+    .request-header:active {
+        transform: scale(0.99);
+    }
+
+    /* Header Left Section */
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        flex: 1;
+    }
+
+    .collapse-icon {
+        width: 32px;
+        height: 32px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .request-card.collapsed .collapse-icon {
+        transform: rotate(-90deg);
+    }
+
+    .header-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .request-title-mini {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin: 0 0 4px 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .request-meta-mini {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+        display: flex;
+        gap: var(--spacing-sm);
+        align-items: center;
+    }
+
+    /* Thumbnail in Header */
+    .header-thumbnail {
+        width: 50px;
+        height: 38px;
+        object-fit: cover;
+        border-radius: var(--radius-sm);
+        flex-shrink: 0;
+    }
+
+    /* Status Badge */
+    .status-badge-mini {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-confirmed { background: #d1fae5; color: #065f46; }
+    .status-rescheduled { background: #dbeafe; color: #1e40af; }
+    .status-completed { background: #dcfce7; color: #166534; }
+    .status-cancelled { background: #fee2e2; color: #991b1b; }
+
+    /* Collapsible Body */
+    .request-body {
+        max-height: 1000px;
+        overflow: hidden;
+        transition: max-height 0.4s ease, padding 0.4s ease;
+        padding: var(--spacing-md);
+        border-top: 1px solid var(--gray-200);
+    }
+
+    .request-card.collapsed .request-body {
+        max-height: 0;
+        padding: 0 var(--spacing-md);
+        border-top: none;
+    }
+
+    /* Info Grid */
+    .info-grid-compact {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .info-item-compact {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        background: var(--gray-50);
+        border-radius: var(--radius-md);
+    }
+
+    .info-icon {
+        width: 32px;
+        height: 32px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .info-icon.confirmed {
+        background: var(--success-color);
+    }
+
+    .info-text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .info-label-small {
+        font-size: 0.65rem;
+        color: var(--gray-600);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    .info-value-small {
+        font-size: 0.85rem;
+        color: var(--dark-color);
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Notes */
+    .notes-box-compact {
+        background: var(--gray-50);
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        margin-bottom: var(--spacing-sm);
+        font-size: 0.85rem;
+        border-left: 3px solid var(--info-color);
+    }
+
+    .notes-box-compact.admin {
+        background: #fffbeb;
+        border-left-color: var(--warning-color);
+    }
+
+    .notes-header-small {
+        font-weight: 700;
+        font-size: 0.75rem;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--gray-700);
+    }
+
+    /* Cancellation Info Box */
+    .cancellation-info-box {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        border-left: 4px solid #dc2626;
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .cancellation-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #dc2626;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .cancellation-detail {
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(220, 38, 38, 0.1);
+        font-size: 0.85rem;
+    }
+
+    .cancellation-detail:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .cancellation-detail strong {
+        color: #991b1b;
+    }
+
+    /* Actions */
+    .request-actions-compact {
+        display: flex;
+        gap: var(--spacing-xs);
+        padding-top: var(--spacing-sm);
+        border-top: 1px solid var(--gray-100);
+    }
+
+    .action-btn-compact {
+        padding: 6px 14px;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 0.8rem;
+        border: 2px solid;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        flex: 1;
+        justify-content: center;
+    }
+
+    .btn-cancel-compact {
+        background: white;
+        color: var(--danger-color);
+        border-color: var(--danger-color);
+    }
+
+    .btn-cancel-compact:hover {
+        background: var(--danger-color);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    /* Bulk Actions */
+    .bulk-actions {
+        padding: var(--spacing-sm);
+        background: var(--gray-50);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--spacing-sm);
+        display: flex;
+        gap: var(--spacing-sm);
+        align-items: center;
+    }
+
+    .bulk-btn {
+        padding: 4px 12px;
+        border-radius: var(--radius-md);
+        font-size: 0.8rem;
+        font-weight: 600;
+        border: 2px solid var(--gray-300);
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .bulk-btn:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--gray-500);
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        opacity: 0.3;
+    }
+
+    /* Modal */
+    .modal-content {
+        border-radius: var(--radius-xl);
+    }
+
+    .modal-header {
+        background: var(--gradient-primary);
+        color: white;
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .filter-bar .d-flex {
+            flex-direction: column;
+            width: 100%;
+            gap: var(--spacing-sm) !important;
+        }
+        
+        .dropdown,
+        .dropdown-toggle {
+            width: 100%;
+        }
+        
+        .dropdown-menu {
+            width: 100%;
+        }
+
+        .header-left {
+            flex-wrap: wrap;
+        }
+
+        .header-thumbnail {
+            display: none;
+        }
+
+        .request-title-mini {
+            font-size: 0.85rem;
+        }
+
+        .info-grid-compact {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block customer_content %}
+{% csrf_token %}
+
+<!-- Filter Bar with Dropdown -->
+<div class="filter-bar">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <!-- Filter Dropdown -->
+        <div class="dropdown">
+            <button class="btn dropdown-toggle d-flex align-items-center justify-content-between gap-2" 
+                    type="button" 
+                    id="filterDropdown" 
+                    data-bs-toggle="dropdown" 
+                    aria-expanded="false">
+                <span class="d-flex align-items-center gap-2">
+                    {% if current_status == 'pending' %}
+                        <i class="fas fa-clock"></i>Pending
+                    {% elif current_status == 'confirmed' %}
+                        <i class="fas fa-check-circle"></i>Confirmed
+                    {% elif current_status == 'completed' %}
+                        <i class="fas fa-check-double"></i>Completed
+                    {% elif current_status == 'cancelled' %}
+                        <i class="fas fa-times-circle"></i>Cancelled
+                    {% else %}
+                        <i class="fas fa-th-list"></i>All Requests
+                    {% endif %}
+                </span>
+                <span class="badge bg-primary rounded-pill">
+                    {% if current_status %}
+                        {% if current_status == 'pending' %}{{ status_counts.pending|default:0 }}
+                        {% elif current_status == 'confirmed' %}{{ status_counts.confirmed|default:0 }}
+                        {% elif current_status == 'completed' %}{{ status_counts.completed|default:0 }}
+                        {% elif current_status == 'cancelled' %}{{ status_counts.cancelled|default:0 }}
+                        {% endif %}
+                    {% else %}
+                        {{ status_counts.all }}
+                    {% endif %}
+                </span>
+            </button>
+            
+            <ul class="dropdown-menu dropdown-menu-start shadow-lg" aria-labelledby="filterDropdown">
+                <li>
+                    <a class="dropdown-item d-flex justify-content-between align-items-center {% if not current_status %}active{% endif %}" 
+                       href="{% url 'customers:demo_requests' %}">
+                        <span>
+                            <i class="fas fa-th-list me-2"></i>All Requests
+                        </span>
+                        <span class="badge bg-secondary rounded-pill">{{ status_counts.all }}</span>
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                
+                <li>
+                    <a class="dropdown-item d-flex justify-content-between align-items-center {% if current_status == 'pending' %}active{% endif %}" 
+                       href="?status=pending">
+                        <span>
+                            <i class="fas fa-clock me-2 text-warning"></i>Pending
+                        </span>
+                        <span class="badge bg-warning text-dark rounded-pill">{{ status_counts.pending|default:0 }}</span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a class="dropdown-item d-flex justify-content-between align-items-center {% if current_status == 'confirmed' %}active{% endif %}" 
+                       href="?status=confirmed">
+                        <span>
+                            <i class="fas fa-check-circle me-2 text-success"></i>Confirmed
+                        </span>
+                        <span class="badge bg-success rounded-pill">{{ status_counts.confirmed|default:0 }}</span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a class="dropdown-item d-flex justify-content-between align-items-center {% if current_status == 'completed' %}active{% endif %}" 
+                       href="?status=completed">
+                        <span>
+                            <i class="fas fa-check-double me-2 text-primary"></i>Completed
+                        </span>
+                        <span class="badge bg-primary rounded-pill">{{ status_counts.completed|default:0 }}</span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a class="dropdown-item d-flex justify-content-between align-items-center {% if current_status == 'cancelled' %}active{% endif %}" 
+                       href="?status=cancelled">
+                        <span>
+                            <i class="fas fa-times-circle me-2 text-danger"></i>Cancelled
+                        </span>
+                        <span class="badge bg-danger rounded-pill">{{ status_counts.cancelled|default:0 }}</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- New Request Button -->
+        <a href="{% url 'customers:request_demo' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>New Request
+        </a>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+{% if page_obj.object_list %}
+<div class="bulk-actions">
+    <button class="bulk-btn" onclick="expandAll()">
+        <i class="fas fa-chevron-down me-1"></i>Expand All
+    </button>
+    <button class="bulk-btn" onclick="collapseAll()">
+        <i class="fas fa-chevron-up me-1"></i>Collapse All
+    </button>
+    <span class="ms-auto text-muted small">
+        <i class="fas fa-info-circle me-1"></i>
+        Click on cards to expand/collapse
+    </span>
+</div>
+{% endif %}
+
+<!-- Collapsible Demo Requests List -->
+{% if page_obj.object_list %}
+    {% for demo_request in page_obj.object_list %}
+        <div class="request-card {% if demo_request.status == 'completed' or demo_request.status == 'cancelled' %}collapsed{% endif %}" 
+             id="card-{{ demo_request.id }}">
+            
+            <!-- Clickable Header -->
+            <div class="request-header" onclick="toggleCard('card-{{ demo_request.id }}')">
+                <div class="header-left">
+                    <div class="collapse-icon">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    
+                    {% if demo_request.demo.thumbnail %}
+                        <img src="{{ demo_request.demo.thumbnail.url }}" 
+                             alt="{{ demo_request.demo.title }}" 
+                             class="header-thumbnail">
+                    {% endif %}
+                    
+                    <div class="header-info">
+                        <div class="request-title-mini">
+                            {{ demo_request.demo.title }}
+                        </div>
+                        <div class="request-meta-mini">
+                            <span><i class="fas fa-hashtag"></i>{{ demo_request.id }}</span>
+                            <span><i class="fas fa-calendar"></i>{{ demo_request.requested_date|date:"M d, Y" }}</span>
+                            <span><i class="fas fa-clock"></i>{{ demo_request.requested_time_slot.start_time|time:"g:i A" }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <span class="status-badge-mini status-{{ demo_request.status }}">
+                    {{ demo_request.get_status_display }}
+                </span>
+            </div>
+            
+            <!-- Collapsible Body -->
+            <div class="request-body">
+                <!-- Info Grid -->
+                <div class="info-grid-compact">
+                    <div class="info-item-compact">
+                        <div class="info-icon">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="info-text">
+                            <div class="info-label-small">Requested Date</div>
+                            <div class="info-value-small">{{ demo_request.requested_date|date:"M d, Y" }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item-compact">
+                        <div class="info-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="info-text">
+                            <div class="info-label-small">Time Slot</div>
+                            <div class="info-value-small">{{ demo_request.requested_time_slot.start_time|time:"g:i A" }}</div>
+                        </div>
+                    </div>
+                    
+                    {% if demo_request.confirmed_date %}
+                    <div class="info-item-compact">
+                        <div class="info-icon confirmed">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="info-text">
+                            <div class="info-label-small">Confirmed Date</div>
+                            <div class="info-value-small">{{ demo_request.confirmed_date|date:"M d, Y" }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if demo_request.confirmed_time_slot %}
+                    <div class="info-item-compact">
+                        <div class="info-icon confirmed">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="info-text">
+                            <div class="info-label-small">Confirmed Time</div>
+                            <div class="info-value-small">{{ demo_request.confirmed_time_slot.start_time|time:"g:i A" }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Cancellation Information -->
+                {% if demo_request.is_cancelled and demo_request.cancellation_reason %}
+                <div class="cancellation-info-box">
+                    <div class="notes-header-small" style="color: #991b1b;">
+                        <i class="fas fa-ban"></i>
+                        Cancellation Information
+                    </div>
+                    <div class="cancellation-detail">
+                        <i class="fas fa-info-circle text-danger me-1"></i>
+                        <strong>Reason:</strong>
+                        <span class="cancellation-badge ms-1">
+                            {{ demo_request.get_cancellation_reason_display }}
+                        </span>
+                    </div>
+                    {% if demo_request.cancellation_details %}
+                    <div class="cancellation-detail">
+                        <i class="fas fa-file-alt text-danger me-1"></i>
+                        <strong>Additional Details:</strong><br>
+                        <span class="text-muted">{{ demo_request.cancellation_details }}</span>
+                    </div>
+                    {% endif %}
+                    {% if demo_request.cancelled_at %}
+                    <div class="cancellation-detail">
+                        <i class="fas fa-calendar-times text-danger me-1"></i>
+                        <strong>Cancelled On:</strong>
+                        <span class="text-muted">{{ demo_request.cancelled_at|date:"F d, Y - g:i A" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <!-- Notes -->
+                {% if demo_request.notes %}
+                <div class="notes-box-compact">
+                    <div class="notes-header-small">
+                        <i class="fas fa-sticky-note"></i>
+                        Your Notes
+                    </div>
+                    <div class="small">{{ demo_request.notes }}</div>
+                </div>
+                {% endif %}
+                
+                {% if demo_request.admin_notes %}
+                <div class="notes-box-compact admin">
+                    <div class="notes-header-small">
+                        <i class="fas fa-comment-alt"></i>
+                        Team Response
+                    </div>
+                    <div class="small">{{ demo_request.admin_notes }}</div>
+                </div>
+                {% endif %}
+                
+                <!-- Actions -->
+                {% if demo_request.status == 'pending' or demo_request.status == 'confirmed' %}
+                <div class="request-actions-compact">
+                    <button class="action-btn-compact btn-cancel-compact cancel-btn" 
+                            data-request-id="{{ demo_request.id }}"
+                            data-demo-title="{{ demo_request.demo.title }}"
+                            onclick="event.stopPropagation()">
+                        <i class="fas fa-times"></i>
+                        Cancel Request
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <div class="d-flex justify-content-center mt-3">
+            <nav>
+                <ul class="pagination pagination-sm">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if current_status %}&status={{ current_status }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+    
+{% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-calendar-times"></i>
+        </div>
+        <h4>No Requests Found</h4>
+        {% if current_status %}
+            <p>No requests with status "{{ current_status|title }}"</p>
+            <a href="{% url 'customers:demo_requests' %}" class="btn btn-outline-primary btn-sm me-2">
+                View All
+            </a>
+        {% else %}
+            <p>You haven't requested any demo sessions yet</p>
+        {% endif %}
+        <a href="{% url 'customers:request_demo' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Request Demo
+        </a>
+    </div>
+{% endif %}
+
+<!-- Cancel Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Cancel Demo Request
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong id="cancelDemoTitle"></strong></p>
+                <p class="text-muted small">Please provide a reason for cancellation:</p>
+                
+                <div class="mb-3">
+                    <label class="form-label">Cancellation Reason *</label>
+                    <select class="form-select" id="cancelReason" required>
+                        <option value="">Select a reason...</option>
+                        <option value="scheduling_conflict">Scheduling Conflict</option>
+                        <option value="requirements_change">Change in Requirements</option>
+                        <option value="found_alternative">Found Alternative Solution</option>
+                        <option value="no_longer_interested">No Longer Interested</option>
+                        <option value="other">Other Reasons</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Additional Details (Optional)</label>
+                    <textarea class="form-control" id="cancelDetails" rows="2" 
+                              placeholder="Any additional information..."></textarea>
+                </div>
+                
+                <div class="alert alert-warning mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    This action cannot be undone.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                    Go Back
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" id="confirmCancelBtn">
+                    Confirm Cancellation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block customer_extra_js %}
+<script>
+let currentRequestId = null;
+let cancelModal = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
+    
+    document.querySelectorAll('.cancel-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            currentRequestId = this.dataset.requestId;
+            document.getElementById('cancelDemoTitle').textContent = this.dataset.demoTitle;
+            document.getElementById('cancelReason').value = '';
+            document.getElementById('cancelDetails').value = '';
+            cancelModal.show();
+        });
+    });
+    
+    document.getElementById('confirmCancelBtn').addEventListener('click', submitCancellation);
+});
+
+// Toggle single card
+function toggleCard(cardId) {
+    const card = document.getElementById(cardId);
+    card.classList.toggle('collapsed');
+}
+
+// Expand all cards
+function expandAll() {
+    document.querySelectorAll('.request-card').forEach(card => {
+        card.classList.remove('collapsed');
+    });
+}
+
+// Collapse all cards
+function collapseAll() {
+    document.querySelectorAll('.request-card').forEach(card => {
+        card.classList.add('collapsed');
+    });
+}
+
+function submitCancellation() {
+    const reason = document.getElementById('cancelReason').value;
+    const details = document.getElementById('cancelDetails').value.trim();
+    
+    if (!reason) {
+        alert('Please select a cancellation reason');
+        return;
+    }
+    
+    const btn = document.getElementById('confirmCancelBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    
+    fetch(`/customer/ajax/demo-request/${currentRequestId}/cancel/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({ reason, details })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            cancelModal.hide();
+            showToast('Request cancelled successfully', 'success');
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            throw new Error(data.error || 'Failed to cancel');
+        }
+    })
+    .catch(error => {
+        showToast(error.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = 'Confirm Cancellation';
+    });
+}
+
+function getCsrfToken() {
+    const input = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (input) return input.value;
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') return value;
+    }
+    return '';
+}
+
+function showToast(msg, type = 'info') {
+    const toast = document.createElement('div');
+    const alertClass = type === 'error' ? 'danger' : type;
+    const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
+    
+    toast.className = `alert alert-${alertClass} position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        <i class="fas fa-${icon} me-2"></i>${msg}
+        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+    `;
+    
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}

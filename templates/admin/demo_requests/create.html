@@ -1,0 +1,778 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block admin_title %}Create Demo Request{% endblock %}
+{% block page_title %}Create New Demo Request{% endblock %}
+
+{% block breadcrumb %}
+<div class="admin-breadcrumb">
+    <div class="d-flex justify-content-between align-items-center">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'core:admin_dashboard' %}">
+                        <i class="fas fa-home me-1"></i>Dashboard
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'core:admin_demo_requests' %}">Demo Requests</a>
+                </li>
+                <li class="breadcrumb-item active">Create Request</li>
+            </ol>
+        </nav>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'core:admin_demo_requests' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back
+            </a>
+            <button type="submit" form="createRequestForm" class="btn btn-primary btn-sm">
+                <i class="fas fa-save me-1"></i>Create Request
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_css %}
+<style>
+    body { -webkit-user-select: none; user-select: none; }
+
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e3c72;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-label.required::after {
+        content: '*';
+        color: #dc3545;
+        margin-left: 0.25rem;
+    }
+
+    .form-control, .form-select {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 0.65rem;
+        font-size: 0.9rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #1e3c72;
+        box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+    }
+
+    /* Info Cards */
+    .customer-select-info, .demo-info, .business-category-info {
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
+        border: 2px solid #3b82f6;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-top: 0.5rem;
+        display: none;
+        font-size: 0.85rem;
+    }
+
+    .customer-select-info.show, .demo-info.show, .business-category-info.show {
+        display: block;
+    }
+
+    /* INLINE DATE & TIME PICKER */
+    .datetime-picker-inline {
+        background: white;
+        border: 2px solid #e3f2fd;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .date-picker-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .date-input-wrapper {
+        position: relative;
+        cursor: pointer;
+    }
+
+    #dateInput {
+        width: 100%;
+        padding: 0.75rem;
+        padding-left: 2.5rem;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e3c72;
+        cursor: pointer;
+    }
+
+    #dateInput:focus {
+        outline: none;
+        border-color: #1e3c72;
+        box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+    }
+
+    .date-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #1e3c72;
+        cursor: pointer;
+        z-index: 1;
+    }
+
+    /* Time Slots Dropdown Style */
+    .time-slot-select-wrapper {
+        margin-top: 1rem;
+        position: relative;
+    }
+
+    #timeSlotSelect {
+        width: 100%;
+        padding: 0.75rem;
+        padding-left: 2.5rem;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e3c72;
+        background: white;
+    }
+
+    #timeSlotSelect:focus {
+        outline: none;
+        border-color: #1e3c72;
+        box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+    }
+
+    /* Critical: Better visibility for ALL option states */
+    #timeSlotSelect option {
+        padding: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    #timeSlotSelect option:disabled {
+        background: #f3f4f6 !important;
+        color: #9ca3af !important;
+        font-style: italic;
+    }
+
+    #timeSlotSelect option[data-status="available"] {
+        background: #ecfdf5 !important;
+        color: #065f46 !important;
+        font-weight: 700 !important;
+    }
+
+    #timeSlotSelect option[data-status="full"] {
+        background: #fee2e2 !important;
+        color: #991b1b !important;
+        font-style: italic;
+    }
+
+    #timeSlotSelect option[data-status="starting_soon"] {
+        background: #fef3c7 !important;
+        color: #92400e !important;
+        font-style: italic;
+        text-decoration: line-through;
+    }
+
+    #timeSlotSelect option[data-status="past"] {
+        background: #f3f4f6 !important;
+        color: #6b7280 !important;
+        font-style: italic;
+        text-decoration: line-through;
+    }
+
+    .time-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #1e3c72;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .slot-info-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin-left: 0.5rem;
+    }
+
+    .slot-info-badge.available {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .slot-info-badge.full {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .slot-info-badge.starting_soon {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    /* Selection Summary */
+    .selection-summary {
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
+        border: 2px solid #3b82f6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .selection-summary.show {
+        display: block;
+    }
+
+    .selection-summary-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: #1e3c72;
+        font-weight: 600;
+    }
+
+    .selection-summary-icon {
+        font-size: 1.5rem;
+        color: #3b82f6;
+    }
+
+    /* Loading State */
+    .loading-slots {
+        text-align: center;
+        padding: 1.5rem;
+        color: #6b7280;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 32px;
+        height: 32px;
+        border: 3px solid rgba(30, 60, 114, 0.1);
+        border-top-color: #1e3c72;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-section { padding: 1rem; }
+        .datetime-picker-inline { padding: 1rem; }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<form method="post" id="createRequestForm" class="needs-validation" novalidate>
+    {% csrf_token %}
+
+    <!-- Customer & Business Info -->
+    <div class="form-section">
+        <h3 class="section-title">
+            <i class="fas fa-user"></i>Customer & Business Information
+        </h3>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="user_id" class="form-label required">
+                        <i class="fas fa-user-circle"></i> Select Customer
+                    </label>
+                    <select name="user_id" id="user_id" class="form-select" required onchange="updateCustomerInfo()">
+                        <option value="">Choose customer...</option>
+                        {% for customer in customers %}
+                            <option value="{{ customer.id }}" 
+                                    data-email="{{ customer.email }}"
+                                    data-mobile="{{ customer.full_mobile }}"
+                                    data-business-category-id="{{ customer.business_category.id|default:'' }}"
+                                    data-business-subcategory-id="{{ customer.business_subcategory.id|default:'' }}">
+                                {{ customer.full_name }} ({{ customer.email }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="customer-select-info" id="customerInfo">
+                    <strong>📧 Email:</strong> <span id="customerEmail">-</span><br>
+                    <strong>📱 Mobile:</strong> <span id="customerMobile">-</span>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="business_category_id" class="form-label">
+                        <i class="fas fa-building"></i> Business Category
+                    </label>
+                    <select name="business_category_id" id="business_category_id" class="form-select" onchange="updateSubcategories(); filterDemos();">
+                        <option value="">Select Category (Optional)</option>
+                        {% for category in business_categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="business_subcategory_id" class="form-label">
+                        <i class="fas fa-sitemap"></i> Subcategory
+                    </label>
+                    <select name="business_subcategory_id" id="business_subcategory_id" class="form-select" disabled onchange="filterDemos()">
+                        <option value="">Select Subcategory</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Selection -->
+    <div class="form-section">
+        <h3 class="section-title">
+            <i class="fas fa-video"></i>Demo Selection
+        </h3>
+
+        <div class="mb-3">
+            <label for="demo_id" class="form-label required">
+                <i class="fas fa-play-circle"></i> Select Demo
+            </label>
+            <select name="demo_id" id="demo_id" class="form-select" required onchange="updateDemoInfo()">
+                <option value="">Choose demo...</option>
+                {% for demo in demos %}
+                    <option value="{{ demo.id }}" 
+                            data-title="{{ demo.title }}"
+                            data-duration="{{ demo.formatted_duration }}">
+                        {{ demo.title }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="demo-info" id="demoInfo">
+            <strong>Duration:</strong> <span id="demoDuration">-</span>
+        </div>
+    </div>
+
+    <!-- Date & Time Selection - INLINE -->
+    <div class="form-section">
+        <h3 class="section-title">
+            <i class="fas fa-calendar-clock"></i>Schedule Demo
+        </h3>
+
+        <div class="datetime-picker-inline">
+            <!-- Date Picker -->
+            <div class="date-picker-section">
+                <label class="form-label required">
+                    <i class="fas fa-calendar"></i> Select Date
+                </label>
+                <div class="date-input-wrapper" onclick="document.getElementById('dateInput').showPicker()">
+                    <i class="fas fa-calendar-day date-icon"></i>
+                    <input type="date" 
+                           id="dateInput" 
+                           class="form-control"
+                           min="{{ today|date:'Y-m-d' }}"
+                           onchange="loadTimeSlots(this.value)"
+                           required>
+                </div>
+                <input type="hidden" name="requested_date" id="selectedDate">
+            </div>
+
+            <!-- Time Slot Dropdown -->
+            <div class="time-slot-select-wrapper">
+                <label class="form-label required">
+                    <i class="fas fa-clock"></i> Select Time Slot
+                </label>
+                <div class="position-relative">
+                    <i class="fas fa-clock time-icon"></i>
+                    <select id="timeSlotSelect" 
+                            name="requested_time_slot_id" 
+                            class="form-control" 
+                            required 
+                            disabled>
+                        <option value="">First select a date</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Selection Summary -->
+            <div class="selection-summary" id="selectionSummary">
+                <div class="selection-summary-content">
+                    <i class="fas fa-check-circle selection-summary-icon"></i>
+                    <div>
+                        <strong>Selected:</strong><br>
+                        <span id="summaryText"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Notes -->
+    <div class="form-section">
+        <h3 class="section-title">
+            <i class="fas fa-sticky-note"></i>Additional Information
+        </h3>
+
+        <div class="row">
+            <div class="col-md-6">
+                <label for="notes" class="form-label">Customer Notes</label>
+                <textarea name="notes" id="notes" class="form-control" rows="3" placeholder="Customer requirements..."></textarea>
+            </div>
+
+            <div class="col-md-6">
+                <label for="admin_notes" class="form-label">Admin Notes</label>
+                <textarea name="admin_notes" id="admin_notes" class="form-control" rows="3" placeholder="Internal notes..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Action Bar -->
+    <div class="form-section" style="display: flex; justify-content: space-between; align-items: center;">
+        <small class="text-muted">
+            <i class="fas fa-info-circle"></i> All required fields (*) must be filled
+        </small>
+        
+        <div class="d-flex gap-2">
+            <a href="{% url 'core:admin_demo_requests' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-times me-1"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-primary" id="bottomSubmitBtn">
+                <i class="fas fa-save me-1"></i>Create Request
+            </button>
+        </div>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+// Global variables
+let businessCategories = {};
+let businessSubcategories = {};
+let allDemosData = {{ demos_json|safe }};
+let filteredDemos = [...allDemosData];
+
+const timeSlots = [
+    {% for slot in time_slots %}
+    {
+        id: {{ slot.id }},
+        text: "{{ slot }}",
+        start_time: "{{ slot.start_time|time:'H:i' }}",
+        end_time: "{{ slot.end_time|time:'H:i' }}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+// Initialize
+function initializeBusinessCategories() {
+    {% for category in business_categories %}
+    businessCategories[{{ category.id }}] = {
+        id: {{ category.id }},
+        name: "{{ category.name|escapejs }}"
+    };
+    {% endfor %}
+    
+    {% for subcategory in business_subcategories %}
+    if (!businessSubcategories[{{ subcategory.category.id }}]) {
+        businessSubcategories[{{ subcategory.category.id }}] = [];
+    }
+    businessSubcategories[{{ subcategory.category.id }}].push({
+        id: {{ subcategory.id }},
+        name: "{{ subcategory.name|escapejs }}"
+    });
+    {% endfor %}
+}
+
+function updateCustomerInfo() {
+    const select = document.getElementById('user_id');
+    const customerInfo = document.getElementById('customerInfo');
+    
+    if (select && select.value) {
+        const option = select.options[select.selectedIndex];
+        
+        document.getElementById('customerEmail').textContent = option.dataset.email || '-';
+        document.getElementById('customerMobile').textContent = option.dataset.mobile || '-';
+        
+        const categoryId = option.dataset.businessCategoryId;
+        const subcategoryId = option.dataset.businessSubcategoryId;
+        
+        if (categoryId) {
+            document.getElementById('business_category_id').value = categoryId;
+            updateSubcategories();
+            
+            setTimeout(() => {
+                if (subcategoryId) {
+                    document.getElementById('business_subcategory_id').value = subcategoryId;
+                }
+                filterDemos();
+            }, 100);
+        }
+        
+        customerInfo.classList.add('show');
+    } else {
+        customerInfo.classList.remove('show');
+    }
+}
+
+function updateSubcategories() {
+    const categorySelect = document.getElementById('business_category_id');
+    const subcategorySelect = document.getElementById('business_subcategory_id');
+    
+    const selectedCategoryId = categorySelect.value;
+    
+    subcategorySelect.innerHTML = '<option value="">Select Subcategory</option>';
+    
+    if (!selectedCategoryId) {
+        subcategorySelect.disabled = true;
+        return;
+    }
+    
+    subcategorySelect.disabled = false;
+    
+    const subcategories = businessSubcategories[selectedCategoryId] || [];
+    
+    subcategories.forEach(subcategory => {
+        const option = document.createElement('option');
+        option.value = subcategory.id;
+        option.textContent = subcategory.name;
+        subcategorySelect.appendChild(option);
+    });
+}
+
+function filterDemos() {
+    const categorySelect = document.getElementById('business_category_id');
+    const demoSelect = document.getElementById('demo_id');
+    
+    const selectedCategoryId = categorySelect ? parseInt(categorySelect.value) : null;
+    const currentDemoId = demoSelect.value;
+    
+    demoSelect.innerHTML = '<option value="">Choose demo...</option>';
+    
+    filteredDemos = allDemosData.filter(demo => {
+        if (!selectedCategoryId) return true;
+        return demo.is_for_all_categories || demo.business_categories.includes(selectedCategoryId);
+    });
+    
+    filteredDemos.forEach(demo => {
+        const option = document.createElement('option');
+        option.value = demo.id;
+        option.textContent = demo.title;
+        option.dataset.title = demo.title;
+        option.dataset.duration = demo.duration || '';
+        demoSelect.appendChild(option);
+    });
+    
+    if (currentDemoId && filteredDemos.some(d => d.id == currentDemoId)) {
+        demoSelect.value = currentDemoId;
+        updateDemoInfo();
+    }
+}
+
+function updateDemoInfo() {
+    const select = document.getElementById('demo_id');
+    const demoInfo = document.getElementById('demoInfo');
+    
+    if (select && select.value) {
+        const option = select.options[select.selectedIndex];
+        document.getElementById('demoDuration').textContent = option.dataset.duration || 'Not specified';
+        demoInfo.classList.add('show');
+    } else {
+        demoInfo.classList.remove('show');
+    }
+}
+
+// Date & Time Functions
+async function loadTimeSlots(dateStr) {
+    const timeSlotSelect = document.getElementById('timeSlotSelect');
+    const selectedDateInput = document.getElementById('selectedDate');
+    const summaryDiv = document.getElementById('selectionSummary');
+    
+    if (!dateStr) {
+        timeSlotSelect.innerHTML = '<option value="">First select a date</option>';
+        timeSlotSelect.disabled = true;
+        summaryDiv.classList.remove('show');
+        return;
+    }
+    
+    // Validate Sunday
+    const selectedDate = new Date(dateStr + 'T00:00:00');
+    if (selectedDate.getDay() === 0) {
+        alert('⚠️ Demos cannot be scheduled on Sundays');
+        document.getElementById('dateInput').value = '';
+        return;
+    }
+    
+    selectedDateInput.value = dateStr;
+    
+    timeSlotSelect.innerHTML = '<option value="">Loading slots...</option>';
+    timeSlotSelect.disabled = true;
+    
+    try {
+        const response = await fetch(`{% url 'core:ajax_admin_check_slot_availability' %}?date=${dateStr}`);
+        const data = await response.json();
+        
+        if (data.success && data.slots) {
+            renderTimeSlots(data.slots, selectedDate);
+        } else {
+            timeSlotSelect.innerHTML = '<option value="">No slots available</option>';
+        }
+    } catch (error) {
+        console.error('Error loading slots:', error);
+        timeSlotSelect.innerHTML = '<option value="">Error loading slots</option>';
+    }
+}
+
+function renderTimeSlots(slots, selectedDate) {
+    const timeSlotSelect = document.getElementById('timeSlotSelect');
+    
+    if (!timeSlotSelect) {
+        console.error('❌ timeSlotSelect element not found');
+        return;
+    }
+    
+    timeSlotSelect.innerHTML = '<option value="">Select time slot...</option>';
+    
+    console.log('🎨 Rendering', slots.length, 'time slots');
+    
+    slots.forEach(slot => {
+        const option = document.createElement('option');
+        option.value = slot.id;
+        
+        let statusBadge = '';
+        let optionClass = '';
+        
+        if (slot.status === 'available') {
+            statusBadge = ' ✅ Available';
+            option.dataset.status = 'available';
+        } else if (slot.status === 'full') {
+            statusBadge = ' ❌ Fully Booked';
+            option.disabled = true;
+            option.dataset.status = 'full';
+        } else if (slot.status === 'starting_soon') {
+            statusBadge = ' ⚠️ Starting Soon (Cannot Book)';
+            option.disabled = true;
+            option.dataset.status = 'starting_soon';
+        } else if (slot.status === 'past') {
+            statusBadge = ' ⛔ Time Passed';
+            option.disabled = true;
+            option.dataset.status = 'past';
+        }
+        
+        option.textContent = `${slot.start_time}${statusBadge}`;
+        
+        console.log(`Slot: ${slot.start_time} - Status: ${slot.status} - Disabled: ${option.disabled}`);
+        
+        timeSlotSelect.appendChild(option);
+    });
+    
+    timeSlotSelect.disabled = false;
+    
+    // Add change listener
+    timeSlotSelect.onchange = function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const status = selectedOption.dataset.status;
+        
+        console.log('✅ Slot selected:', this.value, '- Status:', status);
+        
+        if (status && status !== 'available') {
+            alert(`⚠️ This slot is ${status.replace('_', ' ')} and cannot be booked.`);
+            this.value = '';
+            return;
+        }
+        
+        updateSelectionSummary(selectedDate, this.value);
+    };
+    
+    console.log('✅ Time slots rendered successfully');
+}
+
+function updateSelectionSummary(selectedDate, slotId) {
+    const summaryDiv = document.getElementById('selectionSummary');
+    const summaryText = document.getElementById('summaryText');
+    
+    if (!slotId) {
+        summaryDiv.classList.remove('show');
+        return;
+    }
+    
+    const slot = timeSlots.find(s => s.id == slotId);
+    const dateObj = new Date(selectedDate);
+    const dateStr = dateObj.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    summaryText.innerHTML = `<strong>${dateStr}</strong> at <strong>${slot ? slot.text : 'Selected Time'}</strong>`;
+    summaryDiv.classList.add('show');
+}
+
+// Form Validation
+document.getElementById('createRequestForm').addEventListener('submit', function(e) {
+    const dateInput = document.getElementById('selectedDate');
+    const slotInput = document.getElementById('timeSlotSelect');
+    
+    if (!dateInput.value || !slotInput.value) {
+        e.preventDefault();
+        alert('⚠️ Please select both date and time slot');
+        return false;
+    }
+    
+    // Disable both submit buttons
+    const topSubmitBtn = document.querySelector('[form="createRequestForm"]');
+    const bottomSubmitBtn = document.getElementById('bottomSubmitBtn');
+    
+    if (topSubmitBtn) {
+        topSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating...';
+        topSubmitBtn.disabled = true;
+    }
+    
+    if (bottomSubmitBtn) {
+        bottomSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating...';
+        bottomSubmitBtn.disabled = true;
+    }
+    
+    return true;
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    initializeBusinessCategories();
+    filterDemos();
+    console.log('✅ Page initialized');
+});
+</script>
+{% endblock %}

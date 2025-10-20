@@ -1,0 +1,1224 @@
+<!-- templates/customers/demo_detail.html - COMPLETE WITH VIDEO CHECK -->
+{% extends 'customers/base.html' %}
+{% load static %}
+
+{% block customer_title %}{{ demo.title }} - Demo Portal{% endblock %}
+{% block page_title %}{{ demo.title }}{% endblock %}
+
+{% block customer_extra_css %}
+<style>
+    /* Security Protection */
+    .video-content * {
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        user-select: none !important;
+    }
+
+    video {
+        -webkit-user-drag: none !important;
+        user-drag: none !important;
+        pointer-events: none !important;
+    }
+
+    /* Allow form controls */
+    input, textarea, button, a, select {
+        -webkit-user-select: auto !important;
+        user-select: auto !important;
+        pointer-events: auto !important;
+    }
+
+    /* Professional Video Container - 16:9 Aspect Ratio */
+    .video-container {
+        position: relative;
+        background: #000;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        height: fit-content;
+    }
+
+    .video-wrapper {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+        background: #000;
+    }
+
+    .demo-video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    /* Video Security Overlays */
+    .video-protection-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        z-index: 999;
+        pointer-events: none;
+    }
+
+    .video-watermark {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(0, 0, 0, 0.75);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        z-index: 1000;
+        pointer-events: none;
+    }
+
+    .video-timestamp {
+        position: absolute;
+        bottom: 70px;
+        left: 15px;
+        background: rgba(0, 0, 0, 0.75);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        z-index: 1000;
+        pointer-events: none;
+    }
+
+    /* Custom Video Controls */
+    .custom-controls {
+        background: rgba(0, 0, 0, 0.95);
+        color: white;
+        padding: 12px 15px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .control-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.1rem;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .control-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .progress-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .progress-track {
+        flex: 1;
+        height: 5px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #4ecdc4, #556270);
+        border-radius: 3px;
+        width: 0%;
+        position: relative;
+    }
+
+    .progress-handle {
+        position: absolute;
+        right: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 12px;
+        height: 12px;
+        background: white;
+        border-radius: 50%;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .progress-track:hover .progress-handle {
+        opacity: 1;
+    }
+
+    .time-display {
+        color: #ccc;
+        font-size: 0.8rem;
+        font-family: monospace;
+        min-width: 42px;
+    }
+
+    .volume-container {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .volume-slider {
+        width: 50px;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+        cursor: pointer;
+    }
+
+    /* Demo Header - Compact */
+    .demo-header {
+        background: white;
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: var(--spacing-lg);
+        border: 1px solid var(--gray-200);
+    }
+
+    .demo-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: var(--spacing-sm);
+        line-height: 1.3;
+    }
+
+    .demo-meta-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+        margin: var(--spacing-md) 0;
+        padding-bottom: var(--spacing-md);
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--gray-600);
+        font-size: 0.875rem;
+    }
+
+    .meta-item i {
+        color: var(--primary-color);
+        width: 16px;
+    }
+
+    .demo-description {
+        color: var(--gray-700);
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+
+    .demo-actions-section {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        margin-top: 0;
+    }
+
+    .action-btn {
+        padding: 10px 16px;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        text-decoration: none;
+        width: 100%;
+        text-align: center;
+    }
+
+    .btn-like {
+        background: transparent;
+        color: #f59e0b;
+        border: 2px solid #f59e0b;
+    }
+
+    .btn-like:hover {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .btn-like.liked {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .btn-request-demo {
+        background: var(--gradient-primary);
+        color: white;
+    }
+
+    .btn-request-demo:hover {
+        background: var(--secondary-color);
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    /* Consultation Card */
+    .consultation-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .consultation-icon {
+        font-size: 4rem;
+        color: var(--primary-color);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .consultation-card h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: var(--spacing-md);
+        color: var(--dark-color);
+    }
+
+    .consultation-card p {
+        color: var(--gray-600);
+        margin-bottom: var(--spacing-lg);
+        font-size: 1rem;
+    }
+
+    /* Related Demos Sidebar - 30% */
+    .related-sidebar {
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        height: fit-content;
+        position: sticky;
+        top: 90px;
+    }
+
+    .sidebar-header {
+        padding: var(--spacing-md) var(--spacing-lg);
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .sidebar-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin: 0;
+    }
+
+    .sidebar-content {
+        padding: var(--spacing-md);
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .sidebar-content::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .sidebar-content::-webkit-scrollbar-track {
+        background: var(--gray-100);
+    }
+
+    .sidebar-content::-webkit-scrollbar-thumb {
+        background: var(--gray-400);
+        border-radius: 2px;
+    }
+
+    /* Related Demo Card - Compact */
+    .related-card {
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .related-card:last-child {
+        margin-bottom: 0;
+    }
+
+    .related-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .related-thumbnail {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+    }
+
+    .related-content {
+        padding: var(--spacing-md);
+    }
+
+    .related-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: var(--spacing-xs);
+        color: var(--dark-color);
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .related-meta {
+        color: var(--gray-500);
+        font-size: 0.75rem;
+        margin-bottom: var(--spacing-sm);
+        display: flex;
+        gap: 8px;
+    }
+
+    .related-card .btn {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+        width: 100%;
+    }
+
+    /* Category Badges */
+    .category-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: var(--primary-color);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .category-badge:hover {
+        background: var(--secondary-color);
+        color: white;
+    }
+
+    .subcategory-badge {
+        background: var(--gray-200);
+        color: var(--gray-700);
+    }
+
+    .subcategory-badge:hover {
+        background: var(--gray-300);
+    }
+
+    /* Feedback Section */
+    .feedback-section {
+        background: white;
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        margin-top: var(--spacing-lg);
+        border: 1px solid var(--gray-200);
+    }
+
+    .feedback-section h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .feedback-section * {
+        -webkit-user-select: text !important;
+        user-select: text !important;
+    }
+
+    .feedback-form {
+        background: var(--gray-50);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .rating-stars {
+        display: flex;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .star {
+        font-size: 1.5rem;
+        color: var(--gray-300);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        -webkit-user-select: none !important;
+        user-select: none !important;
+    }
+
+    .star:hover,
+    .star.active {
+        color: var(--warning-color);
+        transform: scale(1.1);
+    }
+
+    /* Fullscreen Styles */
+    .video-container:fullscreen {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .video-container:-webkit-full-screen {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .video-container:-moz-full-screen {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .video-container:fullscreen .video-wrapper {
+        padding-bottom: 0;
+        height: 100%;
+    }
+
+    .video-container:fullscreen .demo-video {
+        object-fit: contain;
+    }
+
+    .video-container:fullscreen .custom-controls {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 10000;
+    }
+
+    .feedback-item {
+        background: white;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-md);
+        border-left: 3px solid var(--primary-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .feedback-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .feedback-author {
+        font-weight: 600;
+        color: var(--dark-color);
+        font-size: 0.9rem;
+    }
+
+    .feedback-date {
+        color: var(--gray-500);
+        font-size: 0.8rem;
+    }
+
+    /* Security Warning */
+    .security-warning {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: var(--danger-color);
+        color: white;
+        padding: 10px 16px;
+        border-radius: var(--radius-md);
+        font-size: 0.875rem;
+        z-index: 10000;
+        display: none;
+        box-shadow: var(--shadow-lg);
+        animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
+    }
+
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+        border-right-color: transparent;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .toast {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 10001;
+        max-width: 350px;
+        box-shadow: var(--shadow-lg);
+    }
+
+    @media (max-width: 992px) {
+        .related-sidebar {
+            position: static;
+            margin-top: var(--spacing-lg);
+        }
+
+        .sidebar-content {
+            max-height: 400px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .demo-title {
+            font-size: 1.25rem;
+        }
+
+        .video-wrapper {
+            padding-bottom: 75%;
+        }
+
+        .custom-controls {
+            flex-wrap: wrap;
+        }
+
+        .volume-container {
+            display: none;
+        }
+    }
+
+    @media print {
+        .video-container {
+            display: none !important;
+        }
+    }
+
+    .demo-video::-webkit-media-controls {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block customer_content %}
+{% csrf_token %}
+
+<div class="security-warning" id="securityWarning">
+    <i class="fas fa-shield-alt me-2"></i>
+    <span id="warningText">Unauthorized action detected!</span>
+</div>
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'customers:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'customers:browse_demos' %}">Demos</a></li>
+        <li class="breadcrumb-item active">{{ demo.title|truncatechars:30 }}</li>
+    </ol>
+</nav>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        {% if demo.video_file %}
+        <!-- Video Container - Only show if video exists -->
+        <div class="video-container video-content">
+            <div class="video-wrapper">
+                <video 
+                    class="demo-video" 
+                    id="demoVideo"
+                    controlslist="nodownload nofullscreen noremoteplayback"
+                    disablepictureinpicture
+                    disableremoteplayback
+                    oncontextmenu="return false;"
+                    preload="metadata">
+                    <source src="{{ demo.video_file.url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                
+                <div class="video-protection-overlay"></div>
+                
+                <div class="video-watermark">
+                    {{ user.email }} - CONFIDENTIAL
+                </div>
+                
+                <div class="video-timestamp" id="videoTimestamp">
+                    <span id="currentTime"></span>
+                </div>
+            </div>
+            
+            <div class="custom-controls">
+                <button id="playPauseBtn" class="control-btn" title="Play/Pause">
+                    <i class="fas fa-play"></i>
+                </button>
+                
+                <div class="progress-container">
+                    <span id="currentDuration" class="time-display">00:00</span>
+                    <div class="progress-track" id="progressTrack">
+                        <div id="progressBar" class="progress-bar">
+                            <div class="progress-handle"></div>
+                        </div>
+                    </div>
+                    <span id="totalDuration" class="time-display">00:00</span>
+                </div>
+                
+                <div class="volume-container">
+                    <button id="volumeBtn" class="control-btn" title="Volume">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                    <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.1" value="1">
+                </div>
+                
+                <button id="fullscreenBtn" class="control-btn" title="Fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+                
+                <div style="color: #888; font-size: 0.8rem;">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- No Video - Show Consultation Card -->
+        <div class="consultation-card">
+            <i class="fas fa-calendar-check consultation-icon"></i>
+            <h3>Schedule Your Consultation</h3>
+            <p>This is a consultation service. Book a live session with our team to discuss your requirements.</p>
+            <a href="{% url 'customers:request_demo' %}?demo={{ demo.id }}" 
+               class="btn btn-primary btn-lg">
+                <i class="fas fa-calendar-plus me-2"></i>Request Consultation
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Demo Information -->
+        <div class="demo-header">
+            <div class="row align-items-start">
+                <div class="col-lg-8">
+                    <h1 class="demo-title">{{ demo.title }}</h1>
+                    
+                    {% if demo.business_category %}
+                        <a href="{% url 'customers:browse_demos' %}?business_category={{ demo.business_category.id }}" 
+                           class="category-badge">
+                            {{ demo.business_category.name }}
+                        </a>
+                    {% endif %}
+                    
+                    <div class="demo-meta-info">
+                        <div class="meta-item">
+                            <i class="fas fa-eye"></i>
+                            <span>{{ demo.views_count }} views</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-star text-warning"></i>
+                            <span id="likesCount">{{ demo.likes_count }}</span> likes
+                        </div>
+                        {% if demo.duration %}
+                        <div class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span>{{ demo.duration }} min</span>
+                        </div>
+                        {% endif %}
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>{{ demo.created_at|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="demo-description">
+                        {{ demo.description|linebreaks }}
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="demo-actions-section">
+                        <button 
+                            class="action-btn btn-like {% if user_liked %}liked{% endif %}" 
+                            id="likeBtn"
+                            data-demo-id="{{ demo.id }}">
+                            <i class="fas fa-star"></i>
+                            <span id="likeText">{% if user_liked %}Liked{% else %}Like{% endif %}</span>
+                        </button>
+                        
+                        <a href="{% url 'customers:request_demo' %}?demo={{ demo.id }}" 
+                           class="action-btn btn-request-demo">
+                            <i class="fas fa-calendar-plus"></i>
+                            Request Live Demo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        {% if related_demos %}
+        <div class="related-sidebar">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">
+                    <i class="fas fa-play-circle me-2"></i>Related Demos
+                </h3>
+            </div>
+            <div class="sidebar-content">
+                {% for related_demo in related_demos %}
+                <div class="related-card">
+                    {% if related_demo.thumbnail %}
+                        <img src="{{ related_demo.thumbnail.url }}" 
+                             alt="{{ related_demo.title }}" 
+                             class="related-thumbnail">
+                    {% else %}
+                        <div class="related-thumbnail" style="background: var(--gray-100); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-video" style="font-size: 2rem; color: var(--gray-400);"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="related-content">
+                        <h4 class="related-title">{{ related_demo.title }}</h4>
+                        <div class="related-meta">
+                            <span><i class="fas fa-eye me-1"></i>{{ related_demo.views_count }}</span>
+                            <span><i class="fas fa-star text-warning me-1"></i>{{ related_demo.likes_count }}</span>
+                        </div>
+                        <a href="{% url 'customers:demo_detail' related_demo.slug %}" 
+                           class="btn btn-primary btn-sm">
+                            <i class="fas fa-play me-1"></i>Watch
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="feedback-section" id="feedback">
+    <h3><i class="fas fa-comments me-2"></i>Share Your Feedback</h3>
+    
+    {% if not user_feedback %}
+    <div class="feedback-form">
+        <form id="feedbackForm">
+            <div class="mb-3">
+                <label class="form-label">Rate this demo:</label>
+                <div class="rating-stars" id="ratingStars">
+                    <i class="fas fa-star star" data-rating="1"></i>
+                    <i class="fas fa-star star" data-rating="2"></i>
+                    <i class="fas fa-star star" data-rating="3"></i>
+                    <i class="fas fa-star star" data-rating="4"></i>
+                    <i class="fas fa-star star" data-rating="5"></i>
+                </div>
+                <input type="hidden" id="selectedRating" value="0">
+            </div>
+            
+            <div class="mb-3">
+                <label for="feedbackText" class="form-label">Your feedback:</label>
+                <textarea 
+                    class="form-control" 
+                    id="feedbackText" 
+                    rows="3" 
+                    placeholder="Share your thoughts..."
+                    required></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane me-2"></i>Submit Feedback
+            </button>
+        </form>
+    </div>
+    {% else %}
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle me-2"></i>
+        Thank you for your feedback!
+        {% if user_feedback.rating %}
+            <div class="mt-2">
+                Rating: 
+                {% for i in "12345" %}
+                    <i class="fas fa-star {% if forloop.counter <= user_feedback.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% if approved_feedbacks %}
+    <h4 class="mt-4 mb-3">Customer Reviews</h4>
+    {% for feedback in approved_feedbacks %}
+        <div class="feedback-item">
+            <div class="feedback-header">
+                <div class="feedback-author">{{ feedback.user.first_name }} {{ feedback.user.last_name.0 }}.</div>
+                <div class="feedback-date">{{ feedback.created_at|date:"M d, Y" }}</div>
+            </div>
+            {% if feedback.rating %}
+                <div class="mb-2">
+                    {% for i in "12345" %}
+                        <i class="fas fa-star {% if forloop.counter <= feedback.rating %}text-warning{% else %}text-muted{% endif %} small"></i>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <p class="mb-0" style="font-size: 0.9rem;">{{ feedback.feedback_text }}</p>
+        </div>
+    {% endfor %}
+    {% endif %}
+</div>
+
+<div id="toastContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 11000;"></div>
+{% endblock %}
+
+{% block customer_extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.getElementById('demoVideo');
+    
+    // Only initialize video controls if video exists
+    if (video) {
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressTrack = document.getElementById('progressTrack');
+        const currentDuration = document.getElementById('currentDuration');
+        const totalDuration = document.getElementById('totalDuration');
+        const currentTimeSpan = document.getElementById('currentTime');
+        const volumeBtn = document.getElementById('volumeBtn');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const videoContainer = document.querySelector('.video-container');
+        
+        initVideoSecurity();
+        initVideoControls();
+        updateTimestamp();
+        setInterval(updateTimestamp, 1000);
+        
+        function initVideoSecurity() {
+            video.controls = false;
+            video.oncontextmenu = () => false;
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'f' || e.key === 'F') {
+                    e.preventDefault();
+                    toggleFullscreen();
+                    return false;
+                }
+                
+                if (e.key === 'F12' || e.key === 'PrintScreen' ||
+                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+                    (e.ctrlKey && e.key === 'u')) {
+                    e.preventDefault();
+                    showWarning('Action blocked');
+                    return false;
+                }
+            });
+            
+            window.addEventListener('blur', () => {
+                if (!video.paused) {
+                    video.pause();
+                    updatePlayPause();
+                }
+            });
+        }
+        
+        function initVideoControls() {
+            playPauseBtn.addEventListener('click', () => {
+                video.paused ? video.play() : video.pause();
+            });
+            
+            video.addEventListener('play', updatePlayPause);
+            video.addEventListener('pause', updatePlayPause);
+            video.addEventListener('timeupdate', updateProgress);
+            video.addEventListener('loadedmetadata', () => {
+                totalDuration.textContent = formatTime(video.duration);
+            });
+            
+            progressTrack.addEventListener('click', (e) => {
+                const rect = progressTrack.getBoundingClientRect();
+                const pos = (e.clientX - rect.left) / rect.width;
+                video.currentTime = pos * video.duration;
+            });
+            
+            volumeBtn.addEventListener('click', () => {
+                video.muted = !video.muted;
+                updateVolume();
+            });
+            
+            volumeSlider.addEventListener('input', () => {
+                video.volume = volumeSlider.value;
+                updateVolume();
+            });
+            
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', toggleFullscreen);
+            }
+            
+            document.addEventListener('fullscreenchange', updateFullscreenButton);
+            document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+            document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+            document.addEventListener('MSFullscreenChange', updateFullscreenButton);
+        }
+        
+        function toggleFullscreen() {
+            if (!document.fullscreenElement && 
+                !document.webkitFullscreenElement && 
+                !document.mozFullScreenElement &&
+                !document.msFullscreenElement) {
+                if (videoContainer.requestFullscreen) {
+                    videoContainer.requestFullscreen();
+                } else if (videoContainer.webkitRequestFullscreen) {
+                    videoContainer.webkitRequestFullscreen();
+                } else if (videoContainer.mozRequestFullScreen) {
+                    videoContainer.mozRequestFullScreen();
+                } else if (videoContainer.msRequestFullscreen) {
+                    videoContainer.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+        
+        function updateFullscreenButton() {
+            if (!fullscreenBtn) return;
+            
+            const icon = fullscreenBtn.querySelector('i');
+            const isFullscreen = document.fullscreenElement || 
+                               document.webkitFullscreenElement || 
+                               document.mozFullScreenElement ||
+                               document.msFullscreenElement;
+            
+            if (isFullscreen) {
+                icon.className = 'fas fa-compress';
+                fullscreenBtn.title = 'Exit Fullscreen (ESC)';
+            } else {
+                icon.className = 'fas fa-expand';
+                fullscreenBtn.title = 'Fullscreen (F)';
+            }
+        }
+        
+        function updatePlayPause() {
+            const icon = playPauseBtn.querySelector('i');
+            icon.className = video.paused ? 'fas fa-play' : 'fas fa-pause';
+        }
+        
+        function updateProgress() {
+            const progress = (video.currentTime / video.duration) * 100;
+            progressBar.style.width = progress + '%';
+            currentDuration.textContent = formatTime(video.currentTime);
+        }
+        
+        function updateVolume() {
+            const icon = volumeBtn.querySelector('i');
+            if (video.muted || video.volume === 0) {
+                icon.className = 'fas fa-volume-mute';
+                volumeSlider.value = 0;
+            } else if (video.volume < 0.5) {
+                icon.className = 'fas fa-volume-down';
+            } else {
+                icon.className = 'fas fa-volume-up';
+            }
+            
+            if (!video.muted) {
+                volumeSlider.value = video.volume;
+            }
+        }
+        
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+        
+        function updateTimestamp() {
+            if (currentTimeSpan) {
+                currentTimeSpan.textContent = new Date().toLocaleTimeString();
+            }
+        }
+    }
+    
+    // Always initialize these (work without video)
+    initLikeFeature();
+    initFeedback();
+    
+    function initLikeFeature() {
+        const likeBtn = document.getElementById('likeBtn');
+        if (likeBtn) {
+            likeBtn.addEventListener('click', function() {
+                const demoId = this.dataset.demoId;
+                this.classList.add('loading');
+                
+                fetch(`/customer/ajax/demo/${demoId}/like/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.liked) {
+                        this.classList.add('liked');
+                        document.getElementById('likeText').textContent = 'Liked';
+                        showToast('Demo liked!', 'success');
+                    } else {
+                        this.classList.remove('liked');
+                        document.getElementById('likeText').textContent = 'Like';
+                        showToast('Like removed', 'info');
+                    }
+                    document.getElementById('likesCount').textContent = data.likes_count;
+                })
+                .catch(() => showToast('Error', 'error'))
+                .finally(() => this.classList.remove('loading'));
+            });
+        }
+    }
+    
+    function initFeedback() {
+        const form = document.getElementById('feedbackForm');
+        const stars = document.querySelectorAll('.star');
+        let rating = 0;
+        
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                rating = parseInt(this.dataset.rating);
+                document.getElementById('selectedRating').value = rating;
+                updateStars();
+            });
+        });
+        
+        function updateStars() {
+            stars.forEach((s, i) => {
+                s.classList.toggle('active', i < rating);
+            });
+        }
+        
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const text = document.getElementById('feedbackText').value.trim();
+                if (!text || text.length < 5) {
+                    showToast('Feedback too short', 'warning');
+                    return;
+                }
+                
+                const btn = form.querySelector('button[type="submit"]');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner"></span> Submitting...';
+                btn.disabled = true;
+                
+                fetch(`/customer/ajax/demo/{{ demo.id }}/feedback/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        feedback: text,
+                        rating: rating
+                    })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Feedback submitted!', 'success');
+                        form.style.display = 'none';
+                        const msg = document.createElement('div');
+                        msg.className = 'alert alert-success';
+                        msg.innerHTML = '<i class="fas fa-check-circle me-2"></i>Thank you for your feedback!';
+                        form.parentNode.insertBefore(msg, form);
+                    }
+                })
+                .catch(() => showToast('Error submitting feedback', 'error'))
+                .finally(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            });
+        }
+    }
+    
+    function getCsrfToken() {
+        const input = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (input) return input.value;
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrftoken') return value;
+        }
+        return '';
+    }
+    
+    function showWarning(msg) {
+        const warning = document.getElementById('securityWarning');
+        document.getElementById('warningText').textContent = msg;
+        warning.style.display = 'block';
+        setTimeout(() => warning.style.display = 'none', 3000);
+    }
+    
+    function showToast(msg, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const id = 'toast-' + Date.now();
+        const alertClass = type === 'error' ? 'danger' : type;
+        const icon = type === 'success' ? 'check-circle' : 
+                    type === 'error' ? 'exclamation-triangle' : 'info-circle';
+        
+        const html = `
+            <div class="toast show" id="${id}" role="alert">
+                <div class="toast-header bg-${alertClass} text-white">
+                    <i class="fas fa-${icon} me-2"></i>
+                    <strong class="me-auto">Demo Portal</strong>
+                    <button type="button" class="btn-close btn-close-white" onclick="document.getElementById('${id}').remove()"></button>
+                </div>
+                <div class="toast-body">${msg}</div>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', html);
+        setTimeout(() => {
+            const toast = document.getElementById(id);
+            if (toast) toast.remove();
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}

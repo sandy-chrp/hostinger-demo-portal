@@ -1,0 +1,597 @@
+<!-- templates/admin/demos/watch.html -->
+{% extends 'admin/base.html' %}
+
+{% block admin_title %}{{ demo.title }} - Preview{% endblock %}
+{% block page_title %}Demo Preview{% endblock %}
+
+{% block breadcrumb %}
+<div class="admin-breadcrumb">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:admin_dashboard' %}">
+                    <i class="fas fa-home me-1"></i>Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:admin_demos' %}">Demo Videos</a>
+            </li>
+            <li class="breadcrumb-item active">{{ demo.title }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block header_actions %}
+<div class="d-flex align-items-center gap-2">
+    <a href="{% url 'core:admin_demos' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i>Back
+    </a>
+    <a href="{% url 'core:admin_demo_detail' demo.id %}" class="btn btn-primary btn-sm">
+        <i class="fas fa-edit me-1"></i>Edit
+    </a>
+</div>
+{% endblock %}
+
+{% block admin_extra_css %}
+<style>
+    /* Video Section */
+    .video-container {
+        background: #000;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+        aspect-ratio: 16/9;
+    }
+
+    .video-player {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+    }
+
+    .video-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        color: rgba(255, 255, 255, 0.7);
+        background: linear-gradient(135deg, #1f2937, #374151);
+    }
+
+    /* Video Info Box */
+    .video-info-box {
+        background: white;
+        padding: 1.25rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .video-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.75rem;
+    }
+
+    .video-description {
+        color: #4b5563;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .admin-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(8, 127, 194, 0.95);
+        color: white;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+        z-index: 10;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Stats Cards - Compact */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-mini {
+        background: white;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        border-left: 3px solid;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .stat-mini:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-mini.views { border-left-color: #087fc2; }
+    .stat-mini.likes { border-left-color: #ef4444; }
+    .stat-mini.requests { border-left-color: #f59e0b; }
+    .stat-mini.duration { border-left-color: #10b981; }
+
+    .stat-mini-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-mini-label {
+        color: #6b7280;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    /* Status Badges */
+    .status-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .status-badge {
+        padding: 0.375rem 0.875rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    .status-active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-inactive {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+        border: 1px solid rgba(107, 114, 128, 0.2);
+    }
+
+    .status-featured {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .status-category {
+        background: rgba(8, 127, 194, 0.1);
+        color: #087fc2;
+        border: 1px solid rgba(8, 127, 194, 0.2);
+    }
+
+    /* Collapsible Info Section */
+    .info-section {
+        background: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .info-header {
+        padding: 1rem 1.25rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid #e2e8f0;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease;
+    }
+
+    .info-header:hover {
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    }
+
+    .info-header-title {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-header-icon {
+        color: #087fc2;
+        transition: transform 0.3s ease;
+    }
+
+    .info-header.collapsed .info-header-icon {
+        transform: rotate(-90deg);
+    }
+
+    .info-body {
+        padding: 1.25rem;
+        max-height: 1000px;
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+
+    .info-body.collapsed {
+        max-height: 0;
+        padding: 0 1.25rem;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.625rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-weight: 500;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 0.875rem;
+        text-align: right;
+    }
+
+    /* Description Section */
+    .description-box {
+        background: white;
+        padding: 1.25rem;
+        border-radius: 0.75rem;
+        border-left: 3px solid #087fc2;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .description-box h6 {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .description-box h6 i {
+        color: #087fc2;
+    }
+
+    .description-text {
+        color: #4b5563;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* Quick Actions */
+    .action-btn {
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: 1px solid;
+        text-align: center;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-btn-primary {
+        background: #087fc2;
+        border-color: #087fc2;
+        color: white;
+    }
+
+    .action-btn-primary:hover {
+        background: #0669a0;
+        color: white;
+    }
+
+    .action-btn-secondary {
+        background: white;
+        border-color: #e2e8f0;
+        color: #4b5563;
+    }
+
+    .action-btn-secondary:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #1f2937;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .video-container {
+            aspect-ratio: 16/9;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .video-title {
+            font-size: 1.1rem;
+        }
+
+        .info-item {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .info-value {
+            text-align: left;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .status-row {
+            flex-direction: column;
+        }
+
+        .admin-badge {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.7rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <!-- Left Column - Video -->
+    <div class="col-lg-8">
+        <div class="video-container">
+            <div class="admin-badge">
+                <i class="fas fa-shield-alt me-1"></i>Admin Preview
+            </div>
+            
+            {% if demo.video_file %}
+                <video class="video-player" controls preload="metadata" poster="{% if demo.thumbnail %}{{ demo.thumbnail.url }}{% endif %}">
+                    <source src="{{ demo.video_file.url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            {% else %}
+                <div class="video-placeholder">
+                    <i class="fas fa-video fa-3x mb-3" style="opacity: 0.4;"></i>
+                    <h5 style="margin-bottom: 0.5rem;">No Video File</h5>
+                    <p style="margin: 0; opacity: 0.7; font-size: 0.9rem;">Upload a video file to preview</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Video Title & Description -->
+        <div class="video-info-box">
+            <h4 class="video-title">{{ demo.title }}</h4>
+            <p class="video-description">{{ demo.description|default:"No description provided." }}</p>
+        </div>
+
+        <!-- Video Stats Below -->
+        <div class="stats-row">
+            <div class="stat-mini views">
+                <div class="stat-mini-number">{{ demo.views_count }}</div>
+                <div class="stat-mini-label">Views</div>
+            </div>
+            
+            <div class="stat-mini likes">
+                <div class="stat-mini-number">{{ demo.likes_count }}</div>
+                <div class="stat-mini-label">Likes</div>
+            </div>
+            
+            <div class="stat-mini requests">
+                <div class="stat-mini-number">{{ demo_requests_count|default:0 }}</div>
+                <div class="stat-mini-label">Requests</div>
+            </div>
+            
+            <div class="stat-mini duration">
+                <div class="stat-mini-number">{{ demo.formatted_duration|default:"--" }}</div>
+                <div class="stat-mini-label">Duration</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column - Info & Actions -->
+    <div class="col-lg-4">
+
+        <!-- Status Badges -->
+        <div class="status-row">
+            {% if demo.is_active %}
+                <span class="status-badge status-active">
+                    <i class="fas fa-check-circle"></i>Active
+                </span>
+            {% else %}
+                <span class="status-badge status-inactive">
+                    <i class="fas fa-eye-slash"></i>Inactive
+                </span>
+            {% endif %}
+            
+            {% if demo.is_featured %}
+                <span class="status-badge status-featured">
+                    <i class="fas fa-star"></i>Featured
+                </span>
+            {% endif %}
+            
+            <span class="status-badge status-category">
+                <i class="fas fa-folder"></i>{{ demo.category.name }}
+            </span>
+        </div>
+
+        <!-- Demo Information -->
+        <div class="info-section">
+            <div class="info-header" onclick="toggleSection('demoInfo')">
+                <div class="info-header-title">
+                    <i class="fas fa-info-circle"></i>
+                    Demo Information
+                </div>
+                <i class="fas fa-chevron-down info-header-icon" id="demoInfoIcon"></i>
+            </div>
+            <div class="info-body" id="demoInfo">
+                <div class="info-item">
+                    <span class="info-label">Demo ID</span>
+                    <span class="info-value">#{{ demo.id }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Category</span>
+                    <span class="info-value">{{ demo.category.name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Created</span>
+                    <span class="info-value">{{ demo.created_at|date:"M d, Y" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Updated</span>
+                    <span class="info-value">{{ demo.updated_at|date:"M d, Y" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Created By</span>
+                    <span class="info-value">{{ demo.created_by.full_name|default:"System" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="info-section">
+            <div class="info-header" onclick="toggleSection('quickActions')">
+                <div class="info-header-title">
+                    <i class="fas fa-bolt"></i>
+                    Quick Actions
+                </div>
+                <i class="fas fa-chevron-down info-header-icon" id="quickActionsIcon"></i>
+            </div>
+            <div class="info-body" id="quickActions">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'core:admin_demo_detail' demo.id %}" class="action-btn action-btn-primary">
+                        <i class="fas fa-edit"></i>Edit Demo
+                    </a>
+                    <button class="action-btn action-btn-secondary" onclick="copyDemoLink()">
+                        <i class="fas fa-link"></i>Copy Customer Link
+                    </button>
+                    <button class="action-btn action-btn-secondary" onclick="downloadVideo()">
+                        <i class="fas fa-download"></i>Download Video
+                    </button>
+                    <button class="action-btn action-btn-secondary" onclick="shareDemo()">
+                        <i class="fas fa-share"></i>Share Demo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+// Collapsible sections
+function toggleSection(sectionId) {
+    const body = document.getElementById(sectionId);
+    const header = body.previousElementSibling;
+    const icon = document.getElementById(sectionId + 'Icon');
+    
+    body.classList.toggle('collapsed');
+    header.classList.toggle('collapsed');
+}
+
+// Copy demo link
+function copyDemoLink() {
+    const demoSlug = '{{ demo.slug }}';
+    const customerLink = `${window.location.origin}/demos/${demoSlug}/`;
+    
+    navigator.clipboard.writeText(customerLink).then(() => {
+        showToast('Link copied to clipboard!', 'success');
+    }).catch(() => {
+        prompt('Copy this link:', customerLink);
+    });
+}
+
+// Download video
+function downloadVideo() {
+    {% if demo.video_file %}
+        const link = document.createElement('a');
+        link.href = '{{ demo.video_file.url }}';
+        link.download = '{{ demo.title|slugify }}.mp4';
+        link.click();
+    {% else %}
+        showToast('No video file available', 'warning');
+    {% endif %}
+}
+
+// Share demo
+function shareDemo() {
+    const demoData = {
+        title: '{{ demo.title|escapejs }}',
+        text: '{{ demo.description|truncatechars:100|escapejs }}',
+        url: `${window.location.origin}/demos/{{ demo.slug }}/`
+    };
+    
+    if (navigator.share) {
+        navigator.share(demoData);
+    } else {
+        copyDemoLink();
+    }
+}
+
+// Toast notification
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 80px; right: 20px; z-index: 10000; min-width: 280px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 4000);
+}
+</script>
+{% endblock %}

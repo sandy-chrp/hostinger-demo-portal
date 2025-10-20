@@ -1,0 +1,1079 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% load permission_tags %}
+
+{% block admin_title %}Customer Management{% endblock %}
+{% block page_title %}Customer Management{% endblock %}
+
+{% block breadcrumb %}
+<div class="admin-breadcrumb">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:admin_dashboard' %}"><i class="fas fa-home me-1"></i>Dashboard</a>
+            </li>
+            <li class="breadcrumb-item active">Customers</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block admin_extra_css %}
+<style>
+    .column-visibility-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .column-visibility-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        color: #374151;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .column-visibility-btn:hover {
+        background: #f9fafb;
+        border-color: #087fc2;
+    }
+
+    .column-visibility-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 0.5rem;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        min-width: 320px;
+        max-height: 500px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+    }
+
+    .column-visibility-menu.show {
+        display: block;
+    }
+
+    .column-visibility-header {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 1;
+    }
+
+    .column-visibility-header h6 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .column-visibility-body {
+        padding: 0.5rem;
+    }
+
+    .column-item {
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .column-item:hover {
+        background: #f9fafb;
+    }
+
+    .column-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: #087fc2;
+    }
+
+    .column-item label {
+        cursor: pointer;
+        margin: 0;
+        font-size: 0.875rem;
+        color: #374151;
+        flex: 1;
+    }
+
+    .column-item.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .column-item.disabled input,
+    .column-item.disabled label {
+        cursor: not-allowed;
+    }
+
+    .column-visibility-footer {
+        padding: 1rem;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        gap: 0.5rem;
+        position: sticky;
+        bottom: 0;
+        background: white;
+    }
+
+    .table th.column-hidden,
+    .table td.column-hidden {
+        display: none !important;
+    }
+
+    .bulk-actions-toolbar {
+        background: #e0f2fe;
+        border: 2px solid #087fc2;
+        border-radius: 0.75rem;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1rem;
+        display: none;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 4px 6px rgba(8, 127, 194, 0.1);
+    }
+
+    .bulk-actions-toolbar.show {
+        display: flex;
+    }
+
+    .bulk-actions-count {
+        font-weight: 600;
+        color: #0369a1;
+        font-size: 0.95rem;
+    }
+
+    .bulk-actions-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: auto;
+    }
+
+    .advanced-filters {
+        background: white;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+        border: 1px solid #e5e7eb;
+    }
+
+    .advanced-filters-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        color: #374151;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .advanced-filters-toggle:hover {
+        background: #f9fafb;
+        border-color: #087fc2;
+    }
+
+    .advanced-filters-content {
+        display: none;
+        margin-top: 1rem;
+    }
+
+    .advanced-filters-content.show {
+        display: block;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(to right, #087fc2, #06b6d4);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #087fc2;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .table th {
+        background: #f9fafb;
+        font-weight: 600;
+        color: #111827;
+        font-size: 0.875rem;
+        border-bottom: 2px solid #e5e7eb;
+        padding: 1rem;
+        white-space: nowrap;
+    }
+
+    .table td {
+        vertical-align: middle;
+        font-size: 0.875rem;
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #087fc2, #06b6d4);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.6rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .status-approved {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .status-blocked {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .filter-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .filter-input-group label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <div>
+        <h1 class="mb-0">Customer Management</h1>
+        <p class="text-muted mb-0">Manage your customers and their accounts</p>
+    </div>
+    
+    <div class="header-actions">
+        <!-- Column Visibility Dropdown -->
+        <div class="column-visibility-dropdown">
+            <button class="column-visibility-btn" 
+                    id="columnVisibilityBtn" 
+                    type="button"
+                    title="Show or hide table columns">
+                <i class="fas fa-columns"></i>
+                <span>Columns</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            
+            <div class="column-visibility-menu" id="columnVisibilityMenu">
+                <div class="column-visibility-header">
+                    <h6><i class="fas fa-eye me-2"></i>Show/Hide Columns</h6>
+                    <button class="btn btn-sm btn-link text-primary" 
+                            type="button"
+                            onclick="resetColumns()">
+                        <i class="fas fa-redo-alt"></i> Reset
+                    </button>
+                </div>
+                
+                <div class="column-visibility-body">
+                    {% for column in all_columns %}
+                        {% if column.always_visible %}
+                            <div class="column-item disabled">
+                                <input type="checkbox" 
+                                       id="col_{{ column.id }}" 
+                                       value="{{ column.id }}"
+                                       checked
+                                       disabled>
+                                <label for="col_{{ column.id }}">{{ column.label }}</label>
+                            </div>
+                        {% else %}
+                            <div class="column-item">
+                                <input type="checkbox" 
+                                       id="col_{{ column.id }}" 
+                                       value="{{ column.id }}"
+                                       {% if column.id in visible_columns %}checked{% endif %}
+                                       onchange="toggleColumn('{{ column.id }}')">
+                                <label for="col_{{ column.id }}">{{ column.label }}</label>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                
+                <div class="column-visibility-footer">
+                    <button class="btn btn-sm btn-primary w-100" 
+                            type="button"
+                            onclick="saveColumnPreferences()">
+                        <i class="fas fa-save me-1"></i>Save Preferences
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Import Button -->
+        {% if user|has_permission:'add_customer' %}
+        <a href="{% url 'core:admin_bulk_import_customers' %}" class="btn btn-info">
+            <i class="fas fa-file-import me-1"></i>Bulk Import
+        </a>
+        {% endif %}
+        
+        <!-- Export Excel Button -->
+        {% if user|has_permission:'view_customers' %}
+        <a href="{% url 'core:admin_customer_export' %}?{% if status_filter %}status={{ status_filter }}{% endif %}{% if search %}{% if status_filter %}&{% endif %}search={{ search }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" 
+           class="btn btn-outline-success">
+            <i class="fas fa-file-excel me-1"></i>Export Excel
+        </a>
+        {% endif %}
+        
+        <!-- Create Customer Button -->
+        {% if user|has_permission:'add_customer' %}
+        <a href="{% url 'core:admin_create_customer' %}" class="btn btn-primary">
+            <i class="fas fa-user-plus me-1"></i>Create Customer
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-cards">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_customers|default:0 }}</div>
+        <div class="stat-label">Total Customers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ active_customers|default:0 }}</div>
+        <div class="stat-label">Active Customers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ pending_approvals|default:0 }}</div>
+        <div class="stat-label">Pending Approval</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ blocked_customers|default:0 }}</div>
+        <div class="stat-label">Blocked Customers</div>
+    </div>
+</div>
+
+<!-- Bulk Actions Toolbar -->
+<div class="bulk-actions-toolbar" id="bulkActionsToolbar">
+    <div class="bulk-actions-count">
+        <i class="fas fa-check-square me-2"></i>
+        <span id="selectedCount">0</span> customer(s) selected
+    </div>
+    <div class="bulk-actions-buttons">
+        {% if user|has_permission:'approve_customer' %}
+        <button class="btn btn-sm btn-success" onclick="bulkAction('approve')" type="button">
+            <i class="fas fa-check me-1"></i>Approve
+        </button>
+        {% endif %}
+        
+        {% if user|has_permission:'block_customer' %}
+        <button class="btn btn-sm btn-dark" onclick="bulkAction('block')" type="button">
+            <i class="fas fa-ban me-1"></i>Block
+        </button>
+        <button class="btn btn-sm btn-info" onclick="bulkAction('unblock')" type="button">
+            <i class="fas fa-check-circle me-1"></i>Unblock
+        </button>
+        {% endif %}
+        
+        {% if user|has_permission:'delete_customer' %}
+        <button class="btn btn-sm btn-danger" onclick="bulkAction('delete')" type="button">
+            <i class="fas fa-trash me-1"></i>Delete
+        </button>
+        {% endif %}
+        
+        <button class="btn btn-sm btn-secondary" onclick="clearSelection()" type="button">
+            <i class="fas fa-times me-1"></i>Clear
+        </button>
+    </div>
+</div>
+
+<!-- Basic Filters -->
+<div class="filter-toolbar" style="background: white; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem; border: 1px solid #e5e7eb;">
+    <form method="get" id="basicFilterForm">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-2">
+                <div class="filter-input-group">
+                    <label for="date_from">From Date</label>
+                    <input type="date" id="date_from" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <div class="filter-input-group">
+                    <label for="date_to">To Date</label>
+                    <input type="date" id="date_to" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <div class="filter-input-group">
+                    <label for="status">Status</label>
+                    <select name="status" id="status" class="form-select form-select-sm">
+                        <option value="">All Status</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="blocked" {% if status_filter == 'blocked' %}selected{% endif %}>Blocked</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="filter-input-group">
+                    <label for="search">Search</label>
+                    <div class="position-relative">
+                        <i class="fas fa-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
+                        <input type="text" id="search" class="form-control form-control-sm" style="padding-left: 2.5rem;" name="search" value="{{ search }}" placeholder="Name, email, phone...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <div class="filter-input-group">
+                    <label style="visibility: hidden;">Action</label>
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="fas fa-search me-1"></i>Search
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-1">
+                <div class="filter-input-group">
+                    <label style="visibility: hidden;">Clear</label>
+                    <a href="{% url 'core:admin_users' %}" class="btn btn-outline-secondary btn-sm w-100" title="Clear filters">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Advanced Filters -->
+<div class="advanced-filters">
+    <button class="advanced-filters-toggle" 
+            type="button" 
+            onclick="toggleAdvancedFilters()">
+        <i class="fas fa-sliders-h"></i>
+        <span>More Filters</span>
+        <i class="fas fa-chevron-down" id="filterChevron"></i>
+    </button>
+    
+    <div class="advanced-filters-content" id="advancedFiltersContent">
+        <form method="get" id="advancedFilterForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="filter-input-group">
+                        <label for="business_category">Business Category</label>
+                        <select name="business_category" id="business_category" class="form-select form-select-sm">
+                            <option value="">All Categories</option>
+                            {% for category in business_categories %}
+                                <option value="{{ category.id }}" {% if business_category_filter == category.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="filter-input-group">
+                        <label for="referral_source">Referral Source</label>
+                        <select name="referral_source" id="referral_source" class="form-select form-select-sm">
+                            <option value="">All Sources</option>
+                            {% for value, label in referral_sources %}
+                                <option value="{{ value }}" {% if referral_source_filter == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="filter-input-group">
+                        <label for="email_verified">Email Verified</label>
+                        <select name="email_verified" id="email_verified" class="form-select form-select-sm">
+                            <option value="">All</option>
+                            <option value="yes" {% if email_verified_filter == 'yes' %}selected{% endif %}>Yes</option>
+                            <option value="no" {% if email_verified_filter == 'no' %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="filter-input-group">
+                        <label for="country">Country</label>
+                        <select name="country" id="country" class="form-select form-select-sm">
+                            <option value="">All Countries</option>
+                            <option value="+91" {% if country_filter == '+91' %}selected{% endif %}>🇮🇳 India</option>
+                            <option value="+1" {% if country_filter == '+1' %}selected{% endif %}>🇺🇸 USA</option>
+                            <option value="+44" {% if country_filter == '+44' %}selected{% endif %}>🇬🇧 UK</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="filter-input-group">
+                        <label style="visibility: hidden;">Actions</label>
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="fas fa-filter me-1"></i>Apply
+                        </button>
+                    </div>
+                </div>
+
+                <input type="hidden" name="date_from" value="{{ date_from }}">
+                <input type="hidden" name="date_to" value="{{ date_to }}">
+                <input type="hidden" name="status" value="{{ status_filter }}">
+                <input type="hidden" name="search" value="{{ search }}">
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="table-container">
+    {% if users %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="customersTable">
+                <thead>
+                    <tr>
+                        <th data-column="checkbox" width="50">
+                            <input type="checkbox" id="selectAll" class="form-check-input">
+                        </th>
+                        <th data-column="customer_id" {% if 'customer_id' not in visible_columns %}class="column-hidden"{% endif %}>ID</th>
+                        <th data-column="customer" {% if 'customer' not in visible_columns %}class="column-hidden"{% endif %}>Customer Name</th>
+                        <th data-column="email" {% if 'email' not in visible_columns %}class="column-hidden"{% endif %}>Email</th>
+                        <th data-column="mobile" {% if 'mobile' not in visible_columns %}class="column-hidden"{% endif %}>Mobile</th>
+                        <th data-column="country_code" {% if 'country_code' not in visible_columns %}class="column-hidden"{% endif %}>Country Code</th>
+                        <th data-column="organization" {% if 'organization' not in visible_columns %}class="column-hidden"{% endif %}>Organization</th>
+                        <th data-column="job_title" {% if 'job_title' not in visible_columns %}class="column-hidden"{% endif %}>Job Title</th>
+                        <th data-column="business_category" {% if 'business_category' not in visible_columns %}class="column-hidden"{% endif %}>Business Category</th>
+                        <th data-column="business_subcategory" {% if 'business_subcategory' not in visible_columns %}class="column-hidden"{% endif %}>Business Subcategory</th>
+                        <th data-column="status" {% if 'status' not in visible_columns %}class="column-hidden"{% endif %}>Status</th>
+                        <th data-column="is_email_verified" {% if 'is_email_verified' not in visible_columns %}class="column-hidden"{% endif %}>Email Verified</th>
+                        <th data-column="is_approved" {% if 'is_approved' not in visible_columns %}class="column-hidden"{% endif %}>Approved</th>
+                        <th data-column="is_active" {% if 'is_active' not in visible_columns %}class="column-hidden"{% endif %}>Active</th>
+                        <th data-column="registration" {% if 'registration' not in visible_columns %}class="column-hidden"{% endif %}>Registration</th>
+                        <th data-column="last_login" {% if 'last_login' not in visible_columns %}class="column-hidden"{% endif %}>Last Login</th>
+                        <th data-column="last_login_ip" {% if 'last_login_ip' not in visible_columns %}class="column-hidden"{% endif %}>Last Login IP</th>
+                        <th data-column="referral_source" {% if 'referral_source' not in visible_columns %}class="column-hidden"{% endif %}>Referral Source</th>
+                        <th data-column="referral_message" {% if 'referral_message' not in visible_columns %}class="column-hidden"{% endif %}>Referral Message</th>
+                        <th data-column="country" {% if 'country' not in visible_columns %}class="column-hidden"{% endif %}>Country</th>
+                        <th data-column="actions" width="180">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in users %}
+                        <tr>
+                            <td data-column="checkbox">
+                                <input type="checkbox" class="form-check-input customer-checkbox" value="{{ customer.id }}">
+                            </td>
+                            <td data-column="customer_id" {% if 'customer_id' not in visible_columns %}class="column-hidden"{% endif %}>{{ customer.id }}</td>
+                            <td data-column="customer" {% if 'customer' not in visible_columns %}class="column-hidden"{% endif %}>
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar me-2">{{ customer.first_name|first }}{{ customer.last_name|first }}</div>
+                                    <div><div class="fw-semibold">{{ customer.full_name }}</div></div>
+                                </div>
+                            </td>
+                            <td data-column="email" {% if 'email' not in visible_columns %}class="column-hidden"{% endif %}>{{ customer.email }}</td>
+                            <td data-column="mobile" {% if 'mobile' not in visible_columns %}class="column-hidden"{% endif %}>{{ customer.mobile }}</td>
+                            <td data-column="country_code" {% if 'country_code' not in visible_columns %}class="column-hidden"{% endif %}>{{ customer.country_code }}</td>
+                            <td data-column="organization" {% if 'organization' not in visible_columns %}class="column-hidden"{% endif %}>{{ customer.organization|default:"Not specified" }}</td>
+                            <td data-column="job_title" {% if 'job_title' not in visible_columns %}class="column-hidden"{% endif %}>{{ customer.job_title|default:"Not specified" }}</td>
+                            <td data-column="business_category" {% if 'business_category' not in visible_columns %}class="column-hidden"{% endif %}>
+                                {% if customer.business_category %}{{ customer.business_category.name }}{% else %}Not specified{% endif %}
+                            </td>
+                            <td data-column="business_subcategory" {% if 'business_subcategory' not in visible_columns %}class="column-hidden"{% endif %}>
+                                {% if customer.business_subcategory %}{{ customer.business_subcategory.name }}{% else %}Not specified{% endif %}
+                            </td>
+                            <td data-column="status" {% if 'status' not in visible_columns %}class="column-hidden"{% endif %}>
+                                {% if customer.is_approved %}
+                                    {% if customer.is_active %}
+                                        <span class="status-badge status-approved"><i class="fas fa-check-circle me-1"></i>Active</span>
+                                    {% else %}
+                                        <span class="status-badge status-blocked"><i class="fas fa-ban me-1"></i>Blocked</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="status-badge status-pending"><i class="fas fa-clock me-1"></i>Pending</span>
+                                {% endif %}
+                            </td>
+                            <td data-column="is_email_verified" {% if 'is_email_verified' not in visible_columns %}class="column-hidden"{% endif %}>
+                                {% if customer.is_email_verified %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-warning">No</span>{% endif %}
+                            </td>
+                            <td data-column="is_approved" {% if 'is_approved' not in visible_columns %}class="column-hidden"{% endif %}>
+                                {% if customer.is_approved %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-warning">No</span>{% endif %}
+                            </td>
+                            <td data-column="is_active" {% if 'is_active' not in visible_columns %}class="column-hidden"{% endif %}>
+                                {% if customer.is_active %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-danger">No</span>{% endif %}
+                            </td>
+                            <td data-column="registration" {% if 'registration' not in visible_columns %}class="column-hidden"{% endif %}>
+                                {{ customer.created_at|date:"M d, Y" }}<br><small class="text-muted">{{ customer.created_at|timesince }} ago</small>
+                            </td>
+                            <td data-column="last_login" {% if 'last_login' not in visible_columns %}class="column-hidden"{% endif %}>
+                                {% if customer.last_login %}{{ customer.last_login|date:"M d, Y" }}<br><small class="text-muted">{{ customer.last_login|timesince }} ago</small>{% else %}<span class="text-muted">Never</span>{% endif %}
+                            </td>
+                            <td data-column="last_login_ip" {% if 'last_login_ip' not in visible_columns %}class="column-hidden"{% endif %}>{{ customer.last_login_ip|default:"N/A" }}</td>
+                            <td data-column="referral_source" {% if 'referral_source' not in visible_columns %}class="column-hidden"{% endif %}>{{ customer.get_referral_source_display|default:"Not specified" }}</td>
+                            <td data-column="referral_message" {% if 'referral_message' not in visible_columns %}class="column-hidden"{% endif %}>{{ customer.referral_message|default:"N/A"|truncatewords:10 }}</td>
+                            <td data-column="country" {% if 'country' not in visible_columns %}class="column-hidden"{% endif %}>{{ customer.get_country_code_display }}</td>
+                            <td data-column="actions">
+                                <div class="action-buttons">
+                                    {% if user|has_permission:'view_customers' %}
+                                    <a href="{% url 'core:admin_customer_detail' customer.id %}" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="View details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if user|has_permission:'edit_customer' %}
+                                    <a href="{% url 'core:admin_edit_customer' customer.id %}" 
+                                       class="btn btn-sm btn-outline-info" 
+                                       title="Edit customer">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if user|has_permission:'delete_customer' %}
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger" 
+                                            onclick="deleteCustomer({{ customer.id }}, '{{ customer.full_name|escapejs }}')"
+                                            title="Delete customer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if users.has_other_pages %}
+        <div class="d-flex justify-content-between align-items-center p-3 border-top">
+            <div class="text-muted">
+                Showing {{ users.start_index }} to {{ users.end_index }} of {{ users.paginator.count }} customers
+            </div>
+            <nav>
+                <ul class="pagination mb-0">
+                    {% if users.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">First</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ users.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a></li>
+                    {% endif %}
+                    {% for num in users.paginator.page_range %}
+                        {% if users.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > users.number|add:'-3' and num < users.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if users.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ users.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ users.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Last</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-users fa-4x text-muted mb-3"></i>
+            <h5 class="text-muted">No customers found</h5>
+            <p class="text-muted">Try adjusting your search or filter criteria</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+(function() {
+    'use strict';
+    
+    var csrfToken = '{{ csrf_token }}';
+    var visibleColumns = {{ visible_columns|safe }};
+
+    function toggleAdvancedFilters() {
+        var content = document.getElementById('advancedFiltersContent');
+        var chevron = document.getElementById('filterChevron');
+        
+        if (content && chevron) {
+            content.classList.toggle('show');
+            chevron.classList.toggle('fa-chevron-down');
+            chevron.classList.toggle('fa-chevron-up');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var columnVisibilityBtn = document.getElementById('columnVisibilityBtn');
+        var columnVisibilityMenu = document.getElementById('columnVisibilityMenu');
+        
+        if (columnVisibilityBtn && columnVisibilityMenu) {
+            columnVisibilityBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                columnVisibilityMenu.classList.toggle('show');
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            var menu = document.getElementById('columnVisibilityMenu');
+            var btn = document.getElementById('columnVisibilityBtn');
+            if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+                menu.classList.remove('show');
+            }
+        });
+
+        var selectAllCheckbox = document.getElementById('selectAll');
+        var customerCheckboxes = document.querySelectorAll('.customer-checkbox');
+        var bulkActionsToolbar = document.getElementById('bulkActionsToolbar');
+        var selectedCountSpan = document.getElementById('selectedCount');
+
+        if (selectAllCheckbox && customerCheckboxes.length > 0) {
+            selectAllCheckbox.addEventListener('change', function() {
+                var isChecked = this.checked;
+                customerCheckboxes.forEach(function(checkbox) {
+                    checkbox.checked = isChecked;
+                });
+                updateBulkActionsToolbar();
+            });
+
+            customerCheckboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                    updateSelectAllState();
+                    updateBulkActionsToolbar();
+                });
+            });
+        }
+
+        function updateSelectAllState() {
+            if (!selectAllCheckbox || customerCheckboxes.length === 0) return;
+            
+            var checkedCount = document.querySelectorAll('.customer-checkbox:checked').length;
+            var totalCount = customerCheckboxes.length;
+            
+            selectAllCheckbox.checked = checkedCount === totalCount && totalCount > 0;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+        }
+
+        function updateBulkActionsToolbar() {
+            if (!bulkActionsToolbar || !selectedCountSpan) return;
+            
+            var checkedCheckboxes = document.querySelectorAll('.customer-checkbox:checked');
+            var count = checkedCheckboxes.length;
+            
+            if (count > 0) {
+                bulkActionsToolbar.classList.add('show');
+                selectedCountSpan.textContent = count;
+            } else {
+                bulkActionsToolbar.classList.remove('show');
+            }
+        }
+    });
+
+    window.toggleAdvancedFilters = toggleAdvancedFilters;
+
+    window.clearSelection = function() {
+        var customerCheckboxes = document.querySelectorAll('.customer-checkbox');
+        var selectAllCheckbox = document.getElementById('selectAll');
+        
+        customerCheckboxes.forEach(function(checkbox) {
+            checkbox.checked = false;
+        });
+        
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+        
+        var bulkActionsToolbar = document.getElementById('bulkActionsToolbar');
+        if (bulkActionsToolbar) {
+            bulkActionsToolbar.classList.remove('show');
+        }
+    };
+
+    window.bulkAction = function(action) {
+        var checkedCheckboxes = document.querySelectorAll('.customer-checkbox:checked');
+        var customerIds = Array.from(checkedCheckboxes).map(function(cb) { return cb.value; });
+        
+        if (customerIds.length === 0) {
+            showNotification('Please select at least one customer', 'warning');
+            return;
+        }
+
+        var actionMessages = {
+            'approve': 'approve',
+            'block': 'block',
+            'unblock': 'unblock',
+            'delete': 'permanently delete'
+        };
+
+        var confirmMessage = 'Are you sure you want to ' + actionMessages[action] + ' ' + customerIds.length + ' customer(s)?';
+        
+        if (!confirm(confirmMessage)) return;
+
+        fetch('{% url "core:admin_bulk_customer_actions" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: action,
+                customer_ids: customerIds
+            })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                setTimeout(function() { window.location.reload(); }, 1500);
+            } else {
+                showNotification(data.message || 'Action failed', 'error');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            showNotification('An error occurred', 'error');
+        });
+    };
+
+    window.deleteCustomer = function(customerId, customerName) {
+        var confirmMessage = 'Are you sure you want to permanently delete "' + customerName + '"?\n\nThis action CANNOT be undone!';
+        
+        if (!confirm(confirmMessage)) return;
+
+        fetch('{% url "core:admin_delete_customer" 0 %}'.replace('0', customerId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                setTimeout(function() { window.location.reload(); }, 1500);
+            } else {
+                showNotification(data.message || 'Delete failed', 'error');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            showNotification('An error occurred while deleting', 'error');
+        });
+    };
+
+    window.toggleColumn = function(columnId) {
+        var checkbox = document.getElementById('col_' + columnId);
+        if (!checkbox) return;
+        
+        var isVisible = checkbox.checked;
+        
+        if (isVisible && visibleColumns.indexOf(columnId) === -1) {
+            visibleColumns.push(columnId);
+        } else if (!isVisible && visibleColumns.indexOf(columnId) !== -1) {
+            visibleColumns = visibleColumns.filter(function(col) { return col !== columnId; });
+        }
+        
+        var headers = document.querySelectorAll('th[data-column="' + columnId + '"]');
+        var cells = document.querySelectorAll('td[data-column="' + columnId + '"]');
+        
+        headers.forEach(function(header) {
+            if (isVisible) {
+                header.classList.remove('column-hidden');
+            } else {
+                header.classList.add('column-hidden');
+            }
+        });
+        
+        cells.forEach(function(cell) {
+            if (isVisible) {
+                cell.classList.remove('column-hidden');
+            } else {
+                cell.classList.add('column-hidden');
+            }
+        });
+    };
+
+    window.saveColumnPreferences = function() {
+        fetch('{% url "core:save_column_preferences" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                table_name: 'customers',
+                visible_columns: visibleColumns
+            })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                showNotification('Column preferences saved!', 'success');
+                var menu = document.getElementById('columnVisibilityMenu');
+                if (menu) menu.classList.remove('show');
+            } else {
+                showNotification(data.message || 'Error saving preferences', 'error');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            showNotification('Error saving preferences', 'error');
+        });
+    };
+
+    window.resetColumns = function() {
+        var defaultColumns = ['checkbox', 'customer', 'email', 'mobile', 'organization', 'job_title', 'business_category', 'status', 'registration', 'last_login', 'actions'];
+        
+        document.querySelectorAll('.column-item input[type="checkbox"]:not([disabled])').forEach(function(cb) {
+            cb.checked = false;
+        });
+        
+        defaultColumns.forEach(function(columnId) {
+            var checkbox = document.getElementById('col_' + columnId);
+            if (checkbox && !checkbox.disabled) {
+                checkbox.checked = true;
+                if (visibleColumns.indexOf(columnId) === -1) {
+                    window.toggleColumn(columnId);
+                }
+            }
+        });
+        
+        visibleColumns = defaultColumns;
+        window.saveColumnPreferences();
+    };
+
+    function showNotification(message, type) {
+        type = type || 'info';
+        var notification = document.createElement('div');
+        var alertClass = type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'danger';
+        notification.className = 'alert alert-' + alertClass + ' alert-dismissible fade show';
+        notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 350px; box-shadow: 0 8px 24px rgba(0,0,0,0.1);';
+        
+        var iconClass = type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'exclamation-circle';
+        
+        notification.innerHTML = '<div class="d-flex align-items-center">' +
+            '<i class="fas fa-' + iconClass + ' me-2"></i>' +
+            '<span>' + message + '</span>' +
+            '<button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>' +
+            '</div>';
+        
+        document.body.appendChild(notification);
+        setTimeout(function() { notification.remove(); }, 5000);
+    }
+})();
+</script>
+{% endblock %}

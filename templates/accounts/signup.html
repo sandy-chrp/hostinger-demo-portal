@@ -1,0 +1,924 @@
+<!-- templates/accounts/signup.html - COLOR MATCHED WITH BASE -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign Up - Demo Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .signup-container {
+        min-height: calc(100vh - 160px);
+        padding: 2rem 0;
+        background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+    }
+    
+    .signup-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        background: white;
+    }
+    
+    /* Sales Contact Banner - UPDATED COLORS */
+    .sales-banner {
+        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(8, 127, 194, 0.3);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    
+    .sales-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+    }
+    
+    .sales-banner.hiding {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    
+    .sales-banner.dismissed {
+        display: none;
+    }
+    
+    .sales-banner-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .sales-banner h5 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .sales-banner p {
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        opacity: 0.95;
+    }
+    
+    .sales-contact-info {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.75rem;
+    }
+    
+    .sales-contact-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .sales-contact-item i {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+    
+    .btn-contact-sales {
+        background: white;
+        color: #087fc2;
+        border: none;
+        padding: 0.5rem 1.25rem;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-contact-sales:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    /* Close button for sales banner */
+    .btn-close-banner {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+        z-index: 10;
+    }
+    
+    .btn-close-banner:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+    
+    .btn-close-banner i {
+        font-size: 0.9rem;
+    }
+    
+    /* Form Styles */
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 0.75rem;
+        transition: all 0.3s;
+        font-size: 0.95rem;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #087fc2;
+        box-shadow: 0 0 0 0.2rem rgba(8, 127, 194, 0.15);
+        outline: none;
+    }
+    
+    /* Validation Styles */
+    .invalid-feedback, .valid-feedback {
+        display: none;
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+    }
+    
+    .form-control.is-invalid ~ .invalid-feedback,
+    .form-select.is-invalid ~ .invalid-feedback,
+    .form-check-input.is-invalid ~ .invalid-feedback {
+        display: block;
+        color: #dc3545;
+    }
+    
+    .form-control.is-valid ~ .valid-feedback,
+    .form-select.is-valid ~ .valid-feedback {
+        display: block;
+        color: #28a745;
+    }
+    
+    .form-control.is-invalid, .form-select.is-invalid {
+        border-color: #dc3545;
+        padding-right: calc(1.5em + 0.75rem);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    
+    .form-control.is-valid, .form-select.is-valid {
+        border-color: #28a745;
+        padding-right: calc(1.5em + 0.75rem);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    
+    /* Password Strength Meter */
+    .password-strength {
+        height: 4px;
+        border-radius: 2px;
+        background: #e0e0e0;
+        margin-top: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .password-strength-bar {
+        height: 100%;
+        width: 0%;
+        transition: all 0.3s;
+    }
+    
+    .strength-weak { width: 33%; background: #dc3545; }
+    .strength-medium { width: 66%; background: #ffc107; }
+    .strength-strong { width: 100%; background: #28a745; }
+    
+    #strengthText {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Buttons - UPDATED COLORS */
+    .btn-primary {
+        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
+        border: none;
+        padding: 0.75rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(8, 127, 194, 0.3);
+    }
+    
+    .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .loading-spinner {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Modal Styles - UPDATED COLORS */
+    .modal-header {
+        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
+        color: white;
+        border-bottom: none;
+    }
+    
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    
+    .contact-method {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        border-left: 4px solid #087fc2;
+    }
+    
+    .contact-method h6 {
+        color: #087fc2;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .contact-method a {
+        color: #0669a0;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .contact-method a:hover {
+        text-decoration: underline;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .sales-contact-info {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .sales-banner {
+            padding: 1rem;
+        }
+        
+        .sales-banner h5 {
+            font-size: 1rem;
+        }
+        
+        .btn-close-banner {
+            width: 28px;
+            height: 28px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container signup-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <!-- Sales Contact Banner with Close Button -->
+            <div class="sales-banner" id="salesBanner">
+                <button type="button" class="btn-close-banner" id="closeSalesBanner" aria-label="Close banner">
+                    <i class="fas fa-times"></i>
+                </button>
+                
+                <div class="sales-banner-content">
+                    <h5>
+                        <i class="fas fa-bolt me-2"></i>
+                        Need Quick Access? Contact Our Sales Team
+                    </h5>
+                    <p class="mb-2">
+                        For enterprise solutions, bulk licenses, or immediate account activation, 
+                        our sales team is here to help you get started faster.
+                    </p>
+                    
+                    <div class="sales-contact-info">
+                        <div class="sales-contact-item">
+                            <i class="fas fa-phone-alt"></i>
+                            <span>+91 8008987948</span>
+                        </div>
+                        <div class="sales-contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>reach@chrp-india.com</span>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn btn-contact-sales mt-2" data-bs-toggle="modal" data-bs-target="#salesModal">
+                        <i class="fas fa-comments"></i>
+                        Contact Sales Team
+                    </button>
+                </div>
+            </div>
+
+            <!-- Signup Card -->
+            <div class="card signup-card">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-primary">Create Account</h2>
+                        <p class="text-muted">Join Demo Portal for exclusive business solutions</p>
+                    </div>
+
+                    <form method="post" id="signupForm" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                            <div class="alert alert-danger alert-dismissible fade show">
+                                <strong>Please correct the following errors:</strong>
+                                <ul class="mb-0 mt-2">
+                                    {% for field, errors in form.errors.items %}
+                                        {% for error in errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endif %}
+
+                        <!-- Name Fields -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="first_name" id="firstName" 
+                                       required value="{{ form.first_name.value|default:'' }}">
+                                <div class="invalid-feedback">Please enter your first name</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="last_name" id="lastName" 
+                                       required value="{{ form.last_name.value|default:'' }}">
+                                <div class="invalid-feedback">Please enter your last name</div>
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label class="form-label">Business Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" name="email" id="emailField" 
+                                   required value="{{ form.email.value|default:'' }}">
+                            <div class="invalid-feedback" id="emailError">Please enter a valid business email</div>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Use your business email address (personal emails not allowed)
+                            </small>
+                        </div>
+
+                        <!-- Mobile -->
+                        <div class="mb-3">
+                            <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <select class="form-select" name="country_code" id="countryCode" style="max-width: 150px;">
+                                    {% for code, label in form.fields.country_code.choices %}
+                                        <option value="{{ code }}" {% if code == '+91' %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <input type="tel" class="form-control" name="mobile" id="mobileField" 
+                                       required pattern="[0-9]{10}" maxlength="10" 
+                                       value="{{ form.mobile.value|default:'' }}">
+                            </div>
+                            <div class="invalid-feedback">Please enter a valid 10-digit mobile number</div>
+                        </div>
+
+                        <!-- Job & Organization -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Job Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="job_title" id="jobTitle" 
+                                       required value="{{ form.job_title.value|default:'' }}">
+                                <div class="invalid-feedback">Please enter your job title</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Organization <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="organization" id="organization" 
+                                       required value="{{ form.organization.value|default:'' }}">
+                                <div class="invalid-feedback">Please enter your organization name</div>
+                            </div>
+                        </div>
+
+                        <!-- Business Category -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Business Category <span class="text-danger">*</span></label>
+                                <select class="form-select" name="business_category" id="categorySelect" required>
+                                    <option value="">Select category...</option>
+                                    {% for category in form.fields.business_category.queryset %}
+                                        <option value="{{ category.id }}"
+                                                {% if form.business_category.value|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>
+                                            {% if category.icon %}{{ category.icon }} {% endif %}{{ category.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select a business category</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Subcategory <small class="text-muted">(Optional)</small></label>
+                                <select class="form-select" name="business_subcategory" id="subcategorySelect" disabled>
+                                    <option value="">Select category first...</option>
+                                </select>
+                                <div id="subcategoryLoader" class="text-muted small mt-1" style="display:none;">
+                                    <span class="loading-spinner"></span> Loading...
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" name="password1" id="password1" 
+                                       required minlength="8">
+                                <div class="password-strength">
+                                    <div class="password-strength-bar" id="strengthBar"></div>
+                                </div>
+                                <small class="text-muted" id="strengthText">Min 8 characters</small>
+                                <div class="invalid-feedback">Password must be at least 8 characters</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" name="password2" id="password2" 
+                                       required>
+                                <div class="invalid-feedback" id="password2Error">Passwords must match</div>
+                                <div class="valid-feedback">
+                                    <i class="fas fa-check-circle me-1"></i>Passwords match
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Referral -->
+                        <div class="mb-3">
+                            <label class="form-label">How did you find us? <small class="text-muted">(Optional)</small></label>
+                            <select class="form-select" name="referral_source" id="referralSource">
+                                <option value="">Select source...</option>
+                                {% for value, label in form.fields.referral_source.choices %}
+                                    {% if value %}
+                                        <option value="{{ value }}"
+                                                {% if form.referral_source.value == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Terms -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" required id="terms">
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="#" target="_blank">Terms of Service</a> and 
+                                    <a href="#" target="_blank">Privacy Policy</a> <span class="text-danger">*</span>
+                                </label>
+                                <div class="invalid-feedback">You must agree to the terms and conditions</div>
+                            </div>
+                        </div>
+
+                        <!-- Submit -->
+                        <button type="submit" class="btn btn-primary w-100 py-2 mb-3" id="submitBtn">
+                            <i class="fas fa-user-plus me-2"></i>Create Account
+                        </button>
+                    </form>
+
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <p class="text-muted mb-0">
+                            Already have an account? 
+                            <a href="{% url 'accounts:signin' %}" class="text-decoration-none fw-bold">Sign In</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales Contact Modal -->
+<div class="modal fade" id="salesModal" tabindex="-1" aria-labelledby="salesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="salesModalLabel">
+                    <i class="fas fa-headset me-2"></i>Contact Sales Team
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Our sales team is available to assist you with:</p>
+                <ul class="mb-4">
+                    <li>Enterprise account setup and onboarding</li>
+                    <li>Bulk user licenses and team management</li>
+                    <li>Custom demo requests and presentations</li>
+                    <li>Priority account activation (within 24 hours)</li>
+                    <li>Pricing packages and volume discounts</li>
+                    <li>Integration and technical support</li>
+                </ul>
+                
+                <div class="contact-method">
+                    <h6><i class="fas fa-phone-alt me-2"></i>Phone Support</h6>
+                    <p class="mb-1">
+                        Call us: <a href="tel:+918008987948">+91-8008987948</a>
+                    </p>
+                    <small class="text-muted">Monday - Saturday: 9:00 AM - 7:00 PM IST</small>
+                </div>
+                
+                <div class="contact-method">
+                    <h6><i class="fas fa-envelope me-2"></i>Email Support</h6>
+                    <p class="mb-1">
+                        Email us: <a href="mailto:reach@chrp-india.com">reach@chrp-india.com</a>
+                    </p>
+                    <small class="text-muted">Response within 24 hours</small>
+                </div>
+                
+                <div class="contact-method">
+                    <h6><i class="fas fa-whatsapp me-2"></i>WhatsApp Business</h6>
+                    <p class="mb-1">
+                        Message us: <a href="https://wa.me/918008987948?text=Hi%2C%20I%20need%20help%20with%20account%20registration" target="_blank">+91-8008987948</a>
+                    </p>
+                    <small class="text-muted">Quick responses during business hours</small>
+                </div>
+                
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Priority Support:</strong> Mention "Quick Registration" for expedited account activation.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="mailto:reach@chrp-india.com?subject=Enterprise Account Registration" class="btn btn-primary">
+                    <i class="fas fa-envelope me-2"></i>Send Email
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('signupForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const categorySelect = document.getElementById('categorySelect');
+    const subcategorySelect = document.getElementById('subcategorySelect');
+    const password1 = document.getElementById('password1');
+    const password2 = document.getElementById('password2');
+    const strengthBar = document.getElementById('strengthBar');
+    const strengthText = document.getElementById('strengthText');
+    const emailField = document.getElementById('emailField');
+    const mobileField = document.getElementById('mobileField');
+    const termsCheckbox = document.getElementById('terms');
+    
+    const blockedDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'ymail.com', 'aol.com', 'icloud.com', 'live.com', 'rediffmail.com', 'protonmail.com'];
+    
+    // Close sales banner functionality
+    const closeSalesBannerBtn = document.getElementById('closeSalesBanner');
+    const salesBanner = document.getElementById('salesBanner');
+    
+    if (closeSalesBannerBtn && salesBanner) {
+        closeSalesBannerBtn.addEventListener('click', function() {
+            salesBanner.classList.add('hiding');
+            setTimeout(() => {
+                salesBanner.classList.add('dismissed');
+                localStorage.setItem('salesBannerDismissed', 'true');
+            }, 300);
+        });
+        
+        if (localStorage.getItem('salesBannerDismissed') === 'true') {
+            salesBanner.classList.add('dismissed');
+        }
+    }
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleFormSubmit();
+        return false;
+    });
+    
+    const textInputs = form.querySelectorAll('input[type="text"]');
+    textInputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.hasAttribute('required')) {
+                if (!this.value.trim()) {
+                    this.classList.add('is-invalid');
+                    this.classList.remove('is-valid');
+                } else {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                }
+            }
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid') && this.value.trim()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    });
+    
+    function validateEmail() {
+        const email = emailField.value.trim();
+        const emailError = document.getElementById('emailError');
+        
+        if (!email) {
+            emailField.classList.add('is-invalid');
+            emailField.classList.remove('is-valid');
+            emailError.textContent = 'Email is required';
+            return false;
+        }
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            emailField.classList.add('is-invalid');
+            emailField.classList.remove('is-valid');
+            emailError.textContent = 'Please enter a valid email address';
+            return false;
+        }
+        
+        const domain = email.split('@')[1]?.toLowerCase();
+        if (blockedDomains.includes(domain)) {
+            emailField.classList.add('is-invalid');
+            emailField.classList.remove('is-valid');
+            emailError.textContent = `Business email required. Personal domains (${domain}) not allowed`;
+            return false;
+        }
+        
+        emailField.classList.remove('is-invalid');
+        emailField.classList.add('is-valid');
+        return true;
+    }
+    
+    emailField.addEventListener('blur', validateEmail);
+    emailField.addEventListener('input', function() {
+        if (this.classList.contains('is-invalid')) {
+            validateEmail();
+        }
+    });
+    
+    mobileField.addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '').slice(0, 10);
+    });
+    
+    mobileField.addEventListener('blur', function() {
+        if (this.value.length === 10) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else if (this.value.length > 0) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+        }
+    });
+    
+    password1.addEventListener('input', function() {
+        const password = this.value;
+        let strength = 0;
+        
+        strengthBar.className = 'password-strength-bar';
+        
+        if (password.length >= 8) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+        
+        if (password.length === 0) {
+            strengthText.textContent = 'Min 8 characters';
+            strengthText.className = 'text-muted';
+        } else if (strength <= 1) {
+            strengthBar.classList.add('strength-weak');
+            strengthText.textContent = 'Weak password';
+            strengthText.className = 'text-danger';
+        } else if (strength === 2) {
+            strengthBar.classList.add('strength-medium');
+            strengthText.textContent = 'Medium password';
+            strengthText.className = 'text-warning';
+        } else {
+            strengthBar.classList.add('strength-strong');
+            strengthText.textContent = 'Strong password';
+            strengthText.className = 'text-success';
+        }
+        
+        if (password2.value) {
+            validatePasswordMatch();
+        }
+    });
+    
+    password1.addEventListener('blur', function() {
+        if (this.value.length > 0 && this.value.length < 8) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+        } else if (this.value.length >= 8) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        }
+    });
+    
+    function validatePasswordMatch() {
+        const pass1 = password1.value;
+        const pass2 = password2.value;
+        const errorDiv = document.getElementById('password2Error');
+        
+        if (!pass2) {
+            password2.classList.remove('is-invalid', 'is-valid');
+            return false;
+        }
+        
+        if (pass1.length < 8) {
+            password2.classList.add('is-invalid');
+            password2.classList.remove('is-valid');
+            errorDiv.textContent = 'Password must be at least 8 characters';
+            return false;
+        }
+        
+        if (pass2 !== pass1) {
+            password2.classList.add('is-invalid');
+            password2.classList.remove('is-valid');
+            errorDiv.textContent = 'Passwords do not match';
+            return false;
+        }
+        
+        password2.classList.remove('is-invalid');
+        password2.classList.add('is-valid');
+        return true;
+    }
+    
+    password2.addEventListener('input', validatePasswordMatch);
+    password2.addEventListener('blur', validatePasswordMatch);
+    
+    categorySelect.addEventListener('change', function() {
+        const categoryId = this.value;
+        
+        if (!categoryId) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            subcategorySelect.innerHTML = '<option value="">Select category first...</option>';
+            subcategorySelect.disabled = true;
+            return;
+        }
+        
+        this.classList.remove('is-invalid');
+        this.classList.add('is-valid');
+        
+        subcategorySelect.disabled = true;
+        const loader = document.getElementById('subcategoryLoader');
+        if (loader) loader.style.display = 'block';
+        
+        fetch(`/auth/ajax/get-subcategories/?category_id=${categoryId}`)
+            .then(res => res.json())
+            .then(data => {
+                subcategorySelect.innerHTML = '<option value="">Select subcategory (optional)...</option>';
+                
+                if (data.success && data.subcategories && data.subcategories.length > 0) {
+                    data.subcategories.forEach(sub => {
+                        subcategorySelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+                    });
+                }
+                
+                subcategorySelect.disabled = false;
+                if (loader) loader.style.display = 'none';
+            })
+            .catch(() => {
+                subcategorySelect.innerHTML = '<option value="">Error loading subcategories</option>';
+                if (loader) loader.style.display = 'none';
+            });
+    });
+    
+    termsCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            this.classList.remove('is-invalid');
+            const errorMsg = this.closest('.form-check').querySelector('.invalid-feedback');
+            if (errorMsg) errorMsg.style.display = 'none';
+        }
+    });
+    
+    function handleFormSubmit() {
+        let isValid = true;
+        let errors = [];
+        
+        const firstName = form.querySelector('[name="first_name"]');
+        if (!firstName.value.trim()) {
+            firstName.classList.add('is-invalid');
+            errors.push('First name is required');
+            isValid = false;
+        }
+        
+        const lastName = form.querySelector('[name="last_name"]');
+        if (!lastName.value.trim()) {
+            lastName.classList.add('is-invalid');
+            errors.push('Last name is required');
+            isValid = false;
+        }
+        
+        if (!validateEmail()) {
+            errors.push('Valid business email is required');
+            isValid = false;
+        }
+        
+        if (mobileField.value.length !== 10) {
+            mobileField.classList.add('is-invalid');
+            errors.push('Valid 10-digit mobile number is required');
+            isValid = false;
+        }
+        
+        const jobTitle = form.querySelector('[name="job_title"]');
+        if (!jobTitle.value.trim()) {
+            jobTitle.classList.add('is-invalid');
+            errors.push('Job title is required');
+            isValid = false;
+        }
+        
+        const organization = form.querySelector('[name="organization"]');
+        if (!organization.value.trim()) {
+            organization.classList.add('is-invalid');
+            errors.push('Organization is required');
+            isValid = false;
+        }
+        
+        if (!categorySelect.value) {
+            categorySelect.classList.add('is-invalid');
+            errors.push('Business category is required');
+            isValid = false;
+        }
+        
+        if (password1.value.length < 8) {
+            password1.classList.add('is-invalid');
+            errors.push('Password must be at least 8 characters');
+            isValid = false;
+        }
+        
+        if (!validatePasswordMatch()) {
+            errors.push('Passwords must match');
+            isValid = false;
+        }
+        
+        if (!termsCheckbox.checked) {
+            termsCheckbox.classList.add('is-invalid');
+            const errorMsg = termsCheckbox.closest('.form-check').querySelector('.invalid-feedback');
+            if (errorMsg) errorMsg.style.display = 'block';
+            errors.push('You must agree to terms and conditions');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            alert('Please fix the following errors:\n\n• ' + errors.join('\n• '));
+            
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+            
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Create Account';
+            return;
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading-spinner me-2"></span>Sending verification code...';
+        form.submit();
+    }
+});
+</script>
+{% endblock %}

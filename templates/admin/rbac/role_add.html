@@ -1,0 +1,228 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block admin_title %}Add Role{% endblock %}
+{% block page_title %}Add New Role{% endblock %}
+
+{% block admin_extra_css %}
+<style>
+    .permission-section {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        margin-bottom: 1rem;
+    }
+    .permission-header {
+        background: #f8f9fa;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #dee2e6;
+        cursor: pointer;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .permission-header:hover {
+        background: #e9ecef;
+    }
+    .permission-body {
+        padding: 1rem;
+    }
+    .permission-item {
+        padding: 0.5rem;
+        border-bottom: 1px solid #f1f3f5;
+    }
+    .permission-item:last-child {
+        border-bottom: none;
+    }
+    
+    @media (max-width: 768px) {
+        .permission-header {
+            font-size: 0.9rem;
+            padding: 0.5rem 0.75rem;
+        }
+        .permission-body {
+            padding: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="mb-1">Add New Role</h2>
+            <p class="text-muted mb-0">Create a new role with permissions</p>
+        </div>
+        <a href="{% url 'accounts:role_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="row">
+            
+            <!-- Left - Basic Info -->
+            <div class="col-12 col-lg-4 mb-4 mb-lg-0">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Basic Information</h5>
+                    </div>
+                    <div class="card-body">
+                        
+                        <!-- Name -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Role Name *</label>
+                            <input type="text" name="name" class="form-control" 
+                                   placeholder="e.g., Content Manager" required>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Description</label>
+                            <textarea name="description" class="form-control" rows="3" 
+                                      placeholder="Describe role purpose and responsibilities"></textarea>
+                        </div>
+
+                        <!-- Priority -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Priority (0-100)</label>
+                            <input type="number" name="priority" class="form-control" 
+                                   value="50" min="0" max="100">
+                            <small class="text-muted">Higher number = more access</small>
+                        </div>
+
+                        <!-- Active -->
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   name="is_active" id="is_active" checked>
+                            <label class="form-check-label fw-bold" for="is_active">
+                                Active Role
+                            </label>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right - Permissions -->
+            <div class="col-12 col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                            <h5 class="mb-0">Permissions <span class="badge bg-primary" id="permCount">0</span></h5>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-primary" 
+                                        onclick="selectAll()">
+                                    Select All
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" 
+                                        onclick="deselectAll()">
+                                    Clear All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        
+                        {% for module, perms in permissions_by_module.items %}
+                        <div class="permission-section">
+                            <div class="permission-header" 
+                                 data-bs-toggle="collapse" 
+                                 data-bs-target="#module{{ forloop.counter }}">
+                                <span>{{ module }} ({{ perms|length }})</span>
+                                <button type="button" 
+                                        class="btn btn-sm btn-link text-decoration-none" 
+                                        onclick="selectModule({{ forloop.counter }}, event)">
+                                    Select
+                                </button>
+                            </div>
+                            <div class="collapse show permission-body" 
+                                 id="module{{ forloop.counter }}">
+                                {% for perm in perms %}
+                                <div class="permission-item">
+                                    <div class="form-check">
+                                        <input class="form-check-input perm-check" 
+                                               type="checkbox" 
+                                               name="permissions" 
+                                               value="{{ perm.id }}"
+                                               id="perm{{ perm.id }}">
+                                        <label class="form-check-label w-100" for="perm{{ perm.id }}">
+                                            <div>{{ perm.name }}</div>
+                                            <small class="text-muted">{{ perm.codename }}</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        {% if not permissions_by_module %}
+                        <div class="text-center text-muted py-4">
+                            No permissions available
+                        </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Actions -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <div class="d-flex flex-column flex-md-row justify-content-end align-items-stretch align-items-md-center gap-2">
+                    <a href="{% url 'accounts:role_list' %}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Create Role
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+function updateCount() {
+    const count = document.querySelectorAll('.perm-check:checked').length;
+    document.getElementById('permCount').textContent = count;
+}
+
+function selectAll() {
+    document.querySelectorAll('.perm-check').forEach(cb => cb.checked = true);
+    updateCount();
+}
+
+function deselectAll() {
+    document.querySelectorAll('.perm-check').forEach(cb => cb.checked = false);
+    updateCount();
+}
+
+function selectModule(num, e) {
+    e.stopPropagation();
+    const module = document.getElementById('module' + num);
+    const checkboxes = module.querySelectorAll('.perm-check');
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    checkboxes.forEach(cb => cb.checked = !allChecked);
+    updateCount();
+}
+
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('perm-check')) {
+        updateCount();
+    }
+});
+</script>
+{% endblock %}

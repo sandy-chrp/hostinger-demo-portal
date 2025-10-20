@@ -1,0 +1,536 @@
+Folder PATH listing
+Volume serial number is 82EA-6D4A
+C:.
+¦   .env
+¦   .gitattributes
+¦   .gitignore
+¦   db.sqlite3
+¦   docker-compose.yml
+¦   docker-entrypoint.sh
+¦   Dockerfile
+¦   End
+¦   main)
+¦   manage.py
+¦   project_structure.txt
+¦   requirements.txt
+¦   slot.end_time
+¦   
++---accounts
+¦   ¦   admin.py
+¦   ¦   apps.py
+¦   ¦   decorators.py
+¦   ¦   forms.py
+¦   ¦   models.py
+¦   ¦   permissions.py
+¦   ¦   sales_forms.py
+¦   ¦   tests.py
+¦   ¦   urls.py
+¦   ¦   views.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---management
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---commands
+¦   ¦   ¦   ¦   create_sample_categories.py
+¦   ¦   ¦   ¦   remove_sample_categories.py
+¦   ¦   ¦   ¦   __init__.py
+¦   ¦   ¦   ¦   
+¦   ¦   ¦   +---__pycache__
+¦   ¦   ¦           create_sample_categories.cpython-313.pyc
+¦   ¦   ¦           remove_sample_categories.cpython-313.pyc
+¦   ¦   ¦           __init__.cpython-313.pyc
+¦   ¦   ¦           
+¦   ¦   +---__pycache__
+¦   ¦           __init__.cpython-313.pyc
+¦   ¦           
+¦   +---migrations
+¦   ¦   ¦   0001_initial.py
+¦   ¦   ¦   0002_customuser_email_verification_token_and_more.py
+¦   ¦   ¦   0003_businesscategory_alter_customuser_country_code_and_more.py
+¦   ¦   ¦   0004_customuser_email_otp_customuser_otp_created_at.py
+¦   ¦   ¦   0005_emailotp.py
+¦   ¦   ¦   0006_role_customuser_employee_id_and_more.py
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           0001_initial.cpython-313.pyc
+¦   ¦           0002_customuser_email_verification_token_and_more.cpython-313.pyc
+¦   ¦           0003_businesscategory_alter_customuser_country_code_and_more.cpython-313.pyc
+¦   ¦           0004_customuser_email_otp_customuser_otp_created_at.cpython-313.pyc
+¦   ¦           0005_emailotp.cpython-313.pyc
+¦   ¦           0006_role_customuser_employee_id_and_more.cpython-313.pyc
+¦   ¦           __init__.cpython-313.pyc
+¦   ¦           
+¦   +---views
+¦   ¦   ¦   customer_views.py
+¦   ¦   ¦   sales_views.py
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           customer_views.cpython-313.pyc
+¦   ¦           sales_views.cpython-313.pyc
+¦   ¦           __init__.cpython-313.pyc
+¦   ¦           
+¦   +---__pycache__
+¦           admin.cpython-313.pyc
+¦           admin_forms.cpython-313.pyc
+¦           apps.cpython-313.pyc
+¦           decorators.cpython-313.pyc
+¦           forms.cpython-313.pyc
+¦           models.cpython-313.pyc
+¦           permissions.cpython-313.pyc
+¦           sales_forms.cpython-313.pyc
+¦           urls.cpython-313.pyc
+¦           views.cpython-313.pyc
+¦           __init__.cpython-313.pyc
+¦           
++---chatbot
+¦   ¦   admin.py
+¦   ¦   apps.py
+¦   ¦   models.py
+¦   ¦   tests.py
+¦   ¦   urls.py
+¦   ¦   views.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---migrations
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           __init__.cpython-313.pyc
+¦   ¦           
+¦   +---__pycache__
+¦           admin.cpython-313.pyc
+¦           apps.cpython-313.pyc
+¦           models.cpython-313.pyc
+¦           urls.cpython-313.pyc
+¦           views.cpython-313.pyc
+¦           __init__.cpython-313.pyc
+¦           
++---core
+¦   ¦   admin.py
+¦   ¦   admin_customer_views.py
+¦   ¦   admin_notification_views.py
+¦   ¦   admin_settings_views.py
+¦   ¦   apps.py
+¦   ¦   business_categories_views.py
+¦   ¦   category_views.py
+¦   ¦   customer_admin_forms.py
+¦   ¦   demo_request_views.py
+¦   ¦   models.py
+¦   ¦   tests.py
+¦   ¦   urls.py
+¦   ¦   user_activity_analytics_views.py
+¦   ¦   utils.py
+¦   ¦   views.py
+¦   ¦   webgl_views.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---migrations
+¦   ¦   ¦   0001_initial.py
+¦   ¦   ¦   0002_admincolumnpreference.py
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           0001_initial.cpython-313.pyc
+¦   ¦           0002_admincolumnpreference.cpython-313.pyc
+¦   ¦           __init__.cpython-313.pyc
+¦   ¦           
+¦   +---__pycache__
+¦           admin.cpython-313.pyc
+¦           admin_customer_views.cpython-313.pyc
+¦           admin_notification_views.cpython-313.pyc
+¦           admin_settings_views.cpython-313.pyc
+¦           apps.cpython-313.pyc
+¦           business_categories_views.cpython-313.pyc
+¦           category_views.cpython-313.pyc
+¦           customer_admin_forms.cpython-313.pyc
+¦           demo_request_views.cpython-313.pyc
+¦           models.cpython-313.pyc
+¦           notification_utils.cpython-313.pyc
+¦           urls.cpython-313.pyc
+¦           user_activity_analytics_views.cpython-313.pyc
+¦           utils.cpython-313.pyc
+¦           views.cpython-313.pyc
+¦           webgl_views.cpython-313.pyc
+¦           __init__.cpython-313.pyc
+¦           
++---customers
+¦   ¦   admin.py
+¦   ¦   ajax_views.py
+¦   ¦   apps.py
+¦   ¦   forms.py
+¦   ¦   liked_demos_views.py
+¦   ¦   middleware.py
+¦   ¦   models.py
+¦   ¦   signals.py
+¦   ¦   tests.py
+¦   ¦   urls.py
+¦   ¦   utils.py
+¦   ¦   validators.py
+¦   ¦   views.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---migrations
+¦   ¦   ¦   0001_initial.py
+¦   ¦   ¦   0002_fix_session_constraint.py
+¦   ¦   ¦   0003_alter_customeractivity_activity_type.py
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           0001_initial.cpython-313.pyc
+¦   ¦           0002_fix_session_constraint.cpython-313.pyc
+¦   ¦           0003_alter_customeractivity_activity_type.cpython-313.pyc
+¦   ¦           __init__.cpython-313.pyc
+¦   ¦           
+¦   +---templatetags
+¦   ¦   ¦   custom_filters.py
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           custom_filters.cpython-313.pyc
+¦   ¦           __init__.cpython-313.pyc
+¦   ¦           
+¦   +---__pycache__
+¦           admin.cpython-313.pyc
+¦           ajax_views.cpython-313.pyc
+¦           apps.cpython-313.pyc
+¦           liked_demos_views.cpython-313.pyc
+¦           middleware.cpython-313.pyc
+¦           models.cpython-313.pyc
+¦           signals.cpython-313.pyc
+¦           urls.cpython-313.pyc
+¦           utils.cpython-313.pyc
+¦           validators.cpython-313.pyc
+¦           views.cpython-313.pyc
+¦           __init__.cpython-313.pyc
+¦           
++---demos
+¦   ¦   admin.py
+¦   ¦   apps.py
+¦   ¦   forms.py
+¦   ¦   models.py
+¦   ¦   signals.py
+¦   ¦   tests.py
+¦   ¦   urls.py
+¦   ¦   views.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---migrations
+¦   ¦   ¦   0001_initial.py
+¦   ¦   ¦   0002_demorequest_city_demorequest_country_region_and_more.py
+¦   ¦   ¦   0003_demo_target_customers.py
+¦   ¦   ¦   0004_alter_demo_slug.py
+¦   ¦   ¦   0005_demo_business_category_demo_business_subcategory_and_more.py
+¦   ¦   ¦   0006_demorequest_business_category_and_more.py
+¦   ¦   ¦   0007_remove_demo_business_category_and_more.py
+¦   ¦   ¦   0008_remove_demo_category_demo_demo_type.py
+¦   ¦   ¦   0009_alter_demorequest_country_region.py
+¦   ¦   ¦   0010_demo_file_type_demo_webgl_file_alter_demo_duration_and_more.py
+¦   ¦   ¦   0011_demo_extracted_path.py
+¦   ¦   ¦   0012_demorequest_cancellation_details_and_more.py
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           0001_initial.cpython-313.pyc
+¦   ¦           0002_demorequest_city_demorequest_country_region_and_more.cpython-313.pyc
+¦   ¦           0003_demo_target_customers.cpython-313.pyc
+¦   ¦           0004_alter_demo_slug.cpython-313.pyc
+¦   ¦           0005_demo_business_category_demo_business_subcategory_and_more.cpython-313.pyc
+¦   ¦           0006_demorequest_business_category_and_more.cpython-313.pyc
+¦   ¦           0007_remove_demo_business_category_and_more.cpython-313.pyc
+¦   ¦           0008_remove_demo_category_demo_demo_type.cpython-313.pyc
+¦   ¦           0009_alter_demorequest_country_region.cpython-313.pyc
+¦   ¦           0010_demo_file_type_demo_webgl_file_alter_demo_duration_and_more.cpython-313.pyc
+¦   ¦           0011_demo_extracted_path.cpython-313.pyc
+¦   ¦           0012_demorequest_cancellation_details_and_more.cpython-313.pyc
+¦   ¦           __init__.cpython-313.pyc
+¦   ¦           
+¦   +---__pycache__
+¦           admin.cpython-313.pyc
+¦           apps.cpython-313.pyc
+¦           forms.cpython-313.pyc
+¦           models.cpython-313.pyc
+¦           signals.cpython-313.pyc
+¦           urls.cpython-313.pyc
+¦           views.cpython-313.pyc
+¦           __init__.cpython-313.pyc
+¦           
++---demo_portal
+¦   ¦   asgi.py
+¦   ¦   settings.py
+¦   ¦   urls.py
+¦   ¦   wsgi.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---__pycache__
+¦           settings.cpython-313.pyc
+¦           urls.cpython-313.pyc
+¦           wsgi.cpython-313.pyc
+¦           __init__.cpython-313.pyc
+¦           
++---enquiries
+¦   ¦   admin.py
+¦   ¦   apps.py
+¦   ¦   models.py
+¦   ¦   tests.py
+¦   ¦   urls.py
+¦   ¦   views.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---migrations
+¦   ¦   ¦   0001_initial.py
+¦   ¦   ¦   0002_businessenquiry_attachment.py
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           0001_initial.cpython-313.pyc
+¦   ¦           0002_businessenquiry_attachment.cpython-313.pyc
+¦   ¦           __init__.cpython-313.pyc
+¦   ¦           
+¦   +---__pycache__
+¦           admin.cpython-313.pyc
+¦           apps.cpython-313.pyc
+¦           models.cpython-313.pyc
+¦           urls.cpython-313.pyc
+¦           views.cpython-313.pyc
+¦           __init__.cpython-313.pyc
+¦           
++---logs
+¦       demo_portal.log
+¦       
++---media
+¦   +---demos
+¦   ¦   +---thumbnails
+¦   ¦   ¦       thumb_web-gtml_f8b494e0.jpg
+¦   ¦   ¦       
+¦   ¦   +---webgl
+¦   ¦           webgl_web-gtml_e5bb0b27.zip
+¦   ¦           
+¦   +---enquiry_attachments
+¦   ¦   +---2025
+¦   ¦       +---10
+¦   ¦               hover.png
+¦   ¦               
+¦   +---webgl_extracted
+¦       +---demo_web-gtml
+¦           +---EasyPact
+¦               ¦   index.html
+¦               ¦   
+¦               +---Build
+¦               ¦       EasyPact 05-07-2025.data
+¦               ¦       EasyPact 05-07-2025.framework.js
+¦               ¦       EasyPact 05-07-2025.loader.js
+¦               ¦       EasyPact 05-07-2025.wasm
+¦               ¦       
+¦               +---StreamingAssets
+¦               ¦       5pin.mp4
+¦               ¦       EasyCom.mp4
+¦               ¦       Intro.mp4
+¦               ¦       TNFC.mp4
+¦               ¦       
+¦               +---TemplateData
+¦                       favicon.ico
+¦                       fullscreen-button.png
+¦                       MemoryProfiler.png
+¦                       progress-bar-empty-dark.png
+¦                       progress-bar-empty-light.png
+¦                       progress-bar-full-dark.png
+¦                       progress-bar-full-light.png
+¦                       style.css
+¦                       unity-logo-dark.png
+¦                       unity-logo-light.png
+¦                       unity-logo-title-footer.png
+¦                       webmemd-icon.png
+¦                       
++---notifications
+¦   ¦   admin.py
+¦   ¦   admin_api_views.py
+¦   ¦   admin_views.py
+¦   ¦   api_views.py
+¦   ¦   apps.py
+¦   ¦   models.py
+¦   ¦   services.py
+¦   ¦   signals.py
+¦   ¦   tests.py
+¦   ¦   urls.py
+¦   ¦   views.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---management
+¦   ¦   +---commands
+¦   ¦       ¦   init_notifications.py
+¦   ¦       ¦   
+¦   ¦       +---__pycache__
+¦   ¦               init_notifications.cpython-313.pyc
+¦   ¦               
+¦   +---migrations
+¦   ¦   ¦   0001_initial.py
+¦   ¦   ¦   0002_alter_notification_notification_type_and_more.py
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           0001_initial.cpython-313.pyc
+¦   ¦           0002_alter_notification_notification_type_and_more.cpython-313.pyc
+¦   ¦           __init__.cpython-313.pyc
+¦   ¦           
+¦   +---__pycache__
+¦           admin.cpython-313.pyc
+¦           admin_api_views.cpython-313.pyc
+¦           admin_views.cpython-313.pyc
+¦           api_views.cpython-313.pyc
+¦           apps.cpython-313.pyc
+¦           models.cpython-313.pyc
+¦           services.cpython-313.pyc
+¦           signals.cpython-313.pyc
+¦           urls.cpython-313.pyc
+¦           views.cpython-313.pyc
+¦           __init__.cpython-313.pyc
+¦           
++---static
+¦   +---css
+¦   +---images
+¦   ¦       logo.webp
+¦   ¦       
+¦   +---js
+¦           advanced_screenshot_detection.js
+¦           customer_security_warning_only.js
+¦           
++---templates
+    ¦   404.html
+    ¦   500.html
+    ¦   base.html
+    ¦   
+    +---accounts
+    ¦       account_blocked.html
+    ¦       forgot_password.html
+    ¦       pending_approval.html
+    ¦       profile.html
+    ¦       reset_password.html
+    ¦       signin.html
+    ¦       signup.html
+    ¦       verify_otp.html
+    ¦       
+    +---admin
+    ¦   ¦   base.html
+    ¦   ¦   dashboard.html
+    ¦   ¦   
+    ¦   +---auth
+    ¦   ¦       login.html
+    ¦   ¦       
+    ¦   +---business_categories
+    ¦   ¦       create.html
+    ¦   ¦       delete.html
+    ¦   ¦       edit.html
+    ¦   ¦       list.html
+    ¦   ¦       
+    ¦   +---business_subcategories
+    ¦   ¦       create.html
+    ¦   ¦       delete.html
+    ¦   ¦       edit.html
+    ¦   ¦       list.html
+    ¦   ¦       
+    ¦   +---categories
+    ¦   ¦       add.html
+    ¦   ¦       detail.html
+    ¦   ¦       edit.html
+    ¦   ¦       list.html
+    ¦   ¦       
+    ¦   +---customers
+    ¦   ¦       bulk_import.html
+    ¦   ¦       create.html
+    ¦   ¦       detail.html
+    ¦   ¦       edit.html
+    ¦   ¦       list.html
+    ¦   ¦       
+    ¦   +---demos
+    ¦   ¦       add.html
+    ¦   ¦       detail.html
+    ¦   ¦       list.html
+    ¦   ¦       universal_preview.html
+    ¦   ¦       universal_viewer.html
+    ¦   ¦       watch.html
+    ¦   ¦       webgl_preview.html
+    ¦   ¦       webgl_viewer.html
+    ¦   ¦       
+    ¦   +---demo_requests
+    ¦   ¦       create.html
+    ¦   ¦       detail.html
+    ¦   ¦       edit.html
+    ¦   ¦       list.html
+    ¦   ¦       
+    ¦   +---enquiries
+    ¦   ¦       detail.html
+    ¦   ¦       list.html
+    ¦   ¦       respond.html
+    ¦   ¦       
+    ¦   +---notifications
+    ¦   ¦       announcements.html
+    ¦   ¦       create_announcement.html
+    ¦   ¦       edit_announcement.html
+    ¦   ¦       edit_template.html
+    ¦   ¦       notifications.html
+    ¦   ¦       send_bulk.html
+    ¦   ¦       settings.html
+    ¦   ¦       stats.html
+    ¦   ¦       templates.html
+    ¦   ¦       
+    ¦   +---partials
+    ¦   ¦       admin_notification_bell.html
+    ¦   ¦       
+    ¦   +---sales
+    ¦   ¦       dashboard.html
+    ¦   ¦       detail.html
+    ¦   ¦       edit.html
+    ¦   ¦       list.html
+    ¦   ¦       registration.html
+    ¦   ¦       
+    ¦   +---settings
+    ¦           backup_settings.html
+    ¦           demo_settings.html
+    ¦           email_settings.html
+    ¦           security_settings.html
+    ¦           settings.html
+    ¦           site_settings.html
+    ¦           system_health.html
+    ¦           
+    +---core
+    ¦       dashboard.html
+    ¦       landing.html
+    ¦       
+    +---customers
+    ¦   ¦   base.html
+    ¦   ¦   browse_demos.html
+    ¦   ¦   contact_sales.html
+    ¦   ¦   dashboard.html
+    ¦   ¦   demo_detail.html
+    ¦   ¦   demo_requests.html
+    ¦   ¦   enquiries.html
+    ¦   ¦   liked_demos.html
+    ¦   ¦   notifications.html
+    ¦   ¦   request_demo.html
+    ¦   ¦   request_demo_specific.html
+    ¦   ¦   request_service.html
+    ¦   ¦   send_enquiry.html
+    ¦   ¦   webgl_viewer.html
+    ¦   ¦   
+    ¦   +---partials
+    ¦           notification_bell.html
+    ¦           
+    +---demos
+    ¦       detail.html
+    ¦       
+    +---emails
+    ¦       account_approved.html
+    ¦       account_approved.txt
+    ¦       admin_created_welcome.html
+    ¦       admin_demo_cancelled.html
+    ¦       admin_new_customer.html
+    ¦       base.html
+    ¦       demo_confirmed.html
+    ¦       
+    +---notifications
+            admin_notifications.html
+            list.html
+            

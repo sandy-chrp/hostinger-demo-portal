@@ -1,0 +1,474 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block admin_title %}Add Employee{% endblock %}
+{% block page_title %}Add New Employee{% endblock %}
+
+{% block admin_extra_css %}
+<style>
+    .form-section {
+        background: #f8f9fa;
+        border-left: 3px solid #087fc2;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border-radius: 0.375rem;
+    }
+    .form-section h5 {
+        color: #087fc2;
+        margin-bottom: 1rem;
+    }
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    @media (max-width: 768px) {
+        .form-section {
+            padding: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="mb-1">Add New Employee</h2>
+            <p class="text-muted mb-0">Create employee account with system access</p>
+        </div>
+        <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <form method="post" id="userAddForm">
+        {% csrf_token %}
+        
+        <div class="row">
+            
+            <!-- Left Column -->
+            <div class="col-12 col-lg-6">
+                
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h5><i class="fas fa-user me-2"></i>Basic Information</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required-field">First Name</label>
+                            <input type="text" name="first_name" class="form-control" 
+                                   placeholder="Enter first name" 
+                                   value="{{ form_data.first_name|default:'' }}"
+                                   required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required-field">Last Name</label>
+                            <input type="text" name="last_name" class="form-control" 
+                                   placeholder="Enter last name" 
+                                   value="{{ form_data.last_name|default:'' }}"
+                                   required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label required-field">Office Email</label>
+                        <input type="email" 
+                            name="email" 
+                            id="email" 
+                            class="form-control" 
+                            placeholder="employee@company.com" 
+                            value="{{ form_data.email|default:'' }}"
+                            pattern="^[a-zA-Z0-9._%+-]+@(?!gmail\.com$|yahoo\.com$|hotmail\.com$|outlook\.com$|live\.com$)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                            title="Business email only. Gmail, Yahoo, Hotmail, Outlook not allowed."
+                            required>
+                        <small id="emailFeedback" class="text-muted">Business email required (no Gmail, Yahoo, etc.)</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label required-field">Contact Number</label>
+                        <div class="input-group">
+                            <select name="country_code" class="form-select" style="max-width: 120px;">
+                                <option value="+91" {% if form_data.country_code == '+91' or not form_data %}selected{% endif %}>🇮🇳 +91</option>
+                                <option value="+1" {% if form_data.country_code == '+1' %}selected{% endif %}>🇺🇸 +1</option>
+                                <option value="+44" {% if form_data.country_code == '+44' %}selected{% endif %}>🇬🇧 +44</option>
+                                <option value="+61" {% if form_data.country_code == '+61' %}selected{% endif %}>🇦🇺 +61</option>
+                            </select>
+                            <input type="text" name="mobile" class="form-control" 
+                                   placeholder="10 digit number" 
+                                   pattern="[0-9]{10}" 
+                                   maxlength="10"
+                                   value="{{ form_data.mobile|default:'' }}"
+                                   required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employee Details -->
+                <div class="form-section">
+                    <h5><i class="fas fa-id-card me-2"></i>Employee Details</h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label required-field">Employee ID</label>
+                        <input type="text" name="employee_id" id="employee_id" class="form-control" 
+                               placeholder="e.g., EMP001" 
+                               value="{{ form_data.employee_id|default:'' }}"
+                               required>
+                        <small id="employeeIdFeedback" class="text-muted">Unique identifier for employee</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label required-field">Role</label>
+                        <select name="role" class="form-select" required>
+                            <option value="">-- Select Role --</option>
+                            {% for role in roles %}
+                            <option value="{{ role.id }}" {% if form_data.role|stringformat:"s" == role.id|stringformat:"s" %}selected{% endif %}>
+                                {{ role.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Assigns permissions and access level</small>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" 
+                               name="is_active" id="is_active" 
+                               {% if not form_data or form_data.is_active == 'on' %}checked{% endif %}>
+                        <label class="form-check-label" for="is_active">
+                            <strong>Active Status</strong>
+                        </label>
+                        <br>
+                        <small class="text-muted">Inactive employees cannot login</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Email Verification</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" 
+                                name="email_verification" id="verifyNow" 
+                                value="verify_now" 
+                                {% if not form_data or form_data.email_verification == 'verify_now' %}checked{% endif %}>
+                            <label class="form-check-label" for="verifyNow">
+                                <strong>Mark as Verified</strong>
+                            </label>
+                            <br>
+                            <small class="text-muted">Skip verification (recommended for employees)</small>
+                        </div>
+                        
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="radio" 
+                                name="email_verification" id="sendVerification" 
+                                value="send_email"
+                                {% if form_data.email_verification == 'send_email' %}checked{% endif %}>
+                            <label class="form-check-label" for="sendVerification">
+                                <strong>Send Verification Email</strong>
+                            </label>
+                            <br>
+                            <small class="text-muted">User must verify email before login</small>
+                        </div>
+    
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="radio" 
+                            name="email_verification" id="skipVerification" 
+                            value="skip"
+                            {% if form_data.email_verification == 'skip' %}checked{% endif %}>
+                        <label class="form-check-label" for="skipVerification">
+                            <strong>Skip Verification</strong>
+                        </label>
+                        <br>
+                        <small class="text-muted">User can login without verifying (not recommended)</small>
+                    </div>
+</div>
+
+<!-- ✅ NEW: Account Approval -->
+<div class="form-check">
+    <input class="form-check-input" type="checkbox" 
+           name="is_approved" id="is_approved" 
+           {% if not form_data or form_data.is_approved == 'on' %}checked{% endif %}>
+    <label class="form-check-label" for="is_approved">
+        <strong>Pre-approve Account</strong>
+    </label>
+    <br>
+    <small class="text-muted">Allow immediate access without approval</small>
+</div>
+
+                </div>
+
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-12 col-lg-6">
+                
+                <!-- Business Category -->
+                <div class="form-section">
+                    <h5><i class="fas fa-layer-group me-2"></i>Business Category</h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select name="business_category" id="business_category" class="form-select">
+                            <option value="">-- Select Category --</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" {% if form_data.business_category|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Business domain expertise</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Subcategory</label>
+                        <select name="business_subcategory" id="business_subcategory" class="form-select">
+                            <option value="">-- Select Category First --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Security -->
+                <div class="form-section">
+                    <h5><i class="fas fa-lock me-2"></i>Security</h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label required-field">Password</label>
+                        <input type="password" name="password" id="password" 
+                               class="form-control" 
+                               placeholder="Minimum 8 characters" 
+                               minlength="8" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label required-field">Confirm Password</label>
+                        <input type="password" name="confirm_password" id="confirm_password" 
+                               class="form-control" 
+                               placeholder="Re-enter password" required>
+                        <small id="passwordMatch" class="text-danger" style="display: none;">
+                            Passwords do not match!
+                        </small>
+                    </div>
+                </div>
+
+                <!-- System Information (Optional) -->
+                <div class="form-section">
+                    <h5><i class="fas fa-server me-2"></i>System Information (Optional)</h5>
+                    <p class="text-muted small">
+                        MAC address and IP will be auto-captured on first login
+                    </p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">System MAC Address</label>
+                        <input type="text" name="system_mac_address" class="form-control" 
+                               placeholder="XX:XX:XX:XX:XX:XX"
+                               pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
+                               value="{{ form_data.system_mac_address|default:'' }}">
+                        <small class="text-muted">Format: XX:XX:XX:XX:XX:XX</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">IP Address</label>
+                        <input type="text" name="system_ip_address" class="form-control" 
+                               placeholder="192.168.1.1"
+                               value="{{ form_data.system_ip_address|default:'' }}">
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Form Actions -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <div class="d-flex flex-column flex-md-row justify-content-end align-items-stretch align-items-md-center gap-2">
+                    <a href="{% url 'accounts:user_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-user-plus"></i> Create Employee
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+let emailTimeout;
+let employeeIdTimeout;
+
+
+// AJAX Email Validation with Business Email Check
+document.getElementById('email').addEventListener('input', function() {
+    clearTimeout(emailTimeout);
+    const email = this.value.trim();
+    const feedback = document.getElementById('emailFeedback');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (!email) {
+        feedback.className = 'text-muted';
+        feedback.textContent = 'Business email required (no Gmail, Yahoo, etc.)';
+        return;
+    }
+    
+    // ✅ Frontend validation - Check personal domains
+    const blockedDomains = [
+        'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com',
+        'live.com', 'icloud.com', 'aol.com', 'ymail.com',
+        'rediffmail.com', 'protonmail.com'
+    ];
+    
+    try {
+        const domain = email.split('@')[1].toLowerCase();
+        
+        if (blockedDomains.includes(domain)) {
+            feedback.className = 'text-danger';
+            feedback.innerHTML = '<i class="fas fa-times-circle"></i> Personal email not allowed. Use business email.';
+            submitBtn.disabled = true;
+            return;
+        }
+    } catch (e) {
+        // Invalid email format
+        feedback.className = 'text-danger';
+        feedback.textContent = 'Invalid email format';
+        return;
+    }
+    
+    // ✅ If business email, check if exists
+    feedback.className = 'text-muted';
+    feedback.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    submitBtn.disabled = true;
+    
+    emailTimeout = setTimeout(() => {
+        fetch(`/auth/ajax/check-employee-email/?email=${encodeURIComponent(email)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.available) {
+                    feedback.className = 'text-success';
+                    feedback.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
+                    submitBtn.disabled = false;
+                } else {
+                    feedback.className = 'text-danger';
+                    feedback.innerHTML = '<i class="fas fa-times-circle"></i> ' + data.message;
+                    submitBtn.disabled = true;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                feedback.className = 'text-muted';
+                feedback.textContent = 'Could not validate email';
+                submitBtn.disabled = false;
+            });
+    }, 500);
+});
+
+// AJAX Employee ID Validation
+document.getElementById('employee_id').addEventListener('input', function() {
+    clearTimeout(employeeIdTimeout);
+    const employeeId = this.value.trim();
+    const feedback = document.getElementById('employeeIdFeedback');
+    
+    if (!employeeId) {
+        feedback.className = 'text-muted';
+        feedback.textContent = 'Unique identifier for employee';
+        return;
+    }
+    
+    feedback.className = 'text-muted';
+    feedback.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    
+    employeeIdTimeout = setTimeout(() => {
+        fetch(`/auth/ajax/check-employee-id/?employee_id=${encodeURIComponent(employeeId)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.available) {
+                    feedback.className = 'text-success';
+                    feedback.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
+                } else {
+                    feedback.className = 'text-danger';
+                    feedback.innerHTML = '<i class="fas fa-times-circle"></i> ' + data.message;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                feedback.className = 'text-muted';
+                feedback.textContent = 'Could not validate employee ID';
+            });
+    }, 500);
+});
+
+// Password match validation
+document.getElementById('confirm_password').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = this.value;
+    const matchMsg = document.getElementById('passwordMatch');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (password !== confirmPassword) {
+        matchMsg.style.display = 'block';
+        submitBtn.disabled = true;
+    } else {
+        matchMsg.style.display = 'none';
+        submitBtn.disabled = false;
+    }
+});
+
+// Load subcategories based on category
+document.getElementById('business_category').addEventListener('change', function() {
+    const categoryId = this.value;
+    const subcategorySelect = document.getElementById('business_subcategory');
+    
+    subcategorySelect.innerHTML = '<option value="">-- Loading... --</option>';
+    
+    if (!categoryId) {
+        subcategorySelect.innerHTML = '<option value="">-- Select Category First --</option>';
+        return;
+    }
+    
+    fetch(`/auth/get-subcategories/?category_id=${categoryId}`)
+        .then(response => response.json())
+        .then(data => {
+            subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+            data.subcategories.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub.id;
+                option.textContent = sub.name;
+                subcategorySelect.appendChild(option);
+            });
+            
+            // Re-select if form_data exists
+            {% if form_data.business_subcategory %}
+            subcategorySelect.value = '{{ form_data.business_subcategory }}';
+            {% endif %}
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            subcategorySelect.innerHTML = '<option value="">-- Error loading --</option>';
+        });
+});
+
+// Form validation
+document.getElementById('userAddForm').addEventListener('submit', function(e) {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    if (password !== confirmPassword) {
+        e.preventDefault();
+        alert('Passwords do not match!');
+        return false;
+    }
+});
+
+// On page load, trigger category change if form_data exists
+document.addEventListener('DOMContentLoaded', function() {
+    {% if form_data.business_category %}
+    document.getElementById('business_category').dispatchEvent(new Event('change'));
+    {% endif %}
+});
+</script>
+{% endblock %}

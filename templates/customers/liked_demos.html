@@ -1,0 +1,933 @@
+{% extends 'customers/base.html' %}
+
+{% block customer_title %}My Liked Videos{% endblock %}
+{% block page_title %}My Liked Videos{% endblock %}
+
+{% block customer_extra_css %}
+<style>
+    /* Security Protection */
+    body {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+    }
+
+    * {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    img, video {
+        -webkit-user-drag: none;
+        user-drag: none;
+        pointer-events: none;
+    }
+
+    input, select, button, a {
+        -webkit-user-select: auto;
+        user-select: auto;
+        pointer-events: auto;
+    }
+
+    /* Filters Section */
+    .filters-section {
+        background: white;
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        margin-bottom: var(--spacing-xl);
+        border: 1px solid var(--gray-200);
+    }
+
+    .filter-label {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: var(--spacing-sm);
+        display: block;
+        font-size: 0.875rem;
+    }
+
+    .form-select {
+        border: 2px solid var(--gray-300);
+        border-radius: var(--radius-lg);
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+
+    .form-select:focus {
+        border-color: #087fc2;
+        box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
+        outline: none;
+    }
+
+    .search-section {
+        position: relative;
+    }
+
+    .search-input {
+        padding-left: 45px;
+        border-radius: var(--radius-lg);
+        border: 2px solid var(--gray-300);
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        border-color: #087fc2;
+        box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--gray-500);
+    }
+
+    /* Demo Grid */
+    .demos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: var(--spacing-xl);
+        margin-top: var(--spacing-xl);
+    }
+
+    .demo-card {
+        background: white;
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        box-shadow: var(--shadow-md);
+        transition: all 0.3s ease;
+        border: 1px solid var(--gray-200);
+        position: relative;
+    }
+
+    .demo-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-xl);
+    }
+
+    /* Badges */
+    .badge-liked {
+        position: absolute;
+        top: var(--spacing-md);
+        right: var(--spacing-md);
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        color: white;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        box-shadow: var(--shadow-md);
+    }
+
+    .badge-watched {
+        position: absolute;
+        top: var(--spacing-md);
+        left: var(--spacing-md);
+        background: var(--success-color);
+        color: white;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* Thumbnail */
+    .demo-thumbnail-container {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+        background: var(--gray-100);
+        cursor: pointer;
+    }
+
+    .demo-thumbnail {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: all 0.3s ease;
+    }
+
+    .demo-card:hover .demo-thumbnail {
+        transform: scale(1.05);
+    }
+
+    /* Overlay - UPDATED */
+    .demo-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(8, 127, 194, 0.85) 0%, rgba(6, 105, 160, 0.7) 100%);
+        opacity: 0;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+
+    .demo-card:hover .demo-overlay {
+        opacity: 1;
+    }
+
+    .play-button {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #087fc2;
+        transform: scale(0.8);
+        transition: all 0.3s ease;
+    }
+
+    .demo-card:hover .play-button {
+        transform: scale(1);
+    }
+
+    /* Demo Content */
+    .demo-card-content {
+        padding: var(--spacing-lg);
+    }
+
+    .demo-category {
+        color: #087fc2;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .demo-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: var(--spacing-sm);
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 48px;
+    }
+
+    .demo-description {
+        color: var(--gray-600);
+        margin-bottom: var(--spacing-lg);
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .demo-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-lg);
+        font-size: 0.875rem;
+        color: var(--gray-500);
+        padding-bottom: var(--spacing-md);
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .demo-stats {
+        display: flex;
+        gap: var(--spacing-md);
+    }
+
+    .demo-stat {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* Actions - UPDATED */
+    .demo-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+
+    .btn-watch {
+        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
+        color: white;
+        border: none;
+        padding: var(--spacing-sm) var(--spacing-lg);
+        border-radius: var(--radius-lg);
+        font-weight: 600;
+        transition: all 0.3s ease;
+        flex: 1;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-sm);
+    }
+
+    .btn-watch:hover {
+        background: linear-gradient(135deg, #0669a0 0%, #055a8a 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(8, 127, 194, 0.3);
+    }
+
+    .btn-unlike {
+        background: white;
+        color: #f59e0b;
+        border: 2px solid #f59e0b;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--radius-lg);
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-unlike:hover {
+        background: #f59e0b;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Watermark */
+    .demo-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        color: rgba(255, 255, 255, 0.1);
+        font-size: 1.5rem;
+        font-weight: bold;
+        pointer-events: none;
+        z-index: 1;
+        user-select: none;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px var(--spacing-xl);
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+    }
+
+    .empty-icon {
+        font-size: 5rem;
+        color: var(--gray-300);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .empty-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .empty-text {
+        color: var(--gray-600);
+        font-size: 1.1rem;
+        margin-bottom: var(--spacing-xl);
+    }
+
+    /* Pagination - UPDATED */
+    .pagination-wrapper {
+        margin-top: var(--spacing-xl);
+        display: flex;
+        justify-content: center;
+    }
+
+    .pagination .page-link {
+        border: 2px solid var(--gray-300);
+        color: var(--gray-700);
+        padding: var(--spacing-sm) var(--spacing-md);
+        margin: 0 var(--spacing-xs);
+        border-radius: var(--radius-md);
+        transition: all 0.3s ease;
+    }
+
+    .pagination .page-link:hover {
+        border-color: #087fc2;
+        background: #087fc2;
+        color: white;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: #087fc2;
+        border-color: #087fc2;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .loading-overlay.show {
+        display: flex;
+    }
+
+    .loading-spinner {
+        background: white;
+        padding: var(--spacing-xl);
+        border-radius: var(--radius-xl);
+        text-align: center;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .demos-grid {
+            grid-template-columns: 1fr;
+            gap: var(--spacing-lg);
+        }
+
+        .filters-section .row > div {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .demo-thumbnail-container {
+            height: 180px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .demo-actions {
+            flex-direction: column;
+        }
+    }
+
+    /* Fade-in animation */
+    .fade-in {
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block customer_content %}
+
+<!-- Filters Section -->
+<div class="filters-section fade-in">
+    <form method="GET" id="filterForm">
+        <div class="row g-3 align-items-end">
+            <!-- Search -->
+            <div class="col-lg-3 col-md-6">
+                <label class="filter-label">
+                    <i class="fas fa-search me-2"></i>Search Videos
+                </label>
+                <div class="search-section">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" 
+                           name="search" 
+                           value="{{ search_query }}" 
+                           placeholder="Search by title or description..." 
+                           class="form-control search-input">
+                </div>
+            </div>
+            
+            <!-- Business Category -->
+            <div class="col-lg-2 col-md-6">
+                <label class="filter-label">
+                    <i class="fas fa-briefcase me-2"></i>Category
+                </label>
+                <select name="business_category" id="categorySelect" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for category in business_categories %}
+                        <option value="{{ category.id }}" 
+                                {% if current_business_category == category.id %}selected{% endif %}>
+                            {% if category.icon %}{{ category.icon }} {% endif %}{{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Business Subcategory -->
+            <div class="col-lg-2 col-md-6">
+                <label class="filter-label">
+                    <i class="fas fa-tags me-2"></i>Subcategory
+                </label>
+                <select name="business_subcategory" id="subcategorySelect" class="form-select">
+                    <option value="">All Subcategories</option>
+                    {% for subcategory in business_subcategories %}
+                        <option value="{{ subcategory.id }}" 
+                                data-category="{{ subcategory.category.id }}"
+                                {% if current_business_subcategory == subcategory.id %}selected{% endif %}>
+                            {{ subcategory.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Sort -->
+            <div class="col-lg-2 col-md-6">
+                <label class="filter-label">
+                    <i class="fas fa-sort me-2"></i>Sort By
+                </label>
+                <select name="sort" class="form-select">
+                    {% for option in sort_options %}
+                    <option value="{{ option.value }}" {% if sort_by == option.value %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Actions -->
+            <div class="col-lg-3 col-md-12">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="fas fa-search me-2"></i>Search
+                    </button>
+                    <a href="{% url 'customers:liked_demos' %}" class="btn btn-outline-secondary" title="Clear All Filters">
+                        <i class="fas fa-times me-2"></i>Clear
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Results Info -->
+{% if page_obj and page_obj.object_list %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <p class="mb-0 text-muted">
+            Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ total_liked }} liked videos
+            {% if search_query %}
+                for "<strong>{{ search_query }}</strong>"
+            {% endif %}
+            {% if current_business_category %}
+                {% for cat in business_categories %}
+                    {% if cat.id == current_business_category %}
+                        in <strong>{{ cat.name }}</strong>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<!-- Demos Grid -->
+<div class="demos-grid">
+    {% for demo in page_obj.object_list %}
+    <div class="demo-card fade-in" data-demo-id="{{ demo.id }}">
+        <!-- Watermark -->
+        <div class="demo-watermark">{{ user.email }}</div>
+        
+        <!-- Liked Badge -->
+        <div class="badge-liked">
+            <i class="fas fa-star"></i>
+            Liked
+        </div>
+
+        <!-- Watched Badge -->
+        {% if demo.id in user_views %}
+        <div class="badge-watched">
+            <i class="fas fa-check-circle"></i>
+            Watched
+        </div>
+        {% endif %}
+
+        <!-- Thumbnail -->
+        <div class="demo-thumbnail-container">
+            <a href="{% url 'customers:demo_detail' demo.slug %}" style="display: block; height: 100%;">
+                {% if demo.thumbnail %}
+                    <img src="{{ demo.thumbnail.url }}" 
+                         alt="{{ demo.title }}" 
+                         class="demo-thumbnail"
+                         loading="lazy">
+                {% else %}
+                    <div class="demo-thumbnail" style="background: var(--gray-200); display: flex; align-items: center; justify-content: center;">
+                        {% if demo.file_type == 'webgl' %}
+                            <i class="fas fa-cube text-muted" style="font-size: 3rem;"></i>
+                        {% else %}
+                            <i class="fas fa-video text-muted" style="font-size: 3rem;"></i>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                <div class="demo-overlay">
+                    <div class="play-button">
+                        {% if demo.file_type == 'webgl' %}
+                            <i class="fas fa-cube"></i>
+                        {% else %}
+                            <i class="fas fa-play"></i>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Demo Content -->
+        <div class="demo-card-content">
+            <div class="demo-category">
+                {% if demo.primary_business_category %}
+                    {{ demo.primary_business_category.name }}
+                {% else %}
+                    All Categories
+                {% endif %}
+            </div>
+            <h3 class="demo-title">{{ demo.title }}</h3>
+            <p class="demo-description">{{ demo.description|truncatewords:15 }}</p>
+            
+            <!-- Meta Info -->
+            <div class="demo-meta">
+                <div class="demo-stats">
+                    <div class="demo-stat">
+                        <i class="fas fa-eye"></i>
+                        <span>{{ demo.views_count }}</span>
+                    </div>
+                    <div class="demo-stat">
+                        <i class="fas fa-star text-warning"></i>
+                        <span>{{ demo.likes_count }}</span>
+                    </div>
+                    {% if demo.file_type == 'video' and demo.duration %}
+                    <div class="demo-stat">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ demo.formatted_duration }}</span>
+                    </div>
+                    {% elif demo.file_type == 'webgl' %}
+                    <div class="demo-stat">
+                        <i class="fas fa-cube"></i>
+                        <span>Interactive</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="demo-actions">
+                <a href="{% url 'customers:demo_detail' demo.slug %}" 
+                   class="btn-watch">
+                    <i class="fas fa-{% if demo.file_type == 'webgl' %}cube{% else %}play-circle{% endif %}"></i>
+                    {% if demo.file_type == 'webgl' %}View Demo{% else %}Watch Video{% endif %}
+                </a>
+                <button class="btn-unlike" 
+                        onclick="unlikeVideo({{ demo.id }})"
+                        title="Remove from liked videos">
+                    <i class="far fa-star"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="pagination-wrapper">
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1&business_category={{ current_business_category }}&business_subcategory={{ current_business_subcategory }}&search={{ search_query }}&sort={{ sort_by }}">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&business_category={{ current_business_category }}&business_subcategory={{ current_business_subcategory }}&search={{ search_query }}&sort={{ sort_by }}">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}&business_category={{ current_business_category }}&business_subcategory={{ current_business_subcategory }}&search={{ search_query }}&sort={{ sort_by }}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}&business_category={{ current_business_category }}&business_subcategory={{ current_business_subcategory }}&search={{ search_query }}&sort={{ sort_by }}">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&business_category={{ current_business_category }}&business_subcategory={{ current_business_subcategory }}&search={{ search_query }}&sort={{ sort_by }}">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+
+{% else %}
+<!-- Empty State -->
+<div class="empty-state fade-in">
+    <div class="empty-icon">
+        <i class="far fa-star"></i>
+    </div>
+    <h2 class="empty-title">
+        {% if search_query or current_business_category or current_business_subcategory %}
+            No Liked Videos Found
+        {% else %}
+            No Liked Videos Yet
+        {% endif %}
+    </h2>
+    <p class="empty-text">
+        {% if search_query or current_business_category or current_business_subcategory %}
+            No videos match your current filters. Try adjusting your search criteria.
+        {% else %}
+            Start exploring our demo library and star your favorite videos to see them here!
+        {% endif %}
+    </p>
+    {% if search_query or current_business_category or current_business_subcategory %}
+        <a href="{% url 'customers:liked_demos' %}" class="btn btn-primary btn-lg me-2">
+            <i class="fas fa-times me-2"></i>Clear Filters
+        </a>
+    {% endif %}
+    <a href="{% url 'customers:browse_demos' %}" class="btn btn-{% if search_query or current_business_category %}outline-{% endif %}primary btn-lg">
+        <i class="fas fa-play-circle me-2"></i>
+        Explore All Videos
+    </a>
+</div>
+{% endif %}
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin fa-3x text-primary mb-3"></i>
+        <p class="fw-semibold">Processing...</p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block customer_extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('categorySelect');
+    const subcategorySelect = document.getElementById('subcategorySelect');
+    
+    const allSubcategories = [];
+    const subcategoryOptions = subcategorySelect.querySelectorAll('option[data-category]');
+    
+    subcategoryOptions.forEach(option => {
+        allSubcategories.push({
+            value: option.value,
+            text: option.textContent.trim(),
+            categoryId: option.getAttribute('data-category')
+        });
+    });
+    
+    function updateSubcategories() {
+        const selectedCategory = categorySelect.value;
+        const currentSubcategory = '{{ current_business_subcategory }}';
+        
+        subcategorySelect.innerHTML = '<option value="">All Subcategories</option>';
+        
+        let filteredSubs = [];
+        
+        if (!selectedCategory || selectedCategory === '') {
+            filteredSubs = allSubcategories;
+        } else {
+            filteredSubs = allSubcategories.filter(sub => sub.categoryId === selectedCategory);
+        }
+        
+        filteredSubs.forEach(sub => {
+            const option = document.createElement('option');
+            option.value = sub.value;
+            option.textContent = sub.text;
+            option.setAttribute('data-category', sub.categoryId);
+            
+            if (currentSubcategory && sub.value === currentSubcategory) {
+                option.selected = true;
+            }
+            
+            subcategorySelect.appendChild(option);
+        });
+        
+        if (filteredSubs.length === 0 && selectedCategory) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No subcategories available';
+            option.disabled = true;
+            subcategorySelect.appendChild(option);
+        }
+    }
+    
+    if (categorySelect) {
+        categorySelect.addEventListener('change', updateSubcategories);
+        updateSubcategories();
+    }
+    
+    const sortSelect = document.querySelector('select[name="sort"]');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            this.form.submit();
+        });
+    }
+    
+    document.addEventListener('contextmenu', function(e) {
+        if (e.target.closest('a') || e.target.closest('button') || e.target.closest('select') || e.target.closest('input')) {
+            return true;
+        }
+        e.preventDefault();
+        return false;
+    });
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.keyCode === 123 || 
+            (e.ctrlKey && e.shiftKey && e.keyCode === 73) ||
+            (e.ctrlKey && e.keyCode === 85) ||
+            (e.ctrlKey && e.keyCode === 83) ||
+            e.keyCode === 44) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    const cards = document.querySelectorAll('.demo-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'all 0.6s ease';
+        card.style.transitionDelay = `${index * 50}ms`;
+        
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100);
+    });
+});
+
+function getCsrfToken() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    if (token) return token;
+    
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') return value;
+    }
+    return '{{ csrf_token }}';
+}
+
+function showLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.classList.add('show');
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.classList.remove('show');
+}
+
+function showAlert(message, type = 'success') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 10000; min-width: 300px;';
+    alertDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.classList.remove('show');
+        setTimeout(() => alertDiv.remove(), 150);
+    }, 4000);
+}
+
+function unlikeVideo(demoId) {
+    if (!confirm('Are you sure you want to remove this video from your liked videos?')) {
+        return;
+    }
+
+    showLoading();
+
+    fetch(`/customer/ajax/demo/${demoId}/like/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        hideLoading();
+        
+        if (data.liked === false) {
+            const card = document.querySelector(`[data-demo-id="${demoId}"]`);
+            
+            if (card) {
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.9)';
+                
+                setTimeout(() => {
+                    card.remove();
+                    
+                    const demoGrid = document.querySelector('.demos-grid');
+                    if (!demoGrid || demoGrid.children.length === 0) {
+                        location.reload();
+                    } else {
+                        showAlert('Video removed from your liked videos successfully!', 'success');
+                    }
+                }, 300);
+            }
+        } else {
+            showAlert('Failed to unlike video. Please try again.', 'danger');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Error:', error);
+        showAlert('Failed to unlike video. Please try again.', 'danger');
+    });
+}
+</script>
+{% endblock %}

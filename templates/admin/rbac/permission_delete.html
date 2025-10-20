@@ -1,0 +1,101 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block admin_title %}Delete Permission{% endblock %}
+{% block page_title %}Delete Permission{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="mb-1 text-danger">
+                <i class="fas fa-exclamation-triangle"></i> Delete Permission
+            </h2>
+            <p class="text-muted mb-0">This action cannot be undone</p>
+        </div>
+        <a href="{% url 'accounts:permission_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Cancel
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-6">
+            
+            <!-- Permission Info -->
+            <div class="card mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Permission to be Deleted</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            <tr>
+                                <th width="35%">Name</th>
+                                <td><strong>{{ permission.name }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Codename</th>
+                                <td><code>{{ permission.codename }}</code></td>
+                            </tr>
+                            <tr>
+                                <th>Module</th>
+                                <td>{{ permission.get_module_display }}</td>
+                            </tr>
+                            <tr>
+                                <th>Used in Roles</th>
+                                <td>
+                                    <span class="badge bg-warning text-dark">
+                                        {{ roles_count }} role(s)
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Warning -->
+            {% if roles_count > 0 %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Warning:</strong> This permission is used in {{ roles_count }} role(s). 
+                Deleting it will remove it from all roles.
+            </div>
+            {% endif %}
+
+            <!-- Confirmation -->
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="bg-light border border-danger rounded p-3 mb-3">
+                            <h6 class="text-danger mb-2">
+                                <i class="fas fa-exclamation-circle"></i> Confirm Deletion
+                            </h6>
+                            <p class="mb-0">
+                                Are you sure you want to permanently delete this permission?
+                            </p>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'accounts:permission_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger"
+                                    onclick="return confirm('Delete this permission permanently?')">
+                                <i class="fas fa-trash"></i> Delete Permission
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

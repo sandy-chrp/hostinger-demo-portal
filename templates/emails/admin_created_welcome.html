@@ -1,0 +1,153 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Welcome to Demo Portal{% endblock %}
+
+{% block preheader %}Your account has been created. Set your password to get started.{% endblock %}
+
+{% block content %}
+<tr>
+    <td style="padding: 40px 30px;">
+        
+        <!-- Welcome Icon -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 25px 0;">
+            <tr>
+                <td align="center">
+                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                        <span style="font-size: 40px;">👋</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Main Heading -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <td align="center">
+                    <h1 style="color: #000000; font-size: 28px; font-weight: 700; margin: 0 0 10px 0;">
+                        Welcome to Demo Portal!
+                    </h1>
+                    <p style="color: #087fc2; font-size: 16px; margin: 0 0 30px 0; font-weight: 600;">
+                        Your account has been created
+                    </p>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Greeting -->
+        <p style="color: #000000; font-size: 16px; line-height: 24px; margin: 0 0 10px 0;">
+            Dear <strong style="color: #000000;">{{ user.full_name }}</strong>,
+        </p>
+        
+        <p style="color: #000000; font-size: 16px; line-height: 24px; margin: 0 0 25px 0;">
+            Your account has been created by our admin team. You now have access to <strong style="color: #087fc2;">Demo Portal</strong> with all its features.
+        </p>
+        
+        <!-- Account Details Box -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f0f9ff; border-left: 5px solid #087fc2; border-radius: 6px; margin: 0 0 25px 0;">
+            <tr>
+                <td style="padding: 20px;">
+                    <p style="color: #000000; font-size: 14px; margin: 0 0 15px 0; font-weight: 600;">
+                        📋 Your Account Details:
+                    </p>
+                    <table width="100%" cellpadding="5" cellspacing="0" border="0">
+                        <tr>
+                            <td style="color: #000000; font-size: 14px; padding: 5px 0;"><strong>Name:</strong></td>
+                            <td style="color: #000000; font-size: 14px; padding: 5px 0;">{{ user.full_name }}</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #000000; font-size: 14px; padding: 5px 0;"><strong>Email:</strong></td>
+                            <td style="color: #000000; font-size: 14px; padding: 5px 0;">{{ user.email }}</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #000000; font-size: 14px; padding: 5px 0;"><strong>Organization:</strong></td>
+                            <td style="color: #000000; font-size: 14px; padding: 5px 0;">{{ user.organization }}</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #000000; font-size: 14px; padding: 5px 0;"><strong>Job Title:</strong></td>
+                            <td style="color: #000000; font-size: 14px; padding: 5px 0;">{{ user.job_title }}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Important Notice -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fff3cd; border-left: 5px solid #f59e0b; border-radius: 6px; margin: 0 0 25px 0;">
+            <tr>
+                <td style="padding: 18px 20px;">
+                    <p style="color: #000000; font-size: 14px; margin: 0; line-height: 22px; font-weight: 500;">
+                        <strong style="color: #000000;">🔑 Set Your Password:</strong> Please use the <strong>"Forgot Password"</strong> option on the login page to set your password before signing in for the first time.
+                    </p>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Next Steps -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ecfdf5; border-radius: 10px; margin: 0 0 25px 0;">
+            <tr>
+                <td style="padding: 20px;">
+                    <p style="color: #000000; font-size: 15px; margin: 0 0 15px 0; font-weight: 600;">
+                        🚀 Getting Started:
+                    </p>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                            <td style="padding: 8px 0;">
+                                <span style="color: #10b981; font-size: 18px; margin-right: 10px;">1.</span>
+                                <span style="color: #000000; font-size: 14px;">Visit the login page</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">
+                                <span style="color: #10b981; font-size: 18px; margin-right: 10px;">2.</span>
+                                <span style="color: #000000; font-size: 14px;">Click "Forgot Password" to set your password</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">
+                                <span style="color: #10b981; font-size: 18px; margin-right: 10px;">3.</span>
+                                <span style="color: #000000; font-size: 14px;">Check your email for password reset link</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">
+                                <span style="color: #10b981; font-size: 18px; margin-right: 10px;">4.</span>
+                                <span style="color: #000000; font-size: 14px;">Set your password and sign in</span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- CTA Button -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 30px 0;">
+            <tr>
+                <td align="center">
+                    <a href="{{ login_url }}" style="display: inline-block; background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(8, 127, 194, 0.3);">
+                        🔐 Go to Login Page
+                    </a>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Support Section -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 25px 0 0 0; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+            <tr>
+                <td>
+                    <p style="color: #000000; font-size: 14px; margin: 0 0 10px 0; font-weight: 600;">
+                        📞 Need Help?
+                    </p>
+                    <p style="color: #000000; font-size: 13px; line-height: 20px; margin: 0;">
+                        Email: <a href="mailto:reach@chrp-india.com" style="color: #087fc2; text-decoration: none;">reach@chrp-india.com</a><br>
+                        Phone: <a href="tel:+918008987948" style="color: #087fc2; text-decoration: none;">+91-8008987948</a><br>
+                        Hours: 9:00 AM - 7:00 PM (Mon-Sat)
+                    </p>
+                </td>
+            </tr>
+        </table>
+        
+    </td>
+</tr>
+{% endblock %}
+
+{% block footer_text %}Welcome to CHRP India Demo Portal. We're excited to have you onboard!{% endblock %}

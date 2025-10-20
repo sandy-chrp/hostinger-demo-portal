@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Media files - Large files excluded
+media/
+media/*
+media/demos/videos/
+media/demos/webgl/
+media/demos/thumbnails/
+media/webgl_extracted/
+
+# Video files
+*.mp4
+*.avi
+*.mov
+*.wmv
+
+# Large build files
+*.zip
+*.data
+*.wasm
+*.bundle
+*.framework.js
+*.loader.js
+
+# Unity WebGL Build
+media/webgl_extracted/**/Build/

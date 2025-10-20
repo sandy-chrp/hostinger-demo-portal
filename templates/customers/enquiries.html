@@ -1,0 +1,814 @@
+<!-- templates/customers/enquiries.html -->
+{% extends 'customers/base.html' %}
+{% load static %}
+
+{% block customer_title %}My Enquiries - Customer Portal{% endblock %}
+{% block page_title %}My Business Enquiries{% endblock %}
+
+{% block customer_extra_css %}
+<style>
+    .enquiry-card {
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        margin-bottom: var(--spacing-lg);
+        border: 1px solid var(--gray-200);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .enquiry-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .enquiry-header {
+        padding: var(--spacing-lg);
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        background: var(--gray-50);
+    }
+
+    .enquiry-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin: 0 0 var(--spacing-xs) 0;
+    }
+
+    .enquiry-id {
+        color: var(--gray-500);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .enquiry-body {
+        padding: var(--spacing-lg);
+    }
+
+    .enquiry-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+        padding-bottom: var(--spacing-lg);
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .meta-icon {
+        width: 20px;
+        color: var(--primary-color);
+    }
+
+    .meta-label {
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-right: var(--spacing-xs);
+    }
+
+    .meta-value {
+        color: var(--gray-600);
+    }
+
+    .enquiry-message {
+        background: var(--gray-50);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        border-left: 4px solid var(--primary-color);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .enquiry-message h6 {
+        margin-bottom: var(--spacing-sm);
+        color: var(--dark-color);
+        font-weight: 600;
+    }
+
+    .enquiry-message p {
+        margin: 0;
+        line-height: 1.6;
+        white-space: pre-wrap;
+    }
+
+    /* Attachment Styles */
+    .attachment-section {
+        background: #f0f9ff;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        border: 1px solid #bae6fd;
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .attachment-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-sm);
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .attachment-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: white;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .attachment-item:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .attachment-info {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        flex: 1;
+    }
+
+    .attachment-icon {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-md);
+        font-size: 1.25rem;
+        color: white;
+    }
+
+    .icon-image {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .icon-pdf {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .icon-excel {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .icon-doc {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+
+    .icon-default {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    }
+
+    .attachment-details {
+        flex: 1;
+    }
+
+    .attachment-name {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 2px;
+        word-break: break-all;
+        font-size: 0.95rem;
+    }
+
+    .attachment-meta {
+        font-size: 0.8rem;
+        color: var(--gray-500);
+    }
+
+    .attachment-actions {
+        display: flex;
+        gap: var(--spacing-xs);
+    }
+
+    .btn-attachment {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-md);
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .btn-view {
+        background: var(--primary-color);
+        color: white;
+        border: 1px solid var(--primary-color);
+    }
+
+    .btn-view:hover {
+        background: #1e3a8a;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-download {
+        background: white;
+        color: var(--primary-color);
+        border: 1px solid var(--primary-color);
+    }
+
+    .btn-download:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .status-badge {
+        padding: var(--spacing-xs) var(--spacing-md);
+        border-radius: var(--radius-lg);
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .status-open {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
+    .status-in_progress {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #93c5fd;
+    }
+
+    .status-answered {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .status-closed {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+
+    .priority-badge {
+        padding: var(--spacing-xs) var(--spacing-md);
+        border-radius: var(--radius-lg);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .priority-low {
+        background: #f0f9ff;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
+    }
+
+    .priority-medium {
+        background: #fffbeb;
+        color: #d97706;
+        border: 1px solid #fed7aa;
+    }
+
+    .priority-high {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+
+    .priority-urgent {
+        background: #450a0a;
+        color: white;
+        border: 1px solid #991b1b;
+    }
+
+    .filter-section {
+        background: white;
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        margin-bottom: var(--spacing-lg);
+        border: 1px solid var(--gray-200);
+    }
+
+    .form-select {
+        border: 2px solid var(--gray-300);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        max-width: 250px;
+    }
+
+    .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+    }
+
+    .response-section {
+        margin-top: var(--spacing-lg);
+        padding-top: var(--spacing-lg);
+        border-top: 1px solid var(--gray-200);
+    }
+
+    .response-item {
+        background: #f8fafc;
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-md);
+        border-left: 4px solid var(--success-color);
+    }
+
+    .response-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .response-author {
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+
+    .response-date {
+        color: var(--gray-500);
+        font-size: 0.875rem;
+    }
+
+    .response-text {
+        line-height: 1.6;
+        white-space: pre-wrap;
+        margin: 0;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--gray-500);
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: var(--spacing-lg);
+        opacity: 0.5;
+        color: var(--primary-color);
+    }
+
+    .pagination-wrapper {
+        margin-top: var(--spacing-xl);
+        display: flex;
+        justify-content: center;
+    }
+
+    /* File Preview Modal */
+    .file-preview-modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.9);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .file-preview-content {
+        position: relative;
+        margin: 2% auto;
+        padding: 0;
+        width: 90%;
+        max-width: 1200px;
+        height: 90vh;
+    }
+
+    .file-preview-close {
+        position: absolute;
+        top: 15px;
+        right: 35px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 10000;
+        transition: 0.3s;
+    }
+
+    .file-preview-close:hover {
+        color: #ff4444;
+    }
+
+    .file-preview-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: var(--radius-lg);
+    }
+
+    .file-preview-image {
+        max-width: 100%;
+        max-height: 90vh;
+        display: block;
+        margin: 0 auto;
+        border-radius: var(--radius-lg);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @media (max-width: 768px) {
+        .enquiry-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--spacing-sm);
+        }
+
+        .enquiry-meta {
+            grid-template-columns: 1fr;
+            gap: var(--spacing-md);
+        }
+
+        .filter-section .d-flex {
+            flex-direction: column;
+            align-items: stretch !important;
+        }
+
+        .form-select {
+            max-width: 100%;
+        }
+
+        .attachment-info {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--spacing-sm);
+        }
+
+        .attachment-actions {
+            width: 100%;
+            flex-direction: column;
+        }
+
+        .btn-attachment {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .file-preview-content {
+            width: 95%;
+            height: 85vh;
+        }
+
+        .file-preview-close {
+            top: 10px;
+            right: 20px;
+            font-size: 32px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block customer_content %}
+<!-- Filter Section -->
+<div class="filter-section">
+    <div class="d-flex justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <label for="statusFilter" class="mb-0 fw-semibold">Search:</label>
+            <select class="form-select" id="statusFilter" onchange="filterEnquiries(this.value)">
+                <option value="" {% if not request.GET.status %}selected{% endif %}>
+                    All Enquiries ({{ page_obj.paginator.count }})
+                </option>
+                <option value="open" {% if request.GET.status == 'open' %}selected{% endif %}>
+                    Open ({{ status_counts.open|default:0 }})
+                </option>
+                <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>
+                    In Progress ({{ status_counts.in_progress|default:0 }})
+                </option>
+                <option value="answered" {% if request.GET.status == 'answered' %}selected{% endif %}>
+                    Answered ({{ status_counts.answered|default:0 }})
+                </option>
+                <option value="closed" {% if request.GET.status == 'closed' %}selected{% endif %}>
+                    Closed ({{ status_counts.closed|default:0 }})
+                </option>
+            </select>
+        </div>
+        
+        <a href="{% url 'customers:send_enquiry' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Send New Enquiry
+        </a>
+    </div>
+</div>
+
+<!-- Enquiries List -->
+{% if page_obj.object_list %}
+    {% for enquiry in page_obj.object_list %}
+        <div class="enquiry-card">
+            <div class="enquiry-header">
+                <div>
+                    <h3 class="enquiry-title">
+                        {% if enquiry.subject %}
+                            {{ enquiry.subject }}
+                        {% else %}
+                            Business Enquiry
+                        {% endif %}
+                    </h3>
+                    <div class="enquiry-id">{{ enquiry.enquiry_id }} • {{ enquiry.created_at|date:"M d, Y" }}</div>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    {% if enquiry.priority %}
+                        <span class="priority-badge priority-{{ enquiry.priority }}">
+                            {{ enquiry.get_priority_display }}
+                        </span>
+                    {% endif %}
+                    <span class="status-badge status-{{ enquiry.status }}">
+                        {{ enquiry.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="enquiry-body">
+                <div class="enquiry-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-folder meta-icon"></i>
+                        <span class="meta-label">Category:</span>
+                        <span class="meta-value">{{ enquiry.category.name|default:"General" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-clock meta-icon"></i>
+                        <span class="meta-label">Created:</span>
+                        <span class="meta-value">{{ enquiry.created_at|timesince }} ago</span>
+                    </div>
+                    {% if enquiry.attachment %}
+                    <div class="meta-item">
+                        <i class="fas fa-paperclip meta-icon"></i>
+                        <span class="meta-label">Attachment:</span>
+                        <span class="meta-value">
+                            <i class="fas fa-check-circle text-success"></i> File attached
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="enquiry-message">
+                    <h6><i class="fas fa-comment-dots me-2"></i>Your Enquiry:</h6>
+                    <p>{{ enquiry.message }}</p>
+                </div>
+
+                <!-- Attachment Section -->
+                {% if enquiry.attachment %}
+                <div class="attachment-section">
+                    <div class="attachment-header">
+                        <i class="fas fa-paperclip"></i>
+                        <span>Attached File</span>
+                    </div>
+                    <div class="attachment-item">
+                        <div class="attachment-info">
+                            <div class="attachment-icon {% if enquiry.attachment.name|lower|slice:'-4:' == '.pdf' %}icon-pdf{% elif enquiry.attachment.name|lower|slice:'-4:' == '.xls' or enquiry.attachment.name|lower|slice:'-5:' == '.xlsx' or enquiry.attachment.name|lower|slice:'-4:' == '.csv' %}icon-excel{% elif enquiry.attachment.name|lower|slice:'-4:' == '.doc' or enquiry.attachment.name|lower|slice:'-5:' == '.docx' %}icon-doc{% elif enquiry.attachment.name|lower|slice:'-4:' == '.png' or enquiry.attachment.name|lower|slice:'-4:' == '.jpg' or enquiry.attachment.name|lower|slice:'-5:' == '.jpeg' or enquiry.attachment.name|lower|slice:'-5:' == '.webp' %}icon-image{% else %}icon-default{% endif %}">
+                                {% if enquiry.attachment.name|lower|slice:'-4:' == '.pdf' %}
+                                    <i class="fas fa-file-pdf"></i>
+                                {% elif enquiry.attachment.name|lower|slice:'-4:' == '.xls' or enquiry.attachment.name|lower|slice:'-5:' == '.xlsx' or enquiry.attachment.name|lower|slice:'-4:' == '.csv' %}
+                                    <i class="fas fa-file-excel"></i>
+                                {% elif enquiry.attachment.name|lower|slice:'-4:' == '.doc' or enquiry.attachment.name|lower|slice:'-5:' == '.docx' %}
+                                    <i class="fas fa-file-word"></i>
+                                {% elif enquiry.attachment.name|lower|slice:'-4:' == '.png' or enquiry.attachment.name|lower|slice:'-4:' == '.jpg' or enquiry.attachment.name|lower|slice:'-5:' == '.jpeg' or enquiry.attachment.name|lower|slice:'-5:' == '.webp' %}
+                                    <i class="fas fa-file-image"></i>
+                                {% else %}
+                                    <i class="fas fa-file"></i>
+                                {% endif %}
+                            </div>
+                            <div class="attachment-details">
+                                <div class="attachment-name">{{ enquiry.attachment_filename }}</div>
+                                <div class="attachment-meta">
+                                    {% if enquiry.attachment_size_mb %}
+                                        {{ enquiry.attachment_size_mb }} MB
+                                    {% endif %}
+                                    • Uploaded {{ enquiry.created_at|date:"M d, Y" }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="attachment-actions">
+                            {% if enquiry.attachment.name|lower|slice:'-4:' == '.png' or enquiry.attachment.name|lower|slice:'-4:' == '.jpg' or enquiry.attachment.name|lower|slice:'-5:' == '.jpeg' or enquiry.attachment.name|lower|slice:'-5:' == '.webp' or enquiry.attachment.name|lower|slice:'-4:' == '.pdf' %}
+                            <a href="#" class="btn-attachment btn-view" onclick="viewFile('{{ enquiry.attachment.url }}', '{{ enquiry.attachment.name }}'); return false;">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </a>
+                            {% endif %}
+                            {% comment %} <a href="{{ enquiry.attachment.url }}" class="btn-attachment btn-download" download>
+                                <i class="fas fa-download"></i>
+                                Download
+                            </a> {% endcomment %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if enquiry.admin_notes %}
+                <div class="enquiry-message" style="border-left-color: var(--warning-color);">
+                    <h6><i class="fas fa-sticky-note me-2"></i>Admin Notes:</h6>
+                    <p>{{ enquiry.admin_notes }}</p>
+                </div>
+                {% endif %}
+                
+                {% if enquiry.responses.exists %}
+                <div class="response-section">
+                    <h6><i class="fas fa-reply me-2"></i>Responses from our team:</h6>
+                    {% for response in enquiry.responses.all %}
+                        {% if not response.is_internal_note %}
+                        <div class="response-item">
+                            <div class="response-header">
+                                <span class="response-author">
+                                    <i class="fas fa-user-tie me-1"></i>
+                                    {{ response.responded_by.first_name }} {{ response.responded_by.last_name }}
+                                </span>
+                                <span class="response-date">{{ response.created_at|date:"M d, Y H:i" }}</span>
+                            </div>
+                            <p class="response-text">{{ response.response_text }}</p>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="d-flex gap-2 mt-3">
+                    {% if enquiry.status == 'open' or enquiry.status == 'in_progress' %}
+                        <a href="{% url 'customers:contact_sales' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-headset me-1"></i>Follow Up
+                        </a>
+                    {% endif %}
+                    
+                    {% if enquiry.status == 'answered' %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check me-1"></i>Response Received
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    
+    {% if page_obj.has_other_pages %}
+        <div class="pagination-wrapper">
+            <nav>
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+    
+{% else %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-envelope-open-text"></i>
+        </div>
+        <h3>No Enquiries Found</h3>
+        {% if request.GET.status %}
+            <p>No enquiries found with status "{{ request.GET.status|title }}".</p>
+            <a href="{% url 'customers:enquiries' %}" class="btn btn-outline-primary mt-3">
+                <i class="fas fa-list me-2"></i>View All Enquiries
+            </a>
+        {% else %}
+            <p>You haven't sent any business enquiries yet.</p>
+            <a href="{% url 'customers:send_enquiry' %}" class="btn btn-primary mt-3">
+                <i class="fas fa-plus me-2"></i>Send Your First Enquiry
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+
+<!-- File Preview Modal -->
+<div id="filePreviewModal" class="file-preview-modal">
+    <span class="file-preview-close" onclick="closeFilePreview()">&times;</span>
+    <div class="file-preview-content" id="filePreviewContent">
+        <!-- Dynamic content will be inserted here -->
+    </div>
+</div>
+{% endblock %}
+
+{% block customer_extra_js %}
+<script>
+function filterEnquiries(status) {
+    if (status) {
+        window.location.href = '?status=' + status;
+    } else {
+        window.location.href = '{% url "customers:enquiries" %}';
+    }
+}
+
+// File preview functionality
+function viewFile(fileUrl, fileName) {
+    const modal = document.getElementById('filePreviewModal');
+    const content = document.getElementById('filePreviewContent');
+    const fileExtension = fileName.toLowerCase().split('.').pop();
+    
+    // Clear previous content
+    content.innerHTML = '';
+    
+    // Check file type and display accordingly
+    if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(fileExtension)) {
+        // Display image
+        const img = document.createElement('img');
+        img.src = fileUrl;
+        img.className = 'file-preview-image';
+        img.alt = fileName;
+        content.appendChild(img);
+    } else if (fileExtension === 'pdf') {
+        // Display PDF in iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = fileUrl;
+        iframe.className = 'file-preview-iframe';
+        content.appendChild(iframe);
+    } else {
+        // For other file types, show download message
+        const message = document.createElement('div');
+        message.style.cssText = 'color: white; text-align: center; padding: 50px; font-size: 1.2rem;';
+        message.innerHTML = `
+            <i class="fas fa-file fa-3x mb-3"></i>
+            <p>Preview not available for this file type.</p>
+            <a href="${fileUrl}" download class="btn btn-primary mt-3">
+                <i class="fas fa-download me-2"></i>Download File
+            </a>
+        `;
+        content.appendChild(message);
+    }
+    
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeFilePreview() {
+    const modal = document.getElementById('filePreviewModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('filePreviewModal');
+    if (event.target === modal) {
+        closeFilePreview();
+    }
+}
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeFilePreview();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.enquiry-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'all 0.6s ease';
+        
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

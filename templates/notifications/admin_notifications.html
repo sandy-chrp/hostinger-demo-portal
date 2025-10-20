@@ -1,0 +1,465 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% load permission_tags %}
+
+{% block admin_title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block breadcrumb %}
+<div class="admin-breadcrumb">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:admin_dashboard' %}">
+                    <i class="fas fa-home me-1"></i>Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item active">Notifications</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+<style>
+    /* Compact stat cards */
+    .notification-stat-card {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .notification-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    }
+    
+    .notification-stat-card.info { border-left-color: #06b6d4; }
+    .notification-stat-card.danger { border-left-color: #ef4444; }
+    .notification-stat-card.success { border-left-color: #10b981; }
+    .notification-stat-card.primary { border-left-color: #3b82f6; }
+    
+    .notification-stat-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .notification-stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+    
+    .notification-stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    
+    .notification-stat-icon {
+        font-size: 2.5rem;
+        opacity: 0.15;
+    }
+    
+    .notification-stat-card.info .notification-stat-icon { color: #06b6d4; }
+    .notification-stat-card.danger .notification-stat-icon { color: #ef4444; }
+    .notification-stat-card.success .notification-stat-icon { color: #10b981; }
+    .notification-stat-card.primary .notification-stat-icon { color: #3b82f6; }
+    
+    .notification-stat-card.danger .notification-stat-number { color: #ef4444; }
+    .notification-stat-card.success .notification-stat-number { color: #10b981; }
+    
+    @media (max-width: 768px) {
+        .notification-stat-card {
+            padding: 1rem;
+        }
+        
+        .notification-stat-number {
+            font-size: 1.75rem;
+        }
+        
+        .notification-stat-icon {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<div class="row g-3 mb-4">
+    <!-- Total Notifications -->
+    <div class="col-lg-3 col-md-6">
+        <div class="notification-stat-card info">
+            <div class="notification-stat-content">
+                <div>
+                    <div class="notification-stat-label">Total</div>
+                    <div class="notification-stat-number">{{ total_count|default:0 }}</div>
+                </div>
+                <div class="notification-stat-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Unread -->
+    <div class="col-lg-3 col-md-6">
+        <div class="notification-stat-card danger">
+            <div class="notification-stat-content">
+                <div>
+                    <div class="notification-stat-label">Unread</div>
+                    <div class="notification-stat-number">{{ unread_count|default:0 }}</div>
+                </div>
+                <div class="notification-stat-icon">
+                    <i class="fas fa-envelope"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Read -->
+    <div class="col-lg-3 col-md-6">
+        <div class="notification-stat-card success">
+            <div class="notification-stat-content">
+                <div>
+                    <div class="notification-stat-label">Read</div>
+                    <div class="notification-stat-number">{{ read_count|default:0 }}</div>
+                </div>
+                <div class="notification-stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Categories -->
+    <div class="col-lg-3 col-md-6">
+        <div class="notification-stat-card primary">
+            <div class="notification-stat-content">
+                <div>
+                    <div class="notification-stat-label">Categories</div>
+                    <div class="notification-stat-number">{{ type_counts|length|default:0 }}</div>
+                </div>
+                <div class="notification-stat-icon">
+                    <i class="fas fa-tag"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters & Actions -->
+<div class="admin-card mb-4">
+    <div class="admin-card-header">
+        <h2 class="admin-card-title">
+            <i class="fas fa-filter"></i>
+            Filter Notifications
+        </h2>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm" onclick="markAllAsRead()">
+                <i class="fas fa-check-double me-1"></i>Mark All Read
+            </button>
+            {% if user|has_permission:'send_notification' %}
+            <a href="{% url 'notifications:admin_bulk_send' %}" class="btn btn-success btn-sm">
+                <i class="fas fa-paper-plane me-1"></i>Send Bulk
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="admin-card-body">
+        <form method="get" class="row g-3">
+            <div class="col-lg-3 col-md-4">
+                <label class="form-label">Type</label>
+                <select name="type" class="form-select" onchange="this.form.submit()">
+                    <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All Types</option>
+                    {% for type_code, type_label in notification_types %}
+                    <option value="{{ type_code }}" {% if filter_type == type_code %}selected{% endif %}>
+                        {{ type_label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-lg-3 col-md-4">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="all" {% if filter_status == 'all' %}selected{% endif %}>All Status</option>
+                    <option value="unread" {% if filter_status == 'unread' %}selected{% endif %}>Unread</option>
+                    <option value="read" {% if filter_status == 'read' %}selected{% endif %}>Read</option>
+                </select>
+            </div>
+            
+            <div class="col-lg-4 col-md-4">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" 
+                       placeholder="Search notifications..." 
+                       value="{{ search }}">
+            </div>
+            
+            <div class="col-lg-2 col-md-12">
+                <label class="form-label d-none d-lg-block">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-1"></i>Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Notifications List -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h2 class="admin-card-title">
+            <i class="fas fa-list"></i>
+            Notifications
+        </h2>
+        {% if notifications %}
+        <span class="badge bg-primary">
+            {{ notifications|length }} of {{ total_count }}
+        </span>
+        {% endif %}
+    </div>
+    <div class="admin-card-body p-0">
+        {% if notifications %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th width="50" class="text-center">Status</th>
+                        <th>Notification</th>
+                        <th width="150">Type</th>
+                        <th width="180">Date</th>
+                        <th width="100" class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for notif in notifications %}
+                    <tr class="{% if not notif.is_read %}table-info{% endif %}">
+                        <td class="text-center align-middle">
+                            {% if not notif.is_read %}
+                            <span class="badge bg-danger rounded-pill">
+                                <i class="fas fa-circle" style="font-size: 6px;"></i>
+                            </span>
+                            {% else %}
+                            <span class="text-success">
+                                <i class="fas fa-check-circle"></i>
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="align-middle">
+                            <div class="fw-bold text-dark mb-1">{{ notif.title }}</div>
+                            <small class="text-muted">{{ notif.message|truncatewords:20 }}</small>
+                        </td>
+                        <td class="align-middle">
+                            <span class="badge bg-primary">
+                                {{ notif.get_notification_type_display }}
+                            </span>
+                        </td>
+                        <td class="align-middle">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ notif.created_at|date:"M d, Y" }}<br>
+                                {{ notif.created_at|date:"h:i A" }}
+                            </small>
+                        </td>
+                        <td class="text-center align-middle">
+                            <div class="btn-group btn-group-sm">
+                                {% if not notif.is_read %}
+                                <button class="btn btn-outline-success" 
+                                        onclick="markAsRead({{ notif.id }})"
+                                        title="Mark as read">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                {% endif %}
+                                <button class="btn btn-outline-danger" 
+                                        onclick="deleteNotification({{ notif.id }})"
+                                        title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if notifications.has_other_pages %}
+        <div class="p-3 border-top bg-light">
+            <nav aria-label="Notifications pagination">
+                <ul class="pagination mb-0 justify-content-center">
+                    {% if notifications.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ notifications.previous_page_number }}&type={{ filter_type }}&status={{ filter_status }}&search={{ search }}">
+                            <i class="fas fa-chevron-left me-1"></i>Previous
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in notifications.paginator.page_range %}
+                        {% if notifications.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > notifications.number|add:'-3' and num < notifications.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}&type={{ filter_type }}&status={{ filter_status }}&search={{ search }}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if notifications.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ notifications.next_page_number }}&type={{ filter_type }}&status={{ filter_status }}&search={{ search }}">
+                            Next<i class="fas fa-chevron-right ms-1"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-inbox fa-4x text-muted" style="opacity: 0.3;"></i>
+            </div>
+            <h5 class="text-muted">No notifications found</h5>
+            <p class="text-muted mb-0">
+                {% if filter_type != 'all' or filter_status != 'all' or search %}
+                    Try adjusting your filters or search terms.
+                {% else %}
+                    You don't have any notifications yet.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function markAsRead(notificationId) {
+    const btn = event.target.closest('button');
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+    
+    fetch(`/notifications/api/admin/${notificationId}/read/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Failed to mark notification as read');
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('An error occurred');
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    });
+}
+
+function markAllAsRead() {
+    if (!confirm('Mark all notifications as read?')) return;
+    
+    const btn = event.target;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+    btn.disabled = true;
+    
+    fetch("{% url 'notifications:api_admin_mark_all_read' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Failed to mark all as read');
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('An error occurred');
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    });
+}
+
+function deleteNotification(notificationId) {
+    if (!confirm('Delete this notification? This action cannot be undone.')) return;
+    
+    const btn = event.target.closest('button');
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+    
+    fetch(`/notifications/api/admin/${notificationId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Failed to delete notification');
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('An error occurred');
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,885 @@
+<!-- templates/admin/enquiries/respond.html -->
+{% extends 'admin/base.html' %}
+
+{% block admin_title %}Respond to Enquiry - {{ enquiry.enquiry_id }}{% endblock %}
+{% block page_title %}Respond to Enquiry{% endblock %}
+
+{% block breadcrumb %}
+<div class="admin-breadcrumb">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:admin_dashboard' %}">
+                    <i class="fas fa-home me-1"></i>Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:admin_enquiries' %}">Enquiries</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:admin_enquiry_detail' enquiry.id %}">{{ enquiry.enquiry_id }}</a>
+            </li>
+            <li class="breadcrumb-item active">Respond</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block admin_extra_css %}
+<style>
+    body {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    /* Status Banner */
+    .status-banner {
+        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
+        color: white;
+        padding: 1.25rem 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        animation: slideDown 0.4s ease;
+    }
+
+    .status-banner-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .status-banner-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        font-size: 0.9rem;
+        opacity: 0.95;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Collapsible Cards */
+    .detail-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
+
+    .card-header-collapsible {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+        user-select: none;
+    }
+
+    .card-header-collapsible:hover {
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    }
+
+    .card-header-collapsible.collapsed {
+        border-bottom: none;
+    }
+
+    .card-header-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #087fc2;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0;
+    }
+
+    .collapse-icon {
+        color: #6b7280;
+        transition: transform 0.3s ease;
+        font-size: 1.1rem;
+    }
+
+    .card-header-collapsible:not(.collapsed) .collapse-icon {
+        transform: rotate(180deg);
+    }
+
+    .card-body-content {
+        padding: 1.5rem;
+    }
+
+    /* Original Message */
+    .original-message {
+        background: #f8fafc;
+        border-left: 4px solid #087fc2;
+        border-radius: 10px;
+        padding: 1.5rem;
+    }
+
+    .message-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .customer-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .customer-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #087fc2, #0669a0);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1.2rem;
+    }
+
+    .customer-name {
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .customer-email {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .message-time {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .message-content {
+        color: #1f2937;
+        line-height: 1.7;
+    }
+
+    /* Editor */
+    .response-editor {
+        margin-bottom: 1.5rem;
+    }
+
+    .editor-toolbar {
+        background: #f8fafc;
+        border: 2px solid #e5e7eb;
+        border-bottom: none;
+        border-radius: 10px 10px 0 0;
+        padding: 0.75rem;
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .editor-btn {
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .editor-btn:hover {
+        background: #087fc2;
+        color: white;
+        border-color: #087fc2;
+    }
+
+    .editor-textarea {
+        width: 100%;
+        min-height: 300px;
+        padding: 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 0 0 10px 10px;
+        resize: vertical;
+        font-size: 1rem;
+        line-height: 1.6;
+        font-family: inherit;
+    }
+
+    .editor-textarea:focus {
+        outline: none;
+        border-color: #087fc2;
+        box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
+    }
+
+    .character-count {
+        text-align: right;
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.5rem;
+    }
+
+    /* Options */
+    .response-options {
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .option-item {
+        margin-bottom: 1rem;
+    }
+
+    .option-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-check-label {
+        color: #1f2937;
+        font-weight: 500;
+    }
+
+    .form-check-input:checked {
+        background-color: #087fc2;
+        border-color: #087fc2;
+    }
+
+    /* Templates */
+    .template-item {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .template-item:hover {
+        border-color: #087fc2;
+        box-shadow: 0 2px 8px rgba(8, 127, 194, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .template-item.selected {
+        border-color: #087fc2;
+        background: rgba(8, 127, 194, 0.05);
+    }
+
+    .template-title {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .template-title i {
+        color: #087fc2;
+    }
+
+    .template-preview {
+        font-size: 0.875rem;
+        color: #6b7280;
+        line-height: 1.4;
+    }
+
+    /* Previous Responses */
+    .response-item {
+        border-left: 3px solid #087fc2;
+        padding-left: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .response-item:last-child {
+        border-bottom: none;
+    }
+
+    .response-item.internal {
+        border-left-color: #f59e0b;
+        background: #fef3c7;
+        padding: 0.75rem;
+        border-radius: 8px;
+    }
+
+    .response-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .response-author {
+        font-weight: 600;
+        color: #087fc2;
+        font-size: 0.875rem;
+    }
+
+    .response-time {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .response-text {
+        font-size: 0.875rem;
+        color: #1f2937;
+        line-height: 1.5;
+    }
+
+    /* Attachments */
+    .attachment-area {
+        border: 2px dashed #d1d5db;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-top: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .attachment-area:hover {
+        border-color: #087fc2;
+        background: rgba(8, 127, 194, 0.05);
+    }
+
+    .attachment-area.dragover {
+        border-color: #087fc2;
+        background: rgba(8, 127, 194, 0.1);
+    }
+
+    .file-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        margin-top: 0.5rem;
+    }
+
+    .file-icon {
+        width: 35px;
+        height: 35px;
+        background: #087fc2;
+        color: white;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .file-name {
+        flex: 1;
+        font-size: 0.875rem;
+        color: #1f2937;
+        font-weight: 500;
+    }
+
+    .file-remove {
+        color: #dc2626;
+        cursor: pointer;
+        padding: 0.25rem;
+    }
+
+    .file-remove:hover {
+        color: #991b1b;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.75rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .status-banner-meta {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .editor-toolbar {
+            padding: 0.5rem;
+            gap: 0.25rem;
+        }
+
+        .editor-btn {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+
+<!-- Back Button -->
+{% comment %} <div class="mb-3">
+    <a href="{% url 'core:admin_enquiry_detail' enquiry.id %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i>Back to Details
+    </a>
+</div> {% endcomment %}
+
+<!-- Enquiry Summary Banner -->
+<div class="status-banner">
+    <div class="status-banner-title">
+        Responding to: {{ enquiry.subject|default:"Business Enquiry" }}
+    </div>
+    <div class="status-banner-meta">
+        <div class="meta-item">
+            <i class="fas fa-hashtag"></i>
+            {{ enquiry.enquiry_id }}
+        </div>
+        <div class="meta-item">
+            <i class="fas fa-user"></i>
+            {{ enquiry.full_name }}
+        </div>
+        <div class="meta-item">
+            <i class="fas fa-envelope"></i>
+            {{ enquiry.business_email }}
+        </div>
+        <div class="meta-item">
+            <i class="fas fa-calendar"></i>
+            {{ enquiry.created_at|date:"M d, Y g:i A" }}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Left Column -->
+    <div class="col-lg-8">
+        <!-- Original Message -->
+        <div class="detail-card">
+            <div class="card-header-collapsible collapsed" data-bs-toggle="collapse" data-bs-target="#originalMessage">
+                <h3 class="card-header-title">
+                    <i class="fas fa-envelope-open-text"></i>
+                    Original Message
+                </h3>
+                <i class="fas fa-chevron-down collapse-icon"></i>
+            </div>
+            <div class="collapse" id="originalMessage">
+                <div class="card-body-content">
+                    <div class="original-message">
+                        <div class="message-header">
+                            <div class="customer-info">
+                                <div class="customer-avatar">
+                                    {{ enquiry.first_name|first|upper }}{{ enquiry.last_name|first|upper }}
+                                </div>
+                                <div>
+                                    <div class="customer-name">{{ enquiry.full_name }}</div>
+                                    <div class="customer-email">{{ enquiry.business_email }}</div>
+                                </div>
+                            </div>
+                            <div class="message-time">
+                                {{ enquiry.created_at|timesince }} ago
+                            </div>
+                        </div>
+                        <div class="message-content">
+                            {{ enquiry.message|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Response Composer -->
+        <div class="detail-card">
+            <div class="card-header-collapsible" data-bs-toggle="collapse" data-bs-target="#responseComposer">
+                <h3 class="card-header-title">
+                    <i class="fas fa-reply"></i>
+                    Compose Response
+                </h3>
+                <i class="fas fa-chevron-down collapse-icon"></i>
+            </div>
+            <div class="collapse show" id="responseComposer">
+                <div class="card-body-content">
+                    <form method="post" id="responseForm" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Editor -->
+                        <div class="response-editor">
+                            <div class="editor-toolbar">
+                                <button type="button" class="editor-btn" onclick="formatText('bold')" title="Bold">
+                                    <i class="fas fa-bold"></i>
+                                </button>
+                                <button type="button" class="editor-btn" onclick="formatText('italic')" title="Italic">
+                                    <i class="fas fa-italic"></i>
+                                </button>
+                                <button type="button" class="editor-btn" onclick="formatText('underline')" title="Underline">
+                                    <i class="fas fa-underline"></i>
+                                </button>
+                                <button type="button" class="editor-btn" onclick="insertBulletList()" title="Bullet List">
+                                    <i class="fas fa-list-ul"></i>
+                                </button>
+                                <button type="button" class="editor-btn" onclick="insertNumberedList()" title="Numbered List">
+                                    <i class="fas fa-list-ol"></i>
+                                </button>
+                                <button type="button" class="editor-btn" onclick="insertSignature()" title="Insert Signature">
+                                    <i class="fas fa-signature"></i>
+                                </button>
+                            </div>
+                            <textarea name="response_text" id="responseText" class="editor-textarea" required placeholder="Type your response here...">Dear {{ enquiry.first_name }},
+
+Thank you for your enquiry regarding {{ enquiry.subject|default:"your business needs" }}.
+
+
+
+Best regards,
+{{ request.user.get_full_name|default:"Support Team" }}
+{{ request.user.email }}</textarea>
+                            <div class="character-count">
+                                <span id="charCount">0</span> characters
+                            </div>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="response-options">
+                            <div class="option-item">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="send_email" id="sendEmail" checked>
+                                    <label class="form-check-label" for="sendEmail">
+                                        <i class="fas fa-envelope me-1"></i>
+                                        Send email to customer
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="option-item">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="is_internal_note" id="internalNote">
+                                    <label class="form-check-label" for="internalNote">
+                                        <i class="fas fa-sticky-note me-1"></i>
+                                        Internal note only
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="option-item">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="mark_answered" id="markAnswered" checked>
+                                    <label class="form-check-label" for="markAnswered">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        Mark enquiry as answered
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Attachments -->
+                        <div>
+                            <label class="form-label fw-bold mt-3">
+                                <i class="fas fa-paperclip me-1"></i>Attachments (Optional)
+                            </label>
+                            <div class="attachment-area" onclick="document.getElementById('fileInput').click()">
+                                <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                <p class="mb-1 fw-bold">Click or drag files here</p>
+                                <small class="text-muted">PDF, DOC, DOCX, XLS, XLSX (Max 10MB)</small>
+                                <input type="file" id="fileInput" name="attachments" multiple style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx">
+                            </div>
+                            <div id="attachedFiles"></div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="action-buttons mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-1"></i>Send Response
+                            </button>
+                            <button type="button" class="btn btn-outline-warning" onclick="saveDraft()">
+                                <i class="fas fa-save me-1"></i>Save Draft
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-lg-4">
+        <!-- Templates -->
+        <div class="detail-card">
+            <div class="card-header-collapsible" data-bs-toggle="collapse" data-bs-target="#templates">
+                <h3 class="card-header-title">
+                    <i class="fas fa-file-alt"></i>
+                    Quick Templates
+                </h3>
+                <i class="fas fa-chevron-down collapse-icon"></i>
+            </div>
+            <div class="collapse show" id="templates">
+                <div class="card-body-content">
+                    <div class="template-item" onclick="useTemplate('acknowledgment')">
+                        <div class="template-title">
+                            <i class="fas fa-check-circle"></i>
+                            Acknowledgment
+                        </div>
+                        <div class="template-preview">
+                            Thank you for your enquiry. We have received your message...
+                        </div>
+                    </div>
+                    
+                    <div class="template-item" onclick="useTemplate('information')">
+                        <div class="template-title">
+                            <i class="fas fa-question-circle"></i>
+                            Information Request
+                        </div>
+                        <div class="template-preview">
+                            To better assist you, could you please provide...
+                        </div>
+                    </div>
+                    
+                    <div class="template-item" onclick="useTemplate('schedule')">
+                        <div class="template-title">
+                            <i class="fas fa-calendar-check"></i>
+                            Schedule Meeting
+                        </div>
+                        <div class="template-preview">
+                            I would be happy to discuss this with you...
+                        </div>
+                    </div>
+                    
+                    <div class="template-item" onclick="useTemplate('closing')">
+                        <div class="template-title">
+                            <i class="fas fa-handshake"></i>
+                            Closing Response
+                        </div>
+                        <div class="template-preview">
+                            Thank you for your interest. If you have any further questions...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Previous Responses -->
+        {% if previous_responses %}
+        <div class="detail-card">
+            <div class="card-header-collapsible collapsed" data-bs-toggle="collapse" data-bs-target="#previousResponses">
+                <h3 class="card-header-title">
+                    <i class="fas fa-history"></i>
+                    Previous Responses
+                    <span class="badge bg-primary ms-2">{{ previous_responses|length }}</span>
+                </h3>
+                <i class="fas fa-chevron-down collapse-icon"></i>
+            </div>
+            <div class="collapse" id="previousResponses">
+                <div class="card-body-content" style="max-height: 400px; overflow-y: auto;">
+                    {% for response in previous_responses %}
+                    <div class="response-item {% if response.is_internal_note %}internal{% endif %}">
+                        <div class="response-header">
+                            <div class="response-author">
+                                {{ response.responded_by.get_full_name }}
+                                {% if response.is_internal_note %}
+                                    <span class="badge bg-warning ms-1">Internal</span>
+                                {% endif %}
+                            </div>
+                            <div class="response-time">
+                                {{ response.created_at|timesince }} ago
+                            </div>
+                        </div>
+                        <div class="response-text">
+                            {{ response.response_text|truncatechars:150 }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+// Character counter
+const responseText = document.getElementById('responseText');
+const charCount = document.getElementById('charCount');
+
+responseText.addEventListener('input', function() {
+    charCount.textContent = this.value.length;
+});
+
+charCount.textContent = responseText.value.length;
+
+// Internal note toggle
+document.getElementById('internalNote').addEventListener('change', function() {
+    const sendEmail = document.getElementById('sendEmail');
+    const markAnswered = document.getElementById('markAnswered');
+    
+    if (this.checked) {
+        sendEmail.checked = false;
+        sendEmail.disabled = true;
+        markAnswered.checked = false;
+    } else {
+        sendEmail.disabled = false;
+        sendEmail.checked = true;
+        markAnswered.checked = true;
+    }
+});
+
+// Text formatting
+function formatText(command) {
+    alert('Rich text formatting would be implemented with TinyMCE or Quill');
+}
+
+function insertBulletList() {
+    insertAtCursor(responseText, '\n• Point 1\n• Point 2\n• Point 3\n');
+}
+
+function insertNumberedList() {
+    insertAtCursor(responseText, '\n1. Point 1\n2. Point 2\n3. Point 3\n');
+}
+
+function insertSignature() {
+    const signature = `\n\nBest regards,\n{{ request.user.get_full_name|default:"" }}\n{{ request.user.email }}`;
+    insertAtCursor(responseText, signature);
+}
+
+function insertAtCursor(textarea, text) {
+    const startPos = textarea.selectionStart;
+    const endPos = textarea.selectionEnd;
+    
+    textarea.value = textarea.value.substring(0, startPos) + text + textarea.value.substring(endPos);
+    textarea.selectionStart = startPos + text.length;
+    textarea.selectionEnd = startPos + text.length;
+    textarea.focus();
+    charCount.textContent = textarea.value.length;
+}
+
+// Templates
+const templates = {
+    acknowledgment: `Dear {{ enquiry.first_name }},\n\nThank you for reaching out to us regarding {{ enquiry.subject|default:"your enquiry" }}.\n\nWe have received your message and appreciate your interest in our services. Our team is currently reviewing your enquiry and will provide you with a comprehensive response shortly.\n\nWe typically respond within 24-48 business hours.\n\nThank you for your patience.\n\nBest regards,\n{{ request.user.get_full_name|default:"Support Team" }}`,
+    
+    information: `Dear {{ enquiry.first_name }},\n\nThank you for your enquiry about {{ enquiry.subject|default:"our services" }}.\n\nTo better assist you, could you please provide:\n\n1. [Specific information needed]\n2. [Timeline or deadline]\n3. [Budget range]\n4. [Any specific requirements]\n\nOnce we have this information, we'll provide you with a tailored solution.\n\nBest regards,\n{{ request.user.get_full_name|default:"Support Team" }}`,
+    
+    schedule: `Dear {{ enquiry.first_name }},\n\nThank you for your interest in {{ enquiry.subject|default:"our services" }}.\n\nI would be delighted to discuss this further. I have the following time slots available:\n\n• [Day], [Date] at [Time]\n• [Day], [Date] at [Time]\n• [Day], [Date] at [Time]\n\nPlease let me know which time works best for you.\n\nLooking forward to speaking with you.\n\nBest regards,\n{{ request.user.get_full_name|default:"Support Team" }}`,
+    
+    closing: `Dear {{ enquiry.first_name }},\n\nThank you for your enquiry regarding {{ enquiry.subject|default:"our services" }}.\n\nI hope the information provided has been helpful. We're committed to providing excellent service and support.\n\nIf you have any further questions, please don't hesitate to reach out.\n\nThank you for considering our services.\n\nBest regards,\n{{ request.user.get_full_name|default:"Support Team" }}`
+};
+
+function useTemplate(type) {
+    if (templates[type]) {
+        responseText.value = templates[type];
+        charCount.textContent = templates[type].length;
+        
+        document.querySelectorAll('.template-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        event.target.closest('.template-item').classList.add('selected');
+    }
+}
+
+// Draft saving
+function saveDraft() {
+    localStorage.setItem('enquiry_response_draft_{{ enquiry.id }}', responseText.value);
+    alert('✅ Draft saved successfully!');
+}
+
+// Load draft
+window.addEventListener('load', function() {
+    const draft = localStorage.getItem('enquiry_response_draft_{{ enquiry.id }}');
+    if (draft && confirm('A draft response was found. Load it?')) {
+        responseText.value = draft;
+        charCount.textContent = draft.length;
+    }
+});
+
+// File handling
+const fileInput = document.getElementById('fileInput');
+const attachmentArea = document.querySelector('.attachment-area');
+const attachedFiles = document.getElementById('attachedFiles');
+
+attachmentArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.classList.add('dragover');
+});
+
+attachmentArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+});
+
+attachmentArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+});
+
+fileInput.addEventListener('change', function(e) {
+    handleFiles(this.files);
+});
+
+function handleFiles(files) {
+    for (let file of files) {
+        displayFile(file);
+    }
+}
+
+function displayFile(file) {
+    const icon = file.type.includes('pdf') ? 'fa-file-pdf' : 
+                 file.type.includes('doc') ? 'fa-file-word' : 
+                 file.type.includes('xls') ? 'fa-file-excel' : 'fa-file';
+    
+    const fileItem = document.createElement('div');
+    fileItem.className = 'file-item';
+    fileItem.innerHTML = `
+        <div class="file-icon">
+            <i class="fas ${icon}"></i>
+        </div>
+        <div class="file-name">${file.name}</div>
+        <div class="file-remove" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </div>
+    `;
+    
+    attachedFiles.appendChild(fileItem);
+}
+
+// Form submit
+document.getElementById('responseForm').addEventListener('submit', function(e) {
+    if (!responseText.value.trim()) {
+        e.preventDefault();
+        alert('⚠️ Please enter a response message.');
+        return false;
+    }
+    
+    localStorage.removeItem('enquiry_response_draft_{{ enquiry.id }}');
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+    submitBtn.disabled = true;
+});
+
+console.log('✅ Enhanced Enquiry Respond Page loaded');
+</script>
+{% endblock %}

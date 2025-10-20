@@ -1,0 +1,141 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Account Status Update - Demo Portal{% endblock %}
+
+{% block preheader %}Your account has been temporarily suspended.{% endblock %}
+
+{% block content %}
+<tr>
+    <td style="padding: 40px 30px;">
+        
+        <!-- Warning Icon -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 25px 0;">
+            <tr>
+                <td align="center">
+                    <div style="width: 80px; height: 80px; background: #fef3c7; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                        <span style="font-size: 40px;">⚠️</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Main Heading -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <td align="center">
+                    <h1 style="color: #000000; font-size: 26px; font-weight: 700; margin: 0 0 10px 0;">
+                        Account Status Update
+                    </h1>
+                    <p style="color: #f59e0b; font-size: 16px; margin: 0 0 30px 0; font-weight: 600;">
+                        Your account has been temporarily suspended
+                    </p>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Greeting -->
+        <p style="color: #000000; font-size: 16px; line-height: 24px; margin: 0 0 10px 0;">
+            Dear <strong style="color: #000000;">{{ user.full_name }}</strong>,
+        </p>
+        
+        <p style="color: #000000; font-size: 16px; line-height: 24px; margin: 0 0 25px 0;">
+            We're writing to inform you that your Demo Portal account has been temporarily suspended by our admin team.
+        </p>
+        
+        <!-- Notice Box -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fff3cd; border-left: 5px solid #f59e0b; border-radius: 6px; margin: 0 0 25px 0;">
+            <tr>
+                <td style="padding: 20px;">
+                    <p style="color: #000000; font-size: 15px; margin: 0 0 15px 0; font-weight: 600;">
+                        ⚠️ What this means:
+                    </p>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                            <td style="padding: 8px 0;">
+                                <span style="color: #f59e0b; font-size: 18px; margin-right: 10px;">•</span>
+                                <span style="color: #000000; font-size: 14px;">You cannot access your Demo Portal account</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">
+                                <span style="color: #f59e0b; font-size: 18px; margin-right: 10px;">•</span>
+                                <span style="color: #000000; font-size: 14px;">Your login credentials are temporarily disabled</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">
+                                <span style="color: #f59e0b; font-size: 18px; margin-right: 10px;">•</span>
+                                <span style="color: #000000; font-size: 14px;">All pending demo requests have been paused</span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Info Section -->
+        <p style="color: #000000; font-size: 15px; line-height: 24px; margin: 0 0 25px 0;">
+            If you believe this is a mistake or would like to discuss this decision, please contact our support team immediately. We're here to help resolve any issues.
+        </p>
+        
+        <!-- Support Section - Highlighted -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f0f9ff; border-radius: 10px; margin: 0 0 25px 0;">
+            <tr>
+                <td style="padding: 25px;">
+                    <p style="color: #000000; font-size: 16px; margin: 0 0 15px 0; font-weight: 600; text-align: center;">
+                        📞 Contact Our Support Team
+                    </p>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                            <td align="center" style="padding: 5px 0;">
+                                <span style="color: #000000; font-size: 14px;">
+                                    📧 Email: <a href="mailto:reach@chrp-india.com" style="color: #087fc2; text-decoration: none; font-weight: 600;">reach@chrp-india.com</a>
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="center" style="padding: 5px 0;">
+                                <span style="color: #000000; font-size: 14px;">
+                                    📞 Phone: <a href="tel:+918008987948" style="color: #087fc2; text-decoration: none; font-weight: 600;">+91-8008987948</a>
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="center" style="padding: 5px 0;">
+                                <span style="color: #000000; font-size: 14px;">
+                                    🕐 Hours: 9:00 AM - 7:00 PM (Mon-Sat)
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- CTA Button -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 20px 0;">
+            <tr>
+                <td align="center">
+                    <a href="mailto:reach@chrp-india.com" style="display: inline-block; background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(8, 127, 194, 0.3);">
+                        📧 Contact Support
+                    </a>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Footer Note -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 25px 0 0 0; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+            <tr>
+                <td>
+                    <p style="color: #000000; font-size: 13px; line-height: 20px; margin: 0; text-align: center;">
+                        We appreciate your understanding and look forward to resolving this matter quickly.
+                    </p>
+                </td>
+            </tr>
+        </table>
+        
+    </td>
+</tr>
+{% endblock %}
+
+{% block footer_text %}For any questions, please contact our support team.{% endblock %}
