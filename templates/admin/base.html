@@ -947,7 +947,7 @@
     <!-- ========================================= -->
     <!-- SETTINGS (Requires manage_settings) -->
     <!-- ========================================= -->
-    {% if user|has_permission:'manage_settings' %}
+    {% comment %} {% if user|has_permission:'manage_settings' %}
     <div class="nav-section">System</div>
     <div class="nav-item">
         <a href="{% url 'core:admin_settings' %}" 
@@ -957,7 +957,7 @@
             <span class="nav-text">Settings</span>
         </a>
     </div>
-    {% endif %}
+    {% endif %} {% endcomment %}
 
     <!-- ========================================= -->
     <!-- LOGOUT (Always visible) -->
