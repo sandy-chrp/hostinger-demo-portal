@@ -4,17 +4,25 @@ Django settings for demo_portal project - UPDATED WITH WEBGL SUPPORT
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+print("\n" + "="*60)
+print("🚀 DEMO PORTAL - CONFIGURATION")
+print("="*60)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-k*tjpr1qzdssx@7mg(4pa)xohsglge8l$w$x$)7w+xhy&d06wf'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-fallback')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
 
 # Application definition
 DJANGO_APPS = [
@@ -60,8 +68,14 @@ MIDDLEWARE = [
     'customers.middleware.CustomerSecurityMiddleware',
     'customers.middleware.ContentProtectionMiddleware',
     'customers.middleware.WebGLFileMiddleware',
-    'customers.middleware.CheckUserStatusMiddleware'
+    'customers.middleware.CheckUserStatusMiddleware',
+    
 ]
+
+# ============================================
+# SECURITY SETTINGS
+# ============================================
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',')
 
 CUSTOMER_SECURITY_SETTINGS = {
     'MAX_LOGIN_ATTEMPTS': 5,
@@ -99,13 +113,31 @@ WSGI_APPLICATION = 'demo_portal.wsgi.application'
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database Configuration
+DATABASE_ENGINE = os.getenv('DATABASE_ENGINE', 'sqlite3')
+
+if DATABASE_ENGINE == 'sqlite3':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+    print("🗄️  DATABASE: SQLite")
+elif DATABASE_ENGINE == 'postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB', 'demoportal'),
+            'USER': os.getenv('POSTGRES_USER', 'demoportal_user'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+            'HOST': os.getenv('POSTGRES_HOST', 'db'),
+            'PORT': os.getenv('POSTGRES_PORT', '5432'),
+        }
+    }
+    print("🐘 DATABASE: PostgreSQL")
+
+print("="*60 + "\n")
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -198,13 +230,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # EMAIL CONFIGURATION
 # =====================================
 
-EMAIL_HOST = 'smtp-mail.outlook.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'support@chrp-india.com'
-EMAIL_HOST_PASSWORD = 'nmknsglbygcqlyxv'
-DEFAULT_FROM_EMAIL = 'support@chrp-india.com'
-EMAIL_USE_TLS = True
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Email Configuration
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp-mail.outlook.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'support@chrp-india.com')
 
 # =====================================
 # CORS SETTINGS

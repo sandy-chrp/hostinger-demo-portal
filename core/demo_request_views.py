@@ -1666,21 +1666,30 @@ def check_employee_availability(request):
     """
     API endpoint to check if employee is available for given time slot
     """
-    employee_id = request.GET.get('employee_id')
-    date = request.GET.get('date')
-    time_slot_id = request.GET.get('time_slot_id')
-    demo_request_id = request.GET.get('demo_request_id')
-    
-    if not all([employee_id, date, time_slot_id]):
-        return JsonResponse({
-            'success': False,
-            'message': 'Missing required parameters'
-        }, status=400)
-    
     try:
-        from datetime import datetime
+        employee_id = request.GET.get('employee_id')
+        date = request.GET.get('date')
+        time_slot_id = request.GET.get('time_slot_id')
+        demo_request_id = request.GET.get('demo_request_id')
+        
+        print(f"\n{'='*60}")
+        print(f"🔍 CHECK EMPLOYEE AVAILABILITY")
+        print(f"{'='*60}")
+        print(f"👤 Employee ID: {employee_id}")
+        print(f"📅 Date: {date}")
+        print(f"⏰ Time Slot ID: {time_slot_id}")
+        print(f"{'='*60}\n")
+        
+        if not all([employee_id, date, time_slot_id]):
+            return JsonResponse({
+                'success': False,
+                'available': False,
+                'message': 'Missing required parameters'
+            }, status=400)
+        
+        from datetime import datetime as dt
         employee = CustomUser.objects.get(id=employee_id, is_staff=True)
-        requested_date = datetime.strptime(date, '%Y-%m-%d').date()
+        requested_date = dt.strptime(date, '%Y-%m-%d').date()
         time_slot = TimeSlot.objects.get(id=time_slot_id)
         
         # Check for conflicts
@@ -1716,32 +1725,55 @@ def check_employee_availability(request):
     except CustomUser.DoesNotExist:
         return JsonResponse({
             'success': False,
+            'available': False,
             'message': 'Employee not found'
         }, status=404)
-    except Exception as e:
+        
+    except TimeSlot.DoesNotExist:
         return JsonResponse({
             'success': False,
+            'available': False,
+            'message': 'Time slot not found'
+        }, status=404)
+        
+    except Exception as e:
+        print(f"❌ Error in check_employee_availability: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        return JsonResponse({
+            'success': False,
+            'available': False,
             'message': str(e)
         }, status=500)
-
 
 @login_required
 @permission_required('manage_demo_requests')
 def get_available_employees(request):
     """
-    API endpoint to get list of available employees for given date/time
+    Get list of employees available for given date and time slot
     """
-    date = request.GET.get('date')
-    time_slot_id = request.GET.get('time_slot_id')
-    
-    if not date or not time_slot_id:
-        return JsonResponse({
-            'success': False,
-            'message': 'Date and time slot required'
-        }, status=400)
-    
     try:
         from datetime import datetime
+        
+        date = request.GET.get('date')
+        time_slot_id = request.GET.get('time_slot_id')
+        
+        print(f"\n{'='*60}")
+        print(f"🔍 GET AVAILABLE EMPLOYEES API")
+        print(f"{'='*60}")
+        print(f"📅 Date: {date}")
+        print(f"⏰ Time Slot ID: {time_slot_id}")
+        print(f"👤 User: {request.user.email}")
+        print(f"{'='*60}\n")
+        
+        if not date or not time_slot_id:
+            return JsonResponse({
+                'success': False,
+                'message': 'Date and time slot required',
+                'employees': []
+            }, status=400)
+        
         requested_date = datetime.strptime(date, '%Y-%m-%d').date()
         time_slot = TimeSlot.objects.get(id=time_slot_id)
         
@@ -1757,18 +1789,32 @@ def get_available_employees(request):
             ).count()
         } for emp in available_employees]
         
+        print(f"✅ Returning {len(employees_data)} employees")
+        
         return JsonResponse({
             'success': True,
             'employees': employees_data,
             'count': len(employees_data)
         })
         
-    except Exception as e:
+    except TimeSlot.DoesNotExist:
+        print(f"❌ Time slot not found: {time_slot_id}")
         return JsonResponse({
             'success': False,
-            'message': str(e)
+            'message': 'Time slot not found',
+            'employees': []
+        }, status=404)
+        
+    except Exception as e:
+        print(f"❌ Error in get_available_employees: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        return JsonResponse({
+            'success': False,
+            'message': f'Server error: {str(e)}',
+            'employees': []
         }, status=500)
-
 
 @login_required
 def employee_demo_requests_list(request):

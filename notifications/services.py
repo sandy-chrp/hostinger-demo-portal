@@ -681,53 +681,143 @@ class NotificationService:
         
         logger.info(f"✅ Sent cancellation notifications to {len(notifications)} admins with permission for request #{demo_request.id}")
         return notifications
-    
+
     @staticmethod
     def notify_employee_demo_assigned(demo_request, employee, send_email=True):
         """
-        Notify employee when a demo is assigned to them
+        Send notification to employee when demo is assigned to them
         
         Args:
             demo_request: DemoRequest instance
-            employee: CustomUser instance (staff member)
+            employee: CustomUser instance (employee)
             send_email: Whether to send email notification
         """
-        # Create notification
-        notification = Notification.objects.create(
-            user=employee,
-            title='Demo Assigned to You',
-            message=f'You have been assigned to handle demo for "{demo_request.demo.title}" '
-                    f'requested by {demo_request.user.get_full_name()}',
-            notification_type='demo_request',
-            content_object=demo_request
-        )
-        
-        # Send email if enabled
-        if send_email:
+        try:
+            print(f"\n{'='*60}")
+            print(f"📧 NOTIFY EMPLOYEE - DEMO ASSIGNED")
+            print(f"{'='*60}")
+            print(f"Employee: {employee.get_full_name()} ({employee.email})")
+            print(f"Demo: {demo_request.demo.title}")
+            print(f"Customer: {demo_request.user.get_full_name()}")
+            print(f"Date: {demo_request.requested_date}")
+            print(f"Time: {demo_request.requested_time_slot}")
+            print(f"Send Email: {send_email}")
+            
+            # Get or create notification template
+            try:
+                template = NotificationTemplate.objects.get(
+                    notification_type='demo_assigned_to_employee',
+                    is_active=True
+                )
+                print(f"✓ Found template: {template.title_template}")
+            except NotificationTemplate.DoesNotExist:
+                print(f"⚠️ Template not found, using default")
+                template = None
+            
+            # Prepare context data
             context = {
                 'employee_name': employee.get_full_name(),
                 'demo_title': demo_request.demo.title,
                 'customer_name': demo_request.user.get_full_name(),
                 'customer_email': demo_request.user.email,
-                'customer_phone': demo_request.user.phone or 'Not provided',
+                'customer_phone': getattr(demo_request.user, 'phone', None) or getattr(demo_request.user, 'phone_number', None) or 'Not provided',
                 'requested_date': demo_request.requested_date.strftime('%B %d, %Y'),
-                'requested_time': f"{demo_request.requested_time_slot.start_time.strftime('%I:%M %p')} - "
-                                f"{demo_request.requested_time_slot.end_time.strftime('%I:%M %p')}",
-                'demo_description': demo_request.demo.description[:200] if demo_request.demo.description else 'No description',
-                'assigned_by': demo_request.assigned_by.get_full_name() if demo_request.assigned_by else 'Admin',
-                'request_id': demo_request.id,
+                'requested_time': f"{demo_request.requested_time_slot.start_time.strftime('%I:%M %p')} - {demo_request.requested_time_slot.end_time.strftime('%I:%M %p')}",
+                'demo_type': demo_request.demo.get_demo_type_display(),
+                'customer_notes': demo_request.notes or 'No additional notes',
             }
             
-            NotificationService.send_email_notification(
+            # Generate notification title and message
+            if template:
+                notification_title = template.render_title(context)
+                notification_message = template.render_message(context)
+            else:
+                notification_title = f"New Demo Assigned: {demo_request.demo.title}"
+                notification_message = (
+                    f"You have been assigned to conduct a demo for {demo_request.user.get_full_name()}.\n\n"
+                    f"Demo: {demo_request.demo.title}\n"
+                    f"Date: {context['requested_date']}\n"
+                    f"Time: {context['requested_time']}\n"
+                    f"Customer: {demo_request.user.get_full_name()} ({demo_request.user.email})\n\n"
+                    f"Please review the details and prepare accordingly."
+                )
+            
+            print(f"📝 Title: {notification_title}")
+            print(f"📝 Message preview: {notification_message[:100]}...")
+            
+            # Create in-app notification
+            from django.contrib.contenttypes.models import ContentType
+            from demos.models import DemoRequest
+            
+            notification = Notification.objects.create(
                 user=employee,
-                subject=f'🎯 Demo Assigned - {demo_request.demo.title}',
-                template_name='employee_demo_assigned',
-                context=context
+                notification_type='demo_assigned_to_employee',
+                title=notification_title,
+                message=notification_message,
+                content_type=ContentType.objects.get_for_model(DemoRequest),
+                object_id=demo_request.id
+                # ✅ REMOVED priority='high' - field doesn't exist
             )
-        
-        logger.info(f"✅ Sent demo assignment notification to {employee.email} for request #{demo_request.id}")
-        return notification
-    
+            
+            print(f"✅ In-app notification created (ID: {notification.id})")
+            
+            # Send email notification if enabled
+            if send_email:
+                try:
+                    from django.core.mail import send_mail
+                    from django.conf import settings
+                    
+                    email_subject = notification_title
+                    email_body = f"""
+    Dear {employee.get_full_name()},
+
+    {notification_message}
+
+    Demo Details:
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - Demo: {demo_request.demo.title}
+    - Type: {context['demo_type']}
+    - Date: {context['requested_date']}
+    - Time: {context['requested_time']}
+
+    Customer Information:
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - Name: {demo_request.user.get_full_name()}
+    - Email: {demo_request.user.email}
+    - Phone: {context['customer_phone']}
+
+    Additional Notes:
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    {context['customer_notes']}
+
+    Please log in to the admin portal to view full details and confirm your availability.
+
+    Best regards,
+    Demo Management System
+                    """
+                    
+                    send_mail(
+                        subject=email_subject,
+                        message=email_body,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[employee.email],
+                        fail_silently=False,
+                    )
+                    
+                    print(f"✅ Email sent to {employee.email}")
+                    
+                except Exception as email_error:
+                    print(f"⚠️ Email failed but notification created: {email_error}")
+            
+            print(f"{'='*60}\n")
+            return notification
+            
+        except Exception as e:
+            print(f"❌ Error in notify_employee_demo_assigned: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+
     @staticmethod
     def notify_employee_demo_unassigned(demo_request, employee, send_email=True):
         """Notify employee when a demo assignment is removed"""
