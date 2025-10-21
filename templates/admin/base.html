@@ -993,8 +993,7 @@
 <div class="dropdown">
     <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
         <i class="fas fa-user-circle me-1"></i>
-        {{ user.get_full_name|default:user.email }}
-        {% comment %} {% if user.role %}
+{% if user.is_authenticated %}{{ user.get_full_name|default:user.email }}{% else %}Guest{% endif %}        {% comment %} {% if user.role %}
             <small class="text-muted d-block" style="font-size: 0.75rem;">{{ user.role.name }}</small>
         {% endif %} {% endcomment %}
     </button>
