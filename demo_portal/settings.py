@@ -402,5 +402,11 @@ if not LOGS_DIR.exists():
 # =====================================
 # LOGIN REDIRECT
 # =====================================
+LOGIN_REDIRECT_URL = '/admin/dashboard/'
+LOGIN_URL = '/accounts/signin/'
+LOGOUT_REDIRECT_URL = '/accounts/signin/'
 
-LOGIN_REDIRECT_URL = '/accounts/signin/'
+# Session settings
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False

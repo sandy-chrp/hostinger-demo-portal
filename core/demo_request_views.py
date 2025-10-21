@@ -605,39 +605,25 @@ CHRP India
     except Exception as e:
         print(f"❌ Error sending cancellation email: {e}")
 
-
 def create_demo_confirmation_notification(demo_request):
-    """Create confirmation notification for demo request"""
+    """Create confirmation notification for demo request - ✅ FIXED"""
     try:
-        try:
-            template = NotificationTemplate.objects.get(
-                notification_type='demo_confirmation',
-                is_active=True
-            )
-            
-            notification_title = template.title_template.replace('{{demo_title}}', demo_request.demo.title)
-            notification_message = template.message_template\
-                .replace('{{demo_title}}', demo_request.demo.title)\
-                .replace('{{confirmed_date}}', demo_request.confirmed_date.strftime('%B %d, %Y'))\
-                .replace('{{confirmed_time}}', str(demo_request.confirmed_time_slot))
-        except NotificationTemplate.DoesNotExist:
-            notification_title = f'Demo Confirmed: {demo_request.demo.title}'
-            notification_message = f'Your demo for "{demo_request.demo.title}" has been confirmed for {demo_request.confirmed_date.strftime("%B %d, %Y")} at {demo_request.confirmed_time_slot}.'
+        # ✅ Use NotificationService instead of manual creation
+        from notifications.services import NotificationService
         
-        Notification.objects.create(
-            user=demo_request.user,
-            notification_type='demo_confirmation',
-            title=notification_title,
-            message=notification_message,
-            content_type=ContentType.objects.get_for_model(DemoRequest),
-            object_id=demo_request.id
+        notification = NotificationService.notify_demo_request_confirmed(
+            demo_request=demo_request,
+            send_email=True  # ✅ CHANGED: Email bhi jayega ab
         )
         
         print(f"✅ Demo confirmation notification created for {demo_request.user.email}")
+        return notification
         
     except Exception as e:
         print(f"❌ Error creating confirmation notification: {e}")
-
+        import traceback
+        traceback.print_exc()
+        return None
 
 # ================================================================================
 # EDIT DEMO REQUEST
@@ -1501,136 +1487,135 @@ def ajax_admin_check_slot_availability(request):
         }, status=500)
     
 
-# demo_request_views.py - REPLACE assign_demo_request function
-
 @login_required
 @permission_required('manage_demo_requests')
 def assign_demo_request(request, request_id):
     """
     Assign demo request to an employee
-    ✅ FIXED: Now sends notification to employee
+    ✅ FIXED: Always returns JSON for AJAX requests
     """
     demo_request = get_object_or_404(DemoRequest, id=request_id)
     
+    # Check if this is an AJAX request
+    is_ajax = (
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 
+        request.content_type == 'application/json'
+    )
+    
     if request.method == 'POST':
-        employee_id = request.POST.get('employee_id')
-        
-        print(f"\n{'='*60}")
-        print(f"🔄 ASSIGN DEMO REQUEST")
-        print(f"{'='*60}")
-        print(f"Request ID: {request_id}")
-        print(f"Employee ID: {employee_id}")
-        print(f"User: {request.user.email}")
-        
-        if not employee_id:
-            print(f"❌ No employee selected")
-            
-            # Check if AJAX request
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Please select an employee'
-                })
-            
-            messages.error(request, '❌ Please select an employee')
-            return redirect('core:admin_demo_request_detail', request_id=request_id)
-        
         try:
-            employee = CustomUser.objects.get(id=employee_id, is_staff=True, is_active=True)
-            print(f"✓ Found employee: {employee.get_full_name()}")
+            employee_id = request.POST.get('employee_id')
             
-            # Check for conflicts
-            has_conflict, conflicting_demo = demo_request.has_conflict_with_employee(employee)
+            print(f"\n{'='*60}")
+            print(f"🔄 ASSIGN DEMO REQUEST")
+            print(f"{'='*60}")
+            print(f"Request ID: {request_id}")
+            print(f"Employee ID: {employee_id}")
+            print(f"User: {request.user.email}")
+            print(f"Is AJAX: {is_ajax}")
             
-            if has_conflict:
-                error_msg = (
-                    f'⚠️ {employee.get_full_name()} already has a demo scheduled at this time. '
-                    f'Please choose a different employee or time slot.'
-                )
-                print(f"❌ Conflict detected: {conflicting_demo}")
+            if not employee_id:
+                print(f"❌ No employee selected")
                 
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Please select an employee'
+                    })
+                
+                messages.error(request, '❌ Please select an employee')
+                return redirect('core:admin_demo_request_detail', request_id=request_id)
+            
+            try:
+                employee = CustomUser.objects.get(id=employee_id, is_staff=True, is_active=True)
+                print(f"✓ Found employee: {employee.get_full_name()}")
+                
+                # Check for conflicts
+                has_conflict, conflicting_demo = demo_request.has_conflict_with_employee(employee)
+                
+                if has_conflict:
+                    error_msg = (
+                        f'⚠️ {employee.get_full_name()} already has a demo scheduled at this time. '
+                        f'Please choose a different employee or time slot.'
+                    )
+                    print(f"❌ Conflict detected: {conflicting_demo}")
+                    
+                    if is_ajax:
+                        return JsonResponse({
+                            'success': False,
+                            'error': error_msg
+                        })
+                    
+                    messages.warning(request, error_msg)
+                    return redirect('core:admin_demo_request_detail', request_id=request_id)
+                
+                # ✅ Assign the demo
+                demo_request.assigned_to = employee
+                demo_request.assigned_at = timezone.now()
+                demo_request.assigned_by = request.user
+                demo_request.save()
+                
+                print(f"✅ Demo assigned successfully")
+                
+                # ✅ Send notification to employee
+                try:
+                    from notifications.services import NotificationService
+                    
+                    print(f"📧 Sending notification to employee...")
+                    notification = NotificationService.notify_employee_demo_assigned(
+                        demo_request=demo_request,
+                        employee=employee,
+                        send_email=True
+                    )
+                    
+                    if notification:
+                        print(f"✅ Notification sent successfully to {employee.email}")
+                        print(f"   - Notification ID: {notification.id}")
+                    else:
+                        print(f"⚠️ Notification function returned None")
+                        
+                except Exception as e:
+                    print(f"⚠️ Notification error (non-critical): {e}")
+                    # Don't fail the assignment if notification fails
+                
+                success_msg = f'✅ Demo successfully assigned to {employee.get_full_name()}'
+                
+                if is_ajax:
+                    print(f"✓ Returning JSON response")
+                    return JsonResponse({
+                        'success': True,
+                        'message': success_msg,
+                        'employee_name': employee.get_full_name(),
+                        'employee_id': employee.id
+                    })
+                
+                messages.success(request, success_msg)
+                return redirect('core:admin_demo_request_detail', request_id=request_id)
+                
+            except CustomUser.DoesNotExist:
+                error_msg = '❌ Selected employee not found'
+                print(f"❌ Employee not found: {employee_id}")
+                
+                if is_ajax:
                     return JsonResponse({
                         'success': False,
                         'error': error_msg
                     })
                 
-                messages.warning(request, error_msg)
+                messages.error(request, error_msg)
                 return redirect('core:admin_demo_request_detail', request_id=request_id)
-            
-            # ✅ Assign the demo
-            demo_request.assigned_to = employee
-            demo_request.assigned_at = timezone.now()
-            demo_request.assigned_by = request.user
-            demo_request.save()
-            
-            print(f"✅ Demo assigned successfully")
-            
-            # ✅ CRITICAL: Send notification to employee
-            try:
-                from notifications.services import NotificationService
-                
-                print(f"📧 Sending notification to employee...")
-                notification = NotificationService.notify_employee_demo_assigned(
-                    demo_request=demo_request,
-                    employee=employee,
-                    send_email=True  # ✅ Send both in-app and email
-                )
-                
-                if notification:
-                    print(f"✅ Notification sent successfully to {employee.email}")
-                    print(f"   - Notification ID: {notification.id}")
-                    print(f"   - Title: {notification.title}")
-                else:
-                    print(f"⚠️ Notification function returned None")
-                    
-            except ImportError as e:
-                print(f"❌ Import error: {e}")
-                print(f"   Make sure notifications app is in INSTALLED_APPS")
-            except Exception as e:
-                print(f"❌ Error sending notification: {e}")
-                import traceback
-                traceback.print_exc()
-            
-            success_msg = f'✅ Demo successfully assigned to {employee.get_full_name()}'
-            
-            # Check if AJAX request
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
-                print(f"✓ Returning JSON response")
-                return JsonResponse({
-                    'success': True,
-                    'message': success_msg,
-                    'employee_name': employee.get_full_name(),
-                    'employee_id': employee.id
-                })
-            
-            messages.success(request, success_msg)
-            return redirect('core:admin_demo_request_detail', request_id=request_id)
-            
-        except CustomUser.DoesNotExist:
-            error_msg = '❌ Selected employee not found'
-            print(f"❌ Employee not found: {employee_id}")
-            
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
-                return JsonResponse({
-                    'success': False,
-                    'error': error_msg
-                })
-            
-            messages.error(request, error_msg)
-            return redirect('core:admin_demo_request_detail', request_id=request_id)
-            
+        
         except Exception as e:
             error_msg = f'❌ Error assigning demo: {str(e)}'
             print(f"❌ Unexpected error: {e}")
             import traceback
             traceback.print_exc()
             
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+            if is_ajax:
                 return JsonResponse({
                     'success': False,
                     'error': error_msg
-                })
+                }, status=500)
             
             messages.error(request, error_msg)
             return redirect('core:admin_demo_request_detail', request_id=request_id)

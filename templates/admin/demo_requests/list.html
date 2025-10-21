@@ -546,9 +546,19 @@ function handleQuickAssign(e) {
     fetch(form.action, {
         method: 'POST',
         body: formData,
-        headers: { 'X-CSRFToken': csrfToken }
+        headers: { 
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'  // ✅ Ensure AJAX detection
+        }
     })
-    .then(r => r.json())
+    .then(response => {
+        // ✅ Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response. Please check server logs.');
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             quickAssignModal.hide();
@@ -560,6 +570,7 @@ function handleQuickAssign(e) {
         }
     })
     .catch(error => {
+        console.error('Assignment error:', error);
         alert('Error: ' + error.message);
         submitBtn.disabled = false;
         submitBtn.innerHTML = 'Assign';

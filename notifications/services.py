@@ -1,7 +1,8 @@
-# notifications/services.py - COMPLETE FILE
+# notifications/services.py - COMPLETE FILE - FINAL VERSION
 """
 Notification Service - Business logic for notifications
 Handles creation, sending emails, and managing notifications
+✅ FIXED: All template variables are properly rendered before saving
 """
 
 from django.utils import timezone
@@ -161,7 +162,6 @@ class NotificationService:
     @staticmethod
     def notify_account_approved(user, send_email=True):
         """Customer account approved"""
-        # Create notification
         notification = Notification.objects.create(
             user=user,
             title='Account Approved',
@@ -169,7 +169,6 @@ class NotificationService:
             notification_type='account_approved'
         )
         
-        # Send email
         if send_email:
             NotificationService.send_email_notification(
                 user=user,
@@ -196,7 +195,7 @@ class NotificationService:
             }
             NotificationService.send_email_notification(
                 user=user,
-                subject='Account Blocked - Demo Portal',
+                subject='Account Status Update - Demo Portal',
                 template_name='account_blocked',
                 context=context
             )
@@ -208,46 +207,81 @@ class NotificationService:
         """Account unblocked notification"""
         notification = Notification.objects.create(
             user=user,
-            title='Account Unblocked',
-            message='Your account has been unblocked. You can now access Demo Portal.',
+            title='Account Reactivated',
+            message='Good news! Your Demo Portal account has been reactivated. You can now access all features.',
             notification_type='account_unblocked'
         )
         
         if send_email:
+            from django.urls import reverse
+            site_url = getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000')
+            login_url = f"{site_url}/auth/signin/"
+            
+            context = {
+                'login_url': login_url,
+                'reactivation_date': timezone.now().strftime('%B %d, %Y at %I:%M %p'),
+            }
             NotificationService.send_email_notification(
                 user=user,
-                subject='Account Unblocked - Demo Portal',
-                template_name='account_unblocked'
+                subject='✅ Account Reactivated - Demo Portal',
+                template_name='account_unblocked',
+                context=context
             )
         
         return notification
-    
+
     @staticmethod
     def notify_demo_request_confirmed(demo_request, send_email=True):
-        """Demo request confirmed"""
+        """Demo request confirmed - ✅ PROPERLY RENDERS TEMPLATE"""
+        
+        # ✅ Pre-format all date/time values
+        confirmed_date_str = demo_request.confirmed_date.strftime('%B %d, %Y')
+        confirmed_time_str = f"{demo_request.confirmed_time_slot.start_time.strftime('%I:%M %p')} - {demo_request.confirmed_time_slot.end_time.strftime('%I:%M %p')}"
+        
+        # ✅ Try to get and render template
+        try:
+            template = NotificationTemplate.objects.get(
+                notification_type='demo_confirmation',
+                is_active=True
+            )
+            
+            context = Context({
+                'demo_title': demo_request.demo.title,
+                'confirmed_date': confirmed_date_str,
+                'confirmed_time': confirmed_time_str,
+            })
+            
+            notification_title = Template(template.title_template).render(context)
+            notification_message = Template(template.message_template).render(context)
+            
+        except NotificationTemplate.DoesNotExist:
+            # ✅ Fallback with pre-formatted values
+            notification_title = 'Demo Request Confirmed'
+            notification_message = f'Your demo request for "{demo_request.demo.title}" has been confirmed for {confirmed_date_str} at {confirmed_time_str}.'
+        
+        # ✅ Save notification with FULLY RENDERED text
         notification = Notification.objects.create(
             user=demo_request.user,
-            title='Demo Request Confirmed',
-            message=f'Your demo request for "{demo_request.demo.title}" has been confirmed.',
+            title=notification_title,
+            message=notification_message,
             notification_type='demo_confirmation',
             content_object=demo_request
         )
         
         if send_email:
-            context = {
-                'demo_title': demo_request.demo.title,
-                'request_date': demo_request.created_at.strftime('%B %d, %Y'),
-                'preferred_date': demo_request.requested_date.strftime('%B %d, %Y') if hasattr(demo_request, 'requested_date') else 'TBD',
-            }
             NotificationService.send_email_notification(
                 user=demo_request.user,
-                subject=f'✓ Demo Request Confirmed - {demo_request.demo.title}',
+                subject=notification_title,
                 template_name='demo_confirmed',
-                context=context
+                context={
+                    'demo_title': demo_request.demo.title,
+                    'confirmed_date': confirmed_date_str,
+                    'confirmed_time': confirmed_time_str,
+                }
             )
         
         return notification
-    
+
     @staticmethod
     def notify_demo_request_rejected(demo_request, reason='Not available', send_email=True):
         """Demo request rejected"""
@@ -280,7 +314,7 @@ class NotificationService:
         notification = Notification.objects.create(
             user=demo_request.user,
             title='Demo Request Rescheduled',
-            message=f'Your demo for "{demo_request.demo.title}" has been rescheduled.',
+            message=f'Your demo for "{demo_request.demo.title}" has been rescheduled to {demo_request.requested_date.strftime("%B %d, %Y")}.',
             notification_type='demo_reschedule',
             content_object=demo_request
         )
@@ -289,7 +323,7 @@ class NotificationService:
             context = {
                 'demo_title': demo_request.demo.title,
                 'old_date': old_date.strftime('%B %d, %Y') if old_date else 'Previous date',
-                'new_date': demo_request.requested_date.strftime('%B %d, %Y') if hasattr(demo_request, 'requested_date') else 'New date',
+                'new_date': demo_request.requested_date.strftime('%B %d, %Y'),
             }
             NotificationService.send_email_notification(
                 user=demo_request.user,
@@ -306,7 +340,7 @@ class NotificationService:
         notification = Notification.objects.create(
             user=demo_request.user,
             title='Demo Request Cancelled',
-            message=f'Your demo request for "{demo_request.demo.title}" has been cancelled.',
+            message=f'Your demo request for "{demo_request.demo.title}" has been cancelled. {reason if reason else ""}',
             notification_type='demo_cancellation',
             content_object=demo_request
         )
@@ -328,17 +362,19 @@ class NotificationService:
     @staticmethod
     def notify_enquiry_received(enquiry, send_email=True):
         """Enquiry received confirmation"""
+        enquiry_id = enquiry.enquiry_id if hasattr(enquiry, "enquiry_id") else enquiry.id
+        
         notification = Notification.objects.create(
             user=enquiry.user,
             title='Enquiry Received',
-            message=f'We have received your enquiry. ID: {enquiry.enquiry_id if hasattr(enquiry, "enquiry_id") else enquiry.id}',
+            message=f'We have received your enquiry (ID: {enquiry_id}). Our team will respond within 24-48 hours.',
             notification_type='enquiry_received',
             content_object=enquiry
         )
         
         if send_email:
             context = {
-                'enquiry_id': enquiry.enquiry_id if hasattr(enquiry, 'enquiry_id') else enquiry.id,
+                'enquiry_id': enquiry_id,
                 'subject': getattr(enquiry, 'subject', 'Business Enquiry'),
                 'enquiry_date': enquiry.created_at.strftime('%B %d, %Y'),
             }
@@ -356,8 +392,8 @@ class NotificationService:
         """Enquiry answered"""
         notification = Notification.objects.create(
             user=enquiry.user,
-            title='Enquiry Response',
-            message=f'Your enquiry has been answered. Please check your enquiry dashboard.',
+            title='Enquiry Response Received',
+            message='Your enquiry has been answered. Please check your enquiry dashboard for details.',
             notification_type='enquiry_response',
             content_object=enquiry
         )
@@ -382,7 +418,7 @@ class NotificationService:
         notification = Notification.objects.create(
             user=enquiry.user,
             title='Enquiry Status Updated',
-            message=f'Your enquiry status changed from {old_status} to {new_status}.',
+            message=f'Your enquiry status has been updated from "{old_status}" to "{new_status}".',
             notification_type='enquiry_status',
             content_object=enquiry
         )
@@ -407,7 +443,6 @@ class NotificationService:
         """New demo available - bulk notification"""
         from accounts.models import CustomUser
         
-        # Get target users
         users = CustomUser.objects.filter(is_active=True, is_staff=False)
         
         notifications = []
@@ -415,7 +450,7 @@ class NotificationService:
             notification = Notification.objects.create(
                 user=user,
                 title='New Demo Available',
-                message=f'A new demo "{demo.title}" is now available!',
+                message=f'A new demo "{demo.title}" is now available in the demo library!',
                 notification_type='new_demo_available',
                 content_object=demo
             )
@@ -441,7 +476,7 @@ class NotificationService:
         notification = Notification.objects.create(
             user=user,
             title='Password Reset Request',
-            message='A password reset was requested for your account.',
+            message='A password reset was requested for your account. If this wasn\'t you, please secure your account immediately.',
             notification_type='password_reset'
         )
         
@@ -463,16 +498,18 @@ class NotificationService:
     @staticmethod
     def notify_profile_updated(user, updated_fields, send_email=True):
         """Profile updated notification"""
+        fields_str = ', '.join(updated_fields)
+        
         notification = Notification.objects.create(
             user=user,
             title='Profile Updated',
-            message=f'Your profile has been updated. Fields changed: {", ".join(updated_fields)}',
+            message=f'Your profile has been updated successfully. Fields changed: {fields_str}',
             notification_type='profile_updated'
         )
         
         if send_email:
             context = {
-                'updated_fields': ', '.join(updated_fields),
+                'updated_fields': fields_str,
                 'update_time': timezone.now().strftime('%B %d, %Y %I:%M %p'),
             }
             NotificationService.send_email_notification(
@@ -490,15 +527,13 @@ class NotificationService:
     
     @staticmethod
     def notify_admin_new_customer(customer, send_email=True):
-        """Notify admins about new customer registration - ONLY those with view_customers permission"""
+        """Notify admins about new customer registration"""
         from accounts.models import CustomUser
         
-        # ✅ Get only admins with view_customers permission
         admins = CustomUser.objects.filter(is_staff=True, is_active=True)
         
         notifications = []
         for admin in admins:
-            # ✅ Check permission before creating notification
             if not admin.has_permission('view_customers'):
                 continue
                 
@@ -525,67 +560,92 @@ class NotificationService:
                     context=context
                 )
         
-        logger.info(f"✅ Sent new customer notifications to {len(notifications)} admins with permission")
+        logger.info(f"✅ Sent new customer notifications to {len(notifications)} admins")
         return notifications
-    
+
     @staticmethod
     def notify_admin_new_demo_request(demo_request, send_email=True):
-        """Notify admins about new demo request - ONLY those with view_demo_requests permission"""
+        """Notify admins about new demo request - ✅ PROPERLY RENDERS TEMPLATE"""
         from accounts.models import CustomUser
         
-        # ✅ Get only admins with view_demo_requests permission
+        # ✅ Pre-format all values
+        customer_name = demo_request.user.get_full_name()
+        demo_title = demo_request.demo.title
+        requested_date_str = demo_request.requested_date.strftime('%B %d, %Y')
+        requested_time_str = f"{demo_request.requested_time_slot.start_time.strftime('%I:%M %p')} - {demo_request.requested_time_slot.end_time.strftime('%I:%M %p')}"
+        
         admins = CustomUser.objects.filter(is_staff=True, is_active=True)
         
         notifications = []
         for admin in admins:
-            # ✅ Check permission before creating notification
             if not admin.has_permission('view_demo_requests'):
                 continue
+            
+            # ✅ Try to render template
+            try:
+                template = NotificationTemplate.objects.get(
+                    notification_type='demo_request',
+                    is_active=True
+                )
                 
+                context = Context({
+                    'customer_name': customer_name,
+                    'demo_title': demo_title,
+                    'requested_date': requested_date_str,
+                    'requested_time': requested_time_str,
+                })
+                
+                notification_title = Template(template.title_template).render(context)
+                notification_message = Template(template.message_template).render(context)
+                
+            except NotificationTemplate.DoesNotExist:
+                # ✅ Fallback with pre-formatted values
+                notification_title = 'New Demo Request'
+                notification_message = f'{customer_name} requested a demo for "{demo_title}" on {requested_date_str} at {requested_time_str}.'
+            
+            # ✅ Save with FULLY RENDERED text
             notification = Notification.objects.create(
                 user=admin,
-                title='New Demo Request',
-                message=f'{demo_request.user.get_full_name()} requested demo for {demo_request.demo.title}',
+                title=notification_title,
+                message=notification_message,
                 notification_type='demo_request',
                 content_object=demo_request
             )
             notifications.append(notification)
             
             if send_email:
-                context = {
-                    'customer_name': demo_request.user.get_full_name(),
-                    'demo_title': demo_request.demo.title,
-                    'request_date': demo_request.created_at.strftime('%B %d, %Y'),
-                }
                 NotificationService.send_email_notification(
                     user=admin,
-                    subject=f'🎯 New Demo Request - {demo_request.demo.title}',
+                    subject=notification_title,
                     template_name='admin_new_demo_request',
-                    context=context
+                    context={
+                        'customer_name': customer_name,
+                        'demo_title': demo_title,
+                        'requested_date': requested_date_str,
+                        'requested_time': requested_time_str,
+                    }
                 )
         
-        logger.info(f"✅ Sent demo request notifications to {len(notifications)} admins with permission")
-        return notifications 
-    
+        logger.info(f"✅ Sent demo request notifications to {len(notifications)} admins")
+        return notifications
+
     @staticmethod
     def notify_admin_new_enquiry(enquiry, send_email=True):
-        """Notify admins about new enquiry - ONLY those with view_enquiries permission"""
+        """Notify admins about new enquiry"""
         from accounts.models import CustomUser
         
-        # ✅ Get only admins with view_enquiries permission
         admins = CustomUser.objects.filter(is_staff=True, is_active=True)
+        enquiry_id = enquiry.enquiry_id if hasattr(enquiry, 'enquiry_id') else enquiry.id
         
         notifications = []
         for admin in admins:
-            # ✅ Check permission before creating notification
             if not admin.has_permission('view_enquiries'):
                 continue
                 
-            enquiry_id = enquiry.enquiry_id if hasattr(enquiry, 'enquiry_id') else enquiry.id
             notification = Notification.objects.create(
                 user=admin,
                 title='New Business Enquiry',
-                message=f'New enquiry from {enquiry.user.get_full_name()} - ID: {enquiry_id}',
+                message=f'New enquiry received from {enquiry.user.get_full_name()} (ID: {enquiry_id})',
                 notification_type='enquiry',
                 content_object=enquiry
             )
@@ -605,47 +665,30 @@ class NotificationService:
                     context=context
                 )
         
-        logger.info(f"✅ Sent enquiry notifications to {len(notifications)} admins with permission")
+        logger.info(f"✅ Sent enquiry notifications to {len(notifications)} admins")
         return notifications
     
     @staticmethod
     def notify_admin_demo_request_cancelled(demo_request, cancelled_by_customer=True, send_email=True):
-        """
-        Notify admins when a demo request is cancelled - ONLY those with view_demo_requests permission
-        
-        Args:
-            demo_request: DemoRequest instance
-            cancelled_by_customer: Boolean - True if customer cancelled, False if admin cancelled
-            send_email: Whether to send email notification
-        """
+        """Notify admins when demo request is cancelled"""
         from accounts.models import CustomUser
         
-        # ✅ Get only admins with view_demo_requests permission
         admins = CustomUser.objects.filter(is_staff=True, is_active=True)
         
-        # Get cancellation details
         cancellation_reason = demo_request.get_cancellation_reason_display() if demo_request.cancellation_reason else 'No reason provided'
         cancellation_details = demo_request.cancellation_details or 'No additional details'
         
         notifications = []
         for admin in admins:
-            # ✅ Check permission before creating notification
             if not admin.has_permission('view_demo_requests'):
                 continue
                 
-            # Create notification
             if cancelled_by_customer:
-                title = f'Demo Request Cancelled by Customer'
-                message = (
-                    f'{demo_request.user.get_full_name()} cancelled their demo request for '
-                    f'"{demo_request.demo.title}". Reason: {cancellation_reason}'
-                )
+                title = 'Demo Request Cancelled by Customer'
+                message = f'{demo_request.user.get_full_name()} cancelled their demo request for "{demo_request.demo.title}". Reason: {cancellation_reason}'
             else:
-                title = f'Demo Request Cancelled'
-                message = (
-                    f'Demo request for "{demo_request.demo.title}" by {demo_request.user.get_full_name()} '
-                    f'has been cancelled.'
-                )
+                title = 'Demo Request Cancelled'
+                message = f'Demo request for "{demo_request.demo.title}" by {demo_request.user.get_full_name()} has been cancelled.'
             
             notification = Notification.objects.create(
                 user=admin,
@@ -656,7 +699,6 @@ class NotificationService:
             )
             notifications.append(notification)
             
-            # Send email if enabled
             if send_email:
                 context = {
                     'admin_name': admin.get_full_name() or 'Admin',
@@ -679,73 +721,70 @@ class NotificationService:
                     context=context
                 )
         
-        logger.info(f"✅ Sent cancellation notifications to {len(notifications)} admins with permission for request #{demo_request.id}")
+        logger.info(f"✅ Sent cancellation notifications to {len(notifications)} admins")
         return notifications
 
     @staticmethod
     def notify_employee_demo_assigned(demo_request, employee, send_email=True):
         """
-        Send notification to employee when demo is assigned to them
-        
-        Args:
-            demo_request: DemoRequest instance
-            employee: CustomUser instance (employee)
-            send_email: Whether to send email notification
+        Send notification to employee when demo is assigned
+        ✅ FIXED: Properly renders all template variables
         """
         try:
+            # ✅ Pre-format ALL values before any template rendering
+            employee_name = employee.get_full_name()
+            demo_title = demo_request.demo.title
+            customer_name = demo_request.user.get_full_name()
+            customer_email = demo_request.user.email
+            customer_phone = getattr(demo_request.user, 'mobile', None) or 'Not provided'
+            requested_date_str = demo_request.requested_date.strftime('%B %d, %Y')
+            requested_time_str = f"{demo_request.requested_time_slot.start_time.strftime('%I:%M %p')} - {demo_request.requested_time_slot.end_time.strftime('%I:%M %p')}"
+            demo_type_str = demo_request.demo.get_demo_type_display()
+            customer_notes_str = demo_request.notes or 'No additional notes provided'
+            
             print(f"\n{'='*60}")
             print(f"📧 NOTIFY EMPLOYEE - DEMO ASSIGNED")
             print(f"{'='*60}")
-            print(f"Employee: {employee.get_full_name()} ({employee.email})")
-            print(f"Demo: {demo_request.demo.title}")
-            print(f"Customer: {demo_request.user.get_full_name()}")
-            print(f"Date: {demo_request.requested_date}")
-            print(f"Time: {demo_request.requested_time_slot}")
-            print(f"Send Email: {send_email}")
+            print(f"Employee: {employee_name} ({employee.email})")
+            print(f"Demo: {demo_title}")
+            print(f"Customer: {customer_name}")
+            print(f"Date: {requested_date_str}")
+            print(f"Time: {requested_time_str}")
             
-            # Get or create notification template
+            # ✅ Try to get and render template
             try:
                 template = NotificationTemplate.objects.get(
                     notification_type='demo_assigned_to_employee',
                     is_active=True
                 )
-                print(f"✓ Found template: {template.title_template}")
+                
+                context = Context({
+                    'employee_name': employee_name,
+                    'demo_title': demo_title,
+                    'customer_name': customer_name,
+                    'customer_email': customer_email,
+                    'customer_phone': customer_phone,
+                    'requested_date': requested_date_str,
+                    'requested_time': requested_time_str,
+                    'demo_type': demo_type_str,
+                    'customer_notes': customer_notes_str,
+                })
+                
+                notification_title = Template(template.title_template).render(context)
+                notification_message = Template(template.message_template).render(context)
+                
+                print(f"✓ Template rendered successfully")
+                
             except NotificationTemplate.DoesNotExist:
-                print(f"⚠️ Template not found, using default")
-                template = None
-            
-            # Prepare context data
-            context = {
-                'employee_name': employee.get_full_name(),
-                'demo_title': demo_request.demo.title,
-                'customer_name': demo_request.user.get_full_name(),
-                'customer_email': demo_request.user.email,
-                'customer_phone': getattr(demo_request.user, 'phone', None) or getattr(demo_request.user, 'phone_number', None) or 'Not provided',
-                'requested_date': demo_request.requested_date.strftime('%B %d, %Y'),
-                'requested_time': f"{demo_request.requested_time_slot.start_time.strftime('%I:%M %p')} - {demo_request.requested_time_slot.end_time.strftime('%I:%M %p')}",
-                'demo_type': demo_request.demo.get_demo_type_display(),
-                'customer_notes': demo_request.notes or 'No additional notes',
-            }
-            
-            # Generate notification title and message
-            if template:
-                notification_title = template.render_title(context)
-                notification_message = template.render_message(context)
-            else:
-                notification_title = f"New Demo Assigned: {demo_request.demo.title}"
-                notification_message = (
-                    f"You have been assigned to conduct a demo for {demo_request.user.get_full_name()}.\n\n"
-                    f"Demo: {demo_request.demo.title}\n"
-                    f"Date: {context['requested_date']}\n"
-                    f"Time: {context['requested_time']}\n"
-                    f"Customer: {demo_request.user.get_full_name()} ({demo_request.user.email})\n\n"
-                    f"Please review the details and prepare accordingly."
-                )
+                # ✅ Fallback with pre-formatted values
+                notification_title = f"New Demo Assigned: {demo_title}"
+                notification_message = f"You have been assigned to conduct a demo for {customer_name}.\n\nDemo: {demo_title}\nDate: {requested_date_str}\nTime: {requested_time_str}\n\nCustomer: {customer_name} ({customer_email})\n\nPlease review the details and prepare accordingly."
+                print(f"⚠️ Using default template")
             
             print(f"📝 Title: {notification_title}")
-            print(f"📝 Message preview: {notification_message[:100]}...")
+            print(f"📝 Message: {notification_message[:100]}...")
             
-            # Create in-app notification
+            # ✅ CREATE notification with FULLY RENDERED text
             from django.contrib.contenttypes.models import ContentType
             from demos.models import DemoRequest
             
@@ -756,48 +795,45 @@ class NotificationService:
                 message=notification_message,
                 content_type=ContentType.objects.get_for_model(DemoRequest),
                 object_id=demo_request.id
-                # ✅ REMOVED priority='high' - field doesn't exist
             )
             
-            print(f"✅ In-app notification created (ID: {notification.id})")
+            print(f"✅ Notification created (ID: {notification.id})")
             
-            # Send email notification if enabled
+            # ✅ Send email if enabled
             if send_email:
                 try:
                     from django.core.mail import send_mail
-                    from django.conf import settings
                     
-                    email_subject = notification_title
                     email_body = f"""
-    Dear {employee.get_full_name()},
+Dear {employee_name},
 
-    {notification_message}
+{notification_message}
 
-    Demo Details:
-    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    - Demo: {demo_request.demo.title}
-    - Type: {context['demo_type']}
-    - Date: {context['requested_date']}
-    - Time: {context['requested_time']}
+Demo Details:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Demo: {demo_title}
+- Type: {demo_type_str}
+- Date: {requested_date_str}
+- Time: {requested_time_str}
 
-    Customer Information:
-    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    - Name: {demo_request.user.get_full_name()}
-    - Email: {demo_request.user.email}
-    - Phone: {context['customer_phone']}
+Customer Information:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Name: {customer_name}
+- Email: {customer_email}
+- Phone: {customer_phone}
 
-    Additional Notes:
-    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    {context['customer_notes']}
+Additional Notes:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{customer_notes_str}
 
-    Please log in to the admin portal to view full details and confirm your availability.
+Please log in to the admin portal to view full details.
 
-    Best regards,
-    Demo Management System
+Best regards,
+Demo Management System
                     """
                     
                     send_mail(
-                        subject=email_subject,
+                        subject=notification_title,
                         message=email_body,
                         from_email=settings.DEFAULT_FROM_EMAIL,
                         recipient_list=[employee.email],
@@ -807,24 +843,24 @@ class NotificationService:
                     print(f"✅ Email sent to {employee.email}")
                     
                 except Exception as email_error:
-                    print(f"⚠️ Email failed but notification created: {email_error}")
+                    print(f"⚠️ Email failed: {email_error}")
             
             print(f"{'='*60}\n")
             return notification
             
         except Exception as e:
-            print(f"❌ Error in notify_employee_demo_assigned: {e}")
+            print(f"❌ Error: {e}")
             import traceback
             traceback.print_exc()
             return None
 
     @staticmethod
     def notify_employee_demo_unassigned(demo_request, employee, send_email=True):
-        """Notify employee when a demo assignment is removed"""
+        """Notify employee when demo assignment is removed"""
         notification = Notification.objects.create(
             user=employee,
             title='Demo Assignment Removed',
-            message=f'Your assignment for demo "{demo_request.demo.title}" has been removed.',
+            message=f'Your assignment for demo "{demo_request.demo.title}" (Customer: {demo_request.user.get_full_name()}) has been removed.',
             notification_type='demo_request',
             content_object=demo_request
         )
@@ -847,19 +883,7 @@ class NotificationService:
     
     @staticmethod
     def send_custom_notification(user, title, message, notification_type='system_announcement', link=None, send_email=False, email_subject=None):
-        """
-        Send a custom notification (for bulk sending)
-        
-        Args:
-            user: User object
-            title: Notification title
-            message: Notification message
-            notification_type: Type of notification
-            link: Optional link
-            send_email: Whether to send email
-            email_subject: Custom email subject
-        """
-        # Create notification
+        """Send a custom notification"""
         notification = Notification.objects.create(
             user=user,
             title=title,
@@ -867,7 +891,6 @@ class NotificationService:
             notification_type=notification_type
         )
         
-        # Send email if requested
         if send_email:
             context = {
                 'title': title,
@@ -890,18 +913,16 @@ class NotificationService:
     
     @staticmethod
     def get_unread_count(user):
-        """Get unread notification count for user"""
+        """Get unread notification count"""
         try:
             return Notification.objects.filter(user=user, is_read=False).count()
         except Exception as e:
             logger.error(f"❌ Error getting unread count: {e}")
-            import traceback
-            traceback.print_exc()
             return 0
     
     @staticmethod
     def mark_as_read(notification_id, user):
-        """Mark specific notification as read"""
+        """Mark notification as read"""
         try:
             notification = Notification.objects.get(id=notification_id, user=user)
             notification.is_read = True
@@ -909,15 +930,14 @@ class NotificationService:
             notification.save(update_fields=['is_read', 'read_at'])
             return True
         except Notification.DoesNotExist:
-            logger.error(f"Notification {notification_id} not found for user {user.id}")
             return False
         except Exception as e:
-            logger.error(f"❌ Error marking notification as read: {e}")
+            logger.error(f"❌ Error: {e}")
             return False
     
     @staticmethod
     def mark_all_as_read(user):
-        """Mark all user notifications as read"""
+        """Mark all notifications as read"""
         try:
             return Notification.objects.filter(
                 user=user,
@@ -927,21 +947,21 @@ class NotificationService:
                 read_at=timezone.now()
             )
         except Exception as e:
-            logger.error(f"❌ Error marking all as read: {e}")
+            logger.error(f"❌ Error: {e}")
             return 0
     
     @staticmethod
     def get_recent_notifications(user, limit=10):
-        """Get recent notifications for user"""
+        """Get recent notifications"""
         try:
             return Notification.objects.filter(user=user).order_by('-created_at')[:limit]
         except Exception as e:
-            logger.error(f"❌ Error getting recent notifications: {e}")
+            logger.error(f"❌ Error: {e}")
             return []
     
     @staticmethod
     def delete_old_notifications(days=90):
-        """Clean up old read notifications"""
+        """Clean up old notifications"""
         try:
             from datetime import timedelta
             cutoff = timezone.now() - timedelta(days=days)
@@ -952,76 +972,5 @@ class NotificationService:
             logger.info(f"✅ Deleted {count} old notifications")
             return count
         except Exception as e:
-            logger.error(f"❌ Error deleting old notifications: {e}")
+            logger.error(f"❌ Error: {e}")
             return 0
-        
-    @staticmethod
-    def notify_account_blocked(user, reason='Policy violation', send_email=True):
-        """
-        Account blocked notification - CREATES IN-APP NOTIFICATION
-        
-        Args:
-            user: User object
-            reason: Reason for blocking
-            send_email: Whether to send email notification
-        """
-        # ✅ CREATE IN-APP NOTIFICATION
-        notification = Notification.objects.create(
-            user=user,
-            title='Account Blocked',
-            message=f'Your account has been blocked. Reason: {reason}',
-            notification_type='account_blocked'
-        )
-        
-        # ✅ SEND EMAIL IF ENABLED
-        if send_email:
-            context = {
-                'reason': reason,
-                'blocked_date': timezone.now().strftime('%B %d, %Y'),
-            }
-            NotificationService.send_email_notification(
-                user=user,
-                subject='Account Status Update - Demo Portal',
-                template_name='account_blocked',
-                context=context
-            )
-        
-        logger.info(f"✅ Account blocked notification sent to {user.email}")
-        return notification
-    
-    @staticmethod
-    def notify_account_unblocked(user, send_email=True):
-        """
-        Account unblocked notification - CREATES IN-APP NOTIFICATION
-        
-        Args:
-            user: User object
-            send_email: Whether to send email notification
-        """
-        # ✅ CREATE IN-APP NOTIFICATION
-        notification = Notification.objects.create(
-            user=user,
-            title='Account Reactivated',
-            message='Good news! Your Demo Portal account has been reactivated. You can now access all features.',
-            notification_type='account_unblocked'
-        )
-        
-        # ✅ SEND EMAIL IF ENABLED
-        if send_email:
-            from django.urls import reverse
-            site_url = getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000')
-            login_url = f"{site_url}/auth/signin/"
-            
-            context = {
-                'login_url': login_url,
-                'reactivation_date': timezone.now().strftime('%B %d, %Y at %I:%M %p'),
-            }
-            NotificationService.send_email_notification(
-                user=user,
-                subject='✅ Account Reactivated - Demo Portal',
-                template_name='account_unblocked',
-                context=context
-            )
-        
-        logger.info(f"✅ Account unblocked notification sent to {user.email}")
-        return notification    

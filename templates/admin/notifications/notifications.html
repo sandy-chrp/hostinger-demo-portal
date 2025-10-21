@@ -2,8 +2,42 @@
 {% extends 'admin/base.html' %}
 {% load static %}
 
-{% block admin_title %}Notifications Management{% endblock %}
-{% block page_title %}Notifications{% endblock %}
+{% block admin_title %}
+    {% if user.is_superuser %}
+        All Notifications Management
+    {% else %}
+        My Notifications
+    {% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if user.is_superuser %}
+        All Notifications
+    {% else %}
+        My Notifications
+    {% endif %}
+{% endblock %}
+
+{% block breadcrumb %}
+<div class="admin-breadcrumb">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:admin_dashboard' %}">
+                    <i class="fas fa-home me-1"></i>Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item active">
+                {% if user.is_superuser %}
+                    All Notifications
+                {% else %}
+                    My Notifications
+                {% endif %}
+            </li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
 
 {% block admin_extra_css %}
 <style>
@@ -120,6 +154,13 @@
 
     .header-title i {
         color: #087fc2;
+    }
+
+    .header-title .badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.35rem 0.65rem;
+        margin-left: 0.5rem;
     }
 
     .header-toolbar {
@@ -270,9 +311,13 @@
     .type-new_customer { background: #dbeafe; color: #1e40af; }
     .type-demo_request { background: #fef3c7; color: #92400e; }
     .type-demo_cancellation { background: #fee2e2; color: #991b1b; }
+    .type-demo_assigned_to_employee { background: #ddd6fe; color: #5b21b6; }
     .type-enquiry { background: #e0e7ff; color: #3730a3; }
     .type-milestone { background: #d1fae5; color: #065f46; }
     .type-system_announcement { background: #e9d5ff; color: #6b21a8; }
+    .type-account_approved { background: #d1fae5; color: #065f46; }
+    .type-account_blocked { background: #fee2e2; color: #991b1b; }
+    .type-demo_confirmation { background: #d1fae5; color: #065f46; }
 
     .email-indicator {
         background: #d1fae5;
@@ -308,6 +353,7 @@
         line-height: 1.6;
         margin-bottom: 1rem;
         font-size: 0.9375rem;
+        white-space: pre-wrap;
     }
 
     .user-details {
@@ -461,12 +507,12 @@
 <!-- Statistics Overview -->
 <div class="stats-overview">
     <div class="stat-box total">
-        <div class="stat-value">{{ stats.total_notifications|default:"0" }}</div>
+        <div class="stat-value">{{ total_count|default:"0" }}</div>
         <div class="stat-text">Total</div>
     </div>
     
     <div class="stat-box unread">
-        <div class="stat-value">{{ stats.unread_notifications|default:"0" }}</div>
+        <div class="stat-value">{{ unread_count|default:"0" }}</div>
         <div class="stat-text">Unread</div>
     </div>
     
@@ -477,7 +523,7 @@
     
     <div class="stat-box sent">
         <div class="stat-value">{{ stats.email_sent|default:"0" }}</div>
-        <div class="stat-text">Sent</div>
+        <div class="stat-text">Email Sent</div>
     </div>
 </div>
 
@@ -508,7 +554,7 @@
         <div class="col-md-5">
             <label class="form-label">Search</label>
             <input type="text" name="q" class="form-control" 
-                   placeholder="Search..." 
+                   placeholder="Search notifications..." 
                    value="{{ search_query }}">
         </div>
         
@@ -526,7 +572,14 @@
     <div class="container-header">
         <h3 class="header-title">
             <i class="fas fa-bell"></i>
-            Notifications
+            {% if user.is_superuser %}
+                All Notifications
+            {% else %}
+                My Notifications
+            {% endif %}
+            {% if notifications %}
+            <span class="badge bg-primary">{{ notifications|length }}</span>
+            {% endif %}
         </h3>
         <div class="header-toolbar">
             <button type="button" class="toolbar-btn" onclick="toggleAllRead()">
@@ -535,7 +588,7 @@
             </button>
             <button type="button" class="toolbar-btn" onclick="selectAll()">
                 <i class="fas fa-check-square"></i>
-                <span>Select</span>
+                <span>Select All</span>
             </button>
             <button type="button" class="toolbar-btn danger" onclick="bulkDelete()">
                 <i class="fas fa-trash"></i>
@@ -564,7 +617,10 @@
                                 {{ notification.title }}
                                 <i class="fas fa-chevron-down collapse-icon"></i>
                             </div>
-                            <span class="notif-timestamp">{{ notification.created_at|timesince }} ago</span>
+                            <span class="notif-timestamp">
+                                <i class="fas fa-clock"></i>
+                                {{ notification.created_at|timesince }} ago
+                            </span>
                         </div>
                         
                         <div class="notif-badges">
@@ -573,7 +629,7 @@
                             </span>
                             {% if notification.email_sent %}
                             <span class="email-indicator">
-                                <i class="fas fa-check"></i> Sent
+                                <i class="fas fa-check"></i> Email Sent
                             </span>
                             {% endif %}
                         </div>
@@ -582,15 +638,6 @@
                 
                 <div class="notif-content">
                     <p class="notif-text">{{ notification.message }}</p>
-                    
-                    {% if notification.user %}
-                    <div class="user-details">
-                        <i class="fas fa-user-circle"></i>
-                        <strong>User:</strong> 
-                        {{ notification.user.get_full_name|default:"Unknown" }}
-                        <span class="email">({{ notification.user.email }})</span>
-                    </div>
-                    {% endif %}
                     
                     <div class="notif-actions-row">
                         {% if not notification.is_read %}
@@ -609,8 +656,14 @@
             {% empty %}
             <div class="empty-state">
                 <i class="fas fa-inbox"></i>
-                <h4>No Notifications</h4>
-                <p>You're all caught up!</p>
+                <h4>No Notifications Found</h4>
+                <p>
+                    {% if filter_type != 'all' or filter_status != 'all' or search_query %}
+                        Try adjusting your filters or search terms.
+                    {% else %}
+                        You're all caught up! No new notifications.
+                    {% endif %}
+                </p>
             </div>
             {% endfor %}
         </form>
@@ -623,19 +676,19 @@
                 {% if notifications.has_previous %}
                 <li class="page-item">
                     <a class="page-link" href="?page={{ notifications.previous_page_number }}&type={{ filter_type }}&status={{ filter_status }}&q={{ search_query }}">
-                        Previous
+                        <i class="fas fa-chevron-left"></i> Previous
                     </a>
                 </li>
                 {% endif %}
                 
                 <li class="page-item active">
-                    <span class="page-link">{{ notifications.number }} / {{ notifications.paginator.num_pages }}</span>
+                    <span class="page-link">{{ notifications.number }} of {{ notifications.paginator.num_pages }}</span>
                 </li>
                 
                 {% if notifications.has_next %}
                 <li class="page-item">
                     <a class="page-link" href="?page={{ notifications.next_page_number }}&type={{ filter_type }}&status={{ filter_status }}&q={{ search_query }}">
-                        Next
+                        Next <i class="fas fa-chevron-right"></i>
                     </a>
                 </li>
                 {% endif %}
@@ -648,8 +701,16 @@
 
 {% block admin_extra_js %}
 <script>
+// Disable right-click
 document.addEventListener('contextmenu', e => e.preventDefault());
 
+// CSRF Token Helper
+function getToken() {
+    const cookie = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
+    return cookie ? decodeURIComponent(cookie.split('=')[1]) : null;
+}
+
+// Toggle individual item expand/collapse
 function toggleItem(id) {
     const item = document.querySelector(`[data-id="${id}"]`);
     if (item) {
@@ -657,6 +718,7 @@ function toggleItem(id) {
     }
 }
 
+// Toggle all read items
 function toggleAllRead() {
     const readItems = document.querySelectorAll('[data-status="read"]');
     const icon = document.getElementById('toggleIcon');
@@ -680,26 +742,34 @@ function toggleAllRead() {
     }
 }
 
+// Select all checkboxes
 function selectAll() {
     const checkboxes = document.querySelectorAll('.notif-select');
     const allChecked = Array.from(checkboxes).every(cb => cb.checked);
     checkboxes.forEach(cb => cb.checked = !allChecked);
 }
 
+// Bulk delete selected notifications
 function bulkDelete() {
     const checked = document.querySelectorAll('.notif-select:checked');
     if (checked.length === 0) {
-        alert('⚠️ Select notifications first');
+        alert('⚠️ Please select notifications first');
         return;
     }
-    if (confirm(`Delete ${checked.length} notification(s)?`)) {
+    if (confirm(`Delete ${checked.length} notification(s)? This cannot be undone.`)) {
         document.getElementById('bulkAction').value = 'delete';
         document.getElementById('bulkForm').submit();
     }
 }
 
+// Mark single notification as read
 function markRead(id) {
-    fetch(`/notifications/api/admin/${id}/read/`, {
+    const btn = event.target.closest('button');
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    btn.disabled = true;
+    
+    fetch(`/admin/notifications/${id}/mark-read/`, {
         method: 'POST',
         headers: {
             'X-CSRFToken': getToken(),
@@ -707,28 +777,57 @@ function markRead(id) {
         }
     })
     .then(r => r.json())
-    .then(data => data.success ? location.reload() : alert('Error'))
-    .catch(() => alert('Error'));
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert('❌ Failed to mark as read');
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('❌ An error occurred');
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    });
 }
 
+// Delete single notification
 function deleteItem(id) {
-    if (confirm('Delete notification?')) {
-        fetch(`/notifications/api/admin/${id}/delete/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getToken(),
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(r => r.json())
-        .then(data => data.success ? location.reload() : alert('Error'))
-        .catch(() => alert('Error'));
+    if (!confirm('Delete this notification? This action cannot be undone.')) {
+        return;
     }
-}
-
-function getToken() {
-    const cookie = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
-    return cookie ? decodeURIComponent(cookie.split('=')[1]) : null;
+    
+    const btn = event.target.closest('button');
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+    btn.disabled = true;
+    
+    fetch(`/admin/notifications/${id}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getToken(),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert('❌ Failed to delete notification');
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('❌ An error occurred');
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    });
 }
 </script>
 {% endblock %}

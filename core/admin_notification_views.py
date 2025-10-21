@@ -24,15 +24,18 @@ import json
 @login_required
 @user_passes_test(is_admin)
 def admin_notifications_view(request):
-    """Main notifications dashboard"""
+    """Main notifications dashboard - Staff only sees their assigned notifications"""
     
     # Get filter parameters
     filter_type = request.GET.get('type', 'all')
     filter_status = request.GET.get('status', 'all')
     search_query = request.GET.get('q', '')
     
-    # Base queryset
-    notifications = Notification.objects.select_related('user').order_by('-created_at')
+    # ✅ CRITICAL: Staff only sees THEIR OWN notifications
+    # Base queryset - filter by current user
+    notifications = Notification.objects.filter(
+        user=request.user  # ✅ Only show notifications for logged-in user
+    ).select_related('user').order_by('-created_at')
     
     # Apply filters
     if filter_type != 'all':
@@ -46,10 +49,7 @@ def admin_notifications_view(request):
     if search_query:
         notifications = notifications.filter(
             Q(title__icontains=search_query) |
-            Q(message__icontains=search_query) |
-            Q(user__first_name__icontains=search_query) |
-            Q(user__last_name__icontains=search_query) |
-            Q(user__email__icontains=search_query)
+            Q(message__icontains=search_query)
         )
     
     # Pagination
@@ -57,45 +57,65 @@ def admin_notifications_view(request):
     page = request.GET.get('page')
     notifications_page = paginator.get_page(page)
     
-    # Statistics
+    # ✅ Statistics - ONLY for current user
     stats = {
-        'total_notifications': Notification.objects.count(),
-        'unread_notifications': Notification.objects.filter(is_read=False).count(),
+        'total_notifications': Notification.objects.filter(user=request.user).count(),
+        'unread_notifications': Notification.objects.filter(user=request.user, is_read=False).count(),
         'today_notifications': Notification.objects.filter(
+            user=request.user,
             created_at__date=timezone.now().date()
         ).count(),
-        'email_sent': Notification.objects.filter(email_sent=True).count(),
+        'email_sent': Notification.objects.filter(user=request.user, email_sent=True).count(),
         'email_failed': Notification.objects.filter(
+            user=request.user,
             email_sent=False,
             email_error__isnull=False
         ).exclude(email_error='').count(),
     }
     
-    # Notification type distribution
-    type_distribution = Notification.objects.values('notification_type').annotate(
+    # ✅ Notification type distribution - ONLY for current user
+    type_distribution = Notification.objects.filter(
+        user=request.user
+    ).values('notification_type').annotate(
         count=Count('id')
     ).order_by('-count')
     
-    # Recent system announcements
+    # Recent system announcements (these can be global)
     announcements = SystemAnnouncement.objects.filter(
         is_active=True,
         start_date__lte=timezone.now(),
         end_date__gte=timezone.now()
     ).order_by('-created_at')[:5]
     
-    # Pending items that need notifications
-    pending_items = {
-        'pending_approvals': User.objects.filter(
-            is_approved=False, 
-            is_active=True
-        ).count(),
-        'open_enquiries': BusinessEnquiry.objects.filter(status='open').count(),
-        'pending_demo_requests': DemoRequest.objects.filter(status='pending').count(),
-        'overdue_enquiries': BusinessEnquiry.objects.filter(
-            status='open',
-            created_at__lt=timezone.now() - timedelta(hours=24)
-        ).count(),
-    }
+    # ✅ Pending items - Different logic for staff vs superadmin
+    if request.user.is_superuser:
+        # Superadmin sees everything
+        pending_items = {
+            'pending_approvals': User.objects.filter(
+                is_approved=False, 
+                is_active=True
+            ).count(),
+            'open_enquiries': BusinessEnquiry.objects.filter(status='open').count(),
+            'pending_demo_requests': DemoRequest.objects.filter(status='pending').count(),
+            'overdue_enquiries': BusinessEnquiry.objects.filter(
+                status='open',
+                created_at__lt=timezone.now() - timedelta(hours=24)
+            ).count(),
+        }
+    else:
+        # ✅ Regular staff - only see items assigned to them
+        pending_items = {
+            'pending_approvals': 0,  # Staff don't approve users
+            'open_enquiries': BusinessEnquiry.objects.filter(
+                assigned_to=request.user, 
+                status='open'
+            ).count(),
+            'pending_demo_requests': DemoRequest.objects.filter(
+                assigned_to=request.user,
+                status='pending'
+            ).count(),
+            'overdue_enquiries': 0,  # Not relevant for staff
+        }
     
     context = {
         'notifications': notifications_page,
@@ -112,10 +132,15 @@ def admin_notifications_view(request):
         'pending_approvals': pending_items['pending_approvals'],
         'open_enquiries': pending_items['open_enquiries'],
         'demo_requests_pending': pending_items['pending_demo_requests'],
+        
+        # ✅ NEW: Add counts for template
+        'total_count': stats['total_notifications'],
+        'unread_count': stats['unread_notifications'],
+        'read_count': stats['total_notifications'] - stats['unread_notifications'],
+        'type_counts': type_distribution,
     }
     
     return render(request, 'admin/notifications/notifications.html', context)
-
 
 @login_required
 @user_passes_test(is_admin)
