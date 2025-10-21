@@ -9,9 +9,7 @@ COPY . .
 
 RUN mkdir -p /app/static /app/media /app/staticfiles
 
-RUN python manage.py makemigrations
-RUN python manage.py migrate
-RUN python manage.py collectstatic --noinput
+
 
 EXPOSE 8000
 
