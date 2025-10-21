@@ -1,4 +1,6 @@
-# Python
+# ============================================
+# PYTHON
+# ============================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -7,49 +9,153 @@ __pycache__/
 env/
 venv/
 ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Django
+# ============================================
+# DJANGO
+# ============================================
 *.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
 staticfiles/
+static_cdn/
 
-# Environment
+# ============================================
+# ENVIRONMENT FILES - CRITICAL!
+# ============================================
 .env
+.env.*
+!.env.example
+*.env
 .env.local
+.env.production
+.env.staging
 
-# IDE
+# ============================================
+# BACKUPS
+# ============================================
+*.backup
+*.bak
+*.sql
+*.dump
+
+# ============================================
+# IDE & EDITORS
+# ============================================
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.project
+.pydevproject
+.settings/
 
-# OS
+# ============================================
+# OS FILES
+# ============================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Media files - Large files excluded
-media/
-media/*
-media/demos/videos/
-media/demos/webgl/
-media/demos/thumbnails/
+# ============================================
+# MEDIA FILES - LARGE FILES
+# ============================================
+# Allow media/ folder structure but ignore large files
+media/demos/videos/*.mp4
+media/demos/videos/*.avi
+media/demos/videos/*.mov
+media/demos/videos/*.wmv
+media/demos/videos/*.mkv
+media/demos/videos/*.flv
+
+# WebGL files (too large)
+media/demos/webgl/*.zip
+media/demos/webgl/*.data
+media/demos/webgl/*.wasm
+media/demos/webgl/*.bundle.js
+media/demos/webgl/*.framework.js
+media/demos/webgl/*.loader.js
+
+# Extracted WebGL builds
 media/webgl_extracted/
 
-# Video files
-*.mp4
-*.avi
-*.mov
-*.wmv
+# Allow placeholder files
+!media/.gitkeep
+!media/demos/.gitkeep
+!media/demos/videos/.gitkeep
+!media/demos/webgl/.gitkeep
+!media/demos/thumbnails/.gitkeep
 
-# Large build files
-*.zip
-*.data
-*.wasm
-*.bundle
-*.framework.js
-*.loader.js
+# ============================================
+# TESTING
+# ============================================
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+*.cover
+.hypothesis/
 
-# Unity WebGL Build
-media/webgl_extracted/**/Build/
+# ============================================
+# DOCKER
+# ============================================
+*.dockerignore
+docker-compose.override.yml
+
+# ============================================
+# LOGS & TEMP
+# ============================================
+*.log
+*.pot
+*.pyc
+celerybeat-schedule
+celerybeat.pid
+*.pid
+*.seed
+
+# ============================================
+# NODE (if using frontend tools)
+# ============================================
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# ============================================
+# SECRETS & CREDENTIALS
+# ============================================
+secret_key.txt
+*.pem
+*.key
+*.cert
+credentials.json
+service-account.json
+
+# ============================================
+# TEMPORARY FILES
+# ============================================
+*.tmp
+*.temp
+~*
