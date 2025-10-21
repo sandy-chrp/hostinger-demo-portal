@@ -319,8 +319,15 @@ def resend_otp_view(request):
 # ===== OTHER AUTHENTICATION VIEWS =====
 
 def signin_view(request):
-    """User login view with approval status check"""
+    """User login view with approval status check - ✅ FIXED REDIRECT"""
+    
+    # ✅ If already logged in, redirect appropriately
     if request.user.is_authenticated:
+        # Check if staff/admin
+        if request.user.is_staff or request.user.is_superuser:
+            return redirect('core:admin_dashboard')
+        
+        # Customer checks
         if hasattr(request.user, 'is_approved'):
             if request.user.is_approved and request.user.is_active:
                 return redirect('customers:dashboard')
@@ -329,10 +336,7 @@ def signin_view(request):
             elif not request.user.is_active:
                 return redirect('accounts:account_blocked')
         else:
-            if request.user.is_staff or request.user.is_superuser:
-                return redirect('core:admin_dashboard')
-            else:
-                return redirect('customers:dashboard')
+            return redirect('customers:dashboard')
     
     if request.method == 'POST':
         form = SignInForm(request.POST)
@@ -341,9 +345,27 @@ def signin_view(request):
             password = form.cleaned_data['password']
             
             user = authenticate(request, username=email, password=password)
+            
             if user:
-                if hasattr(user, 'is_approved'):
-                    # Customer user
+                # ✅ CHECK 1: Staff/Admin User
+                if user.is_staff or user.is_superuser:
+                    if not user.is_active:
+                        messages.error(request, 'Your admin account has been disabled.')
+                        return redirect('accounts:signin')
+                    
+                    login(request, user)
+                    messages.success(request, 'Welcome back, Admin!')
+                    
+                    # Redirect to next or admin dashboard
+                    next_url = request.GET.get('next')
+                    if next_url and next_url.startswith('/admin/'):
+                        return redirect(next_url)
+                    else:
+                        return redirect('core:admin_dashboard')
+                
+                # ✅ CHECK 2: Customer User
+                elif hasattr(user, 'is_approved'):
+                    # Check approval status
                     if not user.is_approved:
                         messages.warning(request, 'Your account is pending approval. Please wait for admin confirmation.')
                         return redirect('accounts:pending_approval')
@@ -360,32 +382,27 @@ def signin_view(request):
                     login(request, user)
                     messages.success(request, f'Welcome back, {user.full_name}!')
                     
-                    # Redirect based on next parameter
+                    # Redirect to next or customer dashboard
                     next_url = request.GET.get('next')
-                    if next_url and next_url.startswith('/dashboard/'):
+                    if next_url and next_url.startswith('/customer/'):
                         return redirect(next_url)
                     else:
                         return redirect('customers:dashboard')
+                
                 else:
-                    # Staff/Admin user
-                    if not user.is_active:
-                        messages.error(request, 'Your admin account has been disabled.')
-                        return redirect('accounts:signin')
-                    
-                    if not (user.is_staff or user.is_superuser):
-                        messages.error(request, 'You do not have admin access.')
-                        return redirect('accounts:signin')
-                    
-                    login(request, user)
-                    messages.success(request, 'Welcome back, Admin!')
-                    
-                    next_url = request.GET.get('next')
-                    if next_url and next_url.startswith('/admin/'):
-                        return redirect(next_url)
-                    else:
-                        return redirect('core:admin_dashboard')
+                    # Unknown user type
+                    messages.error(request, 'Invalid user type. Please contact support.')
+                    return redirect('accounts:signin')
+            
             else:
                 messages.error(request, 'Invalid email or password.')
+        
+        else:
+            # Form validation errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    
     else:
         form = SignInForm()
     
