@@ -38,6 +38,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     'rest_framework',
     'corsheaders',
+    'storages',
 ]
 
 LOCAL_APPS = [
@@ -183,21 +184,7 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-# =====================================
-# WEBGL VIEWER CONFIGURATION - NEW
-# =====================================
-
-# WebGL Extraction Directory (for ZIP files)
-WEBGL_EXTRACT_DIR = os.path.join(MEDIA_ROOT, 'webgl_extracted')
-# Debug output (only in DEBUG mode)
-if DEBUG:
-    print(f"\nWebGL Paths:")
-    print(f"  MEDIA_ROOT: {MEDIA_ROOT}")
-    print(f"  WEBGL_EXTRACT_DIR: {WEBGL_EXTRACT_DIR}\n")
+WEBGL_EXTRACT_DIR = os.path.join(BASE_DIR, 'media', 'webgl_extracted')
 os.makedirs(WEBGL_EXTRACT_DIR, exist_ok=True)
 
 # Demo File Upload Settings
@@ -403,10 +390,61 @@ if not LOGS_DIR.exists():
 # LOGIN REDIRECT
 # =====================================
 LOGIN_REDIRECT_URL = '/admin/dashboard/'
-LOGIN_URL = '/accounts/signin/'
-LOGOUT_REDIRECT_URL = '/accounts/signin/'
+LOGIN_URL = '/auth/signin/'  # ✅ CHANGED from /accounts/signin/ to /auth/signin/
+LOGOUT_REDIRECT_URL = '/auth/signin/'  # ✅ CHANGED
 
 # Session settings
 SESSION_COOKIE_AGE = 86400  # 24 hours
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+# Media files will use S3
+USE_S3 = os.getenv('USE_S3', 'False') == 'True'
+
+if USE_S3:
+    # AWS Settings
+    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'us-east-1')
+    AWS_S3_CUSTOM_DOMAIN = os.getenv('AWS_S3_CUSTOM_DOMAIN')
+    
+    # S3 Storage Settings
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=86400',
+    }
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_QUERYSTRING_AUTH = False
+    AWS_S3_FILE_OVERWRITE = False
+    
+    # ✅ Django 5.2+ Storage Configuration
+    STORAGES = {
+        "default": {
+            "BACKEND": "custom_storages.MediaStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+    
+    print("\n" + "="*60)
+    print("📦 AWS S3 STORAGE: ENABLED")
+    print(f"📍 Bucket: {AWS_STORAGE_BUCKET_NAME}")
+    print(f"🌍 Region: {AWS_S3_REGION_NAME}")
+    print("="*60 + "\n")
+else:
+    # Local storage (default)
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
+    print("\n" + "="*60)
+    print("📁 LOCAL STORAGE: ENABLED")
+    print(f"📍 Media Root: {MEDIA_ROOT}")
+    print("="*60 + "\n")

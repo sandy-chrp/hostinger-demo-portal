@@ -127,14 +127,6 @@
                                       placeholder="Enter role description">{{ role.description }}</textarea>
                         </div>
 
-                        <!-- Priority -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Priority (0-100)</label>
-                            <input type="number" name="priority" class="form-control" 
-                                   value="{{ role.priority }}" min="0" max="100">
-                            <small class="text-muted">Higher number = more access</small>
-                        </div>
-
                         <!-- Active -->
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" 
@@ -149,7 +141,7 @@
                 </div>
 
                 <!-- Stats Card -->
-                <div class="card">
+                {% comment %} <div class="card">
                     <div class="card-header">
                         <h5 class="mb-0">Statistics</h5>
                     </div>
@@ -163,7 +155,7 @@
                             <div class="stat-label">Selected Permissions</div>
                         </div>
                     </div>
-                </div>
+                </div> {% endcomment %}
 
             </div>
 

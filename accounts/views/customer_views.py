@@ -319,83 +319,116 @@ def resend_otp_view(request):
 # ===== OTHER AUTHENTICATION VIEWS =====
 
 def signin_view(request):
-    """User login view with approval status check - ✅ FIXED REDIRECT"""
+    """
+    Customer login view - ONLY for customers
+    Admin/Staff/Employees CANNOT login here
+    """
     
-    # ✅ If already logged in, redirect appropriately
+    # If already logged in, redirect based on user type
     if request.user.is_authenticated:
-        # Check if staff/admin
+        # Check if Staff/Admin/Employee
         if request.user.is_staff or request.user.is_superuser:
+            messages.warning(request, 'Admin/Staff users cannot access customer portal.')
             return redirect('core:admin_dashboard')
         
-        # Customer checks
-        if hasattr(request.user, 'is_approved'):
+        # Check if Employee (using user_type field)
+        if hasattr(request.user, 'user_type') and request.user.user_type == 'employee':
+            messages.warning(request, 'Employee accounts cannot access customer portal.')
+            return redirect('core:admin_dashboard')
+        
+        # Customer - check approval status
+        if hasattr(request.user, 'is_approved') and hasattr(request.user, 'is_active'):
             if request.user.is_approved and request.user.is_active:
                 return redirect('customers:dashboard')
             elif not request.user.is_approved:
                 return redirect('accounts:pending_approval')
             elif not request.user.is_active:
                 return redirect('accounts:account_blocked')
-        else:
-            return redirect('customers:dashboard')
+        
+        # Default redirect for customers
+        return redirect('customers:dashboard')
     
+    # Handle POST request (login attempt)
     if request.method == 'POST':
         form = SignInForm(request.POST)
+        
         if form.is_valid():
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             
+            # Authenticate user
             user = authenticate(request, username=email, password=password)
             
-            if user:
-                # ✅ CHECK 1: Staff/Admin User
-                if user.is_staff or user.is_superuser:
-                    if not user.is_active:
-                        messages.error(request, 'Your admin account has been disabled.')
-                        return redirect('accounts:signin')
-                    
-                    login(request, user)
-                    messages.success(request, 'Welcome back, Admin!')
-                    
-                    # Redirect to next or admin dashboard
-                    next_url = request.GET.get('next')
-                    if next_url and next_url.startswith('/admin/'):
-                        return redirect(next_url)
-                    else:
-                        return redirect('core:admin_dashboard')
+            if user is not None:
                 
-                # ✅ CHECK 2: Customer User
-                elif hasattr(user, 'is_approved'):
-                    # Check approval status
+                # ✅ CRITICAL CHECK #1: Block Staff Users
+                if user.is_staff or user.is_superuser:
+                    messages.error(
+                        request, 
+                        'Admin/Staff users cannot login here. Please use the Admin Panel.'
+                    )
+                    return render(request, 'accounts/signin.html', {'form': form})
+                
+                # ✅ CRITICAL CHECK #2: Block Employee Users
+                if hasattr(user, 'user_type') and user.user_type == 'employee':
+                    messages.error(
+                        request, 
+                        'Employee accounts cannot login here. Please use the Admin Panel.'
+                    )
+                    return render(request, 'accounts/signin.html', {'form': form})
+                
+                # ✅ CUSTOMER VALIDATION
+                # Check if user has approval fields
+                if hasattr(user, 'is_approved'):
+                    
+                    # Check if account is approved
                     if not user.is_approved:
-                        messages.warning(request, 'Your account is pending approval. Please wait for admin confirmation.')
+                        messages.warning(
+                            request, 
+                            'Your account is pending approval. Please wait for admin confirmation.'
+                        )
                         return redirect('accounts:pending_approval')
                     
+                    # Check if account is active
                     if not user.is_active:
-                        messages.error(request, 'Your account has been blocked. Please contact support.')
+                        messages.error(
+                            request, 
+                            'Your account has been blocked. Please contact support.'
+                        )
                         return redirect('accounts:account_blocked')
-                    
+                
+                # ✅ UPDATE USER INFO
+                try:
                     # Update last login IP
                     user.last_login_ip = get_client_ip(request)
                     user.save(update_fields=['last_login_ip'])
-                    
-                    # Login user
-                    login(request, user)
-                    messages.success(request, f'Welcome back, {user.full_name}!')
-                    
-                    # Redirect to next or customer dashboard
-                    next_url = request.GET.get('next')
-                    if next_url and next_url.startswith('/customer/'):
-                        return redirect(next_url)
-                    else:
-                        return redirect('customers:dashboard')
+                except Exception as e:
+                    # Ignore save errors (field might not exist)
+                    pass
                 
+                # ✅ LOGIN SUCCESS
+                login(request, user)
+                
+                # Get user's full name
+                if hasattr(user, 'full_name'):
+                    user_name = user.full_name
+                elif hasattr(user, 'get_full_name'):
+                    user_name = user.get_full_name()
                 else:
-                    # Unknown user type
-                    messages.error(request, 'Invalid user type. Please contact support.')
-                    return redirect('accounts:signin')
+                    user_name = user.email
+                
+                messages.success(request, f'Welcome back, {user_name}!')
+                
+                # Redirect to next URL or dashboard
+                next_url = request.GET.get('next', '')
+                if next_url and next_url.startswith('/customer/'):
+                    return redirect(next_url)
+                else:
+                    return redirect('customers:dashboard')
             
             else:
-                messages.error(request, 'Invalid email or password.')
+                # Invalid credentials
+                messages.error(request, 'Invalid email or password. Please try again.')
         
         else:
             # Form validation errors
@@ -404,9 +437,11 @@ def signin_view(request):
                     messages.error(request, error)
     
     else:
+        # GET request - show empty form
         form = SignInForm()
     
     return render(request, 'accounts/signin.html', {'form': form})
+
 
 @login_required
 def signout_view(request):

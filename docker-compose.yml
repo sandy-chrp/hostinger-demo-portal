@@ -1,10 +1,9 @@
 version: '3.8'
-
 services:
   web:
     build: .
     container_name: django_app
-    command: gunicorn demo_portal.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    command: gunicorn demo_portal.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120
     volumes:
       - .:/app
       - static_volume:/app/staticfiles

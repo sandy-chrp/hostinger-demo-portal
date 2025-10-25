@@ -6,7 +6,7 @@
 
 {% block breadcrumb %}
 <div class="admin-breadcrumb">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item">
@@ -16,16 +16,13 @@
             </ol>
         </nav>
         {% if user|has_permission:'add_demo' %}
-
         <a href="{% url 'core:admin_add_demo' %}" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus me-1"></i>Add New Demo
+            <i class="fas fa-plus me-1"></i><span class="d-none d-sm-inline">Add New Demo</span><span class="d-inline d-sm-none">Add</span>
         </a>
         {% endif %}
     </div>
 </div>
 {% endblock %}
-
-{% comment %} Use default header_actions from base.html {% endcomment %}
 
 {% block admin_extra_css %}
 <style>
@@ -123,6 +120,7 @@
     .table-actions {
         display: flex;
         gap: 0.25rem;
+        flex-wrap: wrap;
     }
 
     .table-actions .btn:hover {
@@ -183,29 +181,239 @@
         border-radius: 4px;
         font-size: 0.7rem;
         font-weight: 600;
+        text-transform: uppercase;
     }
 
     .file-type-badge.video {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        color: white;
+        background: #ddd6fe;
+        color: #5b21b6;
     }
 
     .file-type-badge.webgl {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-        color: white;
+        background: #cffafe;
+        color: #155e75;
     }
 
-    [data-bs-toggle="tooltip"] {
-        cursor: pointer;
+    /* ============================================
+       RESPONSIVE STYLES - Mobile First Approach
+       ============================================ */
+
+    /* Mobile: Hide table, show cards */
+    @media (max-width: 991px) {
+        .table-responsive {
+            display: none;
+        }
+        
+        .demo-cards-mobile {
+            display: block;
+        }
     }
 
-    @media (max-width: 768px) {
+    /* Desktop: Show table, hide cards */
+    @media (min-width: 992px) {
+        .demo-cards-mobile {
+            display: none;
+        }
+        
+        .table-responsive {
+            display: block;
+        }
+    }
+
+    /* Mobile Demo Card Styles */
+    .demo-card-mobile {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border-left: 4px solid #087fc2;
+        transition: all 0.3s ease;
+    }
+
+    .demo-card-mobile:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+
+    .demo-card-header {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .demo-card-thumbnail {
+        flex-shrink: 0;
+    }
+
+    .demo-card-thumbnail img,
+    .demo-card-thumbnail .demo-placeholder {
+        width: 80px;
+        height: 60px;
+    }
+
+    .demo-card-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .demo-card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .demo-card-description {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .demo-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.75rem;
+    }
+
+    .demo-card-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: #f9fafb;
+        border-radius: 6px;
+    }
+
+    .demo-card-stat {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .demo-card-stat-icon {
+        color: #6b7280;
+    }
+
+    .demo-card-stat-value {
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .demo-card-stat-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .demo-card-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .demo-card-actions .btn {
+        flex: 1;
+        min-width: 100px;
+    }
+
+    /* Filter responsive */
+    @media (max-width: 767px) {
         .stats-row {
             grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
         }
 
+        .stat-card {
+            padding: 1rem;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+        }
+
+        .filter-card {
+            padding: 1rem;
+        }
+
+        .filter-card .row {
+            gap: 0.75rem;
+        }
+
+        .filter-card .col-md-3,
+        .filter-card .col-md-4 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .btn-sm {
+            font-size: 0.75rem;
+            padding: 0.375rem 0.75rem;
+        }
+    }
+
+    /* Extra small devices */
+    @media (max-width: 575px) {
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+
+        .demo-card-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .demo-card-thumbnail {
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-card-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .demo-card-actions {
+            flex-direction: column;
+        }
+
+        .demo-card-actions .btn {
+            width: 100%;
+        }
+    }
+
+    /* Table responsive improvements */
+    @media (min-width: 992px) {
         .table-responsive {
+            overflow-x: auto;
+        }
+
+        .admin-table {
+            min-width: 1200px;
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1399px) {
+        .admin-table {
             font-size: 0.875rem;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 0.5rem;
         }
 
         .demo-thumbnail,
@@ -218,130 +426,117 @@
 {% endblock %}
 
 {% block admin_content %}
-{% csrf_token %}
-
-<!-- Quick Stats -->
-<div class="stats-row">
+<!-- Statistics -->
+{% comment %} <div class="stats-row">
     <div class="stat-card primary">
-        <div class="stat-number text-primary">{{ stats.total|default:"0" }}</div>
+        <div class="stat-number primary" style="color: #087fc2;">{{ demos_count }}</div>
         <div class="stat-label">Total Demos</div>
     </div>
     <div class="stat-card success">
-        <div class="stat-number text-success">{{ stats.active|default:"0" }}</div>
+        <div class="stat-number success" style="color: #16a34a;">{{ active_demos_count }}</div>
         <div class="stat-label">Active Demos</div>
     </div>
     <div class="stat-card info">
-        <div class="stat-number text-info">{{ stats.featured|default:"0" }}</div>
+        <div class="stat-number info" style="color: #0ea5e9;">{{ featured_demos_count }}</div>
         <div class="stat-label">Featured</div>
     </div>
     <div class="stat-card warning">
-        <div class="stat-number text-warning">{{ stats.total_views|default:"0" }}</div>
+        <div class="stat-number warning" style="color: #f59e0b;">{{ total_views }}</div>
         <div class="stat-label">Total Views</div>
     </div>
-</div>
+</div> {% endcomment %}
 
 <!-- Filters -->
 <div class="filter-card">
-    <form method="get" class="row g-3">
-        <div class="col-md-4">
-            <label class="form-label">Search Demos</label>
-            <div class="input-group">
-                <input type="text" name="search" class="form-control" 
-                       placeholder="Search by title or description..."
-                       value="{{ search|default:'' }}">
-                <button type="submit" class="btn btn-outline-primary">
-                    <i class="fas fa-search"></i>
-                </button>
+    <form method="GET" action="{% url 'core:admin_demos' %}" id="filterForm">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-sm-6 col-md-4">
+                <label class="form-label small">Search Demos</label>
+                <div class="input-group">
+                    <input type="text" 
+                           class="form-control" 
+                           name="search" 
+                           value="{{ search }}"
+                           placeholder="Search by title or description...">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
             </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small">File Type</label>
+                <select class="form-select" name="file_type" onchange="document.getElementById('filterForm').submit()">
+                    <option value="">All Types</option>
+                    <option value="video" {% if file_type_filter == 'video' %}selected{% endif %}>Video</option>
+                    <option value="webgl" {% if file_type_filter == 'webgl' %}selected{% endif %}>WebGL</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small">Business Category</label>
+                <select class="form-select" name="business_category" onchange="document.getElementById('filterForm').submit()">
+                    <option value="">All Categories</option>
+                    {% for category in business_categories %}
+                        <option value="{{ category.id }}" {% if business_category_filter == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small">Status</label>
+                <select class="form-select" name="status" onchange="document.getElementById('filterForm').submit()">
+                    <option value="">All Status</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+            {% if search or business_category_filter or status_filter or file_type_filter %}
+            <div class="col-6 col-md-12 col-lg-2 text-end">
+                <a href="{% url 'core:admin_demos' %}" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-times me-1"></i>Clear
+                </a>
+            </div>
+            {% endif %}
         </div>
-        
-        <div class="col-md-2">
-            <label class="form-label">File Type</label>
-            <select name="file_type" class="form-select" onchange="this.form.submit()">
-                <option value="">All Types</option>
-                <option value="video" {% if file_type_filter == 'video' %}selected{% endif %}>Video</option>
-                <option value="webgl" {% if file_type_filter == 'webgl' %}selected{% endif %}>WebGL</option>
-            </select>
-        </div>
-
-        <div class="col-md-2">
-            <label class="form-label">Demo Type</label>
-            <select name="demo_type" class="form-select" onchange="this.form.submit()">
-                <option value="">All Types</option>
-                {% for value, label in demo_types %}
-                    <option value="{{ value }}" {% if demo_type_filter == value %}selected{% endif %}>
-                        {{ label }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <div class="col-md-2">
-            <label class="form-label">Business Category</label>
-            <select name="business_category" class="form-select" onchange="this.form.submit()">
-                <option value="">All Categories</option>
-                {% for category in business_categories %}
-                    <option value="{{ category.id }}" 
-                            {% if business_category_filter == category.id|stringformat:"s" %}selected{% endif %}>
-                        {{ category.name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <div class="col-md-2">
-            <label class="form-label">Status</label>
-            <select name="status" class="form-select" onchange="this.form.submit()">
-                <option value="">All Status</option>
-                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
-                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
-                <option value="featured" {% if featured_filter == 'yes' %}selected{% endif %}>Featured</option>
-            </select>
-        </div>
-        
-        {% if search or file_type_filter or demo_type_filter or business_category_filter or status_filter %}
-        <div class="col-md-12">
-            <a href="{% url 'core:admin_demos' %}" class="btn btn-outline-secondary btn-sm">
-                <i class="fas fa-times me-1"></i>Clear All Filters
-            </a>
-        </div>
-        {% endif %}
     </form>
 </div>
 
-<!-- Demo List -->
+{% csrf_token %}
+
 {% if demos %}
+    <!-- Desktop Table View -->
     <div class="admin-card">
-        <div class="admin-card-header">
-            <h3 class="admin-card-title">
-                <i class="fas fa-video"></i>Demo Content
-            </h3>
-            <div class="d-flex align-items-center gap-2">
-                <small class="text-muted">{{ demos.start_index }}-{{ demos.end_index }} of {{ demos.paginator.count }} demos</small>
-            </div>
-        </div>
         <div class="admin-card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table class="table admin-table mb-0">
                     <thead>
                         <tr>
-                            <th>Title & Description</th>
-                            <th width="180">Business Categories</th>
-                            <th width="100">File Type</th>
-                            <th width="80" class="text-center">Views</th>
-                            <th width="80" class="text-center">Likes</th>
-                            <th width="100">Status</th>
-                            <th width="100">Created</th>
-                            <th width="180" class="text-center">Actions</th>
+                            {% comment %} <th style="width: 80px;">Thumbnail</th> {% endcomment %}
+                            <th>Title</th>
+                            <th>Business Category</th>
+                            <th style="width: 100px;">Type</th>
+                            <th class="text-center" style="width: 80px;">Views</th>
+                            <th class="text-center" style="width: 80px;">Likes</th>
+                            <th style="width: 100px;">Status</th>
+                            <th style="width: 110px;">Created</th>
+                            <th class="text-center" style="width: 150px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for demo in demos %}
                             <tr>
+                                {% comment %} <td>
+                                    {% if demo.thumbnail %}
+                                        <img src="{{ demo.thumbnail.url }}" alt="{{ demo.title }}" class="demo-thumbnail">
+                                    {% else %}
+                                        <div class="demo-placeholder {% if demo.file_type == 'webgl' %}webgl{% endif %}">
+                                            <i class="fas {% if demo.file_type == 'video' %}fa-video{% else %}fa-cube{% endif %}"></i>
+                                        </div>
+                                    {% endif %}
+                                </td> {% endcomment %}
                                 <td>
                                     <div>
-                                        <div class="fw-semibold">{{ demo.title }}</div>
-                                        <small class="text-muted">{{ demo.description|truncatechars:60 }}</small>
+                                        <strong class="d-block">{{ demo.title }}</strong>
                                         {% if demo.is_featured %}
                                             <span class="featured-badge ms-2">
                                                 <i class="fas fa-star me-1"></i>Featured
@@ -401,8 +596,7 @@
                                 </td>
                                 <td>
                                     <div class="table-actions justify-content-center">
-                                           {% if user|has_permission:'view_demos' %}
-
+                                        {% if user|has_permission:'view_demos' %}
                                         {% if demo.file_type == 'webgl' %}
                                             <a href="{% url 'core:admin_webgl_preview' demo.id %}" 
                                                class="btn btn-sm btn-outline-info" 
@@ -418,7 +612,7 @@
                                                 <i class="fas fa-play"></i>
                                             </a>
                                         {% endif %}
-                                            {% endif %}
+                                        {% endif %}
                                         {% if user|has_permission:'edit_demo' %}    
                                         <a href="{% url 'core:admin_demo_detail' demo.id %}" 
                                            class="btn btn-sm btn-outline-primary" 
@@ -426,8 +620,7 @@
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         {% endif %}
-                                           {% if user|has_permission:'delete_demo' %}
-
+                                        {% if user|has_permission:'delete_demo' %}
                                         <button class="btn btn-sm btn-outline-danger" 
                                                 onclick="deleteDemo({{ demo.id }}, '{{ demo.title|escapejs }}')"
                                                 title="Delete Demo">
@@ -444,10 +637,125 @@
         </div>
     </div>
 
+    <!-- Mobile Card View -->
+    <div class="demo-cards-mobile">
+        {% for demo in demos %}
+            <div class="demo-card-mobile">
+                <div class="demo-card-header">
+                    <div class="demo-card-thumbnail">
+                        {% if demo.thumbnail %}
+                            <img src="{{ demo.thumbnail.url }}" alt="{{ demo.title }}" class="demo-thumbnail">
+                        {% else %}
+                            <div class="demo-placeholder {% if demo.file_type == 'webgl' %}webgl{% endif %}">
+                                <i class="fas {% if demo.file_type == 'video' %}fa-video{% else %}fa-cube{% endif %}"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="demo-card-info">
+                        <h3 class="demo-card-title">{{ demo.title }}</h3>
+                        <p class="demo-card-description">{{ demo.description|truncatewords:15 }}</p>
+                    </div>
+                </div>
+
+                <div class="demo-card-meta">
+                    {% if demo.file_type == 'video' %}
+                        <span class="file-type-badge video">
+                            <i class="fas fa-video"></i>Video
+                        </span>
+                    {% else %}
+                        <span class="file-type-badge webgl">
+                            <i class="fas fa-cube"></i>WebGL
+                        </span>
+                    {% endif %}
+                    
+                    {% if demo.is_active %}
+                        <span class="status-badge status-active">Active</span>
+                    {% else %}
+                        <span class="status-badge status-inactive">Inactive</span>
+                    {% endif %}
+
+                    {% if demo.is_featured %}
+                        <span class="featured-badge">
+                            <i class="fas fa-star me-1"></i>Featured
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="demo-card-stats">
+                    <div class="demo-card-stat">
+                        <i class="fas fa-eye demo-card-stat-icon"></i>
+                        <div>
+                            <div class="demo-card-stat-value">{{ demo.views_count }}</div>
+                            <div class="demo-card-stat-label">Views</div>
+                        </div>
+                    </div>
+                    <div class="demo-card-stat">
+                        <i class="fas fa-heart demo-card-stat-icon"></i>
+                        <div>
+                            <div class="demo-card-stat-value">{{ demo.likes_count }}</div>
+                            <div class="demo-card-stat-label">Likes</div>
+                        </div>
+                    </div>
+                    <div class="demo-card-stat">
+                        <i class="fas fa-calendar demo-card-stat-icon"></i>
+                        <div>
+                            <div class="demo-card-stat-value">{{ demo.created_at|date:"M d" }}</div>
+                            <div class="demo-card-stat-label">Created</div>
+                        </div>
+                    </div>
+                    <div class="demo-card-stat">
+                        <i class="fas fa-tags demo-card-stat-icon"></i>
+                        <div>
+                            {% with categories=demo.target_business_categories.all %}
+                                {% if categories %}
+                                    <div class="demo-card-stat-value">{{ categories|length }}</div>
+                                    <div class="demo-card-stat-label">Categories</div>
+                                {% else %}
+                                    <div class="demo-card-stat-value">All</div>
+                                    <div class="demo-card-stat-label">Categories</div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demo-card-actions">
+                    {% if user|has_permission:'view_demos' %}
+                    {% if demo.file_type == 'webgl' %}
+                        <a href="{% url 'core:admin_webgl_preview' demo.id %}" 
+                           class="btn btn-sm btn-info" 
+                           target="_blank">
+                            <i class="fas fa-cube me-1"></i>Preview
+                        </a>
+                    {% else %}
+                        <a href="{% url 'core:admin_demo_watch' demo.id %}" 
+                           class="btn btn-sm btn-info" 
+                           target="_blank">
+                            <i class="fas fa-play me-1"></i>Watch
+                        </a>
+                    {% endif %}
+                    {% endif %}
+                    {% if user|has_permission:'edit_demo' %}    
+                    <a href="{% url 'core:admin_demo_detail' demo.id %}" 
+                       class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                    {% endif %}
+                    {% if user|has_permission:'delete_demo' %}
+                    <button class="btn btn-sm btn-danger" 
+                            onclick="deleteDemo({{ demo.id }}, '{{ demo.title|escapejs }}')">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
     <!-- Pagination -->
     {% if demos.has_other_pages %}
         <nav aria-label="Demo pagination" class="mt-4">
-            <ul class="pagination justify-content-center">
+            <ul class="pagination justify-content-center flex-wrap">
                 {% if demos.has_previous %}
                     <li class="page-item">
                         <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if file_type_filter %}&file_type={{ file_type_filter }}{% endif %}{% if demo_type_filter %}&demo_type={{ demo_type_filter }}{% endif %}{% if business_category_filter %}&business_category={{ business_category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">First</a>

@@ -1,208 +1,54 @@
 {% extends 'admin/base.html' %}
-{% load static %}
-{% load permission_tags %}
 
-{% block admin_title %}{{ demo.title }} - Demo Details{% endblock %}
+{% block admin_title %}Demo Details{% endblock %}
 {% block page_title %}{{ demo.title }}{% endblock %}
 
 {% block breadcrumb %}
 <div class="admin-breadcrumb">
-    <div class="d-flex justify-content-between align-items-center">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item">
-                    <a href="{% url 'core:admin_dashboard' %}">
-                        <i class="fas fa-home me-1"></i>Dashboard
-                    </a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{% url 'core:admin_demos' %}">Demo Content</a>
-                </li>
-                <li class="breadcrumb-item active">{{ demo.title }}</li>
-            </ol>
-        </nav>
-        <div class="d-flex align-items-center gap-2">
-            <!-- Preview/Watch Button - CHECK VIEW PERMISSION -->
-            {% if user|has_permission:'view_demos' %}    
-                {% if demo.file_type == 'webgl' %}
-                    <a href="{% url 'core:admin_webgl_preview' demo.id %}" 
-                       class="btn btn-primary btn-sm"
-                       target="_blank">
-                        <i class="fas fa-cube me-1"></i>View Demo
-                    </a>
-                {% else %}
-                    <a href="{% url 'core:admin_demo_watch' demo.id %}" 
-                       class="btn btn-primary btn-sm"
-                       target="_blank">
-                        <i class="fas fa-play me-1"></i>Watch Video
-                    </a>
-                {% endif %}
-            {% endif %}
-
-            <a href="{% url 'core:admin_demos' %}" class="btn btn-outline-secondary btn-sm">
-                <i class="fas fa-arrow-left me-1"></i>Back
-            </a>
-            
-            <!-- Delete Button - CHECK DELETE PERMISSION -->
-            {% if user|has_permission:'delete_demo' %}
-                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete()">
-                    <i class="fas fa-trash me-1"></i>Delete
-                </button>
-            {% endif %}
-        </div>
-    </div>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:admin_dashboard' %}">
+                    <i class="fas fa-home me-1"></i>Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:admin_demos' %}">Demo Content</a>
+            </li>
+            <li class="breadcrumb-item active">{{ demo.title }}</li>
+        </ol>
+    </nav>
 </div>
 {% endblock %}
 
 {% block admin_extra_css %}
 <style>
-    .demo-detail-container {
+    /* Same styling as add page */
+    .page-container {
         display: grid;
-        grid-template-columns: 2fr 1fr;
+        grid-template-columns: 1fr;
         gap: var(--spacing-lg);
     }
 
-    .admin-card {
+    .compact-form {
         background: white;
         border-radius: var(--radius-lg);
         box-shadow: var(--shadow-md);
-        overflow: hidden;
-        margin-bottom: var(--spacing-lg);
+        padding: var(--spacing-lg);
     }
 
-    .admin-card-header {
-        background: var(--gradient-primary);
-        color: white;
-        padding: var(--spacing-md) var(--spacing-lg);
-        font-weight: 600;
+    .section-header {
         font-size: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .admin-card-header:hover {
-        background: var(--secondary-color);
-    }
-
-    .admin-card-header .header-left {
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-sm);
+        border-bottom: 2px solid var(--gray-200);
         display: flex;
         align-items: center;
         gap: var(--spacing-sm);
     }
 
-    .collapse-icon {
-        transition: transform 0.3s ease;
-    }
-
-    .collapse-icon.collapsed {
-        transform: rotate(-90deg);
-    }
-
-    .admin-card-body {
-        padding: var(--spacing-lg);
-    }
-
-    /* Stats Cards */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--spacing-md);
-        margin-bottom: var(--spacing-lg);
-    }
-
-    .stat-card {
-        background: var(--gray-50);
-        border-radius: var(--radius-md);
-        padding: var(--spacing-md);
-        text-align: center;
-        border: 1px solid var(--gray-200);
-    }
-
-    .stat-card-icon {
-        font-size: 1.5rem;
-        color: var(--primary-color);
-        margin-bottom: var(--spacing-xs);
-    }
-
-    .stat-card-value {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: var(--dark-color);
-        margin-bottom: var(--spacing-xs);
-    }
-
-    .stat-card-label {
-        font-size: 0.875rem;
-        color: var(--gray-600);
-    }
-
-    /* Demo Info */
-    .info-row {
-        display: flex;
-        padding: var(--spacing-sm) 0;
-        border-bottom: 1px solid var(--gray-200);
-    }
-
-    .info-row:last-child {
-        border-bottom: none;
-    }
-
-    .info-label {
-        font-weight: 600;
-        color: var(--gray-700);
-        min-width: 180px;
-    }
-
-    .info-value {
-        color: var(--dark-color);
-        flex: 1;
-    }
-
-    .badge-custom {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    .badge-video {
-        background: var(--gradient-primary);
-        color: white;
-    }
-
-    .badge-webgl {
-        background: linear-gradient(135deg, #06b6d4, #0891b2);
-        color: white;
-    }
-
-    .badge-active {
-        background: var(--gradient-success);
-        color: white;
-    }
-
-    .badge-inactive {
-        background: var(--gray-400);
-        color: white;
-    }
-
-    .badge-featured {
-        background: var(--gradient-warning);
-        color: white;
-    }
-
-    /* Thumbnail Preview */
-    .thumbnail-preview {
-        width: 100%;
-        max-width: 300px;
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-sm);
-    }
-
-    /* Form Grid */
     .form-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -214,13 +60,12 @@
         grid-column: 1 / -1;
     }
 
-    /* Category Selection */
     .selection-box {
         padding: var(--spacing-md);
         background: var(--gray-50);
         border-radius: var(--radius-md);
         border: 1px solid var(--gray-200);
-        max-height: 250px;
+        max-height: 200px;
         overflow-y: auto;
     }
 
@@ -279,42 +124,6 @@
         color: var(--gray-400);
     }
 
-    /* Activity Feed */
-    .activity-item {
-        display: flex;
-        align-items: center;
-        padding: var(--spacing-sm);
-        border-bottom: 1px solid var(--gray-200);
-        font-size: 0.875rem;
-    }
-
-    .activity-item:last-child {
-        border-bottom: none;
-    }
-
-    .activity-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: var(--spacing-sm);
-        font-size: 0.875rem;
-        background: var(--gradient-primary);
-        color: white;
-    }
-
-    .activity-content {
-        flex: 1;
-    }
-
-    .activity-time {
-        font-size: 0.75rem;
-        color: var(--gray-500);
-    }
-
-    /* Form Actions */
     .form-actions {
         position: sticky;
         bottom: 0;
@@ -328,32 +137,107 @@
         border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     }
 
-    /* No Permission Message */
-    .no-permission-message {
-        background: var(--gray-50);
-        border: 1px solid var(--gray-300);
-        border-radius: var(--radius-md);
-        padding: var(--spacing-lg);
-        text-align: center;
-        color: var(--gray-600);
+    /* Tabs styling - Better design */
+    .nav-tabs {
+        border-bottom: 2px solid var(--gray-200);
+        margin-bottom: 0;
+        background: white;
+        padding: var(--spacing-sm) var(--spacing-lg);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        box-shadow: var(--shadow-sm);
     }
 
-    @media (max-width: 1024px) {
-        .demo-detail-container {
-            grid-template-columns: 1fr;
-        }
+    .tab-content {
+        padding-top: 0;
+    }
 
-        .stats-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
+    .tab-pane {
+        padding-top: 0;
+    }
 
-        .form-grid {
-            grid-template-columns: 1fr;
-        }
+    .nav-tabs .nav-link {
+        border: none;
+        color: var(--gray-600);
+        padding: var(--spacing-sm) var(--spacing-lg);
+        font-weight: 600;
+        font-size: 0.95rem;
+        position: relative;
+        transition: all 0.3s ease;
+        border-radius: var(--radius-md);
+        margin-right: var(--spacing-sm);
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: var(--primary-color);
+        background: var(--gray-50);
+        border: none;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: white;
+        background: var(--gradient-primary);
+        border: none;
+        box-shadow: 0 2px 8px rgba(8, 127, 194, 0.3);
+    }
+
+    .nav-tabs .nav-link i {
+        margin-right: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .nav-tabs .nav-link.active::after {
+        display: none;
+    }
+
+    /* Stats cards */
+    .stat-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: var(--spacing-lg);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .stat-card h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .stat-card p {
+        color: var(--gray-600);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .info-table {
+        width: 100%;
+    }
+
+    .info-table th {
+        width: 200px;
+        padding: var(--spacing-sm);
+        background: var(--gray-50);
+        font-weight: 600;
+        color: var(--gray-700);
+    }
+
+    .info-table td {
+        padding: var(--spacing-sm);
+    }
+
+    .info-table tr {
+        border-bottom: 1px solid var(--gray-200);
     }
 
     @media (max-width: 768px) {
-        .stats-grid {
+        .form-grid {
             grid-template-columns: 1fr;
         }
     }
@@ -361,246 +245,94 @@
 {% endblock %}
 
 {% block admin_content %}
-<div class="demo-detail-container">
-    <!-- Left Column - Main Content -->
-    <div>
-        <!-- Statistics - COLLAPSIBLE -->
-        <div class="admin-card">
-            <div class="admin-card-header" data-bs-toggle="collapse" data-bs-target="#statsSection">
-                <div class="header-left">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Demo Statistics</span>
-                </div>
-                <i class="fas fa-chevron-down collapse-icon"></i>
-            </div>
-            <div id="statsSection" class="collapse show">
-                <div class="admin-card-body">
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-card-icon">
-                                <i class="fas fa-eye"></i>
-                            </div>
-                            <div class="stat-card-value">{{ total_views }}</div>
-                            <div class="stat-card-label">Total Views</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-card-icon">
-                                <i class="fas fa-thumbs-up"></i>
-                            </div>
-                            <div class="stat-card-value">{{ total_likes }}</div>
-                            <div class="stat-card-label">Total Likes</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-card-icon">
-                                <i class="fas fa-calendar"></i>
-                            </div>
-                            <div class="stat-card-value">{{ total_requests }}</div>
-                            <div class="stat-card-label">Demo Requests</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="page-container">
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" id="demoTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit" type="button">
+                <i class="fas fa-edit me-2"></i>Edit
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button">
+                <i class="fas fa-chart-bar me-2"></i>Details & Stats
+            </button>
+        </li>
+    </ul>
 
-        <!-- Demo Information - COLLAPSIBLE -->
-        <div class="admin-card">
-            <div class="admin-card-header" data-bs-toggle="collapse" data-bs-target="#infoSection">
-                <div class="header-left">
-                    <i class="fas fa-info-circle"></i>
-                    <span>Demo Information</span>
-                </div>
-                <i class="fas fa-chevron-down collapse-icon"></i>
-            </div>
-            <div id="infoSection" class="collapse show">
-                <div class="admin-card-body">
-                    <div class="info-row">
-                        <div class="info-label">Title</div>
-                        <div class="info-value">{{ demo.title }}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Description</div>
-                        <div class="info-value">{{ demo.description }}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">File Type</div>
-                        <div class="info-value">
-                            {% if demo.file_type == 'webgl' %}
-                                <span class="badge-custom badge-webgl">
-                                    <i class="fas fa-cube me-1"></i>WebGL Interactive
-                                </span>
-                            {% else %}
-                                <span class="badge-custom badge-video">
-                                    <i class="fas fa-video me-1"></i>Video Demo
-                                </span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Status</div>
-                        <div class="info-value">
-                            {% if demo.is_active %}
-                                <span class="badge-custom badge-active">
-                                    <i class="fas fa-check-circle me-1"></i>Active
-                                </span>
-                            {% else %}
-                                <span class="badge-custom badge-inactive">
-                                    <i class="fas fa-times-circle me-1"></i>Inactive
-                                </span>
-                            {% endif %}
-                            {% if demo.is_featured %}
-                                <span class="badge-custom badge-featured ms-2">
-                                    <i class="fas fa-star me-1"></i>Featured
-                                </span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Thumbnail</div>
-                        <div class="info-value">
-                            {% if demo.thumbnail %}
-                                <img src="{{ demo.thumbnail.url }}" alt="{{ demo.title }}" class="thumbnail-preview">
-                            {% else %}
-                                <span class="text-muted">No thumbnail</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Created By</div>
-                        <div class="info-value">
-                            {{ demo.created_by.full_name|default:"System" }}
-                        </div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Created At</div>
-                        <div class="info-value">{{ demo.created_at|date:"F d, Y - g:i A" }}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Last Updated</div>
-                        <div class="info-value">{{ demo.updated_at|date:"F d, Y - g:i A" }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Tab Content -->
+    <div class="tab-content" id="demoTabContent">
+        
+        <!-- EDIT TAB -->
+        <div class="tab-pane fade show active" id="edit" role="tabpanel">
+            <form method="post" enctype="multipart/form-data" id="demoForm">
+                {% csrf_token %}
 
-        <!-- Edit Form - CHECK EDIT PERMISSION -->
-        {% if user|has_permission:'edit_demo' %}
-        <form method="post" enctype="multipart/form-data" id="editDemoForm">
-            {% csrf_token %}
-            
-            <div class="admin-card">
-                <div class="admin-card-header">
-                    <div class="header-left">
-                        <i class="fas fa-edit"></i>
-                        <span>Edit Demo Details</span>
-                    </div>
-                </div>
-                <div class="admin-card-body">
+                <div class="compact-form">
                     <!-- Basic Information -->
+                    <div class="section-header">
+                        <i class="fas fa-info-circle"></i> Basic Information
+                    </div>
                     <div class="form-grid">
                         <div class="full-width">
-                            <label for="id_title" class="form-label">Title <span class="text-danger">*</span></label>
-                            <input type="text" name="title" id="id_title" class="form-control" value="{{ demo.title }}" required>
+                            <label for="id_title" class="form-label">Demo Title <span class="text-danger">*</span></label>
+                            <input type="text" name="title" id="id_title" class="form-control" value="{{ form_data.title }}" required>
                         </div>
                         <div class="full-width">
                             <label for="id_description" class="form-label">Description <span class="text-danger">*</span></label>
-                            <textarea name="description" id="id_description" class="form-control" rows="3" required>{{ demo.description }}</textarea>
-                        </div>
-                        <div>
-                            <label for="id_file_type" class="form-label">File Type</label>
-                            <select name="file_type" id="id_file_type" class="form-select">
-                                <option value="video" {% if demo.file_type == 'video' %}selected{% endif %}>Video Demo</option>
-                                <option value="webgl" {% if demo.file_type == 'webgl' %}selected{% endif %}>WebGL Interactive</option>
-                            </select>
-                            <div class="form-text">⚠️ Changing file type will clear the current file</div>
+                            <textarea name="description" id="id_description" class="form-control" rows="3" required>{{ form_data.description }}</textarea>
                         </div>
                     </div>
 
-                    <!-- File Uploads -->
+                    <!-- File Upload -->
+                    <div class="section-header">
+                        <i class="fas fa-file-upload"></i> File Upload (Optional - upload to update)
+                    </div>
                     <div class="form-grid">
-                        <div id="videoFileField" {% if demo.file_type != 'video' %}style="display:none;"{% endif %}>
-                            <label class="form-label">Replace Video File</label>
-                            <input type="file" name="video_file" id="id_video_file" class="form-control" accept="video/*">
-                            {% if demo.video_file %}
-                            <div class="form-text">
-                                <i class="fas fa-check-circle text-success me-1"></i>
-                                Current: {{ demo.video_file.name|truncatewords:3 }}
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div id="webglFileField" {% if demo.file_type != 'webgl' %}style="display:none;"{% endif %}>
-                            <label class="form-label">Replace WebGL File</label>
-                            <input type="file" name="webgl_file" id="id_webgl_file" class="form-control" accept=".html,.zip,.gltf,.glb">
-                            {% if demo.webgl_file %}
-                            <div class="form-text">
-                                <i class="fas fa-check-circle text-success me-1"></i>
-                                Current: {{ demo.webgl_file.name|truncatewords:3 }}
-                            </div>
-                            {% endif %}
-                        </div>
-
                         <div class="full-width">
-                            <label for="id_thumbnail" class="form-label">Replace Thumbnail</label>
+                            <label for="id_thumbnail" class="form-label">Thumbnail</label>
                             <input type="file" name="thumbnail" id="id_thumbnail" class="form-control" accept="image/*">
-                            {% if demo.thumbnail %}
-                            <div class="form-text">
-                                <i class="fas fa-check-circle text-success me-1"></i>
-                                Current thumbnail uploaded
-                            </div>
-                            {% endif %}
+                            <small class="text-muted">Current: {{ demo.thumbnail.name|default:"None" }}</small>
                         </div>
+                        {% if demo.file_type == 'video' %}
+                        <div class="full-width">
+                            <label for="id_video_file" class="form-label">Video File</label>
+                            <input type="file" name="video_file" id="id_video_file" class="form-control" accept="video/*">
+                            <small class="text-muted">Current: {{ demo.video_file.name|default:"None" }}</small>
+                        </div>
+                        {% endif %}
+                        {% if demo.file_type == 'webgl' %}
+                        <div class="full-width">
+                            <label for="id_webgl_file" class="form-label">WebGL File</label>
+                            <input type="file" name="webgl_file" id="id_webgl_file" class="form-control">
+                            <small class="text-muted">Current: {{ demo.webgl_file.name|default:"None" }}</small>
+                        </div>
+                        {% endif %}
                     </div>
 
-                    <!-- Settings -->
-                    <div class="form-grid">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="is_active" id="id_is_active" {% if demo.is_active %}checked{% endif %}>
-                            <label class="form-check-label" for="id_is_active">Active</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="is_featured" id="id_is_featured" {% if demo.is_featured %}checked{% endif %}>
-                            <label class="form-check-label" for="id_is_featured">Featured</label>
-                        </div>
+                    <!-- Business Categories & Customers -->
+                    <div class="section-header mt-4">
+                        <i class="fas fa-bullseye"></i> Target Audience
                     </div>
-                </div>
-            </div>
-
-            <!-- Target Audience - CHECK MANAGE ACCESS PERMISSION -->
-            {% if user|has_permission:'manage_demo_access' %}
-            <div class="admin-card">
-                <div class="admin-card-header">
-                    <div class="header-left">
-                        <i class="fas fa-bullseye"></i>
-                        <span>Target Audience</span>
-                    </div>
-                </div>
-                <div class="admin-card-body">
                     <div class="form-grid">
-                        <!-- Business Categories -->
                         <div>
                             <div class="form-check form-switch mb-2">
-                                <input class="form-check-input" type="checkbox" name="allBusinessCategoriesCheckbox" id="allBusinessCategoriesCheckbox" 
-                                       {% if demo.is_for_all_business_categories %}checked{% endif %}>
+                                <input class="form-check-input" type="checkbox" id="allBusinessCategoriesCheckbox" name="allBusinessCategoriesCheckbox" {% if form_data.all_business_categories %}checked{% endif %}>
                                 <label class="form-check-label" for="allBusinessCategoriesCheckbox">
                                     <strong>All Business Categories</strong>
                                 </label>
                             </div>
-                            <div id="categorySelectionArea" class="selection-box {% if demo.is_for_all_business_categories %}disabled{% endif %}">
+                            <div id="categorySelectionArea" class="selection-box">
                                 {% for category in business_categories %}
                                 <div class="checkbox-item">
-                                    <input type="checkbox" name="target_business_categories" value="{{ category.id }}" 
-                                           id="cat_{{ category.id }}" class="category-checkbox"
-                                           {% if category in demo.target_business_categories.all %}checked{% endif %}>
+                                    <input type="checkbox" name="target_business_categories" value="{{ category.id }}" id="cat_{{ category.id }}" class="category-checkbox" {% if category.id|stringformat:"s" in form_data.selected_business_categories %}checked{% endif %}>
                                     <label for="cat_{{ category.id }}">{{ category.name }}</label>
                                 </div>
                                 {% if category.subcategories.all %}
-                                <div class="subcategory-list" id="subcat_list_{{ category.id }}" 
-                                     {% if category not in demo.target_business_categories.all %}style="display:none;"{% endif %}>
+                                <div class="subcategory-list" id="subcat_list_{{ category.id }}" style="display: none;">
                                     {% for subcategory in category.subcategories.all %}
                                     <div class="checkbox-item">
-                                        <input type="checkbox" name="target_business_subcategories" value="{{ subcategory.id }}" 
-                                               id="subcat_{{ subcategory.id }}" class="subcategory-checkbox" data-parent="{{ category.id }}"
-                                               {% if subcategory in demo.target_business_subcategories.all %}checked{% endif %}>
+                                        <input type="checkbox" name="target_business_subcategories" value="{{ subcategory.id }}" id="subcat_{{ subcategory.id }}" class="subcategory-checkbox" data-parent="{{ category.id }}" {% if subcategory.id|stringformat:"s" in form_data.selected_business_subcategories %}checked{% endif %}>
                                         <label for="subcat_{{ subcategory.id }}">{{ subcategory.name }}</label>
                                     </div>
                                     {% endfor %}
@@ -610,330 +342,192 @@
                             </div>
                         </div>
 
-                        <!-- Target Customers -->
                         <div>
                             <div class="form-check form-switch mb-2">
-                                <input class="form-check-input" type="checkbox" id="allCustomersCheckbox" 
-                                       {% if demo.is_for_all_customers %}checked{% endif %}>
+                                <input class="form-check-input" type="checkbox" id="allCustomersCheckbox" checked>
                                 <label class="form-check-label" for="allCustomersCheckbox">
                                     <strong>All Customers</strong>
                                 </label>
                             </div>
-                            <div id="customerSelectionArea" class="selection-box {% if demo.is_for_all_customers %}disabled{% endif %}">
+                            <div id="customerSelectionArea" class="selection-box disabled">
                                 <div class="search-box">
                                     <i class="fas fa-search"></i>
                                     <input type="text" id="customerSearch" class="form-control form-control-sm" placeholder="Search customers...">
                                 </div>
                                 <div id="customerList">
                                     {% for customer in customers %}
-                                    <div class="checkbox-item" data-search="{{ customer.full_name|lower }} {{ customer.email|lower }}">
-                                        <input type="checkbox" name="target_customers" value="{{ customer.id }}" 
-                                               id="cust_{{ customer.id }}"
-                                               {% if customer in demo.target_customers.all %}checked{% endif %}>
-                                        <label for="cust_{{ customer.id }}">{{ customer.full_name }}</label>
+                                    <div class="checkbox-item" data-search="{{ customer.get_full_name|lower }} {{ customer.email|lower }}">
+                                        <input type="checkbox" name="target_customers" value="{{ customer.id }}" id="cust_{{ customer.id }}" {% if customer.id|stringformat:"s" in form_data.selected_customers %}checked{% endif %}>
+                                        <label for="cust_{{ customer.id }}">{{ customer.get_full_name }}</label>
                                     </div>
                                     {% endfor %}
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            {% endif %}
 
-            <!-- Form Actions -->
-            <div class="form-actions">
-                <a href="{% url 'core:admin_demos' %}" class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-times me-1"></i>Cancel
-                </a>
-                <button type="submit" class="btn btn-primary btn-sm" id="saveBtn">
-                    <i class="fas fa-save me-1"></i>Save Changes
-                </button>
-            </div>
-        </form>
-        {% else %}
-        <!-- No Edit Permission Message -->
-        <div class="admin-card">
-            <div class="admin-card-body">
-                <div class="no-permission-message">
-                    <i class="fas fa-lock fa-3x mb-3 text-muted"></i>
-                    <h5>No Edit Permission</h5>
-                    <p class="mb-0">You do not have permission to edit demo details. Contact your administrator for access.</p>
+                    <!-- Settings -->
+                    <div class="section-header mt-4">
+                        <i class="fas fa-cogs"></i> Settings
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="is_featured" id="id_is_featured" {% if form_data.is_featured %}checked{% endif %}>
+                            <label class="form-check-label" for="id_is_featured">Featured Demo</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="is_active" id="id_is_active" {% if form_data.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="id_is_active">Active</label>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline-secondary btn-sm btn-back">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-sm" id="submitBtn">
+                            <i class="fas fa-save me-1"></i>Update Demo
+                        </button>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
-        {% endif %}
-    </div>
 
-    <!-- Right Column - Sidebar -->
-    <div>
-        <!-- Access Information - COLLAPSIBLE -->
-        <div class="admin-card">
-            <div class="admin-card-header" data-bs-toggle="collapse" data-bs-target="#accessSection">
-                <div class="header-left">
-                    <i class="fas fa-users"></i>
-                    <span>Access Information</span>
+        <!-- DETAILS & STATS TAB -->
+        <div class="tab-pane fade" id="details" role="tabpanel">
+            <div class="compact-form">
+                <!-- Statistics -->
+                <div class="section-header">
+                    <i class="fas fa-chart-bar"></i> Statistics
                 </div>
-                <i class="fas fa-chevron-down collapse-icon"></i>
-            </div>
-            <div id="accessSection" class="collapse show">
-                <div class="admin-card-body">
-                    <div class="info-row">
-                        <div class="info-label">Available To</div>
-                        <div class="info-value">
-                            {% if demo.is_for_all_business_categories %}
-                                <span class="badge bg-success">All Categories</span>
+                <div class="form-grid" style="grid-template-columns: repeat(4, 1fr);">
+                    <div class="stat-card">
+                        <h1 class="text-primary">{{ total_views }}</h1>
+                        <p>Total Views</p>
+                    </div>
+                    <div class="stat-card">
+                        <h1 class="text-success">{{ total_likes }}</h1>
+                        <p>Total Likes</p>
+                    </div>
+                    <div class="stat-card">
+                        <h1 class="text-warning">{{ total_requests }}</h1>
+                        <p>Demo Requests</p>
+                    </div>
+                    <div class="stat-card">
+                        <h1 class="text-info">{{ total_accessible_customers }}</h1>
+                        <p>Accessible To</p>
+                    </div>
+                </div>
+
+                <!-- Demo Information -->
+                <div class="section-header mt-4">
+                    <i class="fas fa-info-circle"></i> Demo Information
+                </div>
+                <table class="info-table">
+                    <tr>
+                        <th>Title:</th>
+                        <td>{{ demo.title }}</td>
+                    </tr>
+                    <tr>
+                        <th>Type:</th>
+                        <td>{{ demo.get_demo_type_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>File Type:</th>
+                        <td>{{ demo.get_file_type_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Duration:</th>
+                        <td>{{ demo.duration|default:"Not specified" }} minutes</td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th>
+                        <td>
+                            {% if demo.is_active %}
+                                <span class="badge bg-success">Active</span>
                             {% else %}
-                                {{ demo.target_business_categories.count }} Categories
+                                <span class="badge bg-secondary">Inactive</span>
                             {% endif %}
-                        </div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Customer Access</div>
-                        <div class="info-value">
-                            {% if demo.is_for_all_customers %}
-                                <span class="badge bg-success">All Customers</span>
-                            {% else %}
-                                {{ demo.target_customers.count }} Specific
+                            {% if demo.is_featured %}
+                                <span class="badge bg-warning">Featured</span>
                             {% endif %}
-                        </div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Total Accessible</div>
-                        <div class="info-value">
-                            <strong>{{ total_accessible_customers }}</strong> customers
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Created:</th>
+                        <td>{{ demo.created_at|date:"d M Y, H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Last Updated:</th>
+                        <td>{{ demo.updated_at|date:"d M Y, H:i" }}</td>
+                    </tr>
+                </table>
 
-        <!-- Recent Activity - COLLAPSIBLE -->
-        {% if recent_views %}
-        <div class="admin-card">
-            <div class="admin-card-header" data-bs-toggle="collapse" data-bs-target="#recentViewsSection">
-                <div class="header-left">
-                    <i class="fas fa-history"></i>
-                    <span>Recent Views</span>
+                <!-- Recent Activity -->
+                {% if recent_views or recent_requests %}
+                <div class="section-header mt-4">
+                    <i class="fas fa-history"></i> Recent Activity
                 </div>
-                <i class="fas fa-chevron-down collapse-icon"></i>
-            </div>
-            <div id="recentViewsSection" class="collapse show">
-                <div class="admin-card-body" style="padding: 0;">
-                    {% for view in recent_views %}
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-eye"></i>
-                        </div>
-                        <div class="activity-content">
-                            <div>{{ view.user.full_name }}</div>
-                            <div class="activity-time">{{ view.viewed_at|timesince }} ago</div>
-                        </div>
+                <div class="form-grid">
+                    {% if recent_views %}
+                    <div>
+                        <h6 class="mb-3">Recent Views</h6>
+                        <ul class="list-unstyled">
+                            {% for view in recent_views %}
+                            <li class="mb-2 pb-2 border-bottom">
+                                <strong>{{ view.user.get_full_name }}</strong><br>
+                                <small class="text-muted">{{ view.viewed_at|date:"d M Y, H:i" }}</small>
+                            </li>
+                            {% endfor %}
+                        </ul>
                     </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Recent Requests - COLLAPSIBLE -->
-        {% if recent_requests %}
-        <div class="admin-card">
-            <div class="admin-card-header" data-bs-toggle="collapse" data-bs-target="#recentRequestsSection">
-                <div class="header-left">
-                    <i class="fas fa-calendar-check"></i>
-                    <span>Recent Requests</span>
-                </div>
-                <i class="fas fa-chevron-down collapse-icon"></i>
-            </div>
-            <div id="recentRequestsSection" class="collapse show">
-                <div class="admin-card-body" style="padding: 0;">
-                    {% for request in recent_requests %}
-                    <div class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-calendar"></i>
-                        </div>
-                        <div class="activity-content">
-                            <div>{{ request.user.full_name }}</div>
-                            <div class="activity-time">{{ request.created_at|timesince }} ago</div>
-                        </div>
+                    {% endif %}
+                    
+                    {% if recent_requests %}
+                    <div>
+                        <h6 class="mb-3">Recent Requests</h6>
+                        <ul class="list-unstyled">
+                            {% for req in recent_requests %}
+                            <li class="mb-2 pb-2 border-bottom">
+                                <strong>{{ req.user.get_full_name }}</strong><br>
+                                <small class="text-muted">{{ req.created_at|date:"d M Y, H:i" }}</small>
+                            </li>
+                            {% endfor %}
+                        </ul>
                     </div>
-                    {% endfor %}
+                    {% endif %}
                 </div>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<!-- Delete Confirmation Modal - ONLY SHOW IF HAS DELETE PERMISSION -->
-{% if user|has_permission:'delete_demo' %}
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete <strong>{{ demo.title }}</strong>?</p>
-                <p class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form method="post" action="{% url 'core:admin_delete_demo' demo.id %}" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Delete Demo</button>
-                </form>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
-{% endif %}
-{% endblock %}
 
-{% block admin_extra_js %}
 <script>
-// File size limits (in bytes)
-const FILE_SIZE_LIMITS = {
-    video: 200 * 1024 * 1024,      // 200 MB
-    webgl: 3 * 1024 * 1024 * 1024,  // 3 GB
-    thumbnail: 10 * 1024 * 1024     // 10 MB
-};
-
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    if (bytes >= k * k * k) {
-        return (bytes / (k * k * k)).toFixed(2) + ' GB';
-    } else if (bytes >= k * k) {
-        return (bytes / (k * k)).toFixed(2) + ' MB';
-    } else if (bytes >= k) {
-        return (bytes / k).toFixed(2) + ' KB';
-    }
-    return bytes + ' Bytes';
-}
-
-function validateFileSize(file, fileType) {
-    const maxSize = FILE_SIZE_LIMITS[fileType];
-    if (file.size > maxSize) {
-        const maxSizeFormatted = formatFileSize(maxSize);
-        const actualSizeFormatted = formatFileSize(file.size);
-        alert(`File size (${actualSizeFormatted}) exceeds maximum allowed size (${maxSizeFormatted}) for ${fileType} files.`);
-        return false;
-    }
-    return true;
-}
-
 document.addEventListener('DOMContentLoaded', function() {
-    setupCollapseIcons();
-    setupFileTypeHandler();
-    setupCategorySelection();
-    setupCustomerSelection();
-    setupFormSubmit();
-    setupFileValidation();
-});
-
-function setupCollapseIcons() {
-    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function(element) {
-        const target = document.querySelector(element.getAttribute('data-bs-target'));
-        const icon = element.querySelector('.collapse-icon');
-        
-        if (target && icon) {
-            target.addEventListener('show.bs.collapse', function() {
-                icon.classList.remove('collapsed');
-            });
-            
-            target.addEventListener('hide.bs.collapse', function() {
-                icon.classList.add('collapsed');
-            });
-        }
-    });
-}
-
-function setupFileTypeHandler() {
-    const fileTypeSelect = document.getElementById('id_file_type');
-    const videoField = document.getElementById('videoFileField');
-    const webglField = document.getElementById('webglFileField');
-    
-    if (fileTypeSelect) {
-        fileTypeSelect.addEventListener('change', function() {
-            if (this.value === 'video') {
-                if (videoField) videoField.style.display = 'block';
-                if (webglField) webglField.style.display = 'none';
-            } else {
-                if (videoField) videoField.style.display = 'none';
-                if (webglField) webglField.style.display = 'block';
-            }
-        });
-    }
-}
-
-function setupFileValidation() {
-    const videoFileInput = document.getElementById('id_video_file');
-    if (videoFileInput) {
-        videoFileInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (!file) return;
-            
-            if (!validateFileSize(file, 'video')) {
-                this.value = '';
-                return;
-            }
-        });
-    }
-    
-    const webglFileInput = document.getElementById('id_webgl_file');
-    if (webglFileInput) {
-        webglFileInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (!file) return;
-            
-            if (!validateFileSize(file, 'webgl')) {
-                this.value = '';
-                return;
-            }
-        });
-    }
-    
-    const thumbnailInput = document.getElementById('id_thumbnail');
-    if (thumbnailInput) {
-        thumbnailInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (!file) return;
-            
-            if (!validateFileSize(file, 'thumbnail')) {
-                this.value = '';
-                return;
-            }
-        });
-    }
-}
-
-function setupCategorySelection() {
+    // Category selection
     const allCategoriesCheckbox = document.getElementById('allBusinessCategoriesCheckbox');
     const categorySelectionArea = document.getElementById('categorySelectionArea');
     const categoryCheckboxes = document.querySelectorAll('.category-checkbox');
     
-    if (allCategoriesCheckbox) {
-        allCategoriesCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                if (categorySelectionArea) categorySelectionArea.classList.add('disabled');
-                categoryCheckboxes.forEach(function(cb) {
-                    cb.checked = false;
-                    const subcategoryList = document.getElementById('subcat_list_' + cb.value);
-                    if (subcategoryList) {
-                        subcategoryList.style.display = 'none';
-                        subcategoryList.querySelectorAll('input').forEach(function(sub) {
-                            sub.checked = false;
-                        });
-                    }
-                });
-            } else {
-                if (categorySelectionArea) categorySelectionArea.classList.remove('disabled');
-            }
-        });
-    }
+    allCategoriesCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            categorySelectionArea.classList.add('disabled');
+            categoryCheckboxes.forEach(function(cb) {
+                cb.checked = false;
+                const subcategoryList = document.getElementById('subcat_list_' + cb.value);
+                if (subcategoryList) {
+                    subcategoryList.style.display = 'none';
+                    subcategoryList.querySelectorAll('input').forEach(function(sub) {
+                        sub.checked = false;
+                    });
+                }
+            });
+        } else {
+            categorySelectionArea.classList.remove('disabled');
+        }
+    });
     
     categoryCheckboxes.forEach(function(checkbox) {
         checkbox.addEventListener('change', function() {
@@ -946,59 +540,88 @@ function setupCategorySelection() {
                     });
                 }
             }
-            if (this.checked && allCategoriesCheckbox) {
+            if (this.checked) {
                 allCategoriesCheckbox.checked = false;
             }
         });
+        
+        // Show subcategories if parent is checked on load
+        if (checkbox.checked) {
+            const subcategoryList = document.getElementById('subcat_list_' + checkbox.value);
+            if (subcategoryList) {
+                subcategoryList.style.display = 'block';
+            }
+        }
     });
-}
-
-function setupCustomerSelection() {
+    
+    // Customer selection
     const allCustomersCheckbox = document.getElementById('allCustomersCheckbox');
     const customerSelectionArea = document.getElementById('customerSelectionArea');
     const customerSearch = document.getElementById('customerSearch');
     
-    if (allCustomersCheckbox) {
-        allCustomersCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                if (customerSelectionArea) customerSelectionArea.classList.add('disabled');
-                document.querySelectorAll('input[name="target_customers"]').forEach(function(cb) {
-                    cb.checked = false;
-                });
+    allCustomersCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            customerSelectionArea.classList.add('disabled');
+            document.querySelectorAll('input[name="target_customers"]').forEach(function(cb) {
+                cb.checked = false;
+            });
+        } else {
+            customerSelectionArea.classList.remove('disabled');
+        }
+    });
+    
+    customerSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        document.querySelectorAll('#customerList .checkbox-item').forEach(function(item) {
+            const searchData = item.getAttribute('data-search');
+            item.style.display = searchData.includes(searchTerm) ? 'flex' : 'none';
+        });
+    });
+    
+    // Cancel button confirmation - ALWAYS confirm
+    let formChanged = false;
+    const demoForm = document.getElementById('demoForm');
+    const backButtons = document.querySelectorAll('.btn-back');
+    
+    demoForm.addEventListener('change', function() {
+        formChanged = true;
+    });
+    
+    demoForm.addEventListener('input', function() {
+        formChanged = true;
+    });
+    
+    backButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // ALWAYS ask for confirmation
+            if (formChanged) {
+                // Has changes - ask to save
+                if (confirm('You have unsaved changes!\n\nClick OK to SAVE changes\nClick Cancel to DISCARD changes')) {
+                    // User wants to save
+                    demoForm.submit();
+                } else {
+                    // User wants to discard - confirm again
+                    if (confirm('Are you sure you want to DISCARD all changes?\n\nClick OK to leave without saving\nClick Cancel to stay')) {
+                        // Confirmed discard
+                        formChanged = false;
+                        window.location.href = "{% url 'core:admin_demos' %}";
+                    }
+                }
             } else {
-                if (customerSelectionArea) customerSelectionArea.classList.remove('disabled');
+                // No changes - still confirm before leaving
+                if (confirm('Are you sure you want to go back?')) {
+                    window.location.href = "{% url 'core:admin_demos' %}";
+                }
             }
         });
-    }
+    });
     
-    if (customerSearch) {
-        customerSearch.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            document.querySelectorAll('#customerList .checkbox-item').forEach(function(item) {
-                const searchData = item.getAttribute('data-search');
-                if (searchData) {
-                    item.style.display = searchData.includes(searchTerm) ? 'flex' : 'none';
-                }
-            });
-        });
-    }
-}
-
-function setupFormSubmit() {
-    const form = document.getElementById('editDemoForm');
-    const saveBtn = document.getElementById('saveBtn');
-    
-    if (form && saveBtn) {
-        form.addEventListener('submit', function() {
-            saveBtn.disabled = true;
-            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
-        });
-    }
-}
-
-function confirmDelete() {
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    deleteModal.show();
-}
+    // Disable warning on form submit
+    demoForm.addEventListener('submit', function() {
+        formChanged = false;
+    });
+});
 </script>
 {% endblock %}

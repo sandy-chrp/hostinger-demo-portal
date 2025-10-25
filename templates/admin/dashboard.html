@@ -512,13 +512,15 @@
         </span>
         <div class="activity-filters">
             <button class="btn btn-sm btn-outline-primary active" 
-                    onclick="loadRegistrationData(event, 'daily')" data-reg-period="daily">Daily</button>
+                    onclick="loadRegistrationData('today')" data-reg-period="today">Today</button>
             <button class="btn btn-sm btn-outline-primary" 
-                    onclick="loadRegistrationData(event, 'weekly')" data-reg-period="weekly">Weekly</button>
+                    onclick="loadRegistrationData('yesterday')" data-reg-period="yesterday">Yesterday</button>
             <button class="btn btn-sm btn-outline-primary" 
-                    onclick="loadRegistrationData(event, 'monthly')" data-reg-period="monthly">Monthly</button>
+                    onclick="loadRegistrationData('weekly')" data-reg-period="weekly">Weekly</button>
             <button class="btn btn-sm btn-outline-primary" 
-                    onclick="showRegCustomDatePicker(event)" data-reg-period="custom">
+                    onclick="loadRegistrationData('monthly')" data-reg-period="monthly">Monthly</button>
+            <button class="btn btn-sm btn-outline-primary" 
+                    onclick="toggleRegistrationCustomDate()" data-reg-period="custom">
                 <i class="fas fa-calendar-alt"></i> Custom
             </button>
         </div>
@@ -534,7 +536,7 @@
                 <input type="date" class="form-control form-control-sm" id="regEndDate">
             </div>
             <div class="col-md-4">
-                <button class="btn btn-primary btn-sm w-100" onclick="applyRegCustomDateRange(event)">
+                <button class="btn btn-primary btn-sm w-100" onclick="applyRegistrationDateRange()">
                     <i class="fas fa-search"></i> Apply
                 </button>
             </div>
@@ -591,9 +593,11 @@
         </h3>
         <div class="activity-filters">
             <button class="btn btn-sm btn-outline-primary active" 
-                    data-period="daily" onclick="loadActivityAjax(event, 'daily')">Daily</button>
+                    data-period="today" onclick="loadActivityAjax(event, 'today')">Today</button>
             <button class="btn btn-sm btn-outline-primary" 
                     data-period="weekly" onclick="loadActivityAjax(event, 'weekly')">Weekly</button>
+            <button class="btn btn-sm btn-outline-primary" 
+                    data-period="yesterday" onclick="loadActivityAjax(event, 'yesterday')">Yesterday</button>
             <button class="btn btn-sm btn-outline-primary" 
                     data-period="monthly" onclick="loadActivityAjax(event, 'monthly')">Monthly</button>
             <button class="btn btn-sm btn-outline-primary" 
@@ -965,8 +969,7 @@ function getCSRFToken() {
 }
 
 // ============ REGISTRATION CHART AJAX FUNCTIONS ============
-function loadRegistrationData(event, period, startDate = null, endDate = null) {
-    if (event) event.preventDefault();
+function loadRegistrationData(period, startDate = null, endDate = null) {
     
     const loadingIndicator = document.getElementById('regLoadingIndicator');
     if (loadingIndicator) loadingIndicator.style.display = 'block';
@@ -1043,23 +1046,21 @@ function updateRegistrationChart(monthlyUsers) {
                 tooltip: { mode: 'index', intersect: false }
             },
             scales: {
-                y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.1)' } },
+                y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1, callback: function(value) { return Number.isInteger(value) ? value : ''; } }, grid: { color: 'rgba(0, 0, 0, 0.1)' } },
                 x: { grid: { display: false } }
             }
         }
     });
 }
 
-function showRegCustomDatePicker(event) {
-    if (event) event.preventDefault();
+function toggleRegistrationCustomDate() {
     const customDateRange = document.getElementById('regCustomDateRange');
     if (customDateRange) {
         customDateRange.style.display = customDateRange.style.display === 'none' ? 'block' : 'none';
     }
 }
 
-function applyRegCustomDateRange(event) {
-    if (event) event.preventDefault();
+function applyRegistrationDateRange() {
     const startDate = document.getElementById('regStartDate').value;
     const endDate = document.getElementById('regEndDate').value;
     if (!startDate || !endDate) {
@@ -1070,7 +1071,7 @@ function applyRegCustomDateRange(event) {
         alert('Start date must be before end date');
         return;
     }
-    loadRegistrationData(null, 'custom', startDate, endDate);
+    loadRegistrationData('custom', startDate, endDate);
 }
 
 // ============ ACTIVITY ANALYTICS AJAX FUNCTIONS ============
@@ -1183,7 +1184,7 @@ function updateActivityChart(timeline) {
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: { legend: { position: 'top', labels: { padding: 20, usePointStyle: true } } },
-            scales: { y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.1)' } }, x: { grid: { display: false } } }
+            scales: { y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1, callback: function(value) { return Number.isInteger(value) ? value : ''; } }, grid: { color: 'rgba(0, 0, 0, 0.1)' } }, x: { grid: { display: false } } }
         }
     });
 }
@@ -1251,7 +1252,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
-                scales: { y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.1)' } }, x: { grid: { display: false } } }
+                scales: { y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1, callback: function(value) { return Number.isInteger(value) ? value : ''; } }, grid: { color: 'rgba(0, 0, 0, 0.1)' } }, x: { grid: { display: false } } }
             }
         });
     }
@@ -1273,7 +1274,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } } },
-                scales: { y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.1)' } }, x: { grid: { display: false } } }
+                scales: { y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1, callback: function(value) { return Number.isInteger(value) ? value : ''; } }, grid: { color: 'rgba(0, 0, 0, 0.1)' } }, x: { grid: { display: false } } }
             }
         });
     }
@@ -1342,7 +1343,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Load initial AJAX data
-    loadActivityAjax(null, 'daily');
+    loadActivityAjax(null, 'today');
 });
 </script>
 {% endblock %}

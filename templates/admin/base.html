@@ -1006,12 +1006,12 @@
             {% endif %}
         </li>
         <li><hr class="dropdown-divider"></li>
-        <li>
+        {% comment %} <li>
             <a class="dropdown-item" href="{% url 'accounts:profile' %}">
                 <i class="fas fa-user me-2"></i>Profile Settings
             </a>
-        </li>
-        <li><hr class="dropdown-divider"></li>
+        </li> {% endcomment %}
+        {% comment %} <li><hr class="dropdown-divider"></li> {% endcomment %}
         <li>
             <a class="dropdown-item text-danger" href="{% url 'core:admin_logout' %}">
                 <i class="fas fa-sign-out-alt me-2"></i>Logout

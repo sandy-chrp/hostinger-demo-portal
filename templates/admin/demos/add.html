@@ -390,11 +390,11 @@
                 <div class="form-grid">
                     <div class="full-width">
                         <label for="id_title" class="form-label">Demo Title <span class="text-danger">*</span></label>
-                        <input type="text" name="title" id="id_title" class="form-control" required>
+                        <input type="text" name="title" id="id_title" class="form-control" value="{{ form_data.title }}" required>
                     </div>
                     <div class="full-width">
                         <label for="id_description" class="form-label">Description <span class="text-danger">*</span></label>
-                        <textarea name="description" id="id_description" class="form-control" rows="3" required></textarea>
+                        <textarea name="description" id="id_description" class="form-control" rows="3" required>{{ form_data.description }}</textarea>
                     </div>
                 </div>
 
@@ -407,8 +407,8 @@
                     <div>
                         <label for="id_file_type" class="form-label">File Type <span class="text-danger">*</span></label>
                         <select name="file_type" id="id_file_type" class="form-select">
-                            <option value="video" selected>Video Demo</option>
-                            <option value="webgl">WebGL Interactive</option>
+                            <option value="video" {% if form_data.file_type == "video" %}selected{% endif %}>Video Demo</option>
+                            <option value="webgl" {% if form_data.file_type == "webgl" %}selected{% endif %}>WebGL Interactive</option>
                         </select>
                     </div>
                     <div id="demoFileField">
@@ -458,7 +458,7 @@
                 <div class="form-grid">
                     <div>
                         <div class="form-check form-switch mb-2">
-                            <input class="form-check-input" type="checkbox" id="allBusinessCategoriesCheckbox">
+                            <input class="form-check-input" type="checkbox" id="allBusinessCategoriesCheckbox" {% if form_data.all_business_categories %}checked{% endif %}>
                             <label class="form-check-label" for="allBusinessCategoriesCheckbox">
                                 <strong>All Business Categories</strong>
                             </label>
@@ -466,14 +466,14 @@
                         <div id="categorySelectionArea" class="selection-box">
                             {% for category in business_categories %}
                             <div class="checkbox-item">
-                                <input type="checkbox" name="target_business_categories" value="{{ category.id }}" id="cat_{{ category.id }}" class="category-checkbox">
+                                <input type="checkbox" name="target_business_categories" value="{{ category.id }}" id="cat_{{ category.id }}" class="category-checkbox" {% if category.id|stringformat:"s" in form_data.selected_business_categories %}checked{% endif %}>
                                 <label for="cat_{{ category.id }}">{{ category.name }}</label>
                             </div>
                             {% if category.subcategories.all %}
                             <div class="subcategory-list" id="subcat_list_{{ category.id }}" style="display: none;">
                                 {% for subcategory in category.subcategories.all %}
                                 <div class="checkbox-item">
-                                    <input type="checkbox" name="target_business_subcategories" value="{{ subcategory.id }}" id="subcat_{{ subcategory.id }}" class="subcategory-checkbox" data-parent="{{ category.id }}">
+                                    <input type="checkbox" name="target_business_subcategories" value="{{ subcategory.id }}" id="subcat_{{ subcategory.id }}" class="subcategory-checkbox" data-parent="{{ category.id }}" {% if subcategory.id|stringformat:"s" in form_data.selected_business_subcategories %}checked{% endif %}>
                                     <label for="subcat_{{ subcategory.id }}">{{ subcategory.name }}</label>
                                 </div>
                                 {% endfor %}
@@ -498,7 +498,7 @@
                             <div id="customerList">
                                 {% for customer in customers %}
                                 <div class="checkbox-item" data-search="{{ customer.full_name|lower }} {{ customer.email|lower }}">
-                                    <input type="checkbox" name="target_customers" value="{{ customer.id }}" id="cust_{{ customer.id }}">
+                                    <input type="checkbox" name="target_customers" value="{{ customer.id }}" id="cust_{{ customer.id }}" {% if customer.id|stringformat:"s" in form_data.selected_customers %}checked{% endif %}>
                                     <label for="cust_{{ customer.id }}">{{ customer.full_name }}</label>
                                 </div>
                                 {% endfor %}
@@ -513,11 +513,11 @@
                 </div>
                 <div class="form-grid">
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" name="is_featured" id="id_is_featured">
+                        <input class="form-check-input" type="checkbox" name="is_featured" id="id_is_featured" {% if form_data.is_featured %}checked{% endif %}>
                         <label class="form-check-label" for="id_is_featured">Featured Demo</label>
                     </div>
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" name="is_active" id="id_is_active" checked>
+                        <input class="form-check-input" type="checkbox" name="is_active" id="id_is_active" {% if form_data.is_active %}checked{% endif %}>
                         <label class="form-check-label" for="id_is_active">Active</label>
                     </div>
                 </div>
@@ -890,5 +890,114 @@ function setupFormValidation() {
         form.classList.add('was-validated');
     });
 }
+
+// ============================================================================
+// UNSAVED CHANGES DETECTION - Popup on Back Button
+// ============================================================================
+
+// Track form changes
+let formChanged = false;
+const demoForm = document.getElementById('demoForm');
+
+// Store original form state
+const originalFormData = {};
+const formElements = demoForm.querySelectorAll('input, select, textarea');
+formElements.forEach(element => {
+    if (element.type === 'checkbox' || element.type === 'radio') {
+        originalFormData[element.name] = element.checked;
+    } else if (element.type === 'file') {
+        originalFormData[element.name] = '';
+    } else {
+        originalFormData[element.name] = element.value;
+    }
+});
+
+// Check if form has changed
+function hasFormChanged() {
+    let changed = false;
+    
+    formElements.forEach(element => {
+        if (element.type === 'checkbox' || element.type === 'radio') {
+            if (originalFormData[element.name] !== element.checked) {
+                changed = true;
+            }
+        } else if (element.type === 'file') {
+            if (element.files && element.files.length > 0) {
+                changed = true;
+            }
+        } else {
+            if (originalFormData[element.name] !== element.value) {
+                changed = true;
+            }
+        }
+    });
+    
+    return changed;
+}
+
+// Mark form as changed
+demoForm.addEventListener('change', function() {
+    formChanged = true;
+});
+
+demoForm.addEventListener('input', function() {
+    formChanged = true;
+});
+
+// Browser close/refresh warning
+window.addEventListener('beforeunload', function(e) {
+    if (formChanged && hasFormChanged()) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+    }
+});
+
+// Back button handler with popup
+const backButtons = document.querySelectorAll('.btn-back');
+backButtons.forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if (formChanged && hasFormChanged()) {
+            // First confirmation: Save changes?
+            const saveChanges = confirm(
+                '⚠️ You have unsaved changes!\n\n' +
+                'Do you want to SAVE your changes?\n\n' +
+                '✓ Click "OK" to SAVE and continue\n' +
+                '✗ Click "Cancel" to leave WITHOUT saving'
+            );
+            
+            if (saveChanges) {
+                // User chose YES - Save the form
+                demoForm.submit();
+            } else {
+                // User chose NO - Double confirm
+                const reallyLeave = confirm(
+                    '⚠️ Are you sure?\n\n' +
+                    'All your changes will be LOST forever!\n\n' +
+                    '✓ Click "OK" to LEAVE without saving\n' +
+                    '✗ Click "Cancel" to go back'
+                );
+                
+                if (reallyLeave) {
+                    // Really leaving
+                    formChanged = false;
+                    window.location.href = "{% url 'core:admin_demos' %}";
+                }
+            }
+        } else {
+            // No changes - navigate
+            window.location.href = "{% url 'core:admin_demos' %}";
+        }
+    });
+});
+
+// Disable warning on form submit
+demoForm.addEventListener('submit', function() {
+    formChanged = false;
+});
+
+console.log('✅ Unsaved Changes Protection Active');
 </script>
 {% endblock %}

@@ -184,6 +184,39 @@
         border: 1px solid rgba(8, 127, 194, 0.2);
     }
 
+    /* ✅ NEW: Business Category & Subcategory Badges */
+    .category-badge {
+        display: inline-block;
+        padding: 0.25rem 0.625rem;
+        background: rgba(8, 127, 194, 0.1);
+        color: #087fc2;
+        border: 1px solid rgba(8, 127, 194, 0.3);
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-right: 0.375rem;
+        margin-bottom: 0.375rem;
+    }
+
+    .subcategory-badge {
+        display: inline-block;
+        padding: 0.25rem 0.625rem;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-right: 0.375rem;
+        margin-bottom: 0.375rem;
+    }
+
+    .all-categories-text {
+        font-size: 0.875rem;
+        color: #9ca3af;
+        font-style: italic;
+    }
+
     /* Collapsible Info Section */
     .info-section {
         background: white;
@@ -262,79 +295,51 @@
         text-align: right;
     }
 
-    /* Description Section */
-    .description-box {
-        background: white;
-        padding: 1.25rem;
-        border-radius: 0.75rem;
-        border-left: 3px solid #087fc2;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        margin-bottom: 1.5rem;
-    }
-
-    .description-box h6 {
-        font-weight: 600;
-        color: #1f2937;
-        margin-bottom: 0.75rem;
-        font-size: 0.95rem;
+    /* ✅ NEW: For categories display in info-value */
+    .info-value.categories-display {
         display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .description-box h6 i {
-        color: #087fc2;
-    }
-
-    .description-text {
-        color: #4b5563;
-        font-size: 0.9rem;
-        line-height: 1.6;
-        margin: 0;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.25rem;
+        max-width: 60%;
     }
 
     /* Quick Actions */
     .action-btn {
-        padding: 0.75rem 1rem;
+        padding: 0.625rem 1rem;
         border-radius: 0.5rem;
         font-size: 0.875rem;
-        font-weight: 500;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
         transition: all 0.2s ease;
-        border: 1px solid;
-        text-align: center;
-        text-decoration: none;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
-        cursor: pointer;
-        width: 100%;
-    }
-
-    .action-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-decoration: none;
     }
 
     .action-btn-primary {
         background: #087fc2;
-        border-color: #087fc2;
         color: white;
     }
 
     .action-btn-primary:hover {
-        background: #0669a0;
+        background: #0666a0;
         color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(8, 127, 194, 0.3);
     }
 
     .action-btn-secondary {
-        background: white;
-        border-color: #e2e8f0;
-        color: #4b5563;
+        background: #f8fafc;
+        color: #1f2937;
+        border: 1px solid #e2e8f0;
     }
 
     .action-btn-secondary:hover {
-        background: #f8fafc;
+        background: #f1f5f9;
         border-color: #cbd5e1;
         color: #1f2937;
     }
@@ -362,6 +367,11 @@
 
         .info-value {
             text-align: left;
+        }
+
+        .info-value.categories-display {
+            justify-content: flex-start;
+            max-width: 100%;
         }
     }
 
@@ -438,29 +448,6 @@
     <!-- Right Column - Info & Actions -->
     <div class="col-lg-4">
 
-        <!-- Status Badges -->
-        <div class="status-row">
-            {% if demo.is_active %}
-                <span class="status-badge status-active">
-                    <i class="fas fa-check-circle"></i>Active
-                </span>
-            {% else %}
-                <span class="status-badge status-inactive">
-                    <i class="fas fa-eye-slash"></i>Inactive
-                </span>
-            {% endif %}
-            
-            {% if demo.is_featured %}
-                <span class="status-badge status-featured">
-                    <i class="fas fa-star"></i>Featured
-                </span>
-            {% endif %}
-            
-            <span class="status-badge status-category">
-                <i class="fas fa-folder"></i>{{ demo.category.name }}
-            </span>
-        </div>
-
         <!-- Demo Information -->
         <div class="info-section">
             <div class="info-header" onclick="toggleSection('demoInfo')">
@@ -475,10 +462,37 @@
                     <span class="info-label">Demo ID</span>
                     <span class="info-value">#{{ demo.id }}</span>
                 </div>
+
+                <!-- ✅ UPDATED: Business Categories Display -->
                 <div class="info-item">
-                    <span class="info-label">Category</span>
-                    <span class="info-value">{{ demo.category.name }}</span>
+                    <span class="info-label">Business Categories</span>
+                    <span class="info-value categories-display">
+                        {% if business_categories %}
+                            {% for category in business_categories %}
+                                <span class="category-badge">{{ category.name }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="all-categories-text">All Categories</span>
+                        {% endif %}
+                    </span>
                 </div>
+
+                <!-- ✅ NEW: Business Subcategories Display -->
+                <div class="info-item">
+                    <span class="info-label">Subcategories</span>
+                    <span class="info-value categories-display">
+                        {% if business_subcategories %}
+                            {% for subcategory in business_subcategories %}
+                                <span class="subcategory-badge" title="{{ subcategory.category.name }}">
+                                    {{ subcategory.name }}
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="all-categories-text">All Subcategories</span>
+                        {% endif %}
+                    </span>
+                </div>
+
                 <div class="info-item">
                     <span class="info-label">Created</span>
                     <span class="info-value">{{ demo.created_at|date:"M d, Y" }}</span>
@@ -513,9 +527,6 @@
                     </button>
                     <button class="action-btn action-btn-secondary" onclick="downloadVideo()">
                         <i class="fas fa-download"></i>Download Video
-                    </button>
-                    <button class="action-btn action-btn-secondary" onclick="shareDemo()">
-                        <i class="fas fa-share"></i>Share Demo
                     </button>
                 </div>
             </div>

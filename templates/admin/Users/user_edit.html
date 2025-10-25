@@ -77,10 +77,17 @@
                     
                     <div class="mb-3">
                         <label class="form-label required-field">Office Email</label>
-                        <input type="email" name="email" id="email" class="form-control" 
-                               value="{{ user_obj.email }}" required>
+                        <input type="email" 
+                               name="email" 
+                               id="email" 
+                               class="form-control" 
+                               placeholder="employee@company.com" 
+                               value="{{ user_obj.email }}"
+                               pattern="^[a-zA-Z0-9._%+-]+@(?!gmail\.com$|yahoo\.com$|hotmail\.com$|outlook\.com$|live\.com$)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                               title="Business email only. Gmail, Yahoo, Hotmail, Outlook not allowed."
+                               required>
                         <small id="emailFeedback" class="text-muted">
-                            <i class="fas fa-building"></i> Business email required
+                            <i class="fas fa-building"></i> Business email required (no Gmail, Yahoo, etc.)
                         </small>
                     </div>
                     
@@ -107,9 +114,20 @@
                     
                     <div class="mb-3">
                         <label class="form-label required-field">Employee ID</label>
-                        <input type="text" name="employee_id" id="employee_id" class="form-control" 
-                               value="{{ user_obj.employee_id }}" required>
-                        <small id="employeeIdFeedback" class="text-muted">Unique identifier</small>
+                        <input type="text" 
+                               name="employee_id" 
+                               id="employee_id" 
+                               class="form-control" 
+                               placeholder="EMP00001" 
+                               value="{{ user_obj.employee_id }}"
+                               pattern="^EMP\d{5}$"
+                               title="Format: EMP followed by 5 digits (e.g., EMP00001)"
+                               maxlength="8"
+                               style="text-transform: uppercase;"
+                               required>
+                        <small id="employeeIdFeedback" class="text-muted">
+                            Format: EMP00001 (EMP followed by 5 digits)
+                        </small>
                     </div>
                     
                     <div class="mb-3">
@@ -266,39 +284,57 @@ let employeeIdTimeout;
 const currentEmail = '{{ user_obj.email }}';
 const currentEmployeeId = '{{ user_obj.employee_id }}';
 
-// AJAX Email Validation (only if changed)
+// ✅ AJAX Email Validation with Business Email Check
 document.getElementById('email').addEventListener('input', function() {
     clearTimeout(emailTimeout);
     const email = this.value.trim();
     const feedback = document.getElementById('emailFeedback');
+    const submitBtn = document.getElementById('submitBtn');
     
-    if (!email || email === currentEmail) {
+    if (!email) {
         feedback.className = 'text-muted';
         feedback.innerHTML = '<i class="fas fa-building"></i> Business email required';
+        submitBtn.disabled = true;
         return;
     }
     
-    // Check personal domains
+    // If email unchanged, no need to validate
+    if (email === currentEmail) {
+        feedback.className = 'text-muted';
+        feedback.innerHTML = '<i class="fas fa-building"></i> Business email required';
+        submitBtn.disabled = false;
+        return;
+    }
+    
+    // ✅ Check if personal email domain
     const blockedDomains = [
-        'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com',
-        'live.com', 'icloud.com', 'aol.com', 'ymail.com'
+        'gmail.com', 'yahoo.com', 'yahoo.co.in', 'hotmail.com', 
+        'outlook.com', 'live.com', 'msn.com', 'icloud.com', 
+        'me.com', 'aol.com', 'ymail.com', 'rediffmail.com', 
+        'protonmail.com', 'mail.com', 'zoho.com'
     ];
     
     try {
         const domain = email.split('@')[1].toLowerCase();
+        
         if (blockedDomains.includes(domain)) {
             feedback.className = 'text-danger';
-            feedback.innerHTML = '<i class="fas fa-times-circle"></i> Personal email not allowed';
+            feedback.innerHTML = '<i class="fas fa-times-circle"></i> Personal email not allowed. Use business email.';
+            submitBtn.disabled = true;
             return;
         }
     } catch (e) {
+        // Invalid email format
         feedback.className = 'text-danger';
         feedback.textContent = 'Invalid email format';
+        submitBtn.disabled = true;
         return;
     }
     
+    // ✅ If business email, check if exists
     feedback.className = 'text-muted';
     feedback.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    submitBtn.disabled = true;
     
     emailTimeout = setTimeout(() => {
         fetch(`/auth/ajax/check-employee-email/?email=${encodeURIComponent(email)}`)
@@ -307,31 +343,55 @@ document.getElementById('email').addEventListener('input', function() {
                 if (data.available) {
                     feedback.className = 'text-success';
                     feedback.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
+                    submitBtn.disabled = false;
                 } else {
                     feedback.className = 'text-danger';
                     feedback.innerHTML = '<i class="fas fa-times-circle"></i> ' + data.message;
+                    submitBtn.disabled = true;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
+                feedback.className = 'text-muted';
+                feedback.textContent = 'Could not validate email';
+                submitBtn.disabled = false;
             });
     }, 500);
 });
 
-// AJAX Employee ID Validation (only if changed)
+// ✅ AJAX Employee ID Validation with Format Check
 document.getElementById('employee_id').addEventListener('input', function() {
     clearTimeout(employeeIdTimeout);
-    const employeeId = this.value.trim();
+    const employeeId = this.value.trim().toUpperCase();
     const feedback = document.getElementById('employeeIdFeedback');
+    const submitBtn = document.getElementById('submitBtn');
     
-    if (!employeeId || employeeId === currentEmployeeId) {
+    if (!employeeId) {
         feedback.className = 'text-muted';
-        feedback.textContent = 'Unique identifier';
+        feedback.textContent = 'Format: EMP00001 (EMP followed by 5 digits)';
+        submitBtn.disabled = true;
+        return;
+    }
+    
+    // If employee ID unchanged, no need to validate
+    if (employeeId === currentEmployeeId) {
+        feedback.className = 'text-muted';
+        feedback.textContent = 'Format: EMP00001 (EMP followed by 5 digits)';
+        submitBtn.disabled = false;
+        return;
+    }
+    
+    // ✅ Frontend format validation
+    const pattern = /^EMP\d{5}$/;
+    if (!pattern.test(employeeId)) {
+        feedback.className = 'text-danger';
+        feedback.innerHTML = '<i class="fas fa-times-circle"></i> Format must be EMP followed by 5 digits (e.g., EMP00001)';
+        submitBtn.disabled = true;
         return;
     }
     
     feedback.className = 'text-muted';
-    feedback.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    feedback.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking availability...';
     
     employeeIdTimeout = setTimeout(() => {
         fetch(`/auth/ajax/check-employee-id/?employee_id=${encodeURIComponent(employeeId)}`)
@@ -339,14 +399,19 @@ document.getElementById('employee_id').addEventListener('input', function() {
             .then(data => {
                 if (data.available) {
                     feedback.className = 'text-success';
-                    feedback.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
+                    feedback.innerHTML = '<i class="fas fa-check-circle"></i> Employee ID available';
+                    submitBtn.disabled = false;
                 } else {
                     feedback.className = 'text-danger';
                     feedback.innerHTML = '<i class="fas fa-times-circle"></i> ' + data.message;
+                    submitBtn.disabled = true;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
+                feedback.className = 'text-muted';
+                feedback.textContent = 'Format: EMP00001 (EMP followed by 5 digits)';
+                submitBtn.disabled = false;
             });
     }, 500);
 });
@@ -407,6 +472,15 @@ document.getElementById('userEditForm').addEventListener('submit', function(e) {
     if (newPassword && newPassword !== confirmPassword) {
         e.preventDefault();
         alert('Passwords do not match!');
+        return false;
+    }
+    
+    // ✅ Validate Employee ID format before submit
+    const employeeId = document.getElementById('employee_id').value.trim();
+    const pattern = /^EMP\d{5}$/;
+    if (!pattern.test(employeeId)) {
+        e.preventDefault();
+        alert('Employee ID must be in format EMP00001 (EMP followed by 5 digits)');
         return false;
     }
 });

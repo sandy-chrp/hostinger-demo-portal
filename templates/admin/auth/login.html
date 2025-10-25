@@ -256,8 +256,31 @@
             z-index: 5;
         }
 
+        /* ✅ NEW: Password Toggle Icon */
+        .password-toggle-icon {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1rem;
+            z-index: 10;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .password-toggle-icon:hover {
+            color: var(--primary-color);
+        }
+
         .form-control.with-icon {
             padding-left: 2.5rem;
+        }
+
+        /* ✅ NEW: Password field with both icons */
+        .form-control.with-both-icons {
+            padding-left: 2.5rem;
+            padding-right: 3rem;
         }
 
         .btn-login {
@@ -278,33 +301,78 @@
         }
 
         .btn-login:hover {
-            background: #0669a0;
+            background: #066aa0;
             transform: translateY(-1px);
-            box-shadow: var(--shadow-lg);
-            color: var(--text-white);
+            box-shadow: 0 10px 20px rgba(8, 127, 194, 0.2);
         }
 
         .btn-login:active {
             transform: translateY(0);
         }
 
-        .btn-login:disabled {
-            opacity: 0.6;
-            transform: none;
+        .btn-login.btn-loading {
+            background: #6c757d;
             cursor: not-allowed;
         }
 
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .login-footer {
+            background: var(--background-secondary);
+            padding: 1.5rem 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .company-info {
+            margin-bottom: 0.5rem;
+        }
+
+        .company-name {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .support-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .support-link:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        /* Alert Messages */
         .alert {
-            border: none;
             border-radius: var(--radius-lg);
             padding: 1rem 1.25rem;
             margin-bottom: 1.5rem;
-            border-left: 4px solid;
-            font-size: 0.875rem;
-            animation: slideInLeft 0.3s ease-out;
+            border: none;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            animation: slideIn 0.3s ease-out;
         }
 
-        @keyframes slideInLeft {
+        @keyframes slideIn {
             from {
                 opacity: 0;
                 transform: translateX(-10px);
@@ -315,216 +383,87 @@
             }
         }
 
-        .alert-danger {
-            background-color: rgba(239, 68, 68, 0.05);
-            border-left-color: var(--danger-color);
-            color: #dc2626;
+        .alert-success {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-left: 4px solid var(--success-color);
+            color: #166534;
         }
 
-        .alert-success {
-            background-color: rgba(16, 185, 129, 0.05);
-            border-left-color: var(--success-color);
-            color: #059669;
+        .alert-error,
+        .alert-danger {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border-left: 4px solid var(--danger-color);
+            color: #991b1b;
         }
 
         .alert-warning {
-            background-color: rgba(245, 158, 11, 0.05);
-            border-left-color: var(--warning-color);
-            color: #d97706;
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border-left: 4px solid var(--warning-color);
+            color: #92400e;
         }
 
-        .login-footer {
-            background: var(--background-secondary);
-            padding: 1.5rem 2rem;
-            text-align: center;
-            border-top: 1px solid var(--border-color);
+        .alert-info {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-left: 4px solid var(--tech-blue);
+            color: #075985;
         }
 
-        .company-info {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .company-name {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .support-link {
-            color: var(--accent-color);
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.8rem;
-            transition: color 0.2s ease;
-        }
-
-        .support-link:hover {
-            color: var(--accent-hover);
-            text-decoration: underline;
-        }
-
-        .back-to-site {
-            position: absolute;
-            top: 2rem;
-            left: 2rem;
-            z-index: 10;
-        }
-
-        .back-link {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-md);
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-        }
-
-        .back-link:hover {
-            color: var(--text-primary);
-            transform: translateX(-2px);
-            background: var(--background-primary);
-        }
-
-        /* Loading state */
-        .btn-loading {
-            pointer-events: none;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--text-white);
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .login-container {
-                max-width: 100%;
-                margin: 0 1rem;
-            }
-
-            .login-header {
-                padding: 2rem 1.5rem;
-            }
-
-            .login-body {
-                padding: 2rem 1.5rem;
-            }
-
-            .login-footer {
-                padding: 1.25rem 1.5rem;
-            }
-
-            .login-title {
-                font-size: 1.375rem;
-            }
-
-            .back-to-site {
-                top: 1rem;
-                left: 1rem;
-            }
-
-            .company-logo-container {
-                max-width: 180px;
-            }
+        .alert-icon {
+            font-size: 1.125rem;
+            flex-shrink: 0;
+            margin-top: 0.125rem;
         }
 
         @media (max-width: 480px) {
-            body {
-                padding: 0.5rem;
-            }
-
-            .company-logo-container {
-                max-width: 160px;
-                padding: 0.75rem;
-            }
-
-            .login-header {
-                padding: 1.5rem 1rem;
-            }
-
             .login-body {
-                padding: 1.5rem 1rem;
+                padding: 2rem 1.5rem;
             }
-
-            .login-footer {
-                padding: 1rem;
+            
+            .login-header {
+                padding: 2rem 1.5rem;
             }
-        }
-
-        /* Focus visible for accessibility */
-        .btn-login:focus-visible,
-        .form-control:focus-visible,
-        .back-link:focus-visible {
-            outline: 2px solid var(--accent-color);
-            outline-offset: 2px;
-        }
-
-        /* High contrast mode support */
-        @media (prefers-contrast: high) {
-            :root {
-                --border-color: #000000;
-                --text-muted: #666666;
-            }
-        }
-
-        /* Reduced motion support */
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
+            
+            .login-title {
+                font-size: 1.25rem;
             }
         }
     </style>
 </head>
-
 <body>
     <div class="login-container">
         <div class="login-card">
             <!-- Header -->
             <div class="login-header">
                 <div class="company-logo-container">
+                    {% load static %}
                     <img src="{% static 'images/logo.webp' %}" alt="CHRP India Logo" class="company-logo">
                 </div>
-                <h1 class="login-title">CHRP-INDIA Admin Portal</h1>
-                <p class="login-subtitle">eLearning & VR/AR Solutions Management System</p>
+                <h1 class="login-title">Administrator Portal</h1>
+                <p class="login-subtitle">Secure Access for Demo Portal Administration</p>
             </div>
 
             <!-- Body -->
             <div class="login-body">
-                <!-- Messages -->
+                <!-- Security Notice -->
+                {% comment %} <div class="security-badge">
+                    <i class="fas fa-shield-halved security-badge-icon"></i>
+                    <div class="security-badge-content">
+                        <strong>Secure Login:</strong> This area is restricted to authorized administrators and staff members only. All access attempts are monitored and logged.
+                    </div>
+                </div> {% endcomment %}
+
+                <!-- Alert Messages -->
                 {% if messages %}
                     {% for message in messages %}
                         <div class="alert alert-{{ message.tags }}">
-                            <div class="d-flex align-items-start">
-                                {% if message.tags == 'error' or message.tags == 'danger' %}
-                                    <i class="fas fa-exclamation-circle me-2 mt-1"></i>
-                                {% elif message.tags == 'success' %}
-                                    <i class="fas fa-check-circle me-2 mt-1"></i>
-                                {% elif message.tags == 'warning' %}
-                                    <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
-                                {% else %}
-                                    <i class="fas fa-info-circle me-2 mt-1"></i>
-                                {% endif %}
-                                <div>{{ message }}</div>
-                            </div>
+                            <i class="fas 
+                                {% if message.tags == 'success' %}fa-circle-check
+                                {% elif message.tags == 'error' or message.tags == 'danger' %}fa-circle-exclamation
+                                {% elif message.tags == 'warning' %}fa-triangle-exclamation
+                                {% else %}fa-circle-info
+                                {% endif %} 
+                                alert-icon"></i>
+                            <div>{{ message }}</div>
                         </div>
                     {% endfor %}
                 {% endif %}
@@ -545,7 +484,8 @@
                                    name="email" 
                                    required 
                                    autocomplete="email"
-                                   autofocus>
+                                   autofocus
+                                   placeholder="admin@company.com">
                         </div>
                     </div>
 
@@ -556,11 +496,14 @@
                                 <i class="fas fa-lock"></i>
                             </div>
                             <input type="password" 
-                                   class="form-control with-icon" 
+                                   class="form-control with-both-icons" 
                                    id="password"
                                    name="password" 
                                    required 
-                                   autocomplete="current-password">
+                                   autocomplete="current-password"
+                                   placeholder="Enter your password">
+                            <!-- ✅ NEW: Eye Icon for Password Toggle -->
+                            <i class="fas fa-eye password-toggle-icon" id="togglePassword"></i>
                         </div>
                     </div>
                     <br>
@@ -596,6 +539,20 @@
             const loginButton = document.getElementById('loginButton');
             const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('password');
+            const togglePassword = document.getElementById('togglePassword');
+            
+            // ✅ NEW: Password Toggle Functionality
+            if (togglePassword && passwordInput) {
+                togglePassword.addEventListener('click', function() {
+                    // Toggle password visibility
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    
+                    // Toggle eye icon
+                    this.classList.toggle('fa-eye');
+                    this.classList.toggle('fa-eye-slash');
+                });
+            }
             
             // Auto-hide alerts after 8 seconds
             const alerts = document.querySelectorAll('.alert');

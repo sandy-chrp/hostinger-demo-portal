@@ -55,7 +55,9 @@ urlpatterns = [
     path('admin/customers/bulk-actions/', admin_customer_views.admin_bulk_customer_actions, name='admin_bulk_customer_actions'),
     path('admin/customers/bulk-import/', admin_customer_views.admin_bulk_import_customers, name='admin_bulk_import_customers'),
     path('admin/customers/import-template/', admin_customer_views.download_import_template, name='download_import_template'),
-
+    path('admin/customers/export/', 
+         admin_customer_views.admin_customer_export_view, 
+         name='admin_customer_export'),
     # =====================================
     # ADMIN DEMO MANAGEMENT  
     # =====================================
@@ -121,6 +123,9 @@ urlpatterns = [
     path('admin/demo-requests/<int:request_id>/mark-complete/', 
      demo_request_views.mark_demo_request_complete, 
      name='mark_demo_request_complete'),
+     path('admin/demo-requests/<int:request_id>/update-notes/', demo_request_views.update_admin_notes, name='update_admin_notes'),
+          
+          
     # =====================================
     # ADMIN CATEGORY MANAGEMENT
     # =====================================
@@ -269,4 +274,13 @@ urlpatterns = [
      path('employee/demo-requests/<int:request_id>/', 
           demo_request_views.employee_demo_request_detail, 
           name='employee_demo_request_detail'),
+     path('api/demo-requests/available-slots/', demo_request_views.available_time_slots_api, name='api_available_slots'),
+     path('api/demo-requests/available-employees/', demo_request_views.available_employees_api, name='api_available_employees'),
+     path('admin/demo-requests/<int:request_id>/reschedule/', 
+          demo_request_views.reschedule_demo_request, 
+          name='reschedule_demo_request'),
+
+     path('admin/demo-requests/<int:request_id>/reactivate/', 
+          demo_request_views.reactivate_demo_request, 
+          name='reactivate_demo_request'),
 ]

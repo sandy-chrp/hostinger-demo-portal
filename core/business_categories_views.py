@@ -19,10 +19,13 @@ def is_admin(user):
 @login_required
 @user_passes_test(is_admin)
 def admin_business_categories(request):
-    """List all business categories"""
+    """List all business categories with status filter"""
     
     # Search functionality
     search_query = request.GET.get('search', '')
+    
+    # Status filter (new)
+    status_filter = request.GET.get('status', '')
     
     # Filter categories
     categories = BusinessCategory.objects.annotate(
@@ -30,11 +33,18 @@ def admin_business_categories(request):
         customer_count=Count('customers')
     ).order_by('sort_order', 'name')
     
+    # Apply search filter if provided
     if search_query:
         categories = categories.filter(
             Q(name__icontains=search_query) |
             Q(description__icontains=search_query)
         )
+    
+    # Apply status filter if provided (new)
+    if status_filter == 'active':
+        categories = categories.filter(is_active=True)
+    elif status_filter == 'inactive':
+        categories = categories.filter(is_active=False)
     
     # Stats
     total_categories = BusinessCategory.objects.count()
@@ -44,6 +54,7 @@ def admin_business_categories(request):
     context = {
         'categories': categories,
         'search_query': search_query,
+        'status_filter': status_filter,  # Pass status filter to template
         'total_categories': total_categories,
         'active_categories': active_categories,
         'total_subcategories': total_subcategories,
@@ -53,6 +64,7 @@ def admin_business_categories(request):
     }
     
     return render(request, 'admin/business_categories/list.html', context)
+
 
 @login_required
 @user_passes_test(is_admin)
@@ -214,11 +226,16 @@ def admin_business_category_toggle_status(request, category_id):
 @login_required
 @user_passes_test(is_admin)
 def admin_business_subcategories(request):
-    """List all business subcategories"""
+    """List all business subcategories with category and status filter"""
     
-    # Get filter parameters
+    # Search functionality
     search_query = request.GET.get('search', '')
+    
+    # Category filter
     category_filter = request.GET.get('category', '')
+    
+    # Status filter (new)
+    status_filter = request.GET.get('status', '')
     
     # Get all categories for filter dropdown
     categories = BusinessCategory.objects.all().order_by('name')
@@ -228,6 +245,7 @@ def admin_business_subcategories(request):
         customer_count=Count('customers')
     ).order_by('category__name', 'sort_order', 'name')
     
+    # Apply search filter if provided
     if search_query:
         subcategories = subcategories.filter(
             Q(name__icontains=search_query) |
@@ -235,8 +253,15 @@ def admin_business_subcategories(request):
             Q(category__name__icontains=search_query)
         )
     
+    # Apply category filter if provided
     if category_filter:
         subcategories = subcategories.filter(category_id=category_filter)
+    
+    # Apply status filter if provided (new)
+    if status_filter == 'active':
+        subcategories = subcategories.filter(is_active=True)
+    elif status_filter == 'inactive':
+        subcategories = subcategories.filter(is_active=False)
     
     # Stats
     total_subcategories = BusinessSubCategory.objects.count()
@@ -247,6 +272,7 @@ def admin_business_subcategories(request):
         'categories': categories,
         'search_query': search_query,
         'category_filter': category_filter,
+        'status_filter': status_filter,  # Pass status filter to template
         'total_subcategories': total_subcategories,
         'active_subcategories': active_subcategories,
         'breadcrumbs': [

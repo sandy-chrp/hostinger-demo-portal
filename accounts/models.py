@@ -8,7 +8,7 @@ from django.utils import timezone
 from datetime import timedelta
 import random
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-
+import re
 
 def validate_business_email(email):
     """Validate that email is not from blocked personal domains"""
@@ -24,6 +24,18 @@ def validate_business_email(email):
             f'Business email required. Personal email domains ({domain}) are not allowed.'
         )
 
+
+def validate_employee_id_format(value):
+    """
+    Validate Employee ID format: EMP followed by exactly 5 digits
+    Example: EMP00001, EMP12345
+    """
+    if value:  # Only validate if value exists
+        pattern = r'^EMP\d{5}$'
+        if not re.match(pattern, value):
+            raise ValidationError(
+                'Employee ID must be in format EMP00000 (EMP followed by 5 digits). Example: EMP00001'
+            )
 
 # =============================================
 # NEW: RBAC MODELS
@@ -459,7 +471,7 @@ class CustomUser(AbstractUser):
         ('+263', '🇿🇼 Zimbabwe (+263)'),
     ]
     country_code = models.CharField(
-        max_length=5, 
+        max_length=50, 
         choices=COUNTRY_CHOICES,
         default='+91',
         verbose_name="Country Code"
@@ -468,10 +480,11 @@ class CustomUser(AbstractUser):
     # EMPLOYEE IDENTIFICATION
     # ==========================================
     employee_id = models.CharField(
-        max_length=50,
+        max_length=8,
         blank=True,
         null=True,
         unique=True,
+        validators=[validate_employee_id_format],
         verbose_name="Employee ID",
         help_text="Unique employee identifier (e.g., EMP001)"
     )
@@ -595,10 +608,16 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name', 'mobile']
     
     class Meta:
-        db_table = 'demo_portal_users'
+        db_table = 'custom_user'
         verbose_name = 'User'
         verbose_name_plural = 'Users'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['employee_id']),  # ✅ Index for faster queries
+            models.Index(fields=['email']),
+            models.Index(fields=['user_type']),
+            models.Index(fields=['is_active']),
+        ]
     
     def __str__(self):
         if self.employee_id:
@@ -638,35 +657,31 @@ class CustomUser(AbstractUser):
     # VALIDATION
     # ==========================================
     def clean(self):
-        """Custom validation"""
+        """
+        Model-level validation
+        Called before save() when using forms or admin
+        """
         super().clean()
         
-        # Validate subcategory belongs to category
-        if self.business_subcategory and self.business_category:
-            if self.business_subcategory.category != self.business_category:
-                raise ValidationError('Selected subcategory does not belong to the selected category.')
-        
-        # Validate MAC address format if provided
-        if self.system_mac_address:
-            import re
-            mac_pattern = r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
-            if not re.match(mac_pattern, self.system_mac_address):
+        #Validate Employee ID format if provided
+        if self.employee_id:
+            # Convert to uppercase
+            self.employee_id = self.employee_id.upper()
+            
+            # Validate format
+            pattern = r'^EMP\d{5}$'
+            if not re.match(pattern, self.employee_id):
                 raise ValidationError({
-                    'system_mac_address': 'Invalid MAC address format. Use XX:XX:XX:XX:XX:XX'
+                    'employee_id': 'Employee ID must be in format EMP00000 (EMP followed by 5 digits)'
                 })
-        
-        # Employee must have employee_id
-        if self.user_type == 'employee' and not self.employee_id:
-            raise ValidationError({'employee_id': 'Employee ID is required for employees'})
-        
-        # ✅ NEW: Customers cannot have high-priority roles
+        # Customers cannot have high-priority roles
         if self.user_type == 'customer' and self.role:
             if self.role.priority >= 60:  # Manager level and above
                 raise ValidationError({
                     'role': 'Customers cannot be assigned admin/manager roles. Please select a customer-appropriate role or change user type to Employee.'
                 })
         
-        # ✅ NEW: Employees should have roles
+        # Employees should have roles
         if self.user_type == 'employee' and not self.role:
             raise ValidationError({
                 'role': 'Employees must be assigned a role.'
@@ -708,3 +723,17 @@ class CustomUser(AbstractUser):
                 grouped[perm.module] = []
             grouped[perm.module].append(perm.codename)
         return grouped
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to ensure data consistency
+        """
+        # ✅ Convert employee_id to uppercase before saving
+        if self.employee_id:
+            self.employee_id = self.employee_id.upper()
+        
+        # ✅ Ensure employees have is_staff=True
+        if self.user_type == 'employee':
+            self.is_staff = True
+        
+        super().save(*args, **kwargs)

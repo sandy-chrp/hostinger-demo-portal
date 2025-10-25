@@ -1,565 +1,790 @@
 {% extends 'admin/base.html' %}
-{% load static %}
 {% load permission_tags %}
 
 {% block admin_title %}Demo Request #{{ demo_request.id }}{% endblock %}
-{% block page_title %}Demo Request Details{% endblock %}
+{% block page_title %}Demo Request #{{ demo_request.id }}{% endblock %}
 
 {% block breadcrumb %}
 <div class="admin-breadcrumb">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item">
-                <a href="{% url 'core:admin_dashboard' %}">
-                    <i class="fas fa-home me-1"></i>Dashboard
-                </a>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="{% url 'core:admin_demo_requests' %}">Demo Requests</a>
-            </li>
-            <li class="breadcrumb-item active">Request #{{ demo_request.id }}</li>
-        </ol>
-    </nav>
+    <div class="d-flex justify-content-between align-items-center">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'core:admin_dashboard' %}">
+                        <i class="fas fa-home me-1"></i>Dashboard
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'core:admin_demo_requests' %}">Demo Requests</a>
+                </li>
+                <li class="breadcrumb-item active">Request #{{ demo_request.id }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'core:admin_demo_requests' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to List
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block admin_extra_css %}
 <style>
-    .info-row {
+    .demo-header {
         display: flex;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #f0f0f0;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
     }
-    .info-row:last-child {
-        border-bottom: none;
+    
+    .info-card {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
     }
+    
+    .info-card-header {
+        background-color: #f9fafb;
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+    }
+    
+    .info-card-header i, 
+    .info-card-header svg {
+        margin-right: 0.5rem;
+        color: #0d6efd;
+    }
+    
+    .info-card-body {
+        padding: 1.5rem;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        row-gap: 1.25rem;
+    }
+    
     .info-label {
         font-weight: 600;
-        color: #4b5563;
-        width: 180px;
-        flex-shrink: 0;
+        color: #374151;
     }
+    
     .info-value {
         color: #1f2937;
-        flex: 1;
     }
+    
+    .info-value a {
+        color: #0d6efd;
+        text-decoration: none;
+    }
+    
+    .info-value a:hover {
+        text-decoration: underline;
+    }
+    
+    .badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .badge.bg-warning { background-color: #f59e0b !important; }
+    .badge.bg-success { background-color: #10b981 !important; }
+    .badge.bg-info { background-color: #0ea5e9 !important; }
+    .badge.bg-danger { background-color: #ef4444 !important; }
+    .badge.bg-secondary { background-color: #6b7280 !important; }
+    
+    .status-badge-lg {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    
+    .assign-card {
+        background-color: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .unassign-card {
+        background-color: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .reassign-card {
+        background-color: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .employee-card {
+        background-color: #f0f9ff;
+        border: 1px solid #e0f2fe;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .employee-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background-color: #0ea5e9;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+    
+    .employee-info {
+        flex-grow: 1;
+    }
+    
+    .employee-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
     .status-timeline {
         position: relative;
-        padding-left: 2rem;
+        margin-top: 2rem;
     }
-    .status-timeline::before {
-        content: '';
+    
+    .timeline-item {
+        display: flex;
+        margin-bottom: 1.5rem;
+    }
+    
+    .timeline-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #0ea5e9;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .timeline-icon.bg-warning { background-color: #f59e0b; }
+    .timeline-icon.bg-success { background-color: #10b981; }
+    .timeline-icon.bg-danger { background-color: #ef4444; }
+    
+    .timeline-content {
+        flex-grow: 1;
+    }
+    
+    .timeline-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .timeline-date {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    
+    .timeline-line {
         position: absolute;
-        left: 8px;
+        left: 16px;
         top: 0;
         bottom: 0;
         width: 2px;
-        background: #e5e7eb;
+        background-color: #e5e7eb;
+        z-index: 1;
     }
-    .status-item {
-        position: relative;
-        padding-bottom: 1.5rem;
+
+    /* Always show assignment section */
+    #assignmentSection {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
-    .status-item::before {
-        content: '';
-        position: absolute;
-        left: -1.5rem;
-        top: 0.25rem;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: #10b981;
-        border: 2px solid white;
-        box-shadow: 0 0 0 2px #10b981;
-    }
-    .status-item.pending::before {
-        background: #f59e0b;
-        box-shadow: 0 0 0 2px #f59e0b;
-    }
-    .status-item.cancelled::before {
-        background: #ef4444;
-        box-shadow: 0 0 0 2px #ef4444;
-    }
-    .workload-card {
-        border: 2px solid #e5e7eb;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        text-align: center;
-        transition: all 0.3s ease;
-    }
-    .workload-card:hover {
-        border-color: #3b82f6;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .workload-number {
-        font-size: 2rem;
-        font-weight: 700;
-        line-height: 1;
-        margin-bottom: 0.5rem;
-    }
-    .workload-label {
-        font-size: 0.875rem;
-        color: #6b7280;
-        font-weight: 500;
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+            row-gap: 0.75rem;
+        }
+        
+        .info-label {
+            margin-bottom: 0.25rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block admin_content %}
-<!-- Status Header -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="admin-card">
-            <div class="admin-card-body">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                    <div>
-                        <h3 class="mb-2">Demo Request #{{ demo_request.id }}</h3>
-                        <p class="text-muted mb-0">
-                            <i class="fas fa-calendar me-1"></i>
-                            Submitted {{ demo_request.created_at|date:"M d, Y h:i A" }}
-                        </p>
-                    </div>
-                    <div>
-                        {% if demo_request.status == 'pending' %}
-                            <span class="badge bg-warning fs-5 px-3 py-2">
-                                <i class="fas fa-clock me-1"></i>Pending
-                            </span>
-                        {% elif demo_request.status == 'confirmed' %}
-                            <span class="badge bg-success fs-5 px-3 py-2">
-                                <i class="fas fa-check-circle me-1"></i>Confirmed
-                            </span>
-                        {% elif demo_request.status == 'completed' %}
-                            <span class="badge bg-info fs-5 px-3 py-2">
-                                <i class="fas fa-check-double me-1"></i>Completed
-                            </span>
-                        {% elif demo_request.status == 'cancelled' %}
-                            <span class="badge bg-danger fs-5 px-3 py-2">
-                                <i class="fas fa-times-circle me-1"></i>Cancelled
-                            </span>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Demo Request Header -->
+<div class="demo-header">
+    <div>
+        <h1 class="h3 mb-1">Demo Request #{{ demo_request.id }}</h1>
+        <p class="text-secondary mb-0">
+            <i class="far fa-calendar-alt me-1"></i>Submitted {{ demo_request.created_at|date:"M d, Y" }} at {{ demo_request.created_at|date:"h:i A" }}
+        </p>
+    </div>
+    <div>
+        {% if demo_request.status == 'pending' %}
+        <span class="status-badge-lg bg-warning text-white">
+            <i class="fas fa-clock me-1"></i>Pending
+        </span>
+        {% elif demo_request.status == 'confirmed' %}
+        <span class="status-badge-lg bg-success text-white">
+            <i class="fas fa-check-circle me-1"></i>Confirmed
+        </span>
+        {% elif demo_request.status == 'completed' %}
+        <span class="status-badge-lg bg-info text-white">
+            <i class="fas fa-flag-checkered me-1"></i>Completed
+        </span>
+        {% elif demo_request.status == 'cancelled' %}
+        <span class="status-badge-lg bg-danger text-white">
+            <i class="fas fa-times-circle me-1"></i>Cancelled
+        </span>
+        {% endif %}
     </div>
 </div>
 
 <div class="row">
-    <!-- Left Column -->
     <div class="col-lg-8">
         <!-- Customer Information -->
-        <div class="admin-card mb-4">
-            <div class="admin-card-header">
-                <h2 class="admin-card-title">
-                    <i class="fas fa-user"></i>
-                    Customer Information
-                </h2>
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="fas fa-user"></i>
+                <h5 class="card-title mb-0">Customer Information</h5>
             </div>
-            <div class="admin-card-body">
-                <div class="info-row">
+            <div class="info-card-body">
+                <div class="info-grid">
                     <div class="info-label">Full Name:</div>
                     <div class="info-value">
-                        <strong>{{ demo_request.user.get_full_name }}</strong>
+                        <a href="{% url 'core:admin_customer_detail' demo_request.user.id %}">{{ demo_request.user.get_full_name }}</a>
                     </div>
-                </div>
-                <div class="info-row">
+                    
                     <div class="info-label">Email:</div>
                     <div class="info-value">
-                        <a href="mailto:{{ demo_request.user.email }}" class="text-primary">
-                            <i class="fas fa-envelope me-1"></i>{{ demo_request.user.email }}
-                        </a>
+                        <a href="mailto:{{ demo_request.user.email }}">{{ demo_request.user.email }}</a>
                     </div>
-                </div>
-                <div class="info-row">
+                    
                     <div class="info-label">Phone:</div>
                     <div class="info-value">
-                        {% if demo_request.user.phone %}
-                            <a href="tel:{{ demo_request.user.phone }}" class="text-primary">
-                                <i class="fas fa-phone me-1"></i>{{ demo_request.user.phone }}
-                            </a>
+                        {% if demo_request.user.mobile %}
+                            <a href="tel:{{ demo_request.user.full_mobile }}">{{ demo_request.user.full_mobile }}</a>
                         {% else %}
                             <span class="text-muted">Not provided</span>
                         {% endif %}
                     </div>
-                </div>
-                <div class="info-row">
+                    
                     <div class="info-label">Company:</div>
                     <div class="info-value">
-                        {{ demo_request.user.company_name|default:"Not provided" }}
+                        {% if demo_request.user.organization %}
+                            {{ demo_request.user.organization }}
+                        {% else %}
+                            <span class="text-muted">Not provided</span>
+                        {% endif %}
                     </div>
-                </div>
-                <div class="info-row">
+                    
+                    <div class="info-label">Job Title:</div>
+                    <div class="info-value">
+                        {% if demo_request.user.job_title %}
+                            {{ demo_request.user.job_title }}
+                        {% else %}
+                            <span class="text-muted">Not provided</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="info-label">Business Category:</div>
+                    <div class="info-value">
+                        {% if demo_request.business_category %}
+                            {{ demo_request.business_category.name }}
+                            
+                            {% if demo_request.business_subcategory %}
+                                <span class="text-secondary">
+                                    <i class="fas fa-angle-right mx-1"></i>{{ demo_request.business_subcategory.name }}
+                                </span>
+                            {% endif %}
+                        {% elif demo_request.user.business_category %}
+                            {{ demo_request.user.business_category.name }}
+                            
+                            {% if demo_request.user.business_subcategory %}
+                                <span class="text-secondary">
+                                    <i class="fas fa-angle-right mx-1"></i>{{ demo_request.user.business_subcategory.name }}
+                                </span>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-muted">Not specified</span>
+                        {% endif %}
+                    </div>
+                    
                     <div class="info-label">Account Status:</div>
                     <div class="info-value">
-                        {% if demo_request.user.is_approved %}
-                            <span class="badge bg-success">
-                                <i class="fas fa-check-circle me-1"></i>Approved
-                            </span>
-                        {% else %}
-                            <span class="badge bg-warning">
-                                <i class="fas fa-clock me-1"></i>Pending Approval
-                            </span>
-                        {% endif %}
                         {% if demo_request.user.is_active %}
-                            <span class="badge bg-success">
-                                <i class="fas fa-toggle-on me-1"></i>Active
-                            </span>
+                            <span class="badge bg-success">Active</span>
                         {% else %}
-                            <span class="badge bg-danger">
-                                <i class="fas fa-toggle-off me-1"></i>Inactive
-                            </span>
+                            <span class="badge bg-danger">Inactive</span>
+                        {% endif %}
+                        
+                        {% if demo_request.user.is_approved %}
+                            <span class="badge bg-success">Approved</span>
+                        {% else %}
+                            <span class="badge bg-warning">Not Approved</span>
                         {% endif %}
                     </div>
                 </div>
             </div>
         </div>
-
+        
         <!-- Demo Information -->
-        <div class="admin-card mb-4">
-            <div class="admin-card-header">
-                <h2 class="admin-card-title">
-                    <i class="fas fa-video"></i>
-                    Demo Information
-                </h2>
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="fas fa-desktop"></i>
+                <h5 class="card-title mb-0">Demo Information</h5>
             </div>
-            <div class="admin-card-body">
-                <div class="info-row">
+            <div class="info-card-body">
+                <div class="info-grid">
                     <div class="info-label">Demo Title:</div>
                     <div class="info-value">
-                        <strong>{{ demo_request.demo.title }}</strong>
+                        <a href="{% url 'core:admin_demo_detail' demo_request.demo.id %}">{{ demo_request.demo.title }}</a>
+                        
+                        {% if demo_request.demo.is_featured %}
+                            <span class="badge bg-info ms-2">Featured</span>
+                        {% endif %}
                     </div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Duration:</div>
+                    
+                    <div class="info-label">Demo Type:</div>
                     <div class="info-value">
-                        <i class="fas fa-clock me-1"></i>{{ demo_request.demo.duration }} minutes
+                        {{ demo_request.demo.get_file_type_display }}
+                        <span class="text-secondary">({{ demo_request.demo.get_demo_type_display }})</span>
                     </div>
                 </div>
-                {% if demo_request.demo.description %}
-                <div class="info-row">
-                    <div class="info-label">Description:</div>
-                    <div class="info-value">
-                        {{ demo_request.demo.description|truncatewords:30 }}
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </div>
-
+        
         <!-- Schedule Information -->
-        <div class="admin-card mb-4">
-            <div class="admin-card-header">
-                <h2 class="admin-card-title">
-                    <i class="fas fa-calendar-alt"></i>
-                    Schedule
-                </h2>
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="far fa-calendar-alt"></i>
+                <h5 class="card-title mb-0">Schedule</h5>
             </div>
-            <div class="admin-card-body">
-                <div class="info-row">
+            <div class="info-card-body">
+                <div class="info-grid">
                     <div class="info-label">Requested Date:</div>
                     <div class="info-value">
-                        <strong>
-                            <i class="fas fa-calendar me-1 text-primary"></i>
-                            {{ demo_request.requested_date|date:"l, F d, Y" }}
-                        </strong>
+                        <i class="far fa-calendar text-primary me-1"></i>{{ demo_request.requested_date|date:"l, F d, Y" }}
                     </div>
-                </div>
-                <div class="info-row">
+                    
                     <div class="info-label">Time Slot:</div>
                     <div class="info-value">
-                        <strong>
-                            <i class="fas fa-clock me-1 text-success"></i>
-                            {{ demo_request.requested_time_slot.start_time|time:"h:i A" }} - 
-                            {{ demo_request.requested_time_slot.end_time|time:"h:i A" }}
-                        </strong>
+                        <i class="far fa-clock text-primary me-1"></i>{{ demo_request.requested_time_slot.get_display_time }}
                     </div>
-                </div>
-                {% if demo_request.notes %}
-                <div class="info-row">
+                    
+                    {% if demo_request.is_confirmed and demo_request.confirmed_date %}
+                    <div class="info-label">Confirmed Date:</div>
+                    <div class="info-value">
+                        <i class="fas fa-calendar-check text-success me-1"></i>{{ demo_request.confirmed_date|date:"l, F d, Y" }}
+                        {% if demo_request.confirmed_date != demo_request.requested_date %}
+                            <span class="badge bg-info">Rescheduled</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="info-label">Confirmed Time:</div>
+                    <div class="info-value">
+                        <i class="fas fa-check-circle text-success me-1"></i>
+                        {% if demo_request.confirmed_time_slot %}
+                            {{ demo_request.confirmed_time_slot.get_display_time }}
+                        {% else %}
+                            {{ demo_request.requested_time_slot.get_display_time }}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
                     <div class="info-label">Customer Notes:</div>
                     <div class="info-value">
-                        <div class="alert alert-info mb-0 py-2">
-                            <i class="fas fa-comment me-1"></i>
-                            <em>"{{ demo_request.notes }}"</em>
-                        </div>
+                        {% if demo_request.notes %}
+                            {{ demo_request.notes }}
+                        {% else %}
+                            <span class="text-muted">No notes provided</span>
+                        {% endif %}
                     </div>
                 </div>
-                {% endif %}
             </div>
         </div>
-
-        <!-- Assignment Card - ALWAYS VISIBLE -->
-        <div class="admin-card mb-4" id="assignmentCard" style="display: block !important;">
-            <div class="admin-card-header">
-                <h2 class="admin-card-title">
-                    <i class="fas fa-user-tie"></i>
-                    Assignment
-                    {% if demo_request.assigned_to %}
-                    <span class="badge bg-success ms-2">
-                        <i class="fas fa-check-circle me-1"></i>Assigned
-                    </span>
-                    {% else %}
-                    <span class="badge bg-warning ms-2">
-                        <i class="fas fa-exclamation-triangle me-1"></i>Unassigned
-                    </span>
-                    {% endif %}
-                </h2>
+        
+        <!-- Assignment Information - ALWAYS VISIBLE -->
+        <div class="info-card" id="assignmentSection">
+            <div class="info-card-header">
+                <i class="fas fa-user-check"></i>
+                <h5 class="card-title mb-0">Assignment</h5>
+                <span class="badge bg-{% if demo_request.assigned_to %}success{% else %}secondary{% endif %} ms-2">
+                    {% if demo_request.assigned_to %}Assigned{% else %}Unassigned{% endif %}
+                </span>
             </div>
-            <div class="admin-card-body" style="display: block !important;">
+            <div class="info-card-body">
                 {% if demo_request.assigned_to %}
-                <!-- Currently Assigned -->
-                <div class="alert alert-success mb-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="d-flex align-items-start flex-grow-1">
-                            <div class="me-3">
-                                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" 
-                                     style="width: 60px; height: 60px;">
-                                    <i class="fas fa-user fa-2x"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h5 class="mb-2">
-                                    <i class="fas fa-user-check me-1"></i>
-                                    {{ demo_request.assigned_to.get_full_name }}
-                                </h5>
-                                <div class="small">
-                                    <div class="mb-1">
-                                        <i class="fas fa-envelope me-1"></i>
-                                        <a href="mailto:{{ demo_request.assigned_to.email }}" class="text-dark">
-                                            {{ demo_request.assigned_to.email }}
-                                        </a>
-                                    </div>
-                                    {% if demo_request.assigned_to.phone %}
-                                    <div class="mb-1">
-                                        <i class="fas fa-phone me-1"></i>
-                                        <a href="tel:{{ demo_request.assigned_to.phone }}" class="text-dark">
-                                            {{ demo_request.assigned_to.phone }}
-                                        </a>
-                                    </div>
-                                    {% endif %}
-                                    <div class="text-muted">
-                                        <i class="fas fa-clock me-1"></i>
-                                        Assigned {{ demo_request.assigned_at|date:"M d, Y h:i A" }}
-                                        {% if demo_request.assigned_by %}
-                                        by {{ demo_request.assigned_by.get_full_name }}
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- Employee Card for assigned employee -->
+                    <div class="employee-card">
+                        <div class="employee-avatar">
+                            <i class="fas fa-user"></i>
                         </div>
-                        
-                        <!-- Action Buttons -->
-                        {% if user|has_permission:'manage_demo_requests' %}
-                        <div class="d-flex flex-column gap-2 ms-3">
-                            <button type="button" 
-                                    class="btn btn-warning btn-sm" 
-                                    onclick="showReassignModal()"
-                                    title="Reassign to different employee"
-                                    aria-label="Reassign demo">
-                                <i class="fas fa-exchange-alt me-1"></i>Reassign
+                        <div class="employee-info">
+                            <h5 class="mb-0">{{ demo_request.assigned_to.get_full_name }}</h5>
+                            <p class="mb-1">
+                                <a href="mailto:{{ demo_request.assigned_to.email }}">{{ demo_request.assigned_to.email }}</a>
+                            </p>
+                            <p class="text-secondary mb-0">
+                                <i class="far fa-clock me-1"></i>Assigned {{ demo_request.assigned_at|date:"M d, Y" }} at {{ demo_request.assigned_at|date:"h:i A" }}
+                                {% if demo_request.assigned_by %}
+                                by {{ demo_request.assigned_by.get_full_name }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="employee-actions">
+                            {% if user|has_permission:'manage_demo_requests' and demo_request.status != 'completed' and demo_request.status != 'cancelled' %}
+                            <button type="button" class="btn btn-warning" onclick="showReassignForm()">
+                                <i class="fas fa-sync-alt me-1"></i>Reassign
                             </button>
-                            <form method="post" 
-                                  action="{% url 'core:unassign_demo_request' demo_request.id %}" 
-                                  onsubmit="return confirm('Unassign {{ demo_request.assigned_to.get_full_name }} from this demo?');">
+                            <button type="button" class="btn btn-danger" onclick="confirmUnassign({{ demo_request.id }})">
+                                <i class="fas fa-user-minus me-1"></i>Unassign
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Reassign Form (hidden by default) -->
+                    <div class="reassign-card" id="reassignForm" style="display: none;">
+                        <h5 class="card-title">Reassign Demo Request</h5>
+                        <form id="reassignDemoForm">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label for="employeeSelect" class="form-label">Select Employee</label>
+                                <div id="loadingEmployees" class="text-center py-2" style="display: none;">
+                                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                                    <span class="ms-2">Loading available employees...</span>
+                                </div>
+                                <select id="employeeSelect" name="employee_id" class="form-select" required>
+                                    <option value="">-- Select Employee --</option>
+                                </select>
+                            </div>
+                            
+                            <div id="availabilityStatus" class="mb-3" style="display: none;"></div>
+                            
+                            <div class="mb-3">
+                                <label for="assignmentNotes" class="form-label">Assignment Notes (Optional)</label>
+                                <textarea id="assignmentNotes" name="assignment_notes" class="form-control" rows="3" 
+                                        placeholder="Any notes about this assignment"></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="sendNotificationCheck" name="send_notification" checked>
+                                    <label class="form-check-label" for="sendNotificationCheck">
+                                        Send email notification to employee
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-primary" onclick="handleReassign({{ demo_request.id }})">
+                                    <i class="fas fa-user-plus me-1"></i>Reassign
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="hideReassignForm()">
+                                    <i class="fas fa-times me-1"></i>Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                {% else %}
+                    <!-- No assignment message and assign form -->
+                    <p class="mb-3">This demo request is currently unassigned.</p>
+                    
+                    {% if user|has_permission:'manage_demo_requests' and demo_request.status != 'completed' and demo_request.status != 'cancelled' %}
+                        <div class="assign-card">
+                            <h5 class="card-title">Assign Demo Request</h5>
+                            <form id="assignDemoForm">
                                 {% csrf_token %}
-                                <button type="submit" 
-                                        class="btn btn-danger btn-sm w-100"
-                                        title="Remove assignment"
-                                        aria-label="Unassign employee">
-                                    <i class="fas fa-times me-1"></i>Unassign
+                                
+                                <div class="mb-3">
+                                    <label for="employeeSelect" class="form-label">Select Employee</label>
+                                    <div id="loadingEmployees" class="text-center py-2">
+                                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                                        <span class="ms-2">Loading available employees...</span>
+                                    </div>
+                                    <select id="employeeSelect" name="employee_id" class="form-select" required disabled>
+                                        <option value="">-- Select Employee --</option>
+                                    </select>
+                                </div>
+                                
+                                <div id="availabilityStatus" class="mb-3" style="display:none"></div>
+                                
+                                <div class="mb-3">
+                                    <label for="assignmentNotes" class="form-label">Assignment Notes (Optional)</label>
+                                    <textarea id="assignmentNotes" name="assignment_notes" class="form-control" rows="3" 
+                                            placeholder="Any notes about this assignment"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="sendNotificationCheck" name="send_notification" checked>
+                                        <label class="form-check-label" for="sendNotificationCheck">
+                                            Send email notification to employee
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <button type="button" class="btn btn-primary" onclick="handleAssign({{ demo_request.id }})">
+                                    <i class="fas fa-user-plus me-1"></i>Assign
                                 </button>
                             </form>
                         </div>
-                        {% endif %}
-                    </div>
-                </div>
+                    {% endif %}
+                {% endif %}
                 
                 <!-- Employee Workload Stats -->
-                <div class="mt-3">
-                    <h6 class="text-muted mb-3">
-                        <i class="fas fa-chart-bar me-1"></i>
-                        Employee Workload
+                {% if demo_request.assigned_to %}
+                <div class="mt-4">
+                    <h6 class="mb-3">
+                        <i class="fas fa-tasks me-1"></i>{{ demo_request.assigned_to.get_full_name }}'s Workload
                     </h6>
-                    <div class="row g-3">
+                    <div class="row">
                         <div class="col-md-4">
-                            <div class="workload-card">
-                                <div class="workload-number text-warning">
-                                    {{ workload_stats.pending|default:0 }}
-                                </div>
-                                <div class="workload-label">
-                                    <i class="fas fa-clock me-1"></i>Pending
+                            <div class="card text-center bg-light mb-3">
+                                <div class="card-body">
+                                    <h3 class="text-warning">{{ workload_stats.pending }}</h3>
+                                    <div class="small text-secondary">Pending</div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="workload-card">
-                                <div class="workload-number text-success">
-                                    {{ workload_stats.confirmed|default:0 }}
-                                </div>
-                                <div class="workload-label">
-                                    <i class="fas fa-check me-1"></i>Confirmed
+                            <div class="card text-center bg-light mb-3">
+                                <div class="card-body">
+                                    <h3 class="text-success">{{ workload_stats.confirmed }}</h3>
+                                    <div class="small text-secondary">Confirmed</div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="workload-card">
-                                <div class="workload-number text-info">
-                                    {{ workload_stats.completed|default:0 }}
-                                </div>
-                                <div class="workload-label">
-                                    <i class="fas fa-check-double me-1"></i>Completed
+                            <div class="card text-center bg-light mb-3">
+                                <div class="card-body">
+                                    <h3 class="text-info">{{ workload_stats.completed }}</h3>
+                                    <div class="small text-secondary">Completed</div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                
-                {% else %}
-                <!-- Not Assigned -->
-                <div class="alert alert-warning d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-exclamation-triangle fa-3x me-3"></i>
-                        <div>
-                            <h6 class="mb-1 fw-bold">Not Assigned Yet</h6>
-                            <small>This demo request has not been assigned to any employee.</small>
-                        </div>
-                    </div>
-                    {% if user|has_permission:'manage_demo_requests' %}
-                    <button type="button" 
-                            class="btn btn-primary" 
-                            onclick="showAssignModal()"
-                            title="Assign employee to this demo"
-                            aria-label="Assign employee">
-                        <i class="fas fa-user-plus me-1"></i>Assign Employee
-                    </button>
-                    {% endif %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Cancellation Details (if cancelled) -->
-        {% if demo_request.status == 'cancelled' and demo_request.cancellation_reason %}
-        <div class="admin-card mb-4">
-            <div class="admin-card-header bg-danger text-white">
-                <h2 class="admin-card-title mb-0">
-                    <i class="fas fa-ban"></i>
-                    Cancellation Details
-                </h2>
-            </div>
-            <div class="admin-card-body">
-                <div class="info-row">
-                    <div class="info-label">Reason:</div>
-                    <div class="info-value">
-                        <strong>{{ demo_request.get_cancellation_reason_display }}</strong>
-                    </div>
-                </div>
-                {% if demo_request.cancellation_details %}
-                <div class="info-row">
-                    <div class="info-label">Details:</div>
-                    <div class="info-value">
-                        {{ demo_request.cancellation_details }}
-                    </div>
-                </div>
-                {% endif %}
-                {% if demo_request.cancelled_at %}
-                <div class="info-row">
-                    <div class="info-label">Cancelled At:</div>
-                    <div class="info-value">
-                        {{ demo_request.cancelled_at|date:"M d, Y h:i A" }}
                     </div>
                 </div>
                 {% endif %}
             </div>
         </div>
-        {% endif %}
+        
+        <!-- Admin Notes -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="fas fa-sticky-note"></i>
+                <h5 class="card-title mb-0">Admin Notes</h5>
+            </div>
+            <div class="info-card-body">
+                <form id="adminNotesForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <textarea class="form-control" rows="4" id="adminNotes" name="admin_notes">{{ demo_request.admin_notes }}</textarea>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary" onclick="saveAdminNotes({{ demo_request.id }})">
+                            <i class="fas fa-save me-1"></i>Save Notes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-
-    <!-- Right Column -->
+    
     <div class="col-lg-4">
         <!-- Quick Actions -->
-        <div class="admin-card mb-4">
-            <div class="admin-card-header">
-                <h2 class="admin-card-title">
-                    <i class="fas fa-bolt"></i>
-                    Quick Actions
-                </h2>
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="fas fa-bolt"></i>
+                <h5 class="card-title mb-0">Quick Actions</h5>
             </div>
-            <div class="admin-card-body">
+            <div class="info-card-body">
                 <div class="d-grid gap-2">
-                    {% if user|has_permission:'manage_demo_requests' %}
-                        {% if demo_request.status == 'confirmed' %}
-                        <button type="button" class="btn btn-info" onclick="markComplete()">
-                            <i class="fas fa-check-double me-2"></i>Mark as Completed
+                    <!-- Back to List -->
+                    <a href="{% url 'core:admin_demo_requests' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to List
+                    </a>
+                    
+                    <!-- Status-based actions -->
+                    {% if demo_request.status == 'pending' %}
+                        {% if user|has_permission:'approve_demo_request' %}
+                        <button type="button" class="btn btn-success" onclick="confirmDemoRequest({{ demo_request.id }})">
+                            <i class="fas fa-check-circle me-1"></i>Confirm Demo
                         </button>
                         {% endif %}
                         
-                        {% if demo_request.status != 'cancelled' %}
-                        <button type="button" class="btn btn-warning" onclick="rescheduleDemo()">
-                            <i class="fas fa-calendar-alt me-2"></i>Reschedule
+                        <button type="button" class="btn btn-warning" onclick="showRescheduleModal({{ demo_request.id }})">
+                            <i class="fas fa-calendar-alt me-1"></i>Reschedule
+                        </button>
+                        
+                        {% if user|has_permission:'reject_demo_request' %}
+                        <button type="button" class="btn btn-danger" onclick="showCancelModal({{ demo_request.id }})">
+                            <i class="fas fa-times-circle me-1"></i>Cancel Request
+                        </button>
+                        {% endif %}
+                    {% elif demo_request.status == 'confirmed' %}
+                        <button type="button" class="btn btn-info" onclick="markCompleted({{ demo_request.id }})">
+                            <i class="fas fa-flag-checkered me-1"></i>Mark as Completed
+                        </button>
+                        
+                        <button type="button" class="btn btn-warning" onclick="showRescheduleModal({{ demo_request.id }})">
+                            <i class="fas fa-calendar-alt me-1"></i>Reschedule
+                        </button>
+                        
+                        {% if user|has_permission:'reject_demo_request' %}
+                        <button type="button" class="btn btn-danger" onclick="showCancelModal({{ demo_request.id }})">
+                            <i class="fas fa-times-circle me-1"></i>Cancel Request
+                        </button>
+                        {% endif %}
+                    {% elif demo_request.status == 'cancelled' %}
+                        {% if user|has_permission:'approve_demo_request' %}
+                        <button type="button" class="btn btn-success" onclick="reactivateRequest({{ demo_request.id }})">
+                            <i class="fas fa-redo me-1"></i>Reactivate Request
                         </button>
                         {% endif %}
                     {% endif %}
                     
-                    <a href="{% url 'core:admin_demo_requests' %}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Back to List
-                    </a>
+                    <!-- Delete action (admin only) -->
+                    {% if user|has_permission:'reject_demo_request' %}
+                    <button type="button" class="btn btn-outline-danger" onclick="confirmDelete({{ demo_request.id }})">
+                        <i class="fas fa-trash me-1"></i>Delete Request
+                    </button>
+                    {% endif %}
                 </div>
             </div>
         </div>
-
-        <!-- Timeline -->
-        <div class="admin-card">
-            <div class="admin-card-header">
-                <h2 class="admin-card-title">
-                    <i class="fas fa-history"></i>
-                    Activity Timeline
-                </h2>
+        
+        <!-- Activity Timeline -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="fas fa-history"></i>
+                <h5 class="card-title mb-0">Activity Timeline</h5>
             </div>
-            <div class="admin-card-body">
+            <div class="info-card-body">
                 <div class="status-timeline">
-                    <div class="status-item">
-                        <strong>Request Submitted</strong>
-                        <br>
-                        <small class="text-muted">
-                            {{ demo_request.created_at|date:"M d, Y h:i A" }}
-                        </small>
+                    <div class="timeline-line"></div>
+                    
+                    <!-- Submitted -->
+                    <div class="timeline-item">
+                        <div class="timeline-icon bg-info">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Request Submitted</div>
+                            <div class="timeline-date">{{ demo_request.created_at|date:"M d, Y h:i A" }}</div>
+                        </div>
                     </div>
                     
-                    {% if demo_request.assigned_at %}
-                    <div class="status-item">
-                        <strong>Assigned to {{ demo_request.assigned_to.get_full_name }}</strong>
-                        <br>
-                        <small class="text-muted">
-                            {{ demo_request.assigned_at|date:"M d, Y h:i A" }}
-                        </small>
+                    <!-- Assignment, if any -->
+                    {% if demo_request.assigned_to %}
+                    <div class="timeline-item">
+                        <div class="timeline-icon bg-primary">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">
+                                Assigned to {{ demo_request.assigned_to.get_full_name }}
+                            </div>
+                            <div class="timeline-date">
+                                {{ demo_request.assigned_at|date:"M d, Y h:i A" }}
+                                {% if demo_request.assigned_by %}
+                                by {{ demo_request.assigned_by.get_full_name }}
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                     {% endif %}
                     
-                    {% if demo_request.status == 'confirmed' %}
-                    <div class="status-item">
-                        <strong>Demo Confirmed</strong>
-                        <br>
-                        <small class="text-muted">
-                            {{ demo_request.updated_at|date:"M d, Y h:i A" }}
-                        </small>
+                    <!-- Status changes -->
+                    {% if demo_request.is_confirmed %}
+                    <div class="timeline-item">
+                        <div class="timeline-icon bg-success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Request Confirmed</div>
+                            <div class="timeline-date">
+                                {% if demo_request.confirmed_at %}
+                                    {{ demo_request.confirmed_at|date:"M d, Y h:i A" }}
+                                {% else %}
+                                    Unknown date
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
-                    {% elif demo_request.status == 'completed' %}
-                    <div class="status-item">
-                        <strong>Demo Completed</strong>
-                        <br>
-                        <small class="text-muted">
-                            {{ demo_request.updated_at|date:"M d, Y h:i A" }}
-                        </small>
+                    {% endif %}
+                    
+                    {% if demo_request.status == 'completed' %}
+                    <div class="timeline-item">
+                        <div class="timeline-icon bg-info">
+                            <i class="fas fa-flag-checkered"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Demo Completed</div>
+                            <div class="timeline-date">
+                                {% if demo_request.completed_at %}
+                                    {{ demo_request.completed_at|date:"M d, Y h:i A" }}
+                                {% else %}
+                                    Unknown date
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
-                    {% elif demo_request.status == 'cancelled' %}
-                    <div class="status-item cancelled">
-                        <strong>Demo Cancelled</strong>
-                        <br>
-                        <small class="text-muted">
-                            {{ demo_request.cancelled_at|date:"M d, Y h:i A" }}
-                        </small>
+                    {% endif %}
+                    
+                    {% if demo_request.status == 'cancelled' %}
+                    <div class="timeline-item">
+                        <div class="timeline-icon bg-danger">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Request Cancelled</div>
+                            <div class="timeline-date">
+                                {% if demo_request.cancelled_at %}
+                                    {{ demo_request.cancelled_at|date:"M d, Y h:i A" }}
+                                {% else %}
+                                    Unknown date
+                                {% endif %}
+                            </div>
+                            
+                            {% if demo_request.cancellation_reason %}
+                            <div class="mt-2">
+                                <strong>Reason:</strong> {{ demo_request.get_cancellation_reason_display }}
+                                {% if demo_request.cancellation_details %}
+                                <div>{{ demo_request.cancellation_details }}</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
                     {% endif %}
                 </div>
@@ -568,387 +793,780 @@
     </div>
 </div>
 
-<!-- Assignment Modal -->
-<div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<!-- Modals -->
+
+<!-- Reschedule Modal -->
+<div class="modal fade" id="rescheduleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="assignModalLabel">
-                    <i class="fas fa-user-plus me-2"></i>
-                    Assign Demo to Employee
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-alt me-2"></i>Reschedule Demo
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="post" action="{% url 'core:assign_demo_request' demo_request.id %}" id="assignForm">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <!-- Demo Details Summary -->
-                    <div class="alert alert-info mb-4">
-                        <h6 class="fw-bold mb-2">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Demo Details
-                        </h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-2">
-                                    <i class="fas fa-video me-1"></i>
-                                    <strong>Demo:</strong> {{ demo_request.demo.title }}
-                                </div>
-                                <div>
-                                    <i class="fas fa-user me-1"></i>
-                                    <strong>Customer:</strong> {{ demo_request.user.get_full_name }}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-2">
-                                    <i class="fas fa-calendar me-1"></i>
-                                    <strong>Date:</strong> {{ demo_request.requested_date|date:"M d, Y" }}
-                                </div>
-                                <div>
-                                    <i class="fas fa-clock me-1"></i>
-                                    <strong>Time:</strong> 
-                                    {{ demo_request.requested_time_slot.start_time|time:"h:i A" }} - 
-                                    {{ demo_request.requested_time_slot.end_time|time:"h:i A" }}
-                                </div>
-                            </div>
-                        </div>
+            <div class="modal-body">
+                <form id="rescheduleForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="rescheduleDate" class="form-label">Select New Date</label>
+                        <input type="date" id="rescheduleDate" name="reschedule_date" class="form-control" required 
+                               min="{{ current_date|date:'Y-m-d' }}">
                     </div>
                     
-                    <!-- Employee Selection -->
-                    <div class="mb-4">
-                        <label class="form-label fw-bold" for="employeeSelect">
-                            <i class="fas fa-user-tie me-1"></i>
-                            Select Employee <span class="text-danger">*</span>
-                        </label>
-                        <select name="employee_id" id="employeeSelect" 
-                                class="form-select form-select-lg" required
-                                aria-label="Select employee for assignment">
-                            <option value="">-- Select an Employee --</option>
+                    <div class="mb-3">
+                        <label for="rescheduleTimeSlot" class="form-label">Select New Time Slot</label>
+                        <div id="loadingTimeSlots" class="text-center py-2" style="display: none;">
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                            <span class="ms-2">Loading available time slots...</span>
+                        </div>
+                        <select id="rescheduleTimeSlot" name="reschedule_time_slot" class="form-select" required disabled>
+                            <option value="">-- Select Time Slot --</option>
                         </select>
-                        <div class="form-text">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Only available employees are shown
-                        </div>
                     </div>
                     
-                    <!-- Availability Status -->
-                    <div id="availabilityStatus" class="mb-3" style="display: none;"></div>
-                    
-                    <!-- Loading State -->
-                    <div id="loadingEmployees" class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-3 text-muted mb-0">
-                            <i class="fas fa-search me-1"></i>
-                            Finding available employees...
-                        </p>
+                    <div class="mb-3">
+                        <label for="rescheduleReason" class="form-label">Reason for Rescheduling</label>
+                        <textarea id="rescheduleReason" name="reschedule_reason" class="form-control" rows="3" 
+                                  placeholder="Provide a reason for rescheduling"></textarea>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i>Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary" id="assignBtn">
-                        <i class="fas fa-check me-1"></i>Assign Employee
-                    </button>
-                </div>
-            </form>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="notifyCustomerCheck" name="notify_customer" checked>
+                            <label class="form-check-label" for="notifyCustomerCheck">
+                                Send notification to customer
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="handleReschedule({{ demo_request.id }})">
+                    <i class="fas fa-calendar-check me-1"></i>Reschedule
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- Cancel Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-times-circle me-2"></i>Cancel Demo Request
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="cancelForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="cancelReason" class="form-label">Cancellation Reason</label>
+                        <select id="cancelReason" name="cancel_reason" class="form-select" required>
+                            <option value="">-- Select Reason --</option>
+                            <option value="customer_request">Customer Request</option>
+                            <option value="scheduling_conflict">Scheduling Conflict</option>
+                            <option value="no_longer_needed">No Longer Needed</option>
+                            <option value="duplicate">Duplicate Request</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="cancelDetails" class="form-label">Additional Details</label>
+                        <textarea id="cancelDetails" name="cancel_details" class="form-control" rows="3" 
+                                  placeholder="Provide additional details about cancellation"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="notifyCancelCheck" name="notify_cancel" checked>
+                            <label class="form-check-label" for="notifyCancelCheck">
+                                Send cancellation notice to customer
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Go Back</button>
+                <button type="button" class="btn btn-danger" onclick="handleCancel({{ demo_request.id }})">
+                    <i class="fas fa-times-circle me-1"></i>Cancel Request
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block admin_extra_js %}
 <script>
-// CSRF Token
-const csrfToken = '{{ csrf_token }}';
+// CSRF token
+const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-// Modal instance
-let assignModal = null;
+// Modals
+let rescheduleModal;
+let cancelModal;
 
-// Initialize
+// Document ready
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✓ Page loaded');
+    // Initialize modals
+    rescheduleModal = new bootstrap.Modal(document.getElementById('rescheduleModal'));
+    cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
     
-    // Initialize modal
-    const modalElement = document.getElementById('assignModal');
-    if (modalElement) {
-        assignModal = new bootstrap.Modal(modalElement);
-        console.log('✓ Modal initialized');
+    // Load available employees if form exists
+    if (document.getElementById('assignDemoForm')) {
+        loadAvailableEmployees();
     }
     
-    // Protect assignment card from hiding
-    const assignmentCard = document.getElementById('assignmentCard');
-    if (assignmentCard) {
-        assignmentCard.style.display = 'block';
-        assignmentCard.style.visibility = 'visible';
-        console.log('✓ Assignment card protected');
+    // Make sure assignment section is always visible
+    const assignmentSection = document.getElementById('assignmentSection');
+    if (assignmentSection) {
+        assignmentSection.style.display = 'block';
+        assignmentSection.style.opacity = '1';
+        assignmentSection.style.visibility = 'visible';
+    }
+});
+
+// Load available employees for assignment
+function loadAvailableEmployees() {
+    const loadingDiv = document.getElementById('loadingEmployees');
+    const employeeSelect = document.getElementById('employeeSelect');
+    
+    if (!loadingDiv || !employeeSelect) return;
+    
+    loadingDiv.style.display = 'block';
+    employeeSelect.disabled = true;
+    
+    // Get date and time slot from the page
+    const date = "{{ demo_request.requested_date|date:'Y-m-d' }}";
+    const timeSlotId = "{{ demo_request.requested_time_slot.id }}";
+    
+    fetch(`/api/demo-requests/available-employees/?date=${date}&time_slot_id=${timeSlotId}`)
+        .then(r => r.json())
+        .then(data => {
+            loadingDiv.style.display = 'none';
+            employeeSelect.innerHTML = '<option value="">-- Select Employee --</option>';
+            
+            if (data.success && data.employees && data.employees.length > 0) {
+                data.employees.forEach(emp => {
+                    const option = document.createElement('option');
+                    option.value = emp.id;
+                    option.textContent = `${emp.name} (${emp.current_demos} demos)`;
+                    employeeSelect.appendChild(option);
+                });
+                employeeSelect.disabled = false;
+            } else {
+                employeeSelect.innerHTML = '<option>No employees available</option>';
+                employeeSelect.disabled = true;
+            }
+        })
+        .catch(error => {
+            loadingDiv.style.display = 'none';
+            alert('Error loading employees: ' + error.message);
+        });
+}
+
+// Check employee availability
+function checkEmployeeAvailability(employeeId) {
+    const statusDiv = document.getElementById('availabilityStatus');
+    if (!statusDiv) return;
+    
+    statusDiv.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm"></div> Checking...</div>';
+    statusDiv.style.display = 'block';
+    
+    // Get date and time slot from the page
+    const date = "{{ demo_request.requested_date|date:'Y-m-d' }}";
+    const timeSlotId = "{{ demo_request.requested_time_slot.id }}";
+    const requestId = "{{ demo_request.id }}";
+    
+    fetch(`/api/demo-requests/check-availability/?employee_id=${employeeId}&date=${date}&time_slot_id=${timeSlotId}&demo_request_id=${requestId}`)
+        .then(r => r.json())
+        .then(data => {
+            const assignBtn = document.querySelector('#assignDemoForm button[type="button"]');
+            const reassignBtn = document.querySelector('#reassignDemoForm button[type="button"]');
+            
+            if (data.available) {
+                statusDiv.innerHTML = `<div class="alert alert-success mb-0">✓ Available</div>`;
+                if (assignBtn) assignBtn.disabled = false;
+                if (reassignBtn) reassignBtn.disabled = false;
+            } else {
+                statusDiv.innerHTML = `<div class="alert alert-danger mb-0">✗ Conflict: ${data.message}</div>`;
+                if (assignBtn) assignBtn.disabled = true;
+                if (reassignBtn) reassignBtn.disabled = true;
+            }
+        });
+}
+
+// Show/Hide reassign form
+function showReassignForm() {
+    document.getElementById('reassignForm').style.display = 'block';
+    
+    // Load available employees
+    const loadingDiv = document.getElementById('loadingEmployees');
+    const employeeSelect = document.getElementById('employeeSelect');
+    
+    loadingDiv.style.display = 'block';
+    employeeSelect.disabled = true;
+    
+    // Get date and time slot
+    const date = "{{ demo_request.requested_date|date:'Y-m-d' }}";
+    const timeSlotId = "{{ demo_request.requested_time_slot.id }}";
+    
+    fetch(`/api/demo-requests/available-employees/?date=${date}&time_slot_id=${timeSlotId}`)
+        .then(r => r.json())
+        .then(data => {
+            loadingDiv.style.display = 'none';
+            employeeSelect.innerHTML = '<option value="">-- Select Employee --</option>';
+            
+            if (data.success && data.employees && data.employees.length > 0) {
+                data.employees.forEach(emp => {
+                    const option = document.createElement('option');
+                    option.value = emp.id;
+                    option.textContent = `${emp.name} (${emp.current_demos} demos)`;
+                    employeeSelect.appendChild(option);
+                });
+                employeeSelect.disabled = false;
+                
+                // Add change listener for availability check
+                employeeSelect.addEventListener('change', function() {
+                    if (this.value) {
+                        checkEmployeeAvailability(this.value);
+                    }
+                });
+            } else {
+                employeeSelect.innerHTML = '<option>No employees available</option>';
+            }
+        })
+        .catch(error => {
+            loadingDiv.style.display = 'none';
+            alert('Error loading employees: ' + error.message);
+        });
+}
+
+function hideReassignForm() {
+    document.getElementById('reassignForm').style.display = 'none';
+}
+
+// Handle assign demo request
+function handleAssign(requestId) {
+    const form = document.getElementById('assignDemoForm');
+    const formData = new FormData(form);
+    const employeeId = formData.get('employee_id');
+    
+    if (!employeeId) {
+        alert('Please select an employee');
+        return;
     }
     
-    // Setup employee select change handler
+    // Disable form
+    form.querySelectorAll('button, select, textarea').forEach(el => el.disabled = true);
+    form.querySelector('button').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Assigning...';
+    
+    fetch(`/admin/demo-requests/${requestId}/assign/`, {
+        method: 'POST',
+        body: formData,
+        headers: { 
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to assign'));
+            // Re-enable form
+            form.querySelectorAll('button, select, textarea').forEach(el => el.disabled = false);
+            form.querySelector('button').innerHTML = '<i class="fas fa-user-plus me-1"></i>Assign';
+        }
+    })
+    .catch(error => {
+        console.error('Assignment error:', error);
+        alert('Error: ' + error.message);
+        // Re-enable form
+        form.querySelectorAll('button, select, textarea').forEach(el => el.disabled = false);
+        form.querySelector('button').innerHTML = '<i class="fas fa-user-plus me-1"></i>Assign';
+    });
+}
+
+// Handle reassign demo request
+function handleReassign(requestId) {
+    const form = document.getElementById('reassignDemoForm');
+    const formData = new FormData(form);
+    const employeeId = document.getElementById('employeeSelect').value;
+    
+    if (!employeeId) {
+        alert('Please select an employee');
+        return;
+    }
+    
+    // Disable form
+    form.querySelectorAll('button, select, textarea').forEach(el => el.disabled = true);
+    form.querySelector('button[type="button"]').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Reassigning...';
+    
+    fetch(`/admin/demo-requests/${requestId}/assign/`, {
+        method: 'POST',
+        body: formData,
+        headers: { 
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to reassign'));
+            // Re-enable form
+            form.querySelectorAll('button, select, textarea').forEach(el => el.disabled = false);
+            form.querySelector('button[type="button"]').innerHTML = '<i class="fas fa-user-plus me-1"></i>Reassign';
+        }
+    })
+    .catch(error => {
+        console.error('Reassignment error:', error);
+        alert('Error: ' + error.message);
+        // Re-enable form
+        form.querySelectorAll('button, select, textarea').forEach(el => el.disabled = false);
+        form.querySelector('button[type="button"]').innerHTML = '<i class="fas fa-user-plus me-1"></i>Reassign';
+    });
+}
+
+// Confirm unassign demo request
+function confirmUnassign(requestId) {
+    if (confirm('Are you sure you want to unassign this demo request?')) {
+        // Disable button
+        const button = document.querySelector('.employee-actions button.btn-danger');
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Unassigning...';
+        
+        fetch(`/admin/demo-requests/${requestId}/unassign/`, {
+            method: 'POST',
+            headers: { 
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Failed to unassign'));
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-user-minus me-1"></i>Unassign';
+            }
+        })
+        .catch(error => {
+            console.error('Unassign error:', error);
+            alert('Error: ' + error.message);
+            // Re-enable button
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-user-minus me-1"></i>Unassign';
+        });
+    }
+}
+
+// Show reschedule modal
+function showRescheduleModal(requestId) {
+    // Set min date for reschedule
+    document.getElementById('rescheduleDate').min = new Date().toISOString().split('T')[0];
+    
+    // Initialize reschedule date to current date
+    document.getElementById('rescheduleDate').value = new Date().toISOString().split('T')[0];
+    
+    // Add change handler for date
+    document.getElementById('rescheduleDate').addEventListener('change', function() {
+        loadTimeSlots(this.value);
+    });
+    
+    // Load time slots for today
+    loadTimeSlots(new Date().toISOString().split('T')[0]);
+    
+    // Show modal
+    rescheduleModal.show();
+}
+
+// Load time slots for a given date
+function loadTimeSlots(date) {
+    const loadingDiv = document.getElementById('loadingTimeSlots');
+    const timeSlotSelect = document.getElementById('rescheduleTimeSlot');
+    
+    loadingDiv.style.display = 'block';
+    timeSlotSelect.disabled = true;
+    
+    fetch(`/api/demo-requests/available-slots/?date=${date}`)
+        .then(r => r.json())
+        .then(data => {
+            loadingDiv.style.display = 'none';
+            timeSlotSelect.innerHTML = '<option value="">-- Select Time Slot --</option>';
+            
+            if (data.success && data.slots && data.slots.length > 0) {
+                data.slots.forEach(slot => {
+                    const option = document.createElement('option');
+                    option.value = slot.id;
+                    option.textContent = slot.display_time;
+                    timeSlotSelect.appendChild(option);
+                });
+                timeSlotSelect.disabled = false;
+            } else {
+                timeSlotSelect.innerHTML = '<option>No time slots available</option>';
+            }
+        })
+        .catch(error => {
+            loadingDiv.style.display = 'none';
+            alert('Error loading time slots: ' + error.message);
+        });
+}
+
+// Handle reschedule
+function handleReschedule(requestId) {
+    const form = document.getElementById('rescheduleForm');
+    const formData = new FormData(form);
+    
+    if (!formData.get('reschedule_date') || !formData.get('reschedule_time_slot')) {
+        alert('Please select a date and time slot');
+        return;
+    }
+    
+    // Disable buttons
+    const buttons = form.parentElement.nextElementSibling.querySelectorAll('button');
+    buttons.forEach(btn => btn.disabled = true);
+    buttons[1].innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Rescheduling...';
+    
+    fetch(`/admin/demo-requests/${requestId}/reschedule/`, {
+        method: 'POST',
+        body: formData,
+        headers: { 
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            rescheduleModal.hide();
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to reschedule'));
+            // Re-enable buttons
+            buttons.forEach(btn => btn.disabled = false);
+            buttons[1].innerHTML = '<i class="fas fa-calendar-check me-1"></i>Reschedule';
+        }
+    })
+    .catch(error => {
+        console.error('Reschedule error:', error);
+        alert('Error: ' + error.message);
+        // Re-enable buttons
+        buttons.forEach(btn => btn.disabled = false);
+        buttons[1].innerHTML = '<i class="fas fa-calendar-check me-1"></i>Reschedule';
+    });
+}
+
+// Show cancel modal
+function showCancelModal(requestId) {
+    cancelModal.show();
+}
+
+// Handle cancel
+function handleCancel(requestId) {
+    const form = document.getElementById('cancelForm');
+    const formData = new FormData(form);
+    
+    if (!formData.get('cancel_reason')) {
+        alert('Please select a cancellation reason');
+        return;
+    }
+    
+    // Disable buttons
+    const buttons = form.parentElement.nextElementSibling.querySelectorAll('button');
+    buttons.forEach(btn => btn.disabled = true);
+    buttons[1].innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Cancelling...';
+    
+    fetch(`/admin/demo-requests/${requestId}/confirm/`, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'cancel',
+            cancel_reason: formData.get('cancel_reason'),
+            cancel_details: formData.get('cancel_details'),
+            notify_customer: formData.get('notify_cancel') === 'on'
+        }),
+        headers: { 
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            cancelModal.hide();
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to cancel'));
+            // Re-enable buttons
+            buttons.forEach(btn => btn.disabled = false);
+            buttons[1].innerHTML = '<i class="fas fa-times-circle me-1"></i>Cancel Request';
+        }
+    })
+    .catch(error => {
+        console.error('Cancel error:', error);
+        alert('Error: ' + error.message);
+        // Re-enable buttons
+        buttons.forEach(btn => btn.disabled = false);
+        buttons[1].innerHTML = '<i class="fas fa-times-circle me-1"></i>Cancel Request';
+    });
+}
+
+// Confirm demo request
+function confirmDemoRequest(requestId) {
+    if (confirm('Are you sure you want to confirm this demo request?')) {
+        const button = document.querySelector('.btn-success');
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Confirming...';
+        
+        // Get date and time slot from the page
+        const dateIso = "{{ demo_request.requested_date|date:'Y-m-d' }}";
+        const timeSlotId = "{{ demo_request.requested_time_slot.id }}";
+        
+        fetch(`/admin/demo-requests/${requestId}/confirm/`, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'confirm',
+                confirmed_date: dateIso,
+                confirmed_time_slot_id: timeSlotId
+            }),
+            headers: { 
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Failed to confirm'));
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-check-circle me-1"></i>Confirm Demo';
+            }
+        })
+        .catch(error => {
+            console.error('Confirm error:', error);
+            alert('Error: ' + error.message);
+            // Re-enable button
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-check-circle me-1"></i>Confirm Demo';
+        });
+    }
+}
+
+// Mark demo as completed
+function markCompleted(requestId) {
+    if (confirm('Are you sure you want to mark this demo as completed?')) {
+        const button = document.querySelector('.btn-info');
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+        
+        fetch(`/admin/demo-requests/${requestId}/mark-complete/`, {
+            method: 'POST',
+            headers: { 
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Failed to mark as completed'));
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-flag-checkered me-1"></i>Mark as Completed';
+            }
+        })
+        .catch(error => {
+            console.error('Complete error:', error);
+            alert('Error: ' + error.message);
+            // Re-enable button
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-flag-checkered me-1"></i>Mark as Completed';
+        });
+    }
+}
+
+// Save admin notes
+function saveAdminNotes(requestId) {
+    const notes = document.getElementById('adminNotes').value;
+    const button = document.querySelector('#adminNotesForm button');
+    
+    // Disable button
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+    
+    fetch(`/admin/demo-requests/${requestId}/update-notes/`, {
+        method: 'POST',
+        body: JSON.stringify({
+            admin_notes: notes
+        }),
+        headers: { 
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            const successAlert = document.createElement('div');
+            successAlert.className = 'alert alert-success mt-3';
+            successAlert.innerHTML = '<i class="fas fa-check-circle me-1"></i>Notes saved successfully';
+            document.getElementById('adminNotesForm').appendChild(successAlert);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                successAlert.remove();
+            }, 3000);
+        } else {
+            alert('Error: ' + (data.error || 'Failed to save notes'));
+        }
+        
+        // Re-enable button
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-save me-1"></i>Save Notes';
+    })
+    .catch(error => {
+        console.error('Save notes error:', error);
+        alert('Error: ' + error.message);
+        
+        // Re-enable button
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-save me-1"></i>Save Notes';
+    });
+}
+
+// Delete request
+function confirmDelete(requestId) {
+    if (confirm('Are you sure you want to delete this request permanently? This action cannot be undone.')) {
+        const button = document.querySelector('.btn-outline-danger');
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Deleting...';
+        
+        fetch(`/admin/demo-requests/${requestId}/delete/`, {
+            method: 'POST',
+            headers: { 
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = "{% url 'core:admin_demo_requests' %}";
+            } else {
+                alert('Error: ' + (data.error || 'Failed to delete'));
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-trash me-1"></i>Delete Request';
+            }
+        })
+        .catch(error => {
+            console.error('Delete error:', error);
+            alert('Error: ' + error.message);
+            // Re-enable button
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-trash me-1"></i>Delete Request';
+        });
+    }
+}
+
+// Reactivate cancelled request
+function reactivateRequest(requestId) {
+    if (confirm('Are you sure you want to reactivate this cancelled request?')) {
+        const button = document.querySelector('.btn-success');
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Reactivating...';
+        
+        fetch(`/admin/demo-requests/${requestId}/reactivate/`, {
+            method: 'POST',
+            headers: { 
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Failed to reactivate'));
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-redo me-1"></i>Reactivate Request';
+            }
+        })
+        .catch(error => {
+            console.error('Reactivate error:', error);
+            alert('Error: ' + error.message);
+            // Re-enable button
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-redo me-1"></i>Reactivate Request';
+        });
+    }
+}
+
+// Add employee selection event handler
+document.addEventListener('DOMContentLoaded', function() {
     const employeeSelect = document.getElementById('employeeSelect');
     if (employeeSelect) {
         employeeSelect.addEventListener('change', function() {
             if (this.value) {
                 checkEmployeeAvailability(this.value);
             } else {
-                document.getElementById('availabilityStatus').style.display = 'none';
-                document.getElementById('assignBtn').disabled = false;
+                const statusDiv = document.getElementById('availabilityStatus');
+                if (statusDiv) statusDiv.style.display = 'none';
             }
         });
-        console.log('✓ Employee select handler attached');
     }
-    
-    // Setup form submit handler
-    const assignForm = document.getElementById('assignForm');
-    if (assignForm) {
-        assignForm.addEventListener('submit', handleAssignSubmit);
-        console.log('✓ Form submit handler attached');
+
+    // Always make sure assignment section is visible
+    const assignmentSection = document.getElementById('assignmentSection');
+    if (assignmentSection) {
+        // Make it always visible by adding inline styles and CSS override
+        assignmentSection.style.display = 'block !important';
+        assignmentSection.style.visibility = 'visible !important';
+        assignmentSection.style.opacity = '1 !important';
+        
+        // Add a class to ensure visibility
+        assignmentSection.classList.add('always-visible');
     }
 });
-
-// Show Assignment Modal
-function showAssignModal() {
-    console.log('showAssignModal called');
-    
-    if (!assignModal) {
-        console.error('Modal not initialized');
-        alert('Modal not ready. Please refresh the page.');
-        return;
-    }
-    
-    // Reset form
-    document.getElementById('employeeSelect').value = '';
-    document.getElementById('availabilityStatus').style.display = 'none';
-    document.getElementById('assignBtn').disabled = false;
-    
-    // Show loading
-    document.getElementById('loadingEmployees').style.display = 'block';
-    
-    // Load employees
-    loadAvailableEmployees();
-    
-    // Show modal
-    assignModal.show();
-}
-
-// Show Reassign Modal
-function showReassignModal() {
-    if (confirm('Reassign this demo to a different employee?')) {
-        showAssignModal();
-    }
-}
-
-// Load Available Employees
-function loadAvailableEmployees() {
-    const date = '{{ demo_request.requested_date|date:"Y-m-d" }}';
-    const timeSlotId = '{{ demo_request.requested_time_slot.id }}';
-    
-    console.log('Loading employees for:', date, timeSlotId);
-    
-    fetch(`/api/demo-requests/available-employees/?date=${date}&time_slot_id=${timeSlotId}`)
-        .then(response => {
-            console.log('Response status:', response.status);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return response.json();
-        })
-        .then(data => {
-            console.log('API Response:', data);
-            
-            document.getElementById('loadingEmployees').style.display = 'none';
-            
-            const select = document.getElementById('employeeSelect');
-            select.innerHTML = '<option value="">-- Select an Employee --</option>';
-            
-            if (data.success && data.employees && data.employees.length > 0) {
-                data.employees.forEach(emp => {
-                    const option = document.createElement('option');
-                    option.value = emp.id;
-                    option.textContent = `${emp.name} (${emp.current_demos} active demos)`;
-                    select.appendChild(option);
-                });
-                select.disabled = false;
-                console.log(`✓ Loaded ${data.employees.length} employees`);
-            } else {
-                const option = document.createElement('option');
-                option.textContent = 'No employees available for this time slot';
-                option.disabled = true;
-                select.appendChild(option);
-                select.disabled = true;
-                
-                document.getElementById('availabilityStatus').innerHTML = `
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>No Available Employees</strong><br>
-                        All employees are busy during this time slot.
-                    </div>
-                `;
-                document.getElementById('availabilityStatus').style.display = 'block';
-                console.log('✗ No employees available');
-            }
-        })
-        .catch(error => {
-            console.error('Error loading employees:', error);
-            document.getElementById('loadingEmployees').style.display = 'none';
-            alert('Error loading employees: ' + error.message);
-        });
-}
-
-// Check Employee Availability
-function checkEmployeeAvailability(employeeId) {
-    const date = '{{ demo_request.requested_date|date:"Y-m-d" }}';
-    const timeSlotId = '{{ demo_request.requested_time_slot.id }}';
-    const demoRequestId = '{{ demo_request.id }}';
-    
-    const statusDiv = document.getElementById('availabilityStatus');
-    statusDiv.innerHTML = `
-        <div class="text-center py-2">
-            <div class="spinner-border spinner-border-sm text-primary"></div>
-            <span class="ms-2">Checking availability...</span>
-        </div>
-    `;
-    statusDiv.style.display = 'block';
-    
-    fetch(`/api/demo-requests/check-availability/?employee_id=${employeeId}&date=${date}&time_slot_id=${timeSlotId}&demo_request_id=${demoRequestId}`)
-        .then(r => r.json())
-        .then(data => {
-            console.log('Availability:', data);
-            
-            if (data.available) {
-                statusDiv.innerHTML = `
-                    <div class="alert alert-success mb-0">
-                        <i class="fas fa-check-circle me-2"></i>
-                        <strong>✓ Available!</strong> ${data.message}
-                    </div>
-                `;
-                document.getElementById('assignBtn').disabled = false;
-            } else {
-                statusDiv.innerHTML = `
-                    <div class="alert alert-danger mb-0">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>✗ Conflict!</strong> ${data.message}
-                        ${data.conflict ? `
-                            <hr class="my-2">
-                            <div class="small">
-                                <strong>Conflicting Demo:</strong><br>
-                                <i class="fas fa-video me-1"></i>${data.conflict.demo_title}<br>
-                                <i class="fas fa-user me-1"></i>${data.conflict.customer}<br>
-                                <i class="fas fa-calendar me-1"></i>${data.conflict.date} at ${data.conflict.time}
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-                document.getElementById('assignBtn').disabled = true;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            statusDiv.innerHTML = `
-                <div class="alert alert-warning mb-0">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    Unable to check availability.
-                </div>
-            `;
-        });
-}
-
-// Handle Form Submit
-function handleAssignSubmit(e) {
-    e.preventDefault();
-    
-    const form = e.target;
-    const formData = new FormData(form);
-    const submitBtn = document.getElementById('assignBtn');
-    
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Assigning...';
-    
-    fetch(form.action, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': csrfToken,
-        }
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            showSuccessMessage('Employee assigned successfully!');
-            assignModal.hide();
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            alert('Error: ' + (data.error || 'Failed to assign'));
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-check me-1"></i>Assign Employee';
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error assigning employee');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-check me-1"></i>Assign Employee';
-    });
-}
-
-function markComplete() {
-    if (!confirm('Mark this demo as completed?')) return;
-    
-    const btn = event.currentTarget;
-    const originalHTML = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
-    
-    fetch(`/admin/demo-requests/{{ demo_request.id }}/mark-complete/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            alert('Demo completed!');
-            location.reload();
-        } else {
-            alert('Error: ' + data.error);
-            btn.disabled = false;
-            btn.innerHTML = originalHTML;
-        }
-    })
-    .catch(err => {
-        alert('Error: ' + err.message);
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
-    });
-}
-
-function rescheduleDemo() {
-    // Show reschedule modal or redirect to edit page
-    const requestId = {{ demo_request.id }};
-    
-    if (confirm('Do you want to reschedule this demo request?\n\nYou will be redirected to the edit page where you can change the date and time.')) {
-        // Redirect to edit page
-        window.location.href = `/admin/demo-requests/${requestId}/edit/`;
-    }
-}
-
-// Success Message
-function showSuccessMessage(message) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
-    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    alertDiv.innerHTML = `
-        <i class="fas fa-check-circle me-2"></i>${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    document.body.appendChild(alertDiv);
-    setTimeout(() => {
-        if (alertDiv.parentNode) alertDiv.remove();
-    }, 3000);
-}
 </script>
+
+<style>
+/* Additional styles to ensure assignment section visibility */
+#assignmentSection, 
+#assignmentSection.info-card,
+#assignmentSection .info-card-header,
+#assignmentSection .info-card-body {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.always-visible {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+</style>
 {% endblock %}

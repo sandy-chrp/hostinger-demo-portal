@@ -10,33 +10,83 @@ from accounts.models import CustomUser as User  # ✅ Fixed: Import with alias
 from .models import Notification
 from .services import NotificationService
 from django.core.paginator import Paginator
+from django.utils import timezone
 
 @login_required
 @permission_required('view_notifications')
 def admin_notification_center(request):
     """
     Admin notification center page
-    Shows all notifications for the logged-in admin user
+    Shows all notifications for the logged-in admin user with enhanced date filtering
     """
     # Get filter parameters
     filter_type = request.GET.get('type', 'all')
     filter_status = request.GET.get('status', 'all')
+    filter_date = request.GET.get('date_filter', 'all')
     search = request.GET.get('search', '')
+    
+    # Custom date filter parameters
+    start_date = request.GET.get('start_date', '')
+    end_date = request.GET.get('end_date', '')
     
     # Base query
     notifications = Notification.objects.filter(
         user=request.user
     ).select_related('user', 'content_type').order_by('-created_at')
     
-    # Apply filters
+    # Apply notification type filter
     if filter_type != 'all':
         notifications = notifications.filter(notification_type=filter_type)
     
+    # Apply read status filter
     if filter_status == 'unread':
         notifications = notifications.filter(is_read=False)
     elif filter_status == 'read':
         notifications = notifications.filter(is_read=True)
     
+    # Apply date filters
+    now = timezone.now()
+    if filter_date == 'today':
+        # Today's notifications (last 24 hours)
+        notifications = notifications.filter(
+            created_at__gte=now.replace(hour=0, minute=0, second=0, microsecond=0)
+        )
+    elif filter_date == 'yesterday':
+        # Yesterday's notifications
+        yesterday_start = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        yesterday_end = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        notifications = notifications.filter(
+            created_at__gte=yesterday_start,
+            created_at__lt=yesterday_end
+        )
+    elif filter_date == 'week':
+        # Last 7 days
+        week_ago = now - timedelta(days=7)
+        notifications = notifications.filter(
+            created_at__gte=week_ago
+        )
+    elif filter_date == 'month':
+        # Last 30 days
+        month_ago = now - timedelta(days=30)
+        notifications = notifications.filter(
+            created_at__gte=month_ago
+        )
+    elif filter_date == 'custom' and start_date and end_date:
+        # Custom date range
+        try:
+            start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').replace(tzinfo=timezone.get_current_timezone())
+            # Add one day to end_date to make it inclusive
+            end_date_obj = (datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)).replace(tzinfo=timezone.get_current_timezone())
+            
+            notifications = notifications.filter(
+                created_at__gte=start_date_obj,
+                created_at__lt=end_date_obj
+            )
+        except ValueError:
+            # If date parsing fails, don't apply the filter
+            pass
+    
+    # Apply search filter
     if search:
         notifications = notifications.filter(
             Q(title__icontains=search) | Q(message__icontains=search)
@@ -50,7 +100,7 @@ def admin_notification_center(request):
     # Stats
     total_count = Notification.objects.filter(user=request.user).count()
     unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
-    read_count = total_count - unread_count  # ✅ Added: Calculate read count
+    read_count = total_count - unread_count
     
     # Notification type counts
     type_counts = {}
@@ -62,19 +112,109 @@ def admin_notification_center(request):
         if count > 0:
             type_counts[ntype] = {'label': label, 'count': count}
     
+    # Date filter options
+    date_filters = [
+        ('all', 'All Time'),
+        ('today', 'Today'),
+        ('yesterday', 'Yesterday'),
+        ('week', 'Last 7 Days'),
+        ('month', 'Last 30 Days'),
+        ('custom', 'Custom Range')
+    ]
+    
     context = {
         'notifications': page_obj,
         'total_count': total_count,
         'unread_count': unread_count,
-        'read_count': read_count,  # ✅ Added: Pass to template
+        'read_count': read_count,
         'type_counts': type_counts,
         'filter_type': filter_type,
         'filter_status': filter_status,
+        'filter_date': filter_date,
+        'date_filters': date_filters,
+        'start_date': start_date,
+        'end_date': end_date,
         'search': search,
         'notification_types': Notification.NOTIFICATION_TYPES,
     }
     
     return render(request, 'notifications/admin_notifications.html', context)
+
+@login_required
+@permission_required('change_notification')
+def mark_all_notifications_read(request):
+    """Mark all notifications as read for the current user"""
+    if request.method == 'POST':
+        unread_notifications = Notification.objects.filter(
+            user=request.user,
+            is_read=False
+        )
+        
+        current_time = timezone.now()
+        
+        # Use bulk update for better performance with many notifications
+        unread_count = unread_notifications.count()
+        if unread_count > 0:
+            # Create a list of notifications to update
+            notifications_to_update = list(unread_notifications)
+            for notification in notifications_to_update:
+                notification.is_read = True
+                notification.read_at = current_time
+            
+            # Perform bulk update
+            Notification.objects.bulk_update(
+                notifications_to_update, 
+                ['is_read', 'read_at']
+            )
+            
+            # Add success message
+            messages.success(request, f"{unread_count} notifications marked as read.")
+    
+    # Redirect with filter parameters preserved
+    redirect_url = 'admin_notification_center'
+    filter_params = {}
+    
+    for param in ['type', 'status', 'date_filter', 'search', 'start_date', 'end_date', 'page']:
+        value = request.GET.get(param)
+        if value:
+            filter_params[param] = value
+    
+    return redirect(redirect_url + '?' + '&'.join([f'{k}={v}' for k, v in filter_params.items()]))
+
+# Mark a single notification as read
+@login_required
+@permission_required('change_notification')
+def mark_notification_read(request, notification_id):
+    """Mark a single notification as read"""
+    try:
+        notification = Notification.objects.get(id=notification_id, user=request.user)
+        
+        # Only mark as read if it's currently unread
+        if not notification.is_read:
+            notification.mark_as_read()
+            
+            # Return success response for AJAX calls
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'success'})
+        else:
+            # Already read
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'already_read'})
+                
+    except Notification.DoesNotExist:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Notification not found'}, status=404)
+    
+    # If not an AJAX request, redirect back to notification center with filters preserved
+    redirect_url = 'admin_notification_center'
+    filter_params = {}
+    
+    for param in ['type', 'status', 'date_filter', 'search', 'start_date', 'end_date', 'page']:
+        value = request.GET.get(param)
+        if value:
+            filter_params[param] = value
+    
+    return redirect(redirect_url + '?' + '&'.join([f'{k}={v}' for k, v in filter_params.items()]))
 
 @login_required
 @require_http_methods(["GET"])

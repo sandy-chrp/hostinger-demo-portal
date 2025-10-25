@@ -5,6 +5,83 @@
 
 {% block admin_content %}
 <style>
+/* ===== SKIP VERIFICATION BOX - ALWAYS VISIBLE ===== */
+.skip-verification-box {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999 !important;
+    background: #fff3cd !important;
+    border: 2px solid #ffc107 !important;
+    border-radius: 8px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+
+.skip-verification-box .form-check {
+    margin: 0 !important;
+}
+
+.skip-verification-box .form-check-input {
+    width: 3.5rem !important;
+    height: 1.75rem !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+}
+
+.skip-verification-box .form-check-label {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #664d03 !important;
+    cursor: pointer !important;
+    margin: 0 !important;
+}
+
+.skip-verification-icon {
+    font-size: 1.5rem !important;
+    color: #ffc107 !important;
+    flex-shrink: 0 !important;
+}
+
+/* ===== EMAIL CHANGE ALERT ===== */
+.email-change-alert {
+    background: #d1ecf1;
+    border: 2px solid #0dcaf0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 15px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+}
+
+.email-change-alert.show {
+    display: flex !important;
+}
+
+.email-change-alert i {
+    color: #0dcaf0;
+    font-size: 1.3rem;
+}
+
+.email-change-alert .alert-text {
+    flex: 1;
+}
+
+.email-change-alert .alert-text strong {
+    display: block;
+    color: #055160;
+    font-size: 0.95rem;
+}
+
+.email-change-alert .alert-text small {
+    color: #087990;
+    font-size: 0.85rem;
+}
+
 .password-wrapper {
     position: relative;
 }
@@ -60,8 +137,8 @@
 }
 
 .section-header {
-    padding: var(--spacing-md) 0;
-    margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+    padding: 0.75rem 0;
+    margin: 1rem 0 0.75rem 0;
     border-bottom: 2px solid #e9ecef;
 }
 
@@ -72,7 +149,7 @@
     margin: 0;
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: 0.5rem;
 }
 
 .section-header h5 i {
@@ -149,11 +226,11 @@
 }
 
 #otpSection {
-    background: #f8f9fa;
-    padding: var(--spacing-lg);
+    background: #f0f9ff;
+    padding: 1rem;
     border-radius: 8px;
-    border: 2px dashed #dee2e6;
-    margin-bottom: var(--spacing-md);
+    border: 2px solid #087fc2;
+    margin-bottom: 1rem;
 }
 
 .form-check-label {
@@ -164,7 +241,7 @@
 .admin-card-header {
     background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
     color: white;
-    padding: var(--spacing-xl);
+    padding: 1.25rem 1.5rem;
     border-radius: 12px 12px 0 0;
     display: flex;
     justify-content: space-between;
@@ -178,12 +255,12 @@
     color: white !important;
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: 0.75rem;
 }
 
 .admin-card-body {
     background: white;
-    padding: var(--spacing-xl);
+    padding: 2rem;
     border-radius: 0 0 12px 12px;
 }
 
@@ -212,29 +289,6 @@
     text-decoration: underline;
 }
 
-/* Alert customization */
-.alert-danger {
-    background-color: rgba(239, 68, 68, 0.1);
-    border-color: #ef4444;
-    color: #dc3545;
-}
-
-/* Form check customization */
-.form-check-input:checked {
-    background-color: #087fc2;
-    border-color: #087fc2;
-}
-
-.form-check-input:focus {
-    border-color: #087fc2;
-    box-shadow: 0 0 0 0.25rem rgba(8, 127, 194, 0.25);
-}
-
-.form-switch .form-check-input:checked {
-    background-color: #087fc2;
-}
-
-/* Button success */
 .btn-success {
     background-color: #10b981;
     border-color: #10b981;
@@ -256,543 +310,569 @@
     border-color: #10b981;
     color: white;
 }
-
-/* Secondary button */
-.btn-secondary {
-    background-color: #6c757d;
-    border-color: #6c757d;
-}
-
-.btn-secondary:hover,
-.btn-secondary:focus {
-    background-color: #5a6268;
-    border-color: #5a6268;
-}
-
-@media (max-width: 768px) {
-    .admin-card-header {
-        flex-direction: column;
-        gap: var(--spacing-md);
-        align-items: flex-start;
-    }
-    
-    .admin-card-body {
-        padding: var(--spacing-md);
-    }
-    
-    #otpSection {
-        padding: var(--spacing-md);
-    }
-}
 </style>
 
-<div class="admin-card">
-    <div class="admin-card-header">
-        <h2 class="admin-card-title">
-            <i class="fas fa-user-edit"></i>Edit Customer
-        </h2>
-        <a href="{% url 'core:admin_users' %}" class="btn btn-light">
-            <i class="fas fa-arrow-left me-2"></i>Back
-        </a>
-    </div>
-    
-    <div class="admin-card-body">
-        <form method="post" id="customerForm" novalidate>
-            {% csrf_token %}
+<div class="container-fluid px-4 py-4">
+    <div class="card border-0 shadow-sm">
+        <div class="admin-card-header">
+            <h3 class="admin-card-title">
+                <i class="fas fa-user-edit"></i>
+                Edit Customer
+            </h3>
+            <a href="{% url 'core:admin_users' %}" class="btn btn-light">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+        
+        <div class="admin-card-body">
+            <!-- ✅ Skip Verification Toggle - ALWAYS VISIBLE -->
+            <div class="skip-verification-box">
+                <i class="fas fa-shield-alt skip-verification-icon"></i>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="skipVerification" name="skip_verification">
+                    <label class="form-check-label" for="skipVerification">
+                        Skip Email Verification (Admin Override)
+                    </label>
+                </div>
+            </div>
+
+            <!-- Email Change Alert -->
+            <div class="email-change-alert" id="emailChangeAlert">
+                <i class="fas fa-info-circle"></i>
+                <div class="alert-text">
+                    <strong>Email Address Changed!</strong>
+                    <small>New email must be verified with OTP before saving (or enable Skip Verification above)</small>
+                </div>
+            </div>
             
-            {% if form.errors %}
-                <div class="alert alert-danger alert-dismissible fade show">
-                    <strong><i class="fas fa-exclamation-triangle me-2"></i>Please correct the following errors:</strong>
-                    <ul class="mb-0 mt-2">
-                        {% for field, errors in form.errors.items %}
-                            {% for error in errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        {% endfor %}
-                    </ul>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <form method="post" id="editCustomerForm">
+                {% csrf_token %}
+                
+                <!-- Personal Information -->
+                <div class="section-header">
+                    <h5><i class="fas fa-user"></i> Personal Information</h5>
                 </div>
-            {% endif %}
-
-            <!-- Personal Information -->
-            <div class="section-header">
-                <h5><i class="fas fa-user"></i>Personal Information</h5>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">First Name <span class="text-danger">*</span></label>
-                    {{ form.first_name }}
-                    <div class="validation-msg" id="firstNameMsg"></div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                    {{ form.last_name }}
-                    <div class="validation-msg" id="lastNameMsg"></div>
-                </div>
-            </div>
-
-            <!-- Contact Information -->
-            <div class="section-header">
-                <h5><i class="fas fa-envelope"></i>Contact Information</h5>
-            </div>
-            <div class="row">
-                <div class="col-md-8 mb-3">
-                    <label class="form-label">Business Email <span class="text-danger">*</span></label>
-                    <div class="input-group">
-                        {{ form.email }}
-                        <button type="button" class="btn btn-outline-primary" id="sendOtpBtn" disabled>
-                            <i class="fas fa-paper-plane me-1"></i>Send OTP
-                        </button>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="id_first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                        {{ form.first_name }}
+                        <div id="firstNameMsg" class="validation-msg"></div>
                     </div>
-                    <small class="text-muted d-block mt-1">Business email required for verification</small>
-                    <div class="validation-msg" id="emailMsg"></div>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Options</label>
-                    <div class="form-check form-switch">
-                        {{ form.skip_email_validation }}
-                        <label class="form-check-label">Skip email validation</label>
+                    <div class="col-md-6">
+                        <label for="id_last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                        {{ form.last_name }}
+                        <div id="lastNameMsg" class="validation-msg"></div>
                     </div>
-                    <small class="text-muted d-block">Bypass OTP verification</small>
                 </div>
-            </div>
-
-            <!-- OTP Verification Section -->
-            <div class="row" id="otpSection" style="display:none;">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Enter OTP Code <span class="text-danger">*</span></label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="otpInput" maxlength="6" placeholder="000000">
-                        <button type="button" class="btn btn-success" id="verifyOtpBtn">
-                            <i class="fas fa-check me-1"></i>Verify
-                        </button>
+                
+                <!-- Contact Information -->
+                <div class="section-header">
+                    <h5><i class="fas fa-envelope"></i> Contact Information</h5>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="id_email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            {{ form.email }}
+                            <button class="btn btn-outline-primary" type="button" id="sendOtpBtn">
+                                <i class="fas fa-paper-plane me-1"></i>Send OTP
+                            </button>
+                        </div>
+                        <div id="emailMsg" class="validation-msg"></div>
+                        <input type="hidden" id="originalEmail" value="{{ form.instance.email }}">
                     </div>
-                    <small class="text-muted d-block mt-1">Check email for 6-digit verification code</small>
-                    <div class="validation-msg" id="otpMsg"></div>
+                    <div class="col-md-6">
+                        <label for="id_mobile" class="form-label">Mobile Number <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            {{ form.country_code }}
+                            {{ form.mobile }}
+                        </div>
+                        <div id="mobileMsg" class="validation-msg"></div>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Actions</label>
-                    <div>
-                        <button type="button" class="btn btn-link p-0" id="resendOtpBtn">
-                            <i class="fas fa-redo me-1"></i>Resend OTP
-                        </button>
-                        <div class="mt-2">
-                            <small class="text-muted fw-bold d-block" id="otpTimer"></small>
+                
+                <!-- OTP Verification Section -->
+                <div id="otpSection" style="display: none;">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-6">
+                            <label for="otpInput" class="form-label">Enter 6-Digit OTP</label>
+                            <input type="text" class="form-control" id="otpInput" maxlength="6" placeholder="000000" autocomplete="off">
+                            <div id="otpMsg" class="validation-msg"></div>
+                            <small id="otpTimer" class="text-muted"></small>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-outline-success" id="verifyOtpBtn">
+                                <i class="fas fa-check me-1"></i>Verify OTP
+                            </button>
+                            <button type="button" class="btn btn-link" id="resendOtpBtn" style="display: none;">
+                                <i class="fas fa-redo me-1"></i>Resend OTP
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Country Code <span class="text-danger">*</span></label>
-                    {{ form.country_code }}
+                
+                <!-- Password Section - OPTIONAL FOR EDIT -->
+                <div class="section-header">
+                    <h5><i class="fas fa-lock"></i> Password (Optional - Leave blank to keep current)</h5>
                 </div>
-                <div class="col-md-8 mb-3">
-                    <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
-                    {{ form.mobile }}
-                    <small class="text-muted d-block mt-1">10-digit mobile number</small>
-                    <div class="validation-msg" id="mobileMsg"></div>
-                </div>
-            </div>
-
-            <!-- Professional Information -->
-            <div class="section-header">
-                <h5><i class="fas fa-briefcase"></i>Professional Information</h5>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Job Title</label>
-                    {{ form.job_title }}
-                    <small class="text-muted d-block mt-1">e.g., Software Engineer, Manager</small>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Organization</label>
-                    {{ form.organization }}
-                    <small class="text-muted d-block mt-1">Company or organization name</small>
-                </div>
-            </div>
-
-            <!-- Business Category -->
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Business Category</label>
-                    {{ form.business_category }}
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Business Subcategory</label>
-                    {{ form.business_subcategory }}
-                    <div id="subcategoryLoader" style="display:none;">
-                        <small class="text-muted">
-                            <span class="spinner-border spinner-border-sm me-1"></span>Loading subcategories...
-                        </small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Account Password -->
-            <div class="section-header">
-                <h5><i class="fas fa-key"></i>Account Password</h5>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Password <span class="text-danger">*</span></label>
-                    <div class="password-wrapper">
-                        {{ form.password }}
-                        <i class="fas fa-eye password-toggle-icon" data-target="password"></i>
-                    </div>
-                    <small class="text-muted d-block mt-1">Minimum 8 characters with letters & numbers</small>
-                    
-                    <div class="password-strength" id="passwordStrength" style="display:none;">
-                        <div class="progress">
-                            <div class="progress-bar" id="strengthBar" style="width: 0%"></div>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="id_new_password" class="form-label">New Password</label>
+                        <div class="password-wrapper">
+                            {{ form.new_password }}
+                            <i class="fas fa-eye password-toggle-icon" data-target="id_new_password"></i>
                         </div>
-                        <small class="text-muted mt-1 d-block" id="strengthText"></small>
+                        <div id="pass1Msg" class="validation-msg"></div>
+                        <div id="passwordStrength" class="password-strength" style="display: none;">
+                            <div class="progress">
+                                <div id="strengthBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <small id="strengthText" class="text-muted"></small>
+                        </div>
                     </div>
-                    
-                    <div class="validation-msg" id="pass1Msg"></div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                    <div class="password-wrapper">
-                        {{ form.confirm_password }}
-                        <i class="fas fa-eye password-toggle-icon" data-target="confirm_password"></i>
+                    <div class="col-md-6">
+                        <label for="id_confirm_new_password" class="form-label">Confirm New Password</label>
+                        <div class="password-wrapper">
+                            {{ form.confirm_new_password }}
+                            <i class="fas fa-eye password-toggle-icon" data-target="id_confirm_new_password"></i>
+                        </div>
+                        <div id="pass2Msg" class="validation-msg"></div>
                     </div>
-                    <small class="text-muted d-block mt-1">Re-enter password to confirm</small>
-                    <div class="validation-msg" id="pass2Msg"></div>
                 </div>
-            </div>
-
-            <!-- Additional Information -->
-            <div class="section-header">
-                <h5><i class="fas fa-info-circle"></i>Additional Information</h5>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Referral Source</label>
-                    {{ form.referral_source }}
-                    <small class="text-muted d-block mt-1">How did they hear about us?</small>
+                
+                <!-- Business Information -->
+                <div class="section-header">
+                    <h5><i class="fas fa-briefcase"></i> Business Information</h5>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Notes</label>
-                    {{ form.referral_message }}
-                    <small class="text-muted d-block mt-1">Additional comments or context</small>
-                </div>
-            </div>
-
-            <!-- Account Settings -->
-            <div class="section-header">
-                <h5><i class="fas fa-cog"></i>Account Settings</h5>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <div class="form-check form-switch">
-                        {{ form.is_approved }}
-                        <label class="form-check-label fw-bold">Approve Account Immediately</label>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="id_job_title" class="form-label">Job Title</label>
+                        {{ form.job_title }}
                     </div>
-                    <small class="text-muted d-block mt-1">Customer can access portal immediately</small>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <div class="form-check form-switch">
-                        {{ form.send_welcome_email }}
-                        <label class="form-check-label fw-bold">Send Welcome Email</label>
+                    <div class="col-md-6">
+                        <label for="id_organization" class="form-label">Organization</label>
+                        {{ form.organization }}
                     </div>
-                    <small class="text-muted d-block mt-1">Email login credentials to customer</small>
+                    <div class="col-md-6">
+                        <label for="editCategorySelect" class="form-label">Business Category</label>
+                        {{ form.business_category }}
+                        <div id="categoryLoader" style="display: none;">
+                            <small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Loading...</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="editSubcategorySelect" class="form-label">Business Subcategory</label>
+                        {{ form.business_subcategory }}
+                        <div id="subcategoryLoader" style="display: none;">
+                            <small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Loading...</small>
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            <hr class="my-4">
-
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
-                    <i class="fas fa-save me-2"></i>Update Customer
-                </button>
-                <a href="{% url 'core:admin_users' %}" class="btn btn-secondary btn-lg">
-                    <i class="fas fa-times me-2"></i>Cancel
-                </a>
-            </div>
-        </form>
+                
+                <!-- Referral Information -->
+                <div class="section-header">
+                    <h5><i class="fas fa-share-alt"></i> Referral Information</h5>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label for="id_referral_source" class="form-label">Referral Source</label>
+                        {{ form.referral_source }}
+                    </div>
+                    <div class="col-md-12">
+                        <label for="id_referral_message" class="form-label">Referral Message</label>
+                        {{ form.referral_message }}
+                    </div>
+                </div>
+                
+                <!-- Account Status -->
+                <div class="section-header">
+                    <h5><i class="fas fa-cog"></i> Account Status</h5>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            {{ form.is_approved }}
+                            <label class="form-check-label" for="id_is_approved">Account Approved</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="id_is_active">Account Active</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            {{ form.is_email_verified }}
+                            <label class="form-check-label" for="id_is_email_verified">Email Verified</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="mt-4 d-flex gap-3">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                        <i class="fas fa-save me-2"></i>Update Customer
+                    </button>
+                    <a href="{% url 'core:admin_users' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
-{% endblock %}
 
-{% block admin_extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('customerForm');
-    const submitBtn = document.getElementById('submitBtn');
-    
-    const firstName = document.querySelector('[name="first_name"]');
-    const lastName = document.querySelector('[name="last_name"]');
-    const email = document.querySelector('[name="email"]');
-    const skipValidation = document.querySelector('[name="skip_email_validation"]');
-    const mobile = document.querySelector('[name="mobile"]');
-    const password1 = document.querySelector('[name="password"]');
-    const password2 = document.querySelector('[name="confirm_password"]');
-    const category = document.querySelector('[name="business_category"]');
-    const subcategory = document.querySelector('[name="business_subcategory"]');
-    
+    // Form elements
+    const form = document.getElementById('editCustomerForm');
+    const email = document.getElementById('id_email');
+    const originalEmail = document.getElementById('originalEmail');
+    const firstName = document.getElementById('id_first_name');
+    const lastName = document.getElementById('id_last_name');
+    const mobile = document.getElementById('id_mobile');
+    const password1 = document.getElementById('id_new_password');
+    const password2 = document.getElementById('id_confirm_new_password');
+    const skipValidation = document.getElementById('skipVerification');
     const sendOtpBtn = document.getElementById('sendOtpBtn');
-    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
-    const resendOtpBtn = document.getElementById('resendOtpBtn');
     const otpSection = document.getElementById('otpSection');
     const otpInput = document.getElementById('otpInput');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    const resendOtpBtn = document.getElementById('resendOtpBtn');
     const otpTimerDisplay = document.getElementById('otpTimer');
+    const emailChangeAlert = document.getElementById('emailChangeAlert');
+    const category = document.getElementById('editCategorySelect');
+    const subcategory = document.getElementById('editSubcategorySelect');
+    const submitBtn = document.getElementById('submitBtn');
     
+    let emailChanged = false;
     let emailVerified = false;
     let otpTimer = null;
     
-    const blockedDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'ymail.com', 'aol.com', 'icloud.com', 'live.com'];
-    const commonPasswords = ['12345678', '123456789', '1234567890', 'password', 'password1', 'password123', 'qwerty123', 'abc123456', '11111111', '00000000', '12341234', 'qwertyuiop', 'asdfghjkl', 'zxcvbnm123', 'admin123', 'welcome123', 'letmein123'];
+    const commonPasswords = ['password', '12345678', 'qwerty', 'abc123', 'password123', '123456789'];
     
-    function showValidation(input, msgId, isValid, message) {
-        const msg = document.getElementById(msgId);
-        if (isValid) {
-            input.classList.remove('is-invalid');
-            input.classList.add('is-valid');
-            msg.className = 'validation-msg success show';
-            msg.textContent = message || '✓ Valid';
-        } else {
-            input.classList.remove('is-valid');
-            input.classList.add('is-invalid');
-            msg.className = 'validation-msg error show';
-            msg.textContent = message;
-        }
+    // ✅ CRITICAL: Track email changes
+    if (email && originalEmail) {
+        email.addEventListener('input', function() {
+            const currentEmail = this.value.trim().toLowerCase();
+            const origEmail = originalEmail.value.trim().toLowerCase();
+            emailChanged = (currentEmail !== origEmail);
+            
+            // Show/hide email change alert
+            if (emailChangeAlert) {
+                if (emailChanged) {
+                    emailChangeAlert.classList.add('show');
+                    emailVerified = false; // Reset verification when email changes
+                } else {
+                    emailChangeAlert.classList.remove('show');
+                    emailVerified = false;
+                }
+            }
+            
+            updateSendOtpButton();
+        });
     }
     
-    function clearValidation(input, msgId) {
-        input.classList.remove('is-valid', 'is-invalid');
-        document.getElementById(msgId).className = 'validation-msg';
-    }
-    
+    // Password toggle
     document.querySelectorAll('.password-toggle-icon').forEach(icon => {
         icon.addEventListener('click', function() {
-            const target = this.dataset.target;
-            const input = document.querySelector(`[name="${target}"]`);
-            const type = input.type === 'password' ? 'text' : 'password';
-            input.type = type;
-            this.className = type === 'text' ? 'fas fa-eye-slash password-toggle-icon' : 'fas fa-eye password-toggle-icon';
+            const targetId = this.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            if (input) {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    this.classList.remove('fa-eye');
+                    this.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    this.classList.remove('fa-eye-slash');
+                    this.classList.add('fa-eye');
+                }
+            }
         });
     });
     
-    [firstName, lastName].forEach(field => {
-        const msgId = field.name === 'first_name' ? 'firstNameMsg' : 'lastNameMsg';
-        field.addEventListener('blur', () => {
-            if (!field.value.trim()) showValidation(field, msgId, false, 'Required');
-            else showValidation(field, msgId, true);
-        });
-        field.addEventListener('input', () => {
-            if (field.classList.contains('is-invalid') && field.value.trim()) showValidation(field, msgId, true);
-        });
-    });
-    
-    email.addEventListener('blur', validateEmail);
-    email.addEventListener('input', () => {
-        if (email.classList.contains('is-invalid')) validateEmail();
-        if (skipValidation.checked) {
-            sendOtpBtn.disabled = true;
+    // Helper functions
+    function showValidation(element, msgId, isValid, message) {
+        const msg = document.getElementById(msgId);
+        if (!element || !msg) return;
+        
+        if (isValid) {
+            element.classList.remove('is-invalid');
+            element.classList.add('is-valid');
+            msg.className = 'validation-msg success show';
         } else {
-            const value = email.value.trim();
-            sendOtpBtn.disabled = !(value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
+            element.classList.remove('is-valid');
+            element.classList.add('is-invalid');
+            msg.className = 'validation-msg error show';
         }
-    });
+        msg.textContent = message;
+    }
     
+    function clearValidation(element, msgId) {
+        const msg = document.getElementById(msgId);
+        if (!element || !msg) return;
+        element.classList.remove('is-valid', 'is-invalid');
+        msg.className = 'validation-msg';
+        msg.textContent = '';
+    }
+    
+    // Email validation
     function validateEmail() {
+        if (!email) return false;
         const value = email.value.trim();
+        
         if (!value) {
             showValidation(email, 'emailMsg', false, 'Email is required');
             return false;
         }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
             showValidation(email, 'emailMsg', false, 'Invalid email format');
             return false;
         }
-        if (!skipValidation.checked) {
-            const domain = value.split('@')[1]?.toLowerCase();
-            if (blockedDomains.includes(domain)) {
-                showValidation(email, 'emailMsg', false, `Personal email (${domain}) not allowed. Check skip to override`);
-                return false;
-            }
-        }
+        
+        showValidation(email, 'emailMsg', true, '✓ Valid email format');
         return true;
     }
     
-    skipValidation.addEventListener('change', function() {
-        if (this.checked) {
-            otpSection.style.display = 'none';
-            sendOtpBtn.disabled = true;
-            emailVerified = true;
-            clearValidation(email, 'emailMsg');
-        } else {
-            emailVerified = false;
-            if (email.value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
-                sendOtpBtn.disabled = false;
-            }
-        }
-    });
+    if (email) {
+        email.addEventListener('blur', validateEmail);
+        email.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) validateEmail();
+        });
+    }
     
-    sendOtpBtn.addEventListener('click', function() {
+    // Update Send OTP button state
+    function updateSendOtpButton() {
+        if (!sendOtpBtn || !email) return;
+        
         const emailValue = email.value.trim();
-        if (!validateEmail()) return;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const isValidEmail = emailRegex.test(emailValue);
         
-        sendOtpBtn.disabled = true;
-        sendOtpBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
-        
-        fetch('{% url "core:admin_send_otp" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({ email: emailValue })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                showValidation(email, 'emailMsg', true, '✓ ' + data.message);
-                otpSection.style.display = 'flex';
-                otpInput.value = '';
-                otpInput.disabled = false;
-                otpInput.focus();
-                verifyOtpBtn.disabled = false;
-                verifyOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify';
-                verifyOtpBtn.classList.remove('btn-outline-success');
-                verifyOtpBtn.classList.add('btn-success');
-                resendOtpBtn.style.display = 'inline-block';
-                startOtpTimer(600);
-            } else {
-                showValidation(email, 'emailMsg', false, data.message);
-                sendOtpBtn.disabled = false;
-            }
-            sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send OTP';
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showValidation(email, 'emailMsg', false, 'Failed to send OTP');
-            sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send OTP';
+        // ✅ LOGIC: Only enable Send OTP if email changed AND valid
+        if (emailChanged && isValidEmail) {
             sendOtpBtn.disabled = false;
-        });
-    });
-    
-    verifyOtpBtn.addEventListener('click', function() {
-        const otpValue = otpInput.value.trim();
-        const emailValue = email.value.trim();
-        
-        if (!otpValue || otpValue.length !== 6) {
-            showValidation(otpInput, 'otpMsg', false, 'Enter 6-digit OTP');
-            return;
+            sendOtpBtn.classList.remove('btn-outline-secondary');
+            sendOtpBtn.classList.add('btn-outline-primary');
+        } else {
+            sendOtpBtn.disabled = true;
+            sendOtpBtn.classList.remove('btn-outline-primary');
+            sendOtpBtn.classList.add('btn-outline-secondary');
         }
-        
-        verifyOtpBtn.disabled = true;
-        verifyOtpBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Verifying...';
-        
-        fetch('{% url "core:admin_verify_otp" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({ email: emailValue, otp: otpValue })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                showValidation(otpInput, 'otpMsg', true, '✓ ' + data.message);
-                emailVerified = true;
-                verifyOtpBtn.innerHTML = '<i class="fas fa-check-circle me-1"></i>Verified';
-                verifyOtpBtn.classList.remove('btn-success');
-                verifyOtpBtn.classList.add('btn-outline-success');
-                otpInput.disabled = true;
-                resendOtpBtn.style.display = 'none';
-                clearInterval(otpTimer);
-                otpTimerDisplay.textContent = '';
-            } else {
-                showValidation(otpInput, 'otpMsg', false, data.message);
-                verifyOtpBtn.disabled = false;
-                verifyOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify';
+    }
+    
+    // Send OTP
+    if (sendOtpBtn && email) {
+        sendOtpBtn.addEventListener('click', function() {
+            const emailValue = email.value.trim();
+            
+            if (!emailValue) {
+                showValidation(email, 'emailMsg', false, 'Enter email first');
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showValidation(otpInput, 'otpMsg', false, 'Verification failed');
-            verifyOtpBtn.disabled = false;
-            verifyOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify';
+            
+            if (clearValidation) clearValidation(email, 'emailMsg');
+            sendOtpBtn.disabled = true;
+            sendOtpBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
+            
+            fetch('{% url "core:admin_send_otp" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ email: emailValue })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showValidation(email, 'emailMsg', true, '✓ ' + data.message);
+                    if (otpSection) otpSection.style.display = 'block';
+                    if (otpInput) {
+                        otpInput.value = '';
+                        otpInput.focus();
+                    }
+                    if (resendOtpBtn) resendOtpBtn.style.display = 'inline-block';
+                    startOtpTimer(600);
+                    sendOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>OTP Sent';
+                } else {
+                    showValidation(email, 'emailMsg', false, data.message);
+                    sendOtpBtn.disabled = false;
+                    sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send OTP';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showValidation(email, 'emailMsg', false, 'Failed to send OTP');
+                sendOtpBtn.disabled = false;
+                sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send OTP';
+            });
         });
-    });
+    }
     
-    resendOtpBtn.addEventListener('click', () => sendOtpBtn.click());
+    // Verify OTP
+    if (verifyOtpBtn && otpInput && email) {
+        verifyOtpBtn.addEventListener('click', function() {
+            const otp = otpInput.value.trim();
+            const emailValue = email.value.trim();
+            
+            if (!otp || otp.length !== 6) {
+                showValidation(otpInput, 'otpMsg', false, 'Enter 6-digit OTP');
+                return;
+            }
+            
+            verifyOtpBtn.disabled = true;
+            verifyOtpBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Verifying...';
+            
+            fetch('{% url "core:admin_verify_otp" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ email: emailValue, otp: otp })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showValidation(otpInput, 'otpMsg', true, '✓ Email verified!');
+                    emailVerified = true;
+                    verifyOtpBtn.disabled = true;
+                    verifyOtpBtn.innerHTML = '<i class="fas fa-check-circle me-1"></i>Verified';
+                    verifyOtpBtn.classList.remove('btn-outline-success');
+                    verifyOtpBtn.classList.add('btn-success');
+                    if (otpInput) otpInput.disabled = true;
+                    if (resendOtpBtn) resendOtpBtn.style.display = 'none';
+                    clearInterval(otpTimer);
+                    if (otpTimerDisplay) {
+                        otpTimerDisplay.textContent = '✓ Email verified!';
+                        otpTimerDisplay.style.color = '#198754';
+                    }
+                    // Hide email change alert after verification
+                    if (emailChangeAlert) emailChangeAlert.classList.remove('show');
+                    updateSendOtpButton();
+                } else {
+                    showValidation(otpInput, 'otpMsg', false, data.message);
+                    verifyOtpBtn.disabled = false;
+                    verifyOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify OTP';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showValidation(otpInput, 'otpMsg', false, 'Verification failed');
+                verifyOtpBtn.disabled = false;
+                verifyOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify OTP';
+            });
+        });
+    }
     
+    // Resend OTP
+    if (resendOtpBtn && sendOtpBtn) {
+        resendOtpBtn.addEventListener('click', () => {
+            if (otpInput) clearValidation(otpInput, 'otpMsg');
+            sendOtpBtn.click();
+        });
+    }
+    
+    // OTP Timer
     function startOtpTimer(seconds) {
+        if (!otpTimerDisplay) return;
+        
         let remaining = seconds;
         clearInterval(otpTimer);
         otpTimer = setInterval(() => {
             const minutes = Math.floor(remaining / 60);
             const secs = remaining % 60;
             otpTimerDisplay.textContent = `⏱ Expires in ${minutes}:${secs.toString().padStart(2, '0')}`;
+            otpTimerDisplay.style.color = remaining <= 60 ? '#dc3545' : '#6c757d';
+            
             if (remaining <= 0) {
                 clearInterval(otpTimer);
                 otpTimerDisplay.textContent = '⚠ OTP expired. Resend.';
+                otpTimerDisplay.style.color = '#dc3545';
             }
             remaining--;
         }, 1000);
     }
     
-    mobile.addEventListener('input', function() {
-        this.value = this.value.replace(/\D/g, '').slice(0, 10);
-    });
-    
-    mobile.addEventListener('blur', function() {
-        if (!this.value) {
-            clearValidation(this, 'mobileMsg');
-        } else if (this.value.length === 10) {
-            showValidation(this, 'mobileMsg', true, '✓ Valid');
-        } else {
-            showValidation(this, 'mobileMsg', false, 'Must be 10 digits');
-        }
-    });
-    
-    password1.addEventListener('input', function() {
-        const value = this.value;
-        const strengthDiv = document.getElementById('passwordStrength');
-        const strengthBar = document.getElementById('strengthBar');
-        const strengthText = document.getElementById('strengthText');
+    // Mobile validation
+    if (mobile) {
+        mobile.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
         
-        if (!value) {
-            strengthDiv.style.display = 'none';
-            clearValidation(this, 'pass1Msg');
-            return;
-        }
-        strengthDiv.style.display = 'block';
-        let strength = 0;
-        if (value.length >= 8) strength += 20;
-        if (value.length >= 12) strength += 10;
-        if (/[a-z]/.test(value)) strength += 20;
-        if (/[A-Z]/.test(value)) strength += 20;
-        if (/\d/.test(value)) strength += 20;
-        if (/[^a-zA-Z\d]/.test(value)) strength += 10;
-        strengthBar.style.width = strength + '%';
-        if (strength < 50) {
-            strengthBar.className = 'progress-bar strength-weak';
-            strengthText.textContent = 'Weak password';
-        } else if (strength < 75) {
-            strengthBar.className = 'progress-bar strength-medium';
-            strengthText.textContent = 'Medium strength';
-        } else {
-            strengthBar.className = 'progress-bar strength-strong';
-            strengthText.textContent = 'Strong password';
-        }
-        if (this.classList.contains('is-invalid') || value.length >= 8) validatePass1();
-        if (password2.value) validatePass2();
-    });
+        mobile.addEventListener('blur', function() {
+            if (!this.value) {
+                clearValidation(this, 'mobileMsg');
+            } else if (this.value.length === 10) {
+                showValidation(this, 'mobileMsg', true, '✓ Valid');
+            } else {
+                showValidation(this, 'mobileMsg', false, 'Must be 10 digits');
+            }
+        });
+    }
     
-    password1.addEventListener('blur', validatePass1);
+    // Password strength
+    if (password1) {
+        password1.addEventListener('input', function() {
+            const value = this.value;
+            const strengthDiv = document.getElementById('passwordStrength');
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+            
+            if (!strengthDiv || !strengthBar || !strengthText) return;
+            
+            if (!value) {
+                strengthDiv.style.display = 'none';
+                clearValidation(this, 'pass1Msg');
+                return;
+            }
+            strengthDiv.style.display = 'block';
+            let strength = 0;
+            if (value.length >= 8) strength += 20;
+            if (value.length >= 12) strength += 10;
+            if (/[a-z]/.test(value)) strength += 20;
+            if (/[A-Z]/.test(value)) strength += 20;
+            if (/\d/.test(value)) strength += 20;
+            if (/[^a-zA-Z\d]/.test(value)) strength += 10;
+            strengthBar.style.width = strength + '%';
+            if (strength < 50) {
+                strengthBar.className = 'progress-bar strength-weak';
+                strengthText.textContent = 'Weak password';
+            } else if (strength < 75) {
+                strengthBar.className = 'progress-bar strength-medium';
+                strengthText.textContent = 'Medium strength';
+            } else {
+                strengthBar.className = 'progress-bar strength-strong';
+                strengthText.textContent = 'Strong password';
+            }
+            if (this.classList.contains('is-invalid') || value.length >= 8) validatePass1();
+            if (password2 && password2.value) validatePass2();
+        });
+        
+        password1.addEventListener('blur', validatePass1);
+    }
     
     function validatePass1() {
+        if (!password1) return false;
         const value = password1.value;
+        
+        // ✅ PASSWORD IS OPTIONAL IN EDIT MODE
         if (!value) {
-            showValidation(password1, 'pass1Msg', false, 'Password is required');
-            return false;
+            clearValidation(password1, 'pass1Msg');
+            return true; // Allow empty password in edit mode
         }
+        
         if (value.length < 8) {
             showValidation(password1, 'pass1Msg', false, 'Min 8 characters');
             return false;
@@ -815,10 +895,25 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
     
-    password2.addEventListener('input', validatePass2);
-    password2.addEventListener('blur', validatePass2);
+    if (password2) {
+        password2.addEventListener('input', validatePass2);
+        password2.addEventListener('blur', validatePass2);
+    }
     
     function validatePass2() {
+        if (!password2) return false;
+        
+        // ✅ If password1 is empty, password2 should also be empty or clear
+        if (!password1 || !password1.value) {
+            if (!password2.value) {
+                clearValidation(password2, 'pass2Msg');
+                return true;
+            } else {
+                showValidation(password2, 'pass2Msg', false, 'First password is empty');
+                return false;
+            }
+        }
+        
         if (!password2.value) {
             clearValidation(password2, 'pass2Msg');
             return false;
@@ -835,6 +930,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
     
+    // Business Category/Subcategory
     if (category && subcategory) {
         category.addEventListener('change', function() {
             const categoryId = this.value;
@@ -845,7 +941,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             subcategory.disabled = true;
             subcategory.innerHTML = '<option value="">Loading...</option>';
-            document.getElementById('subcategoryLoader').style.display = 'block';
+            const loader = document.getElementById('subcategoryLoader');
+            if (loader) loader.style.display = 'block';
             
             fetch(`/auth/ajax/get-subcategories/?category_id=${categoryId}`)
                 .then(res => res.json())
@@ -857,48 +954,72 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     }
                     subcategory.disabled = false;
-                    document.getElementById('subcategoryLoader').style.display = 'none';
+                    if (loader) loader.style.display = 'none';
                 })
                 .catch(() => {
                     subcategory.innerHTML = '<option value="">Error loading</option>';
                     subcategory.disabled = false;
-                    document.getElementById('subcategoryLoader').style.display = 'none';
+                    if (loader) loader.style.display = 'none';
                 });
         });
     }
     
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        let isValid = true;
-        
-        if (!firstName.value.trim()) {
-            showValidation(firstName, 'firstNameMsg', false, 'Required');
-            isValid = false;
-        }
-        if (!lastName.value.trim()) {
-            showValidation(lastName, 'lastNameMsg', false, 'Required');
-            isValid = false;
-        }
-        if (!validateEmail()) isValid = false;
-        if (!skipValidation.checked && !emailVerified) {
-            showValidation(email, 'emailMsg', false, '⚠ Verify email with OTP');
-            isValid = false;
-        }
-        if (mobile.value.length !== 10) {
-            showValidation(mobile, 'mobileMsg', false, '10 digits required');
-            isValid = false;
-        }
-        if (!validatePass1()) isValid = false;
-        if (!validatePass2()) isValid = false;
-        
-        if (!isValid) {
-            form.querySelector('.is-invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
-        }
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
-        form.submit();
-    });
+    // Form Submission
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            console.log('Submitting - Email changed:', emailChanged, 'Skip:', skipValidation ? skipValidation.checked : 'N/A', 'Verified:', emailVerified);
+            
+            let isValid = true;
+            
+            if (firstName && !firstName.value.trim()) {
+                showValidation(firstName, 'firstNameMsg', false, 'Required');
+                isValid = false;
+            }
+            if (lastName && !lastName.value.trim()) {
+                showValidation(lastName, 'lastNameMsg', false, 'Required');
+                isValid = false;
+            }
+            if (!validateEmail()) isValid = false;
+            
+            // ✅ CRITICAL: Email verification check - ONLY if email changed
+            if (skipValidation && email && emailChanged && !skipValidation.checked && !emailVerified) {
+                showValidation(email, 'emailMsg', false, '⚠ New email must be verified with OTP or turn ON "Skip Verification"');
+                isValid = false;
+                console.log('❌ New email not verified!');
+            }
+            
+            if (mobile && mobile.value && mobile.value.length !== 10) {
+                showValidation(mobile, 'mobileMsg', false, '10 digits required');
+                isValid = false;
+            }
+            
+            // ✅ ONLY validate passwords if they are filled
+            if (password1 && password1.value) {
+                if (!validatePass1()) isValid = false;
+                if (!validatePass2()) isValid = false;
+            }
+            
+            if (!isValid) {
+                const firstInvalid = form.querySelector('.is-invalid');
+                if (firstInvalid) {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
+            
+            console.log('✅ Form validated - submitting');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating Customer...';
+            }
+            form.submit();
+        });
+    }
+    
+    // Initialize
+    updateSendOtpButton();
 });
 </script>
 {% endblock %}

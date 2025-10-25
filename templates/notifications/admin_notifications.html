@@ -77,6 +77,49 @@
     .notification-stat-card.danger .notification-stat-number { color: #ef4444; }
     .notification-stat-card.success .notification-stat-number { color: #10b981; }
     
+    /* Custom date range styles */
+    .custom-date-fields {
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+        margin-top: 1rem;
+    }
+    
+    /* Filter tags */
+    .applied-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        align-items: center;
+    }
+    
+    .filter-tag {
+        display: inline-flex;
+        align-items: center;
+        background-color: #f0f7ff;
+        border: 1px solid #d0e3ff;
+        border-radius: 16px;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.8rem;
+        color: #3b82f6;
+    }
+    
+    .filter-tag .filter-remove {
+        margin-left: 0.5rem;
+        color: #3b82f6;
+        font-weight: bold;
+        font-size: 1rem;
+        text-decoration: none;
+        line-height: 1;
+    }
+    
+    .clear-all-filters {
+        color: #ef4444;
+        font-size: 0.8rem;
+        text-decoration: none;
+        margin-left: auto;
+    }
+    
     @media (max-width: 768px) {
         .notification-stat-card {
             padding: 1rem;
@@ -165,16 +208,16 @@
             <button class="btn btn-primary btn-sm" onclick="markAllAsRead()">
                 <i class="fas fa-check-double me-1"></i>Mark All Read
             </button>
-            {% if user|has_permission:'send_notification' %}
+            {% comment %} {% if user|has_permission:'send_notification' %}
             <a href="{% url 'notifications:admin_bulk_send' %}" class="btn btn-success btn-sm">
                 <i class="fas fa-paper-plane me-1"></i>Send Bulk
             </a>
-            {% endif %}
+            {% endif %} {% endcomment %}
         </div>
     </div>
     <div class="admin-card-body">
-        <form method="get" class="row g-3">
-            <div class="col-lg-3 col-md-4">
+        <form method="get" class="row g-3" id="filter-form">
+            <div class="col-md-3">
                 <label class="form-label">Type</label>
                 <select name="type" class="form-select" onchange="this.form.submit()">
                     <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All Types</option>
@@ -186,7 +229,7 @@
                 </select>
             </div>
             
-            <div class="col-lg-3 col-md-4">
+            <div class="col-md-3">
                 <label class="form-label">Status</label>
                 <select name="status" class="form-select" onchange="this.form.submit()">
                     <option value="all" {% if filter_status == 'all' %}selected{% endif %}>All Status</option>
@@ -195,20 +238,88 @@
                 </select>
             </div>
             
-            <div class="col-lg-4 col-md-4">
-                <label class="form-label">Search</label>
-                <input type="text" name="search" class="form-control" 
-                       placeholder="Search notifications..." 
-                       value="{{ search }}">
+            <!-- New Date Filter -->
+            <div class="col-md-3">
+                <label class="form-label">Time Period</label>
+                <select name="date_filter" id="date_filter" class="form-select" onchange="toggleCustomDateFields()">
+                    <option value="all" {% if filter_date == 'all' %}selected{% endif %}>All Time</option>
+                    <option value="today" {% if filter_date == 'today' %}selected{% endif %}>Today</option>
+                    <option value="yesterday" {% if filter_date == 'yesterday' %}selected{% endif %}>Yesterday</option>
+                    <option value="week" {% if filter_date == 'week' %}selected{% endif %}>Last 7 Days</option>
+                    <option value="month" {% if filter_date == 'month' %}selected{% endif %}>Last 30 Days</option>
+                    <option value="custom" {% if filter_date == 'custom' %}selected{% endif %}>Custom Range</option>
+                </select>
             </div>
             
-            <div class="col-lg-2 col-md-12">
-                <label class="form-label d-none d-lg-block">&nbsp;</label>
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="fas fa-search me-1"></i>Search
-                </button>
+            <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Search notifications..." 
+                           value="{{ search }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Custom Date Fields (Hidden by default) -->
+            <div class="custom-date-fields col-12 row g-3 m-0" id="customDateFields" {% if filter_date != 'custom' %}style="display:none;"{% endif %}>
+                <div class="col-md-5">
+                    <label class="form-label">From</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date }}">
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">To</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">Apply</button>
+                </div>
             </div>
         </form>
+
+        <!-- Active filters display -->
+        {% if filter_type != 'all' or filter_status != 'all' or filter_date != 'all' or search %}
+        <div class="applied-filters mt-3 pt-3 border-top">
+            <span class="text-muted me-2">Active Filters:</span>
+            {% if filter_type != 'all' %}
+            <span class="filter-tag">
+                Type: {% for type_code, type_label in notification_types %}{% if filter_type == type_code %}{{ type_label }}{% endif %}{% endfor %}
+                <a href="?{% if filter_status != 'all' %}status={{ filter_status }}{% endif %}{% if filter_date != 'all' %}&date_filter={{ filter_date }}{% if filter_date == 'custom' %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}{% endif %}{% if search %}&search={{ search }}{% endif %}" class="filter-remove">&times;</a>
+            </span>
+            {% endif %}
+            
+            {% if filter_status != 'all' %}
+            <span class="filter-tag">
+                Status: {{ filter_status|title }}
+                <a href="?{% if filter_type != 'all' %}type={{ filter_type }}{% endif %}{% if filter_date != 'all' %}&date_filter={{ filter_date }}{% if filter_date == 'custom' %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}{% endif %}{% if search %}&search={{ search }}{% endif %}" class="filter-remove">&times;</a>
+            </span>
+            {% endif %}
+            
+            {% if filter_date != 'all' %}
+            <span class="filter-tag">
+                Date: {% if filter_date == 'today' %}Today
+                      {% elif filter_date == 'yesterday' %}Yesterday
+                      {% elif filter_date == 'week' %}Last 7 Days
+                      {% elif filter_date == 'month' %}Last 30 Days
+                      {% elif filter_date == 'custom' %}Custom Range
+                      {% endif %}
+                <a href="?{% if filter_type != 'all' %}type={{ filter_type }}{% endif %}{% if filter_status != 'all' %}&status={{ filter_status }}{% endif %}{% if search %}&search={{ search }}{% endif %}" class="filter-remove">&times;</a>
+            </span>
+            {% endif %}
+            
+            {% if search %}
+            <span class="filter-tag">
+                Search: "{{ search }}"
+                <a href="?{% if filter_type != 'all' %}type={{ filter_type }}{% endif %}{% if filter_status != 'all' %}&status={{ filter_status }}{% endif %}{% if filter_date != 'all' %}&date_filter={{ filter_date }}{% if filter_date == 'custom' %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}{% endif %}" class="filter-remove">&times;</a>
+            </span>
+            {% endif %}
+            
+            <a href="{% url 'notifications:admin_notification_center' %}" class="clear-all-filters">Clear All Filters</a>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -216,40 +327,31 @@
 <div class="admin-card">
     <div class="admin-card-header">
         <h2 class="admin-card-title">
-            <i class="fas fa-list"></i>
+            <i class="fas fa-bell"></i>
             Notifications
         </h2>
-        {% if notifications %}
-        <span class="badge bg-primary">
-            {{ notifications|length }} of {{ total_count }}
-        </span>
-        {% endif %}
     </div>
     <div class="admin-card-body p-0">
         {% if notifications %}
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+            <table class="table table-hover align-middle">
+                <thead>
                     <tr>
-                        <th width="50" class="text-center">Status</th>
+                        <th width="50" class="text-center">#</th>
                         <th>Notification</th>
                         <th width="150">Type</th>
-                        <th width="180">Date</th>
+                        <th width="150">Date</th>
                         <th width="100" class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for notif in notifications %}
-                    <tr class="{% if not notif.is_read %}table-info{% endif %}">
-                        <td class="text-center align-middle">
+                    <tr class="{% if not notif.is_read %}table-light{% endif %}">
+                        <td class="text-center">
                             {% if not notif.is_read %}
-                            <span class="badge bg-danger rounded-pill">
-                                <i class="fas fa-circle" style="font-size: 6px;"></i>
-                            </span>
+                            <span class="badge rounded-pill bg-danger">&nbsp;</span>
                             {% else %}
-                            <span class="text-success">
-                                <i class="fas fa-check-circle"></i>
-                            </span>
+                            <span class="text-muted">{{ forloop.counter }}</span>
                             {% endif %}
                         </td>
                         <td class="align-middle">
@@ -297,7 +399,7 @@
                 <ul class="pagination mb-0 justify-content-center">
                     {% if notifications.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ notifications.previous_page_number }}&type={{ filter_type }}&status={{ filter_status }}&search={{ search }}">
+                        <a class="page-link" href="?page={{ notifications.previous_page_number }}&type={{ filter_type }}&status={{ filter_status }}{% if filter_date != 'all' %}&date_filter={{ filter_date }}{% if filter_date == 'custom' %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}{% endif %}{% if search %}&search={{ search }}{% endif %}">
                             <i class="fas fa-chevron-left me-1"></i>Previous
                         </a>
                     </li>
@@ -310,7 +412,7 @@
                             </li>
                         {% elif num > notifications.number|add:'-3' and num < notifications.number|add:'3' %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ num }}&type={{ filter_type }}&status={{ filter_status }}&search={{ search }}">
+                                <a class="page-link" href="?page={{ num }}&type={{ filter_type }}&status={{ filter_status }}{% if filter_date != 'all' %}&date_filter={{ filter_date }}{% if filter_date == 'custom' %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}{% endif %}{% if search %}&search={{ search }}{% endif %}">
                                     {{ num }}
                                 </a>
                             </li>
@@ -319,7 +421,7 @@
                     
                     {% if notifications.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ notifications.next_page_number }}&type={{ filter_type }}&status={{ filter_status }}&search={{ search }}">
+                        <a class="page-link" href="?page={{ notifications.next_page_number }}&type={{ filter_type }}&status={{ filter_status }}{% if filter_date != 'all' %}&date_filter={{ filter_date }}{% if filter_date == 'custom' %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}{% endif %}{% if search %}&search={{ search }}{% endif %}">
                             Next<i class="fas fa-chevron-right ms-1"></i>
                         </a>
                     </li>
@@ -336,7 +438,7 @@
             </div>
             <h5 class="text-muted">No notifications found</h5>
             <p class="text-muted mb-0">
-                {% if filter_type != 'all' or filter_status != 'all' or search %}
+                {% if filter_type != 'all' or filter_status != 'all' or filter_date != 'all' or search %}
                     Try adjusting your filters or search terms.
                 {% else %}
                     You don't have any notifications yet.
@@ -399,7 +501,7 @@ function markAsRead(notificationId) {
 function markAllAsRead() {
     if (!confirm('Mark all notifications as read?')) return;
     
-    const btn = event.target;
+    const btn = event.target.closest('button');
     const originalHtml = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
     btn.disabled = true;
@@ -460,6 +562,20 @@ function deleteNotification(notificationId) {
         btn.innerHTML = originalHtml;
         btn.disabled = false;
     });
+}
+
+// Toggle custom date fields based on selected date filter
+function toggleCustomDateFields() {
+    const dateFilter = document.getElementById('date_filter');
+    const customDateFields = document.getElementById('customDateFields');
+    
+    if (dateFilter.value === 'custom') {
+        customDateFields.style.display = 'flex';
+    } else {
+        customDateFields.style.display = 'none';
+        // If not on custom date range, submit the form to apply the new filter immediately
+        document.getElementById('filter-form').submit();
+    }
 }
 </script>
 {% endblock %}

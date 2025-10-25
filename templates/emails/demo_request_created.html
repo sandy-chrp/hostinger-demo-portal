@@ -1,0 +1,48 @@
+{% extends "emails/base.html" %}
+
+{% block email_title %}Demo Request Received{% endblock %}
+
+{% block email_content %}
+<div class="email-greeting">
+    Hi {{ user.first_name }}!
+</div>
+
+<div class="email-content">
+    <p>Thank you for your interest! Your demo request has been <strong>successfully received</strong>.</p>
+    
+    <div class="notification-card">
+        <h3>✓ Request Received</h3>
+        <p>We have received your demo request and our team is currently reviewing it.</p>
+    </div>
+    
+    <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p style="margin: 0; color: #0369a1;">
+            <strong>Demo:</strong> {{ demo.title }}<br>
+            <strong>Status:</strong> <span style="color: #f59e0b;">Pending Review</span><br>
+            <strong>Requested Date:</strong> {{ requested_date|date:"F d, Y" }}<br>
+            <strong>Requested Time:</strong> {{ time_slot }}
+            {% if demo_request.business_category %}<br>
+            <strong>Business Category:</strong> {{ demo_request.business_category.name }}{% endif %}
+            {% if demo_request.business_subcategory %}<br>
+            <strong>Business Subcategory:</strong> {{ demo_request.business_subcategory.name }}{% endif %}
+        </p>
+    </div>
+    
+    <div style="background: #eff6ff; padding: 15px; border-left: 4px solid #3b82f6; border-radius: 4px; margin: 20px 0;">
+        <p style="margin: 0; color: #1e40af; font-size: 14px;">
+            <strong>📌 What's Next?</strong><br>
+            • Our team will review your request within 24 hours<br>
+            • You'll receive a confirmation email once your demo is scheduled<br>
+            • We may contact you if we need additional information
+        </p>
+    </div>
+    
+    <div style="text-align: center; margin: 30px 0;">
+        <a href="{{ site_url }}/customer/demo-requests/" class="email-button">
+            View Request Details
+        </a>
+    </div>
+    
+    <p>We're excited to showcase our solution to you!</p>
+</div>
+{% endblock %}

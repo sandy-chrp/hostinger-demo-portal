@@ -15,11 +15,12 @@ import pytz
 from accounts.decorators import permission_required
 
 # App imports
-from accounts.models import BusinessCategory, BusinessSubCategory, CustomUser
+from accounts.models import BusinessCategory, BusinessSubCategory, CustomUser, Role
 from demos.models import Demo, DemoRequest, TimeSlot
 from enquiries.models import BusinessEnquiry
 from notifications.models import Notification, NotificationTemplate
 from django.contrib.contenttypes.models import ContentType
+from django.views.decorators.http import require_GET, require_POST
 
 
 def is_admin(user):
@@ -56,6 +57,7 @@ def get_filtered_demos_for_business(business_category=None, business_subcategory
 # ================================================================================
 # ADMIN DEMO REQUESTS LIST & MANAGEMENT
 # ================================================================================
+
 @login_required
 @permission_required('view_demo_requests')
 def admin_demo_requests_list_view(request):
@@ -64,19 +66,23 @@ def admin_demo_requests_list_view(request):
     from django.db.models import Q
     from django.core.paginator import Paginator
     from datetime import datetime, timedelta
+    from accounts.models import CustomUser, Role
     
     # Get filter parameters
     search = request.GET.get('search', '')
     status_filter = request.GET.get('status', '')
-    demo_filter = request.GET.get('demo', '')
+    assigned_to_filter = request.GET.get('assigned_to', '')  # New: assigned_to filter
     time_range = request.GET.get('time_range', '')
     date_filter = request.GET.get('date', '')
     
-    # Base query - ✅ REMOVED business_category
+    # Custom date range parameters
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    
+    # Base query
     demo_requests = DemoRequest.objects.select_related(
         'user',
         'demo',
-        # ❌ REMOVE THIS LINE: 'demo__business_category',
         'requested_time_slot',
         'assigned_to',
         'assigned_by'
@@ -95,8 +101,17 @@ def admin_demo_requests_list_view(request):
     if status_filter:
         demo_requests = demo_requests.filter(status=status_filter)
     
-    if demo_filter:
-        demo_requests = demo_requests.filter(demo_id=demo_filter)
+    # New: Apply assigned_to filter
+    if assigned_to_filter:
+        if assigned_to_filter == 'unassigned':
+            demo_requests = demo_requests.filter(assigned_to__isnull=True)
+        elif assigned_to_filter == 'me':
+            demo_requests = demo_requests.filter(assigned_to=request.user)
+        else:
+            try:
+                demo_requests = demo_requests.filter(assigned_to_id=int(assigned_to_filter))
+            except ValueError:
+                pass
     
     if date_filter:
         try:
@@ -105,7 +120,18 @@ def admin_demo_requests_list_view(request):
         except ValueError:
             pass
     
-    if time_range:
+    # Handle custom date range
+    if time_range == 'custom_range' and (date_from or date_to):
+        try:
+            if date_from:
+                from_date = datetime.strptime(date_from, '%Y-%m-%d').date()
+                demo_requests = demo_requests.filter(requested_date__gte=from_date)
+            if date_to:
+                to_date = datetime.strptime(date_to, '%Y-%m-%d').date()
+                demo_requests = demo_requests.filter(requested_date__lte=to_date)
+        except ValueError:
+            pass
+    elif time_range:
         today = datetime.now().date()
         
         if time_range == 'today':
@@ -133,8 +159,11 @@ def admin_demo_requests_list_view(request):
                 requested_date__lte=month_end
             )
     
-    # Pagination
-    paginator = Paginator(demo_requests, 20)
+    # Count total results before pagination
+    total_results = demo_requests.count()
+    
+    # Pagination - Changed to 10 items per page
+    paginator = Paginator(demo_requests, 10)  # Changed from 20 to 10
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
@@ -147,22 +176,30 @@ def admin_demo_requests_list_view(request):
         'cancelled': DemoRequest.objects.filter(status='cancelled').count(),
     }
     
-    # Get all demos for filter
-    demos = Demo.objects.filter(is_active=True).order_by('title')
+    # Get sales managers and assigned employees for the filter dropdown
+    sales_employees = CustomUser.objects.filter(
+        Q(role__name__icontains='sales') |  # Sales managers
+        Q(id__in=DemoRequest.objects.values_list('assigned_to', flat=True).distinct())  # Already assigned employees
+    ).filter(is_active=True).distinct().order_by('first_name')
     
     context = {
         'requests': page_obj,
         'demo_requests': page_obj,
+        'paginator': paginator,  # Add paginator to context
+        'total_results': total_results,  # Add total results to context
         'stats': stats,
-        'demos': demos,
+        'sales_employees': sales_employees,  # New: Add sales employees to context
         'search': search,
         'status_filter': status_filter,
-        'demo_filter': demo_filter,
+        'assigned_to_filter': assigned_to_filter,  # New: Add assigned_to filter to context
         'time_range': time_range,
         'date_filter': date_filter,
+        'date_from': date_from,  # Add date_from to context
+        'date_to': date_to,      # Add date_to to context
     }
     
     return render(request, 'admin/demo_requests/list.html', context)
+
 # ================================================================================
 # CREATE DEMO REQUEST
 # ================================================================================
@@ -388,11 +425,155 @@ def admin_create_demo_request_view(request):
     
     return render(request, 'admin/demo_requests/create.html', context)
 
+@login_required
+@require_GET
+def available_time_slots_api(request):
+    """API endpoint to get available time slots for a given date"""
+    
+    try:  # ✅ Wrap everything in try-catch to prevent 500 errors
+        date_str = request.GET.get('date')
+        
+        if not date_str:
+            return JsonResponse({
+                'success': False,
+                'error': 'Date parameter is required'
+            }, status=400)
+        
+        try:
+            # Parse date from string
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+            
+            # Check if date is not in the past
+            if date_obj < timezone.now().date():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Cannot schedule for a past date'
+                }, status=400)
+            
+            # Check if date is not a Sunday (assuming Sunday is off)
+            if date_obj.weekday() == 6:  # Sunday
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Cannot schedule for a Sunday'
+                }, status=400)
+        except ValueError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid date format'
+            }, status=400)
+        
+        # ✅ Get all time slots with error handling
+        time_slots = TimeSlot.objects.filter(is_active=True).order_by('start_time')
+        
+        # If date is today, filter out past time slots
+        if date_obj == timezone.now().date():
+            current_time = timezone.now().time()
+            time_slots = time_slots.filter(start_time__gt=current_time)
+        
+        # ✅ Check if any time slots are already booked for this date
+        booked_slots = DemoRequest.objects.filter(
+            requested_date=date_obj, 
+            status__in=['pending', 'confirmed']
+        ).values_list('requested_time_slot_id', flat=True)
+        
+        # ✅ Filter out booked slots and build response
+        available_slots = []
+        for slot in time_slots:
+            if slot.id not in booked_slots:
+                try:
+                    # ✅ Safely get display time
+                    display_time = slot.get_display_time() if hasattr(slot, 'get_display_time') else f"{slot.start_time.strftime('%H:%M')} - {slot.end_time.strftime('%H:%M')}"
+                    
+                    available_slots.append({
+                        'id': slot.id,
+                        'display_time': display_time,
+                        'start_time': slot.start_time.strftime('%H:%M'),
+                        'end_time': slot.end_time.strftime('%H:%M'),
+                    })
+                except Exception as e:
+                    # ✅ Skip slots that cause errors
+                    print(f"Error processing slot {slot.id}: {e}")
+                    continue
+        
+        return JsonResponse({
+            'success': True,
+            'slots': available_slots,
+            'date': date_str
+        }, status=200)
+    
+    except Exception as e:
+        # ✅ Catch all errors and return proper JSON error
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"❌ ERROR in available_time_slots_api: {e}")
+        print(error_details)
+        
+        return JsonResponse({
+            'success': False,
+            'error': f'Server error: {str(e)}'
+        }, status=500)
 
+
+@login_required
+@require_GET
+def available_employees_api(request):
+       """API endpoint to get available employees for a given date and time slot"""
+       date_str = request.GET.get('date')
+       time_slot_id = request.GET.get('time_slot_id')
+       
+       if not date_str or not time_slot_id:
+           return JsonResponse({
+               'success': False,
+               'error': 'Date and time slot parameters are required'
+           })
+       
+       try:
+           date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+           time_slot = TimeSlot.objects.get(id=time_slot_id)
+       except (ValueError, TimeSlot.DoesNotExist):
+           return JsonResponse({
+               'success': False,
+               'error': 'Invalid date or time slot'
+           })
+       
+       # Get all employees (adjust query as per your requirements)
+       employees = CustomUser.objects.filter(
+           is_staff=True,
+           is_active=True,
+           role__name__icontains='sales'
+       )
+       
+       # Check for conflicts
+       busy_employees = DemoRequest.objects.filter(
+           requested_date=date_obj,
+           requested_time_slot=time_slot,
+           status__in=['pending', 'confirmed'],
+       ).values_list('assigned_to_id', flat=True)
+       
+       # Filter out busy employees
+       available_employees = []
+       for emp in employees:
+           if emp.id not in busy_employees:
+               # Count current demos assigned
+               demo_count = DemoRequest.objects.filter(
+                   assigned_to=emp,
+                   status__in=['pending', 'confirmed']
+               ).count()
+               
+               available_employees.append({
+                   'id': emp.id,
+                   'name': emp.get_full_name(),
+                   'email': emp.email,
+                   'current_demos': demo_count
+               })
+       
+       return JsonResponse({
+           'success': True,
+           'employees': available_employees
+       })
 # ================================================================================
 # AJAX - GET FILTERED DEMOS
 # ================================================================================
-
 @login_required
 @user_passes_test(is_admin)
 @require_http_methods(["GET"])
@@ -786,56 +967,93 @@ def admin_delete_demo_request_view(request, request_id):
 @login_required
 @permission_required('view_demo_requests')
 def admin_demo_request_detail_view(request, request_id):
-    """
-    Admin demo request detail page
-    Shows full details of a demo request including assignment info
-    """
+    """Admin demo request detail view"""
     from demos.models import DemoRequest
+    from django.utils import timezone
+    from django.shortcuts import get_object_or_404, render
+    from django.http import JsonResponse
     
-    print(f"\n{'='*50}")
-    print(f"Detail View Called - Request ID: {request_id}")
-    print(f"User: {request.user.email}")
-    print(f"{'='*50}\n")
-    
-    # Get demo request with related data
+    # Get demo request with all related objects
+    # Remove the fields that don't exist in the model: 'completed_by', 'cancelled_by', 'confirmed_by'
     demo_request = get_object_or_404(
         DemoRequest.objects.select_related(
             'user',
+            'user__business_category',
+            'user__business_subcategory',
             'demo',
+            'business_category',
+            'business_subcategory',
             'requested_time_slot',
+            'confirmed_time_slot',
             'assigned_to',
-            'assigned_by'
+            'assigned_by',
+            'handled_by'  # Keep this if it exists in your model
         ),
         id=request_id
     )
     
-    print(f"Found: {demo_request}")
-    print(f"Status: {demo_request.status}")
-    print(f"Assigned to: {demo_request.assigned_to}")
+    # Calculate workload stats
+    workload_stats = {
+        'pending': 0,
+        'confirmed': 0, 
+        'completed': 0
+    }
     
-    # Calculate workload stats for assigned employee
-    workload_stats = None
     if demo_request.assigned_to:
-        employee = demo_request.assigned_to
         workload_stats = {
-            'pending': employee.assigned_demo_requests.filter(status='pending').count(),
-            'confirmed': employee.assigned_demo_requests.filter(status='confirmed').count(),
-            'completed': employee.assigned_demo_requests.filter(status='completed').count(),
-            'total': employee.assigned_demo_requests.filter(
-                status__in=['pending', 'confirmed', 'completed']
+            'pending': DemoRequest.objects.filter(
+                assigned_to=demo_request.assigned_to, 
+                status='pending'
+            ).count(),
+            'confirmed': DemoRequest.objects.filter(
+                assigned_to=demo_request.assigned_to, 
+                status='confirmed'
+            ).count(),
+            'completed': DemoRequest.objects.filter(
+                assigned_to=demo_request.assigned_to, 
+                status='completed'
             ).count(),
         }
-        print(f"Workload: {workload_stats}")
+    
+    # Current date for form validation
+    current_date = timezone.now().date()
     
     context = {
         'demo_request': demo_request,
         'workload_stats': workload_stats,
+        'current_date': current_date,
     }
     
-    print(f"Rendering template with context keys: {list(context.keys())}")
-    print(f"{'='*50}\n")
-    
     return render(request, 'admin/demo_requests/detail.html', context)
+
+
+@login_required
+@permission_required('approve_demo_request')
+def update_admin_notes(request, request_id):
+    """Update admin notes for a demo request"""
+    from demos.models import DemoRequest
+    from django.http import JsonResponse
+    from django.shortcuts import get_object_or_404
+    import json
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
+    # Get request body
+    try:
+        data = json.loads(request.body)
+        admin_notes = data.get('admin_notes', '')
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    
+    # Get the demo request
+    demo_request = get_object_or_404(DemoRequest, id=request_id)
+    
+    # Update admin notes
+    demo_request.admin_notes = admin_notes
+    demo_request.save()
+    
+    return JsonResponse({'success': True})
 
 # ================================================================================
 # CONFIRM/RESCHEDULE/CANCEL DEMO REQUEST - WITH ENHANCED VALIDATION
@@ -1490,160 +1708,130 @@ def ajax_admin_check_slot_availability(request):
 @login_required
 @permission_required('manage_demo_requests')
 def assign_demo_request(request, request_id):
-    """
-    Assign demo request to an employee
-    ✅ FIXED: Always returns JSON for AJAX requests
-    """
+    """Assign or reassign a demo request to an employee"""
+    from demos.models import DemoRequest
+    from accounts.models import CustomUser
+    from django.utils import timezone
+    import json
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
+    # Get the demo request
     demo_request = get_object_or_404(DemoRequest, id=request_id)
     
-    # Check if this is an AJAX request
-    is_ajax = (
-        request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 
-        request.content_type == 'application/json'
-    )
+    # Prevent assigning completed or cancelled requests
+    if demo_request.status in ['completed', 'cancelled']:
+        return JsonResponse({
+            'success': False, 
+            'error': f'Cannot assign {demo_request.get_status_display()} requests'
+        })
     
-    if request.method == 'POST':
-        try:
-            employee_id = request.POST.get('employee_id')
-            
-            print(f"\n{'='*60}")
-            print(f"🔄 ASSIGN DEMO REQUEST")
-            print(f"{'='*60}")
-            print(f"Request ID: {request_id}")
-            print(f"Employee ID: {employee_id}")
-            print(f"User: {request.user.email}")
-            print(f"Is AJAX: {is_ajax}")
-            
-            if not employee_id:
-                print(f"❌ No employee selected")
-                
-                if is_ajax:
-                    return JsonResponse({
-                        'success': False,
-                        'error': 'Please select an employee'
-                    })
-                
-                messages.error(request, '❌ Please select an employee')
-                return redirect('core:admin_demo_request_detail', request_id=request_id)
-            
-            try:
-                employee = CustomUser.objects.get(id=employee_id, is_staff=True, is_active=True)
-                print(f"✓ Found employee: {employee.get_full_name()}")
-                
-                # Check for conflicts
-                has_conflict, conflicting_demo = demo_request.has_conflict_with_employee(employee)
-                
-                if has_conflict:
-                    error_msg = (
-                        f'⚠️ {employee.get_full_name()} already has a demo scheduled at this time. '
-                        f'Please choose a different employee or time slot.'
-                    )
-                    print(f"❌ Conflict detected: {conflicting_demo}")
-                    
-                    if is_ajax:
-                        return JsonResponse({
-                            'success': False,
-                            'error': error_msg
-                        })
-                    
-                    messages.warning(request, error_msg)
-                    return redirect('core:admin_demo_request_detail', request_id=request_id)
-                
-                # ✅ Assign the demo
-                demo_request.assigned_to = employee
-                demo_request.assigned_at = timezone.now()
-                demo_request.assigned_by = request.user
-                demo_request.save()
-                
-                print(f"✅ Demo assigned successfully")
-                
-                # ✅ Send notification to employee
-                try:
-                    from notifications.services import NotificationService
-                    
-                    print(f"📧 Sending notification to employee...")
-                    notification = NotificationService.notify_employee_demo_assigned(
-                        demo_request=demo_request,
-                        employee=employee,
-                        send_email=True
-                    )
-                    
-                    if notification:
-                        print(f"✅ Notification sent successfully to {employee.email}")
-                        print(f"   - Notification ID: {notification.id}")
-                    else:
-                        print(f"⚠️ Notification function returned None")
-                        
-                except Exception as e:
-                    print(f"⚠️ Notification error (non-critical): {e}")
-                    # Don't fail the assignment if notification fails
-                
-                success_msg = f'✅ Demo successfully assigned to {employee.get_full_name()}'
-                
-                if is_ajax:
-                    print(f"✓ Returning JSON response")
-                    return JsonResponse({
-                        'success': True,
-                        'message': success_msg,
-                        'employee_name': employee.get_full_name(),
-                        'employee_id': employee.id
-                    })
-                
-                messages.success(request, success_msg)
-                return redirect('core:admin_demo_request_detail', request_id=request_id)
-                
-            except CustomUser.DoesNotExist:
-                error_msg = '❌ Selected employee not found'
-                print(f"❌ Employee not found: {employee_id}")
-                
-                if is_ajax:
-                    return JsonResponse({
-                        'success': False,
-                        'error': error_msg
-                    })
-                
-                messages.error(request, error_msg)
-                return redirect('core:admin_demo_request_detail', request_id=request_id)
-        
-        except Exception as e:
-            error_msg = f'❌ Error assigning demo: {str(e)}'
-            print(f"❌ Unexpected error: {e}")
-            import traceback
-            traceback.print_exc()
-            
-            if is_ajax:
-                return JsonResponse({
-                    'success': False,
-                    'error': error_msg
-                }, status=500)
-            
-            messages.error(request, error_msg)
-            return redirect('core:admin_demo_request_detail', request_id=request_id)
+    # Get employee ID from form data
+    employee_id = request.POST.get('employee_id')
+    if not employee_id:
+        return JsonResponse({'success': False, 'error': 'Employee ID is required'})
     
-    # GET request - redirect to detail page
-    return redirect('core:admin_demo_request_detail', request_id=request_id)
+    # Validate employee exists and is active
+    try:
+        employee = CustomUser.objects.get(id=employee_id, is_staff=True, is_active=True)
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Invalid employee'})
+    
+    # Check if employee has time slot conflict
+    has_conflict, conflict_demo = demo_request.has_conflict_with_employee(employee)
+    if has_conflict:
+        return JsonResponse({
+            'success': False, 
+            'error': f'Employee has a scheduling conflict with another demo at the same time'
+        })
+    
+    # Get optional fields
+    assignment_notes = request.POST.get('assignment_notes', '')
+    send_notification = request.POST.get('send_notification') == 'on'
+    
+    # If this is a reassignment, store the previous employee for notification
+    previous_employee = demo_request.assigned_to
+    
+    # Update the demo request
+    demo_request.assigned_to = employee
+    demo_request.assigned_at = timezone.now()
+    demo_request.assigned_by = request.user
+    
+    # Add assignment notes if provided
+    if assignment_notes:
+        if demo_request.admin_notes:
+            demo_request.admin_notes += f"\n\n[{timezone.now().strftime('%Y-%m-%d %H:%M')}] Assignment Note: {assignment_notes}"
+        else:
+            demo_request.admin_notes = f"[{timezone.now().strftime('%Y-%m-%d %H:%M')}] Assignment Note: {assignment_notes}"
+    
+    # Save the changes
+    demo_request.save()
+    
+    # Send notification to new employee if requested
+    if send_notification:
+        # This would be implemented in your notification system
+        # For example:
+        # send_email_notification(employee, 'new_demo_assignment', {'demo_request': demo_request})
+        pass
+    
+    # Send notification to previous employee if this was a reassignment
+    if previous_employee and previous_employee != employee:
+        # This would be implemented in your notification system
+        # For example:
+        # send_email_notification(previous_employee, 'demo_reassigned', {'demo_request': demo_request, 'new_employee': employee})
+        pass
+    
+    return JsonResponse({'success': True})
+
 
 @login_required
 @permission_required('manage_demo_requests')
 def unassign_demo_request(request, request_id):
-    """
-    Remove assignment from demo request
-    """
+    """Unassign a demo request from an employee"""
+    from demos.models import DemoRequest
+    from django.utils import timezone
+    import json
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
+    # Get the demo request
     demo_request = get_object_or_404(DemoRequest, id=request_id)
     
-    if demo_request.assigned_to:
-        old_employee = demo_request.assigned_to
-        demo_request.assigned_to = None
-        demo_request.assigned_at = None
-        demo_request.save()
-        
-        messages.success(
-            request,
-            f'✅ Demo unassigned from {old_employee.get_full_name()}'
-        )
+    # Prevent unassigning completed or cancelled requests
+    if demo_request.status in ['completed', 'cancelled']:
+        return JsonResponse({
+            'success': False, 
+            'error': f'Cannot unassign {demo_request.get_status_display()} requests'
+        })
     
-    return redirect('core:admin_demo_request_detail', request_id=request_id)
-
+    # Store the current employee for notification
+    previous_employee = demo_request.assigned_to
+    
+    if not previous_employee:
+        return JsonResponse({
+            'success': False, 
+            'error': 'This demo request is not currently assigned'
+        })
+    
+    # Update admin notes
+    if demo_request.admin_notes:
+        demo_request.admin_notes += f"\n\n[{timezone.now().strftime('%Y-%m-%d %H:%M')}] Unassigned by {request.user.get_full_name()}"
+    else:
+        demo_request.admin_notes = f"[{timezone.now().strftime('%Y-%m-%d %H:%M')}] Unassigned by {request.user.get_full_name()}"
+    
+    # Unassign the demo request
+    demo_request.assigned_to = None
+    demo_request.assigned_at = None
+    demo_request.save()
+    
+    # Send notification to previous employee
+    # This would be implemented in your notification system
+    # For example:
+    # send_email_notification(previous_employee, 'demo_unassigned', {'demo_request': demo_request})
+    
+    return JsonResponse({'success': True})
 
 @login_required
 @permission_required('manage_demo_requests')
@@ -2018,3 +2206,266 @@ def employee_demo_request_detail(request, request_id):
     
     # ✅ Use admin template with employee flag
     return render(request, 'admin/demo_requests/detail.html', context)
+
+
+@login_required
+@permission_required('manage_demo_requests')
+@require_http_methods(['POST'])
+def reschedule_demo_request(request, request_id):
+    """
+    Reschedule a demo request to a new date and time
+    Used by: details.html → handleReschedule() → POST /admin/demo-requests/{id}/reschedule/
+    """
+    try:
+        demo_request = get_object_or_404(DemoRequest, id=request_id)
+        
+        # Get form data
+        reschedule_date_str = request.POST.get('reschedule_date')
+        reschedule_time_slot_id = request.POST.get('reschedule_time_slot')
+        reschedule_reason = request.POST.get('reschedule_reason', '')
+        notify_customer = request.POST.get('notify_customer') == 'on'
+        
+        # Validate inputs
+        if not reschedule_date_str or not reschedule_time_slot_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'Date and time slot are required'
+            })
+        
+        # Parse date
+        from datetime import datetime
+        try:
+            reschedule_date = datetime.strptime(reschedule_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid date format'
+            })
+        
+        # Check if date is not in the past
+        if reschedule_date < timezone.now().date():
+            return JsonResponse({
+                'success': False,
+                'error': 'Cannot reschedule to a past date'
+            })
+        
+        # Get time slot
+        try:
+            time_slot = TimeSlot.objects.get(id=reschedule_time_slot_id)
+        except TimeSlot.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid time slot'
+            })
+        
+        # Check if assigned employee is available on new date/time (if assigned)
+        if demo_request.assigned_to:
+            # Check for conflicts
+            conflicting_demos = DemoRequest.objects.filter(
+                assigned_to=demo_request.assigned_to,
+                requested_date=reschedule_date,
+                requested_time_slot=time_slot,
+                status__in=['pending', 'confirmed']
+            ).exclude(id=demo_request.id)
+            
+            if conflicting_demos.exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Assigned employee {demo_request.assigned_to.get_full_name()} is not available at this time'
+                })
+        
+        # Update demo request
+        old_date = demo_request.requested_date
+        old_time = str(demo_request.requested_time_slot)  # Fixed: use str() instead of get_display_time()
+        
+        demo_request.requested_date = reschedule_date
+        demo_request.requested_time_slot = time_slot
+        
+        # If confirmed, also update confirmed date/time
+        if demo_request.status == 'confirmed':
+            demo_request.confirmed_date = reschedule_date
+            demo_request.confirmed_time_slot = time_slot
+        
+        demo_request.save()
+        
+        # Send notification to customer if requested
+        if notify_customer:
+            try:
+                # Send email to customer
+                send_mail(
+                    subject=f'Demo Rescheduled - {demo_request.demo.title}',
+                    message=f'''
+Dear {demo_request.user.get_full_name()},
+
+Your demo for "{demo_request.demo.title}" has been rescheduled.
+
+Previous Schedule:
+Date: {old_date.strftime('%B %d, %Y')}
+Time: {old_time}
+
+New Schedule:
+Date: {reschedule_date.strftime('%B %d, %Y')}
+Time: {str(time_slot)}  # Fixed: use str() instead of get_display_time()
+
+Reason: {reschedule_reason if reschedule_reason else 'Not specified'}
+
+If you have any questions, please contact us.
+
+Best regards,
+Demo Management Team
+                    ''',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[demo_request.user.email],
+                    fail_silently=True,
+                )
+                
+                # Create notification
+                Notification.objects.create(
+                    recipient=demo_request.user,
+                    title='Demo Rescheduled',
+                    message=f'Your demo for "{demo_request.demo.title}" has been rescheduled to {reschedule_date.strftime("%B %d, %Y")} at {str(time_slot)}',  # Fixed: use str() instead of get_display_time()
+                    notification_type='demo_rescheduled',
+                    content_type=ContentType.objects.get_for_model(DemoRequest),
+                    object_id=demo_request.id
+                )
+            except Exception as e:
+                print(f"Error sending notification: {e}")
+        
+        # Notify assigned employee (if any)
+        if demo_request.assigned_to:
+            try:
+                Notification.objects.create(
+                    recipient=demo_request.assigned_to,
+                    title='Demo Rescheduled',
+                    message=f'Demo request #{demo_request.id} for {demo_request.user.get_full_name()} has been rescheduled to {reschedule_date.strftime("%B %d, %Y")} at {str(time_slot)}',  # Fixed: use str() instead of get_display_time()
+                    notification_type='demo_rescheduled',
+                    content_type=ContentType.objects.get_for_model(DemoRequest),
+                    object_id=demo_request.id
+                )
+            except Exception as e:
+                print(f"Error creating employee notification: {e}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Demo request rescheduled successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
+# ================================================================================
+# 🔥 NEW: REACTIVATE CANCELLED REQUEST
+# ================================================================================
+
+@login_required
+@permission_required('manage_demo_requests')
+@require_http_methods(['POST'])
+def reactivate_demo_request(request, request_id):
+    """
+    Reactivate a cancelled demo request
+    Used by: details.html → reactivateRequest() → POST /admin/demo-requests/{id}/reactivate/
+    """
+    try:
+        demo_request = get_object_or_404(DemoRequest, id=request_id)
+        
+        # Check if request is cancelled
+        if demo_request.status != 'cancelled':
+            return JsonResponse({
+                'success': False,
+                'error': 'Only cancelled requests can be reactivated'
+            })
+        
+        # Check if the requested date is not in the past
+        if demo_request.requested_date < timezone.now().date():
+            return JsonResponse({
+                'success': False,
+                'error': 'Cannot reactivate a demo with a past date. Please reschedule first.'
+            })
+        
+        # Check if assigned employee is still available (if assigned)
+        if demo_request.assigned_to:
+            conflicting_demos = DemoRequest.objects.filter(
+                assigned_to=demo_request.assigned_to,
+                requested_date=demo_request.requested_date,
+                requested_time_slot=demo_request.requested_time_slot,
+                status__in=['pending', 'confirmed']
+            ).exclude(id=demo_request.id)
+            
+            if conflicting_demos.exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Assigned employee is no longer available. Please reassign or reschedule.'
+                })
+        
+        # Reactivate request
+        demo_request.status = 'pending'
+        demo_request.cancellation_reason = None
+        demo_request.cancellation_details = None
+        demo_request.cancelled_at = None
+        demo_request.save()
+        
+        # Create notification for customer
+        try:
+            Notification.objects.create(
+                recipient=demo_request.user,
+                title='Demo Request Reactivated',
+                message=f'Your demo request for "{demo_request.demo.title}" scheduled for {demo_request.requested_date.strftime("%B %d, %Y")} has been reactivated. Our team will contact you shortly.',
+                notification_type='demo_reactivated',
+                content_type=ContentType.objects.get_for_model(DemoRequest),
+                object_id=demo_request.id
+            )
+            
+            # Send email to customer
+            send_mail(
+                subject=f'Demo Request Reactivated - {demo_request.demo.title}',
+                message=f'''
+Dear {demo_request.user.get_full_name()},
+
+Good news! Your demo request has been reactivated.
+
+Demo Details:
+- Title: {demo_request.demo.title}
+- Date: {demo_request.requested_date.strftime('%B %d, %Y')}
+- Time: {str(demo_request.requested_time_slot)}  # Fixed: use str() instead of get_display_time()
+- Status: Pending Confirmation
+
+Our team will contact you shortly to confirm the details.
+
+Best regards,
+Demo Management Team
+                ''',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[demo_request.user.email],
+                fail_silently=True,
+            )
+        except Exception as e:
+            print(f"Error creating customer notification: {e}")
+        
+        # Create notification for assigned employee (if any)
+        if demo_request.assigned_to:
+            try:
+                Notification.objects.create(
+                    recipient=demo_request.assigned_to,
+                    title='Demo Request Reactivated',
+                    message=f'Demo request #{demo_request.id} for {demo_request.user.get_full_name()} on {demo_request.requested_date.strftime("%B %d, %Y")} has been reactivated.',
+                    notification_type='demo_assigned',
+                    content_type=ContentType.objects.get_for_model(DemoRequest),
+                    object_id=demo_request.id
+                )
+            except Exception as e:
+                print(f"Error creating employee notification: {e}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Demo request reactivated successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })

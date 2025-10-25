@@ -113,11 +113,28 @@
                     
                     <div class="mb-3">
                         <label class="form-label required-field">Employee ID</label>
-                        <input type="text" name="employee_id" id="employee_id" class="form-control" 
-                               placeholder="e.g., EMP001" 
-                               value="{{ form_data.employee_id|default:'' }}"
-                               required>
-                        <small id="employeeIdFeedback" class="text-muted">Unique identifier for employee</small>
+                        <div class="input-group">
+                            <input type="text" 
+                                   name="employee_id" 
+                                   id="employee_id" 
+                                   class="form-control" 
+                                   placeholder="EMP00001" 
+                                   value="{{ form_data.employee_id|default:'' }}"
+                                   pattern="^EMP\d{5}$"
+                                   title="Format: EMP followed by 5 digits (e.g., EMP00001)"
+                                   maxlength="8"
+                                   style="text-transform: uppercase;"
+                                   required>
+                            <button type="button" 
+                                    class="btn btn-outline-secondary" 
+                                    id="autoFillEmployeeId"
+                                    title="Auto-fill next Employee ID">
+                                <i class="fas fa-magic"></i> Auto
+                            </button>
+                        </div>
+                        <small id="employeeIdFeedback" class="text-muted">
+                            Format: EMP00001 (Suggested: <span id="suggestedId" class="text-primary fw-bold">{{ next_employee_id }}</span>)
+                        </small>
                     </div>
                     
                     <div class="mb-3">
@@ -158,53 +175,68 @@
                             <small class="text-muted">Skip verification (recommended for employees)</small>
                         </div>
                         
-                        <div class="form-check mt-2">
+                        <div class="form-check">
                             <input class="form-check-input" type="radio" 
                                 name="email_verification" id="sendVerification" 
-                                value="send_email"
-                                {% if form_data.email_verification == 'send_email' %}checked{% endif %}>
+                                value="send_verification_email" 
+                                {% if form_data.email_verification == 'send_verification_email' %}checked{% endif %}>
                             <label class="form-check-label" for="sendVerification">
                                 <strong>Send Verification Email</strong>
                             </label>
                             <br>
                             <small class="text-muted">User must verify email before login</small>
                         </div>
-    
-                    <div class="form-check mt-2">
-                        <input class="form-check-input" type="radio" 
-                            name="email_verification" id="skipVerification" 
-                            value="skip"
-                            {% if form_data.email_verification == 'skip' %}checked{% endif %}>
-                        <label class="form-check-label" for="skipVerification">
-                            <strong>Skip Verification</strong>
-                        </label>
-                        <br>
-                        <small class="text-muted">User can login without verifying (not recommended)</small>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" 
+                                name="email_verification" id="skipVerification" 
+                                value="skip_verification" 
+                                {% if form_data.email_verification == 'skip_verification' %}checked{% endif %}>
+                            <label class="form-check-label" for="skipVerification">
+                                <strong>Skip Verification</strong>
+                            </label>
+                            <br>
+                            <small class="text-muted">User can login without verification</small>
+                        </div>
                     </div>
-</div>
-
-<!-- ✅ NEW: Account Approval -->
-<div class="form-check">
-    <input class="form-check-input" type="checkbox" 
-           name="is_approved" id="is_approved" 
-           {% if not form_data or form_data.is_approved == 'on' %}checked{% endif %}>
-    <label class="form-check-label" for="is_approved">
-        <strong>Pre-approve Account</strong>
-    </label>
-    <br>
-    <small class="text-muted">Allow immediate access without approval</small>
-</div>
-
                 </div>
-
+                
+                <!-- System Information -->
+                <div class="form-section">
+                    <h5><i class="fas fa-desktop me-2"></i>System Information</h5>
+                    <p class="text-muted small mb-3">For system binding (optional)</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">System MAC Address</label>
+                        <input type="text" 
+                               name="system_mac_id" 
+                               class="form-control" 
+                               placeholder="00:1A:2B:3C:4D:5E" 
+                               value="{{ form_data.system_mac_id|default:'' }}"
+                               pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
+                               title="MAC Address format: 00:1A:2B:3C:4D:5E">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">System IP Address</label>
+                        <input type="text" 
+                               name="system_ip_address" 
+                               class="form-control" 
+                               placeholder="e.g., 192.168.1.100" 
+                               value="{{ form_data.system_ip_address|default:'' }}"
+                               pattern="^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+                               title="IPv4 Address format: 192.168.1.100">
+                    </div>
+                </div>
             </div>
-
+            
             <!-- Right Column -->
             <div class="col-12 col-lg-6">
                 
                 <!-- Business Category -->
                 <div class="form-section">
-                    <h5><i class="fas fa-layer-group me-2"></i>Business Category</h5>
+                    <h5><i class="fas fa-briefcase me-2"></i>Business Category</h5>
+                    <p class="text-muted small mb-3">For tracking purposes (optional)</p>
                     
                     <div class="mb-3">
                         <label class="form-label">Category</label>
@@ -216,94 +248,100 @@
                             </option>
                             {% endfor %}
                         </select>
-                        <small class="text-muted">Business domain expertise</small>
                     </div>
                     
                     <div class="mb-3">
                         <label class="form-label">Subcategory</label>
                         <select name="business_subcategory" id="business_subcategory" class="form-select">
                             <option value="">-- Select Category First --</option>
+                            {% if form_data.business_subcategory %}
+                            <!-- Subcategories will load via JS -->
+                            {% endif %}
                         </select>
                     </div>
                 </div>
-
-                <!-- Security -->
+                
+                <!-- Authentication -->
                 <div class="form-section">
-                    <h5><i class="fas fa-lock me-2"></i>Security</h5>
+                    <h5><i class="fas fa-lock me-2"></i>Authentication</h5>
                     
                     <div class="mb-3">
                         <label class="form-label required-field">Password</label>
-                        <input type="password" name="password" id="password" 
-                               class="form-control" 
-                               placeholder="Minimum 8 characters" 
-                               minlength="8" required>
+                        <div class="input-group">
+                            <input type="password" 
+                                   name="password" 
+                                   id="password" 
+                                   class="form-control" 
+                                   placeholder="Enter password" 
+                                   minlength="8"
+                                   required>
+                            <button class="btn btn-outline-secondary" 
+                                    type="button" 
+                                    id="togglePassword" 
+                                    title="Show/Hide Password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">Minimum 8 characters</small>
                     </div>
                     
                     <div class="mb-3">
                         <label class="form-label required-field">Confirm Password</label>
-                        <input type="password" name="confirm_password" id="confirm_password" 
+                        <input type="password" 
+                               name="confirm_password" 
+                               id="confirm_password" 
                                class="form-control" 
-                               placeholder="Re-enter password" required>
-                        <small id="passwordMatch" class="text-danger" style="display: none;">
-                            Passwords do not match!
-                        </small>
+                               placeholder="Confirm password" 
+                               minlength="8"
+                               required>
+                        <div id="passwordMatch" class="text-danger mt-1" style="display: none;">
+                            <i class="fas fa-exclamation-circle"></i> Passwords do not match
+                        </div>
                     </div>
                 </div>
-
-                <!-- System Information (Optional) -->
-                <div class="form-section">
-                    <h5><i class="fas fa-server me-2"></i>System Information (Optional)</h5>
-                    <p class="text-muted small">
-                        MAC address and IP will be auto-captured on first login
-                    </p>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">System MAC Address</label>
-                        <input type="text" name="system_mac_address" class="form-control" 
-                               placeholder="XX:XX:XX:XX:XX:XX"
-                               pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
-                               value="{{ form_data.system_mac_address|default:'' }}">
-                        <small class="text-muted">Format: XX:XX:XX:XX:XX:XX</small>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">IP Address</label>
-                        <input type="text" name="system_ip_address" class="form-control" 
-                               placeholder="192.168.1.1"
-                               value="{{ form_data.system_ip_address|default:'' }}">
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- Form Actions -->
-        <div class="card mt-4">
-            <div class="card-body">
-                <div class="d-flex flex-column flex-md-row justify-content-end align-items-stretch align-items-md-center gap-2">
-                    <a href="{% url 'accounts:user_list' %}" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Cancel
-                    </a>
-                    <button type="submit" class="btn btn-primary" id="submitBtn">
-                        <i class="fas fa-user-plus"></i> Create Employee
+                
+                <!-- Submit Section -->
+                <div class="mt-4 d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                        <i class="fas fa-user-plus"></i> Create User
                     </button>
+                    <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
                 </div>
             </div>
         </div>
-
     </form>
-
 </div>
 {% endblock %}
 
 {% block admin_extra_js %}
 <script>
+// Variables to handle debounce
 let emailTimeout;
 let employeeIdTimeout;
 
+// Toggle password visibility
+document.getElementById('togglePassword').addEventListener('click', function() {
+    const passwordInput = document.getElementById('password');
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
+    
+    // Toggle icon
+    const icon = this.querySelector('i');
+    icon.classList.toggle('fa-eye');
+    icon.classList.toggle('fa-eye-slash');
+});
 
-// AJAX Email Validation with Business Email Check
+// Auto-fill Employee ID button
+document.getElementById('autoFillEmployeeId').addEventListener('click', function() {
+    const suggestedId = document.getElementById('suggestedId').textContent.trim();
+    document.getElementById('employee_id').value = suggestedId;
+    // Trigger the validation event
+    document.getElementById('employee_id').dispatchEvent(new Event('input'));
+});
+
+// ✅ AJAX Email Validation
 document.getElementById('email').addEventListener('input', function() {
     clearTimeout(emailTimeout);
     const email = this.value.trim();
@@ -316,10 +354,10 @@ document.getElementById('email').addEventListener('input', function() {
         return;
     }
     
-    // ✅ Frontend validation - Check personal domains
+    // ✅ Frontend check for business email
     const blockedDomains = [
-        'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com',
-        'live.com', 'icloud.com', 'aol.com', 'ymail.com',
+        'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 
+        'live.com', 'ymail.com', 'aol.com', 'icloud.com', 
         'rediffmail.com', 'protonmail.com'
     ];
     
@@ -367,20 +405,31 @@ document.getElementById('email').addEventListener('input', function() {
     }, 500);
 });
 
-// AJAX Employee ID Validation
+// ✅ AJAX Employee ID Validation with Format Check
 document.getElementById('employee_id').addEventListener('input', function() {
     clearTimeout(employeeIdTimeout);
-    const employeeId = this.value.trim();
+    const employeeId = this.value.trim().toUpperCase();
     const feedback = document.getElementById('employeeIdFeedback');
+    const suggestedId = document.getElementById('suggestedId').textContent;
+    const submitBtn = document.getElementById('submitBtn');
     
     if (!employeeId) {
         feedback.className = 'text-muted';
-        feedback.textContent = 'Unique identifier for employee';
+        feedback.innerHTML = `Format: EMP00001 (Suggested: <span id="suggestedId" class="text-primary fw-bold">${suggestedId}</span>)`;
+        return;
+    }
+    
+    // ✅ Frontend format validation
+    const pattern = /^EMP\d{5}$/;
+    if (!pattern.test(employeeId)) {
+        feedback.className = 'text-danger';
+        feedback.innerHTML = '<i class="fas fa-times-circle"></i> Format must be EMP followed by 5 digits (e.g., EMP00001)';
+        submitBtn.disabled = true;
         return;
     }
     
     feedback.className = 'text-muted';
-    feedback.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    feedback.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking availability...';
     
     employeeIdTimeout = setTimeout(() => {
         fetch(`/auth/ajax/check-employee-id/?employee_id=${encodeURIComponent(employeeId)}`)
@@ -388,16 +437,19 @@ document.getElementById('employee_id').addEventListener('input', function() {
             .then(data => {
                 if (data.available) {
                     feedback.className = 'text-success';
-                    feedback.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
+                    feedback.innerHTML = '<i class="fas fa-check-circle"></i> Employee ID available';
+                    submitBtn.disabled = false;
                 } else {
                     feedback.className = 'text-danger';
                     feedback.innerHTML = '<i class="fas fa-times-circle"></i> ' + data.message;
+                    submitBtn.disabled = true;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 feedback.className = 'text-muted';
-                feedback.textContent = 'Could not validate employee ID';
+                feedback.innerHTML = `Format: EMP00001 (Suggested: <span id="suggestedId" class="text-primary fw-bold">${suggestedId}</span>)`;
+                submitBtn.disabled = false;
             });
     }, 500);
 });
@@ -460,6 +512,15 @@ document.getElementById('userAddForm').addEventListener('submit', function(e) {
     if (password !== confirmPassword) {
         e.preventDefault();
         alert('Passwords do not match!');
+        return false;
+    }
+    
+    // ✅ Validate Employee ID format before submit
+    const employeeId = document.getElementById('employee_id').value.trim();
+    const pattern = /^EMP\d{5}$/;
+    if (!pattern.test(employeeId)) {
+        e.preventDefault();
+        alert('Employee ID must be in format EMP00001 (EMP followed by 5 digits)');
         return false;
     }
 });

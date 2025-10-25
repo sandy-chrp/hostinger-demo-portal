@@ -15,7 +15,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.urls import reverse  # ⭐ YEH LINE ADD KAREIN
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import uuid
 import csv
@@ -873,20 +873,35 @@ def admin_bulk_customer_actions(request):
 
 
 @login_required
-@permission_required('view_customers')
 @user_passes_test(is_admin)
 def admin_customer_export_view(request):
-    """Export customer data to CSV with visible columns only"""
+    """
+    Export customer data to CSV or Excel with dynamic filtering
+    - Supports both CSV and Excel formats
+    - Applies all active filters from the list view
+    - Uses user's column preferences
+    - No duplicate data
+    - Professional formatting for Excel
+    """
     from core.models import AdminColumnPreference
+    from accounts.models import BusinessCategory
     
-    # Get user's visible columns
+    # Get export format from query parameter (default: csv)
+    export_format = request.GET.get('format', 'csv').lower()
+    
+    # Validate format
+    if export_format not in ['csv', 'excel', 'xlsx']:
+        export_format = 'csv'
+    
+    # Get user's visible columns preferences
     visible_columns = AdminColumnPreference.get_user_preferences(
         user=request.user,
         table_name='customers',
         default_columns=[
-            'customer', 'contact', 'organization', 'job_title',
-            'business_category', 'status', 'registration', 
-            'last_login', 'referral_source', 'country'
+            'customer_id', 'customer', 'email', 'mobile', 'organization', 
+            'job_title', 'business_category', 'business_subcategory',
+            'status', 'is_email_verified', 'registration', 'last_login',
+            'referral_source', 'country'
         ]
     )
     
@@ -894,17 +909,29 @@ def admin_customer_export_view(request):
     non_exportable = ['checkbox', 'actions']
     exportable_columns = [col for col in visible_columns if col not in non_exportable]
     
-    # Column mapping to CSV headers and data extraction
+    # ====================================================================
+    # COLUMN CONFIGURATION - Maps column IDs to headers and data getters
+    # ====================================================================
     COLUMN_CONFIG = {
+        'customer_id': {
+            'header': 'Customer ID',
+            'getter': lambda u: u.id
+        },
         'customer': {
-            'header': 'Name',
+            'header': 'Full Name',
             'getter': lambda u: u.full_name
         },
-        'contact': {
-            'header': 'Email',
-            'getter': lambda u: u.email,
-            'extra_headers': ['Phone'],
-            'extra_getters': [lambda u: u.full_mobile]
+        'email': {
+            'header': 'Email Address',
+            'getter': lambda u: u.email
+        },
+        'mobile': {
+            'header': 'Mobile Number',
+            'getter': lambda u: u.mobile or ''
+        },
+        'country_code': {
+            'header': 'Country Code',
+            'getter': lambda u: u.country_code or '+91'
         },
         'organization': {
             'header': 'Organization',
@@ -916,30 +943,51 @@ def admin_customer_export_view(request):
         },
         'business_category': {
             'header': 'Business Category',
-            'getter': lambda u: u.business_category.name if u.business_category else 'Not specified',
-            'extra_headers': ['Business Subcategory'],
-            'extra_getters': [lambda u: u.business_subcategory.name if u.business_subcategory else 'Not specified']
+            'getter': lambda u: u.business_category.name if u.business_category else 'Not specified'
+        },
+        'business_subcategory': {
+            'header': 'Business Subcategory',
+            'getter': lambda u: u.business_subcategory.name if u.business_subcategory else 'Not specified'
         },
         'status': {
-            'header': 'Status',
+            'header': 'Account Status',
             'getter': lambda u: (
                 'Active' if u.is_approved and u.is_active else
-                'Blocked' if u.is_approved and not u.is_active else 'Pending'
-            ),
-            'extra_headers': ['Email Verified'],
-            'extra_getters': [lambda u: 'Yes' if u.is_email_verified else 'No']
+                'Blocked' if not u.is_active else 
+                'Pending Approval'
+            )
+        },
+        'is_email_verified': {
+            'header': 'Email Verified',
+            'getter': lambda u: 'Yes' if u.is_email_verified else 'No'
+        },
+        'is_approved': {
+            'header': 'Approved',
+            'getter': lambda u: 'Yes' if u.is_approved else 'No'
+        },
+        'is_active': {
+            'header': 'Active',
+            'getter': lambda u: 'Yes' if u.is_active else 'No'
         },
         'registration': {
             'header': 'Registration Date',
-            'getter': lambda u: u.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            'getter': lambda u: u.created_at.strftime('%Y-%m-%d %H:%M:%S') if u.created_at else ''
         },
         'last_login': {
             'header': 'Last Login',
             'getter': lambda u: u.last_login.strftime('%Y-%m-%d %H:%M:%S') if u.last_login else 'Never'
         },
+        'last_login_ip': {
+            'header': 'Last Login IP',
+            'getter': lambda u: u.last_login_ip or 'N/A'
+        },
         'referral_source': {
             'header': 'Referral Source',
-            'getter': lambda u: u.get_referral_source_display() or 'Not specified'
+            'getter': lambda u: u.get_referral_source_display() if hasattr(u, 'get_referral_source_display') else (u.referral_source or 'Not specified')
+        },
+        'referral_message': {
+            'header': 'Referral Message',
+            'getter': lambda u: u.referral_message or ''
         },
         'country': {
             'header': 'Country',
@@ -947,36 +995,68 @@ def admin_customer_export_view(request):
         }
     }
     
-    # Get filter parameters
-    status_filter = request.GET.get('status')
-    search = request.GET.get('search')
-    date_from = request.GET.get('date_from')
-    date_to = request.GET.get('date_to')
+    # ====================================================================
+    # GET ALL FILTER PARAMETERS (Same as list view)
+    # ====================================================================
+    search = request.GET.get('search', '').strip()
+    status_filter = request.GET.get('status', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    business_category_filter = request.GET.get('business_category', '')
+    referral_source_filter = request.GET.get('referral_source', '')
+    email_verified_filter = request.GET.get('email_verified', '')
+    country_filter = request.GET.get('country', '')
     
-    # Filter customers
+    # ====================================================================
+    # BASE QUERYSET - Get all non-staff customers
+    # ====================================================================
     customers = User.objects.filter(
         is_staff=False,
         is_superuser=False
     ).select_related('business_category', 'business_subcategory').order_by('-created_at')
     
-    # Apply filters (same as list view)
-    if status_filter == 'pending':
-        customers = customers.filter(is_approved=False)
-    elif status_filter == 'approved':
-        customers = customers.filter(is_approved=True)
-    elif status_filter == 'blocked':
-        customers = customers.filter(is_active=False)
-    elif status_filter == 'active':
-        customers = customers.filter(is_active=True, is_approved=True)
+    # ====================================================================
+    # APPLY ALL FILTERS DYNAMICALLY
+    # ====================================================================
     
+    # Search filter
     if search:
         customers = customers.filter(
             Q(first_name__icontains=search) |
             Q(last_name__icontains=search) |
             Q(email__icontains=search) |
-            Q(organization__icontains=search)
+            Q(organization__icontains=search) |
+            Q(job_title__icontains=search) |
+            Q(mobile__icontains=search)
         )
     
+    # Status filter
+    if status_filter == 'active':
+        customers = customers.filter(is_approved=True, is_active=True)
+    elif status_filter == 'pending':
+        customers = customers.filter(is_approved=False)
+    elif status_filter == 'blocked':
+        customers = customers.filter(is_active=False)
+    elif status_filter == 'approved':
+        customers = customers.filter(is_approved=True)
+    
+    # Business category filter
+    if business_category_filter:
+        customers = customers.filter(business_category_id=business_category_filter)
+    
+    # Referral source filter
+    if referral_source_filter:
+        customers = customers.filter(referral_source=referral_source_filter)
+    
+    # Email verified filter
+    if email_verified_filter:
+        customers = customers.filter(is_email_verified=(email_verified_filter == 'yes'))
+    
+    # Country filter
+    if country_filter:
+        customers = customers.filter(country_code=country_filter)
+    
+    # Date range filter
     if date_from:
         try:
             from_date = datetime.strptime(date_from, '%Y-%m-%d')
@@ -992,35 +1072,181 @@ def admin_customer_export_view(request):
         except ValueError:
             pass
     
-    # Create CSV response
-    response = HttpResponse(content_type='text/csv')
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    response['Content-Disposition'] = f'attachment; filename="customers_export_{timestamp}.csv"'
-    
-    writer = csv.writer(response)
-    
-    # Build headers based on visible columns
+    # ====================================================================
+    # BUILD HEADERS - Based on visible columns
+    # ====================================================================
     headers = []
     for col_id in exportable_columns:
         if col_id in COLUMN_CONFIG:
-            config = COLUMN_CONFIG[col_id]
-            headers.append(config['header'])
-            if 'extra_headers' in config:
-                headers.extend(config['extra_headers'])
+            headers.append(COLUMN_CONFIG[col_id]['header'])
     
-    writer.writerow(headers)
-    
-    # Write customer data
+    # ====================================================================
+    # EXTRACT DATA - Build rows based on filtered customers
+    # ====================================================================
+    data_rows = []
     for customer in customers:
         row = []
         for col_id in exportable_columns:
             if col_id in COLUMN_CONFIG:
-                config = COLUMN_CONFIG[col_id]
-                row.append(config['getter'](customer))
-                if 'extra_getters' in config:
-                    for getter in config['extra_getters']:
-                        row.append(getter(customer))
-        writer.writerow(row)
+                try:
+                    value = COLUMN_CONFIG[col_id]['getter'](customer)
+                    row.append(value)
+                except Exception as e:
+                    row.append('')  # Fallback for any errors
+        data_rows.append(row)
+    
+    # ====================================================================
+    # EXPORT BASED ON FORMAT
+    # ====================================================================
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    
+    if export_format in ['excel', 'xlsx']:
+        # =======================================
+        # EXCEL EXPORT with Professional Styling
+        # =======================================
+        return export_to_excel(headers, data_rows, timestamp, request)
+    else:
+        # =======================================
+        # CSV EXPORT (Simple & Fast)
+        # =======================================
+        return export_to_csv(headers, data_rows, timestamp)
+
+
+def export_to_csv(headers, data_rows, timestamp):
+    """Export data to CSV format"""
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="customers_export_{timestamp}.csv"'
+    
+    # Add UTF-8 BOM for Excel compatibility
+    response.write('\ufeff')
+    
+    writer = csv.writer(response)
+    writer.writerow(headers)
+    writer.writerows(data_rows)
+    
+    return response
+
+
+def export_to_excel(headers, data_rows, timestamp, request):
+    """
+    Export data to Excel format with professional styling
+    - Header row with blue background
+    - Auto-adjusted column widths
+    - Borders and alignment
+    - Freeze panes for headers
+    """
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    
+    # Create workbook and active sheet
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Customer Export"
+    
+    # ====================================================================
+    # HEADER STYLING
+    # ====================================================================
+    header_fill = PatternFill(start_color="087FC2", end_color="087FC2", fill_type="solid")
+    header_font = Font(name='Arial', size=11, bold=True, color="FFFFFF")
+    header_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    
+    # Border style
+    thin_border = Border(
+        left=Side(style='thin', color='CCCCCC'),
+        right=Side(style='thin', color='CCCCCC'),
+        top=Side(style='thin', color='CCCCCC'),
+        bottom=Side(style='thin', color='CCCCCC')
+    )
+    
+    # Write headers
+    ws.append(headers)
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = header_alignment
+        cell.border = thin_border
+    
+    # ====================================================================
+    # DATA ROWS STYLING
+    # ====================================================================
+    data_font = Font(name='Arial', size=10)
+    data_alignment = Alignment(horizontal='left', vertical='center', wrap_text=False)
+    
+    # Write data rows
+    for row_data in data_rows:
+        ws.append(row_data)
+    
+    # Apply styling to data rows
+    for row_num in range(2, len(data_rows) + 2):
+        for col_num in range(1, len(headers) + 1):
+            cell = ws.cell(row=row_num, column=col_num)
+            cell.font = data_font
+            cell.alignment = data_alignment
+            cell.border = thin_border
+    
+    # ====================================================================
+    # AUTO-ADJUST COLUMN WIDTHS
+    # ====================================================================
+    for col_num, header in enumerate(headers, 1):
+        column_letter = get_column_letter(col_num)
+        
+        # Calculate max width based on header and data
+        max_length = len(str(header))
+        for row_num in range(2, min(len(data_rows) + 2, 100)):  # Check first 100 rows for performance
+            cell_value = ws.cell(row=row_num, column=col_num).value
+            if cell_value:
+                max_length = max(max_length, len(str(cell_value)))
+        
+        # Set column width (with limits)
+        adjusted_width = min(max_length + 2, 50)  # Max 50 characters
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
+    # ====================================================================
+    # FREEZE HEADER ROW
+    # ====================================================================
+    ws.freeze_panes = 'A2'
+    
+    # ====================================================================
+    # ADD METADATA SHEET (Optional)
+    # ====================================================================
+    meta_ws = wb.create_sheet(title="Export Info")
+    meta_ws['A1'] = 'Export Information'
+    meta_ws['A1'].font = Font(bold=True, size=14)
+    
+    meta_ws['A3'] = 'Export Date:'
+    meta_ws['B3'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    meta_ws['A4'] = 'Exported By:'
+    meta_ws['B4'] = request.user.full_name if hasattr(request.user, 'full_name') else request.user.username
+    
+    meta_ws['A5'] = 'Total Records:'
+    meta_ws['B5'] = len(data_rows)
+    
+    meta_ws['A6'] = 'Filters Applied:'
+    filters_applied = []
+    if request.GET.get('search'):
+        filters_applied.append(f"Search: {request.GET.get('search')}")
+    if request.GET.get('status'):
+        filters_applied.append(f"Status: {request.GET.get('status')}")
+    if request.GET.get('date_from'):
+        filters_applied.append(f"From: {request.GET.get('date_from')}")
+    if request.GET.get('date_to'):
+        filters_applied.append(f"To: {request.GET.get('date_to')}")
+    
+    meta_ws['B6'] = ', '.join(filters_applied) if filters_applied else 'None'
+    
+    # ====================================================================
+    # SAVE TO RESPONSE
+    # ====================================================================
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="customers_export_{timestamp}.xlsx"'
+    
+    # Save workbook to response
+    wb.save(response)
     
     return response
 
@@ -1038,9 +1264,38 @@ def get_country_name(country_code):
         '+39': 'Italy',
         '+34': 'Spain',
         '+7': 'Russia',
-        # Add more as needed
+        '+61': 'Australia',
+        '+55': 'Brazil',
+        '+82': 'South Korea',
+        '+971': 'UAE',
+        '+65': 'Singapore',
+        '+60': 'Malaysia',
+        '+62': 'Indonesia',
+        '+66': 'Thailand',
+        '+63': 'Philippines',
+        '+92': 'Pakistan',
+        '+880': 'Bangladesh',
+        '+94': 'Sri Lanka',
+        '+977': 'Nepal',
+        '+27': 'South Africa',
+        '+234': 'Nigeria',
+        '+20': 'Egypt',
+        '+52': 'Mexico',
+        '+54': 'Argentina',
+        '+56': 'Chile',
+        '+351': 'Portugal',
+        '+31': 'Netherlands',
+        '+32': 'Belgium',
+        '+41': 'Switzerland',
+        '+43': 'Austria',
+        '+46': 'Sweden',
+        '+47': 'Norway',
+        '+45': 'Denmark',
+        '+358': 'Finland',
+        '+48': 'Poland',
     }
-    return country_map.get(country_code, 'Not specified')
+    return country_map.get(country_code, country_code if country_code else 'Not specified')
+
 
 def send_approval_notification(customer, request=None):
     """

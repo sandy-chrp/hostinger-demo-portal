@@ -4,8 +4,8 @@
 {% block page_title %}Business Categories{% endblock %}
 
 {% block admin_content %}
-<!-- Stats Cards -->
-<div class="stats-grid">
+<!-- Stats Cards (Smaller Size) -->
+<div class="stats-grid small-stats">
     <div class="stat-card primary">
         <div class="stat-icon">
             <i class="fas fa-folder"></i>
@@ -33,7 +33,6 @@
 <div class="admin-card">
     <div class="admin-card-header">
         <h2 class="admin-card-title">
-           
             Business Categories Management
         </h2>
         <a href="{% url 'core:admin_business_category_create' %}" class="btn btn-primary">
@@ -41,7 +40,7 @@
         </a>
     </div>
     <div class="admin-card-body">
-        <!-- Search Bar -->
+        <!-- Search and Filter Bar -->
         <div class="row mb-4">
             <div class="col-md-6">
                 <form method="get" class="d-flex">
@@ -49,7 +48,7 @@
                     <button type="submit" class="btn btn-outline-primary ms-2">
                         <i class="fas fa-search"></i>
                     </button>
-                    {% if search_query %}
+                    {% if search_query or status_filter %}
                         <a href="{% url 'core:admin_business_categories' %}" class="btn btn-outline-secondary ms-2">
                             <i class="fas fa-times"></i>
                         </a>
@@ -57,6 +56,19 @@
                 </form>
             </div>
             <div class="col-md-6 text-end">
+                <!-- Status Filter Dropdown -->
+                <div class="d-inline-block me-2">
+                    <form method="get" class="d-inline">
+                        <select name="status" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+                            <option value="">All Status</option>
+                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Only</option>
+                            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive Only</option>
+                        </select>
+                        {% if search_query %}
+                            <input type="hidden" name="search" value="{{ search_query }}">
+                        {% endif %}
+                    </form>
+                </div>
                 <a href="{% url 'core:admin_business_subcategories' %}" class="btn btn-outline-primary">
                     Manage Subcategories
                 </a>
@@ -71,11 +83,10 @@
                         <tr>
                             <th width="50">#</th>
                             <th>Category Name</th>
-                            {% comment %} <th width="100" class="text-center">Icon</th> {% endcomment %}
                             <th width="120" class="text-center">Subcategories</th>
                             <th width="120" class="text-center">Customers</th>
                             <th width="100" class="text-center">Status</th>
-                            <th width="200" class="text-center">Actions</th>
+                            <th width="150" class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -88,9 +99,6 @@
                                         <br><small class="text-muted">{{ category.description|truncatewords:15 }}</small>
                                     {% endif %}
                                 </td>
-                                {% comment %} <td class="text-center">
-                                    <span style="font-size: 1.5rem;">{{ category.icon|default:"📁" }}</span>
-                                </td> {% endcomment %}
                                 <td class="text-center">
                                     <span class="badge bg-primary">{{ category.subcategory_count }}</span>
                                 </td>
@@ -110,13 +118,13 @@
                                            class="btn btn-outline-primary" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form method="post" action="{% url 'core:admin_business_category_toggle_status' category.id %}" class="d-inline">
+                                        {% comment %} <form method="post" action="{% url 'core:admin_business_category_toggle_status' category.id %}" class="d-inline">
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-outline-warning" 
                                                     title="{% if category.is_active %}Deactivate{% else %}Activate{% endif %}">
                                                 <i class="fas fa-{% if category.is_active %}eye-slash{% else %}eye{% endif %}"></i>
                                             </button>
-                                        </form>
+                                        </form> {% endcomment %}
                                         <a href="{% url 'core:admin_business_category_delete' category.id %}" 
                                            class="btn btn-outline-danger" title="Delete">
                                             <i class="fas fa-trash"></i>
@@ -133,6 +141,8 @@
                 <i class="fas fa-info-circle me-2"></i>
                 {% if search_query %}
                     No categories found matching "{{ search_query }}".
+                {% elif status_filter %}
+                    No {{ status_filter }} categories found.
                 {% else %}
                     No business categories found. Create your first category to get started.
                 {% endif %}
@@ -140,4 +150,30 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Additional CSS for smaller stats cards -->
+<style>
+    .small-stats {
+        margin-bottom: 1.5rem;
+    }
+    
+    .small-stats .stat-card {
+        padding: 0.75rem;
+        min-height: auto;
+    }
+    
+    .small-stats .stat-icon {
+        font-size: 1.25rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .small-stats .stat-number {
+        font-size: 1.5rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .small-stats .stat-label {
+        font-size: 0.85rem;
+    }
+</style>
 {% endblock %}

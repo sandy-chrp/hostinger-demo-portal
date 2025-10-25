@@ -30,17 +30,17 @@
 
 {% block admin_extra_css %}
 <style>
-    /* Simple Clean Design */
+    /* Simple Clean Design - UPDATED WITH SMALLER STAT CARDS */
     .stats-row {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
-        gap: 1rem;
-        margin-bottom: 1.5rem;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
     }
 
     .stat-card {
         background: white;
-        padding: 1.5rem;
+        padding: 0.75rem; /* Reduced padding */
         border-radius: 8px;
         border: 1px solid #e5e7eb;
         text-align: center;
@@ -53,15 +53,15 @@
     .stat-card.cancelled { border-left: 4px solid #ef4444; }
 
     .stat-number {
-        font-size: 2rem;
+        font-size: 1.5rem; /* Smaller font size */
         font-weight: 700;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.25rem; /* Reduced margin */
         color: #1f2937;
     }
 
     .stat-label {
         color: #6b7280;
-        font-size: 0.875rem;
+        font-size: 0.75rem; /* Smaller font size */
         font-weight: 500;
         text-transform: uppercase;
     }
@@ -130,6 +130,39 @@
         box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
     }
 
+    /* Custom date range styles */
+    .date-range-container {
+        display: none;
+        margin-top: 0.5rem;
+    }
+    
+    .date-range-container.show {
+        display: flex;
+    }
+
+    /* Pagination Styles */
+    .pagination {
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .pagination .page-item .page-link {
+        color: #087fc2;
+        border: 1px solid #e5e7eb;
+        min-width: 40px;
+        text-align: center;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: #087fc2;
+        border-color: #087fc2;
+        color: white;
+    }
+    
+    .pagination .page-item.disabled .page-link {
+        color: #9ca3af;
+    }
+
     @media (max-width: 1024px) {
         .stats-row {
             grid-template-columns: repeat(3, 1fr);
@@ -149,7 +182,7 @@
 {% endblock %}
 
 {% block admin_content %}
-<!-- Statistics Cards -->
+<!-- Statistics Cards - SMALLER SIZE -->
 <div class="stats-row">
     <div class="stat-card total">
         <div class="stat-number">{{ stats.total_requests }}</div>
@@ -173,15 +206,17 @@
     </div>
 </div>
 
-<!-- Filters -->
+<!-- Filters - UPDATED WITHOUT DEMO FILTER AND WITH ASSIGNED FILTER -->
 <div class="filter-card">
-    <form method="get" class="row g-3">
+    <form method="get" class="row g-3" id="filtersForm">
+        <!-- Search field -->
         <div class="col-md-3">
             <input type="text" name="search" class="form-control" 
                    placeholder="Search..." value="{{ search|default:'' }}">
         </div>
         
-        <div class="col-md-2">
+        <!-- Status filter -->
+        <div class="col-md-3">
             <select name="status" class="form-select" onchange="this.form.submit()">
                 <option value="">All Status</option>
                 <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
@@ -191,34 +226,52 @@
             </select>
         </div>
         
-        <div class="col-md-2">
-            <select name="demo" class="form-select" onchange="this.form.submit()">
-                <option value="">All Demos</option>
-                {% for demo in demos %}
-                    <option value="{{ demo.id }}" {% if demo_filter == demo.id|stringformat:"s" %}selected{% endif %}>
-                        {{ demo.title|truncatechars:30 }}
+        <!-- Assigned to filter -->
+        <div class="col-md-3">
+            <select name="assigned_to" class="form-select" onchange="this.form.submit()">
+                <option value="">All Assigned</option>
+                <option value="unassigned" {% if assigned_to_filter == 'unassigned' %}selected{% endif %}>Unassigned</option>
+                <option value="me" {% if assigned_to_filter == 'me' %}selected{% endif %}>Assigned to Me</option>
+                {% for employee in sales_employees %}
+                    <option value="{{ employee.id }}" {% if assigned_to_filter == employee.id|stringformat:"s" %}selected{% endif %}>
+                        {{ employee.get_full_name|truncatechars:25 }}
                     </option>
                 {% endfor %}
             </select>
         </div>
         
-        <div class="col-md-2">
-            <select name="time_range" class="form-select" onchange="this.form.submit()">
+        <!-- Time range filter with Custom Range option -->
+        <div class="col-md-3">
+            <select name="time_range" class="form-select" id="timeRangeSelect" onchange="handleTimeRangeChange(this.value)">
                 <option value="">All Time</option>
                 <option value="today" {% if time_range == 'today' %}selected{% endif %}>Today</option>
+                <option value="tomorrow" {% if time_range == 'tomorrow' %}selected{% endif %}>Tomorrow</option>
                 <option value="this_week" {% if time_range == 'this_week' %}selected{% endif %}>This Week</option>
+                <option value="next_week" {% if time_range == 'next_week' %}selected{% endif %}>Next Week</option>
                 <option value="this_month" {% if time_range == 'this_month' %}selected{% endif %}>This Month</option>
+                <option value="custom_range" {% if time_range == 'custom_range' %}selected{% endif %}>Custom Range</option>
             </select>
-        </div>
-
-        <div class="col-md-2">
-            <input type="date" name="date" class="form-control" 
-                   value="{{ date_filter|default:'' }}" onchange="this.form.submit()">
+            
+            <!-- Custom date range picker - Hidden by default -->
+            <div class="date-range-container row g-2 mt-2 {% if time_range == 'custom_range' %}show{% endif %}" id="dateRangeContainer">
+                <div class="col-6">
+                    <input type="date" name="date_from" class="form-control" 
+                           value="{{ date_from|default:'' }}" placeholder="From">
+                </div>
+                <div class="col-6">
+                    <input type="date" name="date_to" class="form-control" 
+                           value="{{ date_to|default:'' }}" placeholder="To">
+                </div>
+                <div class="col-12 mt-2">
+                    <button type="submit" class="btn btn-sm btn-primary w-100">Apply Date Range</button>
+                </div>
+            </div>
         </div>
         
-        <div class="col-md-1">
-            <a href="{% url 'core:admin_demo_requests' %}" class="btn btn-outline-secondary w-100">
-                <i class="fas fa-times"></i>
+        <!-- Reset filters button -->
+        <div class="col-md-12 text-end mt-1">
+            <a href="{% url 'core:admin_demo_requests' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-times me-1"></i>Clear Filters
             </a>
         </div>
     </form>
@@ -233,188 +286,286 @@
                     <tr>
                         <th>Customer</th>
                         <th>Demo</th>
-                        <th>Requested Date/Time</th>
+                        <th>Date & Time</th>
                         <th>Assigned To</th>
                         <th>Status</th>
-                        <th>Created</th>
-                        <th width="200">Actions</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for request in demo_requests %}
-                    <tr data-request-id="{{ request.id }}" 
-                        data-demo="{{ request.demo.title }}"
-                        data-customer="{{ request.user.get_full_name }}"
-                        data-date="{{ request.requested_date|date:'M d, Y' }}"
-                        data-time="{{ request.requested_time_slot.start_time|time:'h:i A' }} - {{ request.requested_time_slot.end_time|time:'h:i A' }}"
-                        data-date-iso="{{ request.requested_date|date:'Y-m-d' }}"
-                        data-timeslot-id="{{ request.requested_time_slot.id }}">
-                        
-                        <td>
-                            <div class="fw-bold">{{ request.user.get_full_name }}</div>
-                            <small class="text-muted">{{ request.user.email }}</small>
-                        </td>
-                        
-                        <td>
-                            <div class="fw-bold">{{ request.demo.title }}</div>
-                            <small class="text-muted">{{ request.demo.demo_type|title }}</small>
-                        </td>
-                        
-                        <td>
-                            <div>{{ request.requested_date|date:"M d, Y" }}</div>
-                            <small class="text-muted">
-                                {{ request.requested_time_slot.start_time|time:"h:i A" }} - 
-                                {{ request.requested_time_slot.end_time|time:"h:i A" }}
-                            </small>
-                        </td>
-                        
-                        <td>
-                            {% if request.assigned_to %}
-                                <span class="badge bg-success">
-                                    {{ request.assigned_to.get_full_name }}
-                                </span>
-                            {% else %}
-                                <span class="badge bg-warning">Unassigned</span>
-                            {% endif %}
-                        </td>
-                        
-                        <td>
-                            {% if request.status == 'pending' %}
-                                <span class="badge bg-warning">Pending</span>
-                            {% elif request.status == 'confirmed' %}
-                                <span class="badge bg-success">Confirmed</span>
-                            {% elif request.status == 'completed' %}
-                                <span class="badge bg-info">Completed</span>
-                            {% elif request.status == 'cancelled' %}
-                                <span class="badge bg-danger">Cancelled</span>
-                            {% endif %}
-                        </td>
-                        
-                        <td>
-                            <small class="text-muted">
-                                {{ request.created_at|date:"M d, Y" }}
-                            </small>
-                        </td>
-                        
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <!-- View -->
-                                <a href="{% url 'core:admin_demo_request_detail' request.id %}" 
-                                   class="btn btn-outline-primary" title="View">
-                                    <i class="fas fa-eye"></i>
-                                </a>
+                        <tr data-request-id="{{ request.id }}" 
+                            data-demo="{{ request.demo.title }}"
+                            data-customer="{{ request.user.get_full_name }}"
+                            data-date="{{ request.requested_date|date:"D, M d, Y" }}"
+                            data-time="{{ request.requested_time_slot.get_display_time }}"
+                            data-date-iso="{{ request.requested_date|date:"Y-m-d" }}"
+                            data-timeslot-id="{{ request.requested_time_slot.id }}">
+                            
+                            <td>
+                                <div class="fw-semibold">{{ request.user.get_full_name }}</div>
+                                <div class="small text-secondary">{{ request.user.email }}</div>
                                 
-                                <!-- Assign -->
-                                {% if user|has_permission:'manage_demo_requests' %}
-                                    <button class="btn btn-outline-info" 
-                                            onclick="quickAssign({{ request.id }})" title="Assign">
-                                        <i class="fas fa-user-plus"></i>
-                                    </button>
+                                {% if request.user.mobile %}
+                                <div class="small text-secondary mt-1">
+                                    <i class="fas fa-phone-alt me-1"></i>{{ request.user.full_mobile }}
+                                </div>
                                 {% endif %}
                                 
-                                <!-- Confirm -->
-                                {% if request.status == 'pending' and user|has_permission:'approve_demo_request' %}
-                                    <button class="btn btn-outline-success" 
-                                            onclick="confirmRequest({{ request.id }})" title="Confirm">
+                                {% if request.user.organization %}
+                                <div class="small text-secondary mt-1">
+                                    <i class="fas fa-building me-1"></i>{{ request.user.organization }}
+                                </div>
+                                {% endif %}
+                            </td>
+                            
+                            <td>
+                                <div class="fw-semibold">{{ request.demo.title }}</div>
+                                <div class="small text-secondary">{{ request.demo.get_file_type_display }}</div>
+                                
+                                {% if request.demo.is_featured %}
+                                <div class="mt-1">
+                                    <span class="badge bg-info">Featured</span>
+                                </div>
+                                {% endif %}
+                            </td>
+                            
+                            <td>
+                                <div class="fw-semibold">
+                                    {{ request.requested_date|date:"D, M d, Y" }}
+                                </div>
+                                <div class="small text-secondary">
+                                    {{ request.requested_time_slot.get_display_time }}
+                                </div>
+                                
+                                {% if request.is_confirmed and request.requested_date != request.confirmed_date %}
+                                <div class="small text-success mt-1">
+                                    <i class="fas fa-calendar-check me-1"></i>
+                                    Confirmed: {{ request.confirmed_date|date:"M d, Y" }}
+                                </div>
+                                {% endif %}
+                                
+                                <div class="small text-secondary mt-1">
+                                    <i class="far fa-clock me-1"></i>
+                                    Requested {{ request.created_at|timesince }} ago
+                                </div>
+                            </td>
+                            
+                            <td>
+                                {% if request.assigned_to %}
+                                <div class="fw-semibold">
+                                    {{ request.assigned_to.get_full_name }}
+                                </div>
+                                <div class="small text-secondary">
+                                    {{ request.assigned_to.email }}
+                                </div>
+                                
+                                {% if request.assigned_at %}
+                                <div class="small text-secondary mt-1">
+                                    <i class="far fa-calendar me-1"></i>
+                                    {{ request.assigned_at|date:"M d, Y" }}
+                                </div>
+                                {% endif %}
+                                
+                                {% else %}
+                                <div class="text-secondary">
+                                    <i class="fas fa-user-slash me-1"></i> Not assigned
+                                </div>
+                                {% endif %}
+                            </td>
+                            
+                            <td>
+                                {% if request.status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% elif request.status == 'confirmed' %}
+                                <span class="badge bg-success">Confirmed</span>
+                                {% elif request.status == 'completed' %}
+                                <span class="badge bg-info">Completed</span>
+                                {% elif request.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                                
+                                {% if request.cancellation_reason %}
+                                <div class="small text-danger mt-1">
+                                    {{ request.get_cancellation_reason_display }}
+                                </div>
+                                {% endif %}
+                                
+                                {% endif %}
+                            </td>
+                            
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'core:admin_demo_request_detail' request.id %}" 
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    
+                                    {% if request.status == 'pending' and user|has_permission:'approve_demo_request' %}
+                                    <button type="button" class="btn btn-sm btn-outline-success" 
+                                            onclick="confirmRequest({{ request.id }})" 
+                                            title="Confirm Request">
                                         <i class="fas fa-check"></i>
                                     </button>
-                                {% endif %}
-                                
-                                <!-- Cancel -->
-                                {% if request.status == 'pending' and user|has_permission:'reject_demo_request' %}
-                                    <button class="btn btn-outline-danger" 
-                                            onclick="cancelRequest({{ request.id }})" title="Cancel">
+                                    {% endif %}
+                                    
+                                    {% if request.status == 'pending' and not request.assigned_to and user|has_permission:'manage_demo_requests' %}
+                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                            onclick="quickAssign({{ request.id }})" 
+                                            title="Assign Request">
+                                        <i class="fas fa-user-plus"></i>
+                                    </button>
+                                    {% endif %}
+                                    
+                                    {% if request.status != 'cancelled' and request.status != 'completed' and user|has_permission:'approve_demo_request' %}
+                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                            onclick="cancelRequest({{ request.id }})" 
+                                            title="Cancel Request">
                                         <i class="fas fa-times"></i>
                                     </button>
-                                {% endif %}
-                                
-                                <!-- Delete -->
-                                {% if request.status == 'cancelled' and user|has_permission:'reject_demo_request' %}
-                                    <button class="btn btn-outline-danger" 
-                                            onclick="deleteRequest({{ request.id }})" title="Delete">
-                                        <i class="fas fa-trash"></i>
+                                    {% endif %}
+                                    
+                                    {% if user|has_permission:'approve_demo_request' %}
+                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                            onclick="deleteRequest({{ request.id }})" 
+                                            title="Delete Request">
+                                        <i class="fas fa-trash-alt"></i>
                                     </button>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-
-    <!-- Pagination -->
-    {% if requests.has_other_pages %}
-        <nav class="mt-4">
-            <ul class="pagination justify-content-center">
-                {% if requests.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ requests.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">Previous</a>
-                    </li>
-                {% endif %}
-
-                <li class="page-item active">
-                    <span class="page-link">{{ requests.number }} of {{ requests.paginator.num_pages }}</span>
-                </li>
-
-                {% if requests.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ requests.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Next</a>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
-    {% endif %}
-{% else %}
-    <div class="admin-card">
-        <div class="text-center py-5">
-            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-            <h4>No Demo Requests Found</h4>
-            <p class="text-muted">No requests match your current filters.</p>
+    
+    <!-- Pagination - Always displayed when there's data -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+            <p class="text-muted mb-0">
+                Showing {{ demo_requests.start_index }} to {{ demo_requests.end_index }} of {{ paginator.count }} entries
+            </p>
         </div>
+        <div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0">
+                    {% if demo_requests.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if time_range %}&time_range={{ time_range }}{% endif %}{% if assigned_to_filter %}&assigned_to={{ assigned_to_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ demo_requests.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if time_range %}&time_range={{ time_range }}{% endif %}{% if assigned_to_filter %}&assigned_to={{ assigned_to_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;&laquo;</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;</span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in paginator.page_range %}
+                        {% if demo_requests.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > demo_requests.number|add:'-3' and num < demo_requests.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if time_range %}&time_range={{ time_range }}{% endif %}{% if assigned_to_filter %}&assigned_to={{ assigned_to_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if demo_requests.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ demo_requests.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if time_range %}&time_range={{ time_range }}{% endif %}{% if assigned_to_filter %}&assigned_to={{ assigned_to_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if time_range %}&time_range={{ time_range }}{% endif %}{% if assigned_to_filter %}&assigned_to={{ assigned_to_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;&raquo;</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i> No demo requests found matching your criteria.
     </div>
 {% endif %}
 
-<!-- Quick Assign Modal -->
-<div class="modal fade" id="quickAssignModal" tabindex="-1">
+<!-- Assign Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Assign Employee</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="assignModalLabel">
+                    <i class="fas fa-user-check me-2"></i>Assign Demo Request
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="quickAssignForm" method="post">
-                {% csrf_token %}
-                <div class="modal-body">
+            <div class="modal-body">
+                <form id="quickAssignForm" onsubmit="handleQuickAssign(event)">
+                    {% csrf_token %}
+                    
                     <div class="alert alert-info">
-                        <div class="fw-bold" id="assignModalDemo">Demo Title</div>
-                        <div class="small mt-1">
-                            <span id="assignModalCustomer">Customer</span>
-                        </div>
-                        <div class="small">
-                            <span id="assignModalDateTime">Date & Time</span>
-                        </div>
+                        <div class="mb-1"><strong>Demo:</strong> <span id="assignModalDemo"></span></div>
+                        <div class="mb-1"><strong>Customer:</strong> <span id="assignModalCustomer"></span></div>
+                        <div><strong>Date/Time:</strong> <span id="assignModalDateTime"></span></div>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Select Employee</label>
-                        <select name="employee_id" id="quickEmployeeSelect" class="form-select" required>
+                        <label for="quickEmployeeSelect" class="form-label">Select Employee</label>
+                        <div id="quickLoadingEmployees" class="text-center py-2">
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                            <span class="ms-2">Loading available employees...</span>
+                        </div>
+                        <select id="quickEmployeeSelect" name="employee_id" class="form-select" required disabled>
                             <option value="">-- Select Employee --</option>
                         </select>
                     </div>
                     
-                    <div id="quickAvailabilityStatus" style="display: none;"></div>
-                    <div id="quickLoadingEmployees" class="text-center" style="display: none;">
-                        <div class="spinner-border text-primary"></div>
-                        <p class="mt-2">Loading employees...</p>
+                    <div id="quickAvailabilityStatus" class="mb-3" style="display:none"></div>
+                    
+                    <div class="mb-3">
+                        <label for="assignmentNotes" class="form-label">Assignment Notes (Optional)</label>
+                        <textarea id="assignmentNotes" name="assignment_notes" class="form-control" rows="3" 
+                                  placeholder="Any notes about this assignment"></textarea>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="quickAssignBtn">Assign</button>
-                </div>
-            </form>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sendNotificationCheck" name="send_notification" checked>
+                            <label class="form-check-label" for="sendNotificationCheck">
+                                Send email notification to employee
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" id="quickAssignBtn" class="btn btn-primary">Assign</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -422,21 +573,39 @@
 
 {% block admin_extra_js %}
 <script>
-const csrfToken = '{{ csrf_token }}';
-const HAS_APPROVE_PERMISSION = {% if user|has_permission:'approve_demo_request' %}true{% else %}false{% endif %};
-const HAS_REJECT_PERMISSION = {% if user|has_permission:'reject_demo_request' %}true{% else %}false{% endif %};
-const HAS_MANAGE_PERMISSION = {% if user|has_permission:'manage_demo_requests' %}true{% else %}false{% endif %};
+// CSRF token
+const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-let quickAssignModal = null;
+// Permission flags
+const HAS_MANAGE_PERMISSION = {{ user|has_permission:'manage_demo_requests'|yesno:'true,false' }};
+const HAS_APPROVE_PERMISSION = {{ user|has_permission:'approve_demo_request'|yesno:'true,false' }};
+const HAS_REJECT_PERMISSION = {{ user|has_permission:'reject_demo_request'|yesno:'true,false' }};
+
+// Modals
+let quickAssignModal;
 let currentAssignRequestId = null;
 
+// Handle custom date range
+function handleTimeRangeChange(value) {
+    const dateRangeContainer = document.getElementById('dateRangeContainer');
+    
+    if (value === 'custom_range') {
+        dateRangeContainer.classList.add('show');
+    } else {
+        dateRangeContainer.classList.remove('show');
+        document.getElementById('filtersForm').submit();
+    }
+}
+
+// Document ready
 document.addEventListener('DOMContentLoaded', function() {
-    const modalElement = document.getElementById('quickAssignModal');
-    if (modalElement) {
-        quickAssignModal = new bootstrap.Modal(modalElement);
-        document.getElementById('quickAssignForm').addEventListener('submit', handleQuickAssign);
-        
-        document.getElementById('quickEmployeeSelect').addEventListener('change', function() {
+    // Initialize the assign modal
+    quickAssignModal = new bootstrap.Modal(document.getElementById('assignModal'));
+    
+    // Initialize the employee select change handler
+    const employeeSelect = document.getElementById('quickEmployeeSelect');
+    if (employeeSelect) {
+        employeeSelect.addEventListener('change', function() {
             if (this.value && currentAssignRequestId) {
                 checkQuickAvailability(this.value);
             }
