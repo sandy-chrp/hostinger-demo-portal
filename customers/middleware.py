@@ -1,6 +1,3 @@
-# customers/middleware.py - ONLY ESSENTIAL FIXES
-# ✅ Sirf CustomerSecurityMiddleware aur CheckUserStatusMiddleware fix kiye hain
-# ✅ Baaki sab middleware same rakhe hain
 
 from django.utils.deprecation import MiddlewareMixin
 from django.shortcuts import redirect
@@ -12,6 +9,11 @@ from django.contrib.auth import logout
 from django.urls import reverse
 import os
 import mimetypes
+from django.utils.deprecation import MiddlewareMixin
+from django.http import FileResponse
+import os
+
+
 
 
 class CustomerSecurityMiddleware:
@@ -267,4 +269,27 @@ class WebGLCompressionMiddleware:
                             except:
                                 pass
         
+        return response
+
+
+class BrotliContentEncodingMiddleware(MiddlewareMixin):
+    def process_response(self, request, response):
+        if not isinstance(response, FileResponse):
+            return response
+        
+        if hasattr(response, 'filename') and response.filename:
+            filename = str(response.filename)
+            if filename.endswith('.br'):
+                response['Content-Encoding'] = 'br'
+                base_name = filename[:-3]
+                if base_name.endswith('.wasm'):
+                    response['Content-Type'] = 'application/wasm'
+                elif base_name.endswith('.js'):
+                    response['Content-Type'] = 'application/javascript'
+                elif base_name.endswith('.data'):
+                    response['Content-Type'] = 'application/octet-stream'
+                elif base_name.endswith('.json'):
+                    response['Content-Type'] = 'application/json'
+                response['Cache-Control'] = 'public, max-age=31536000, immutable'
+                response['Access-Control-Allow-Origin'] = '*'
         return response

@@ -261,16 +261,21 @@ class Demo(models.Model):
                     print(f"✅ Cleaned up old extracted files: {extract_dir}")
                 except Exception as e:
                     print(f"❌ Error cleaning up extracted files: {e}")
-    
+
     def _extract_webgl_zip(self):
-        """Extract WebGL ZIP file to dedicated folder"""
+        """
+        Extract WebGL ZIP to LOCAL server (even if ZIP is on S3)
+        
+        This method handles both S3 and local storage:
+        - If S3: Downloads ZIP temporarily, then extracts locally
+        - If Local: Extracts directly
+        """
         if not self.webgl_file or not self.webgl_file.name.endswith('.zip'):
             return
         
-        # Create extraction directory
+        # Create local extraction directory
         extract_dir = os.path.join(
-            settings.MEDIA_ROOT, 
-            'webgl_extracted', 
+            settings.WEBGL_EXTRACT_ROOT,  # Use new setting
             f'demo_{self.slug}'
         )
         
@@ -278,24 +283,73 @@ class Demo(models.Model):
         if os.path.exists(extract_dir):
             shutil.rmtree(extract_dir)
         
-        # Create directory
+        # Create fresh directory
         os.makedirs(extract_dir, exist_ok=True)
         
-        # Extract ZIP file
         try:
-            with zipfile.ZipFile(self.webgl_file.path, 'r') as zip_ref:
-                zip_ref.extractall(extract_dir)
+            # ✅ CRITICAL: Check if using S3 storage
+            if hasattr(settings, 'USE_S3') and settings.USE_S3:
+                # S3 Storage: Download to temp file first
+                import tempfile
+                
+                print(f"📥 Downloading ZIP from S3: {self.webgl_file.name}")
+                
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp_file:
+                    # Read from S3 and write to temp file
+                    self.webgl_file.open('rb')
+                    tmp_file.write(self.webgl_file.read())
+                    self.webgl_file.close()
+                    tmp_zip_path = tmp_file.name
+                
+                print(f"✅ Downloaded to temp: {tmp_zip_path}")
+                
+                # Extract from temp file to local directory
+                with zipfile.ZipFile(tmp_zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(extract_dir)
+                
+                # Clean up temp file
+                os.remove(tmp_zip_path)
+                print(f"🗑️  Cleaned up temp file")
             
-            # Store relative path
+            else:
+                # Local Storage: Extract directly from file path
+                print(f"📂 Extracting ZIP from local: {self.webgl_file.path}")
+                
+                with zipfile.ZipFile(self.webgl_file.path, 'r') as zip_ref:
+                    zip_ref.extractall(extract_dir)
+            
+            # Store relative path (relative to MEDIA_ROOT)
             self.extracted_path = f'webgl_extracted/demo_{self.slug}'
-            print(f"✅ WebGL ZIP extracted to: {extract_dir}")
             
+            # Count extracted files
+            file_count = sum([len(files) for _, _, files in os.walk(extract_dir)])
+            
+            print(f"✅ WebGL ZIP extracted successfully!")
+            print(f"   📁 Location: {extract_dir}")
+            print(f"   📄 Files: {file_count}")
+            print(f"   💾 Stored path: {self.extracted_path}")
+            
+        except zipfile.BadZipFile:
+            print(f"❌ Error: Invalid or corrupted ZIP file")
+            self.extracted_path = ''
+        except PermissionError as e:
+            print(f"❌ Permission error: {e}")
+            self.extracted_path = ''
         except Exception as e:
             print(f"❌ Error extracting WebGL ZIP: {e}")
+            import traceback
+            traceback.print_exc()
             self.extracted_path = ''
-    
+
     def get_webgl_index_url(self):
-        """Get URL to WebGL index.html or file"""
+        """
+        Get URL to WebGL index.html or file
+        
+        Returns the URL to serve the WebGL content based on file type:
+        - ZIP files: Returns URL to extracted index.html
+        - HTML files: Returns direct URL to file
+        - 3D models: Returns URL to file for model-viewer
+        """
         from django.urls import reverse
         
         if self.file_type != 'webgl' or not self.webgl_file:
@@ -303,9 +357,10 @@ class Demo(models.Model):
         
         file_ext = os.path.splitext(self.webgl_file.name)[1].lower()
         
+        # ✅ CASE 1: ZIP file (extracted)
         if file_ext == '.zip' and self.extracted_path:
-            # Look for index.html in extracted folder
-            possible_paths = [
+            # Look for index.html in common locations
+            possible_index_files = [
                 'index.html',
                 'Index.html',
                 'build/index.html',
@@ -314,39 +369,45 @@ class Demo(models.Model):
                 'Dist/index.html',
             ]
             
-            for rel_path in possible_paths:
-                full_path = os.path.join(settings.MEDIA_ROOT, self.extracted_path, rel_path)
+            for rel_path in possible_index_files:
+                full_path = os.path.join(
+                    settings.MEDIA_ROOT, 
+                    self.extracted_path, 
+                    rel_path
+                )
+                
                 if os.path.exists(full_path):
+                    # ✅ CRITICAL: Generate URL using correct namespace
+                    url_path = rel_path.replace('\\', '/')  # Windows path fix
+                    
                     try:
-                        # ✅ Convert Windows backslash to forward slash for URL
-                        url_path = rel_path.replace('\\', '/')
-                        
-                        return reverse('customers:serve_webgl_file', kwargs={
+                        # ✅ CHANGED: 'core:serve_webgl_file' instead of 'customers:serve_webgl_file'
+                        return reverse('core:serve_webgl_file', kwargs={
                             'slug': self.slug,
                             'filepath': url_path
                         })
                     except Exception as e:
-                        print(f"❌ Error generating URL: {e}")
+                        print(f"❌ Error generating URL for {url_path}: {e}")
                         return None
             
-            # If no index.html found, try first HTML file
+            # If no index.html found in common locations, search for ANY HTML file
             extracted_dir = os.path.join(settings.MEDIA_ROOT, self.extracted_path)
             
             if os.path.exists(extracted_dir):
                 for root, dirs, files in os.walk(extracted_dir):
                     for file in files:
                         if file.lower().endswith(('.html', '.htm')):
-                            # Get relative path
+                            # Get relative path from extracted directory
                             rel_path = os.path.relpath(
                                 os.path.join(root, file),
                                 extracted_dir
                             )
-                            
-                            # ✅ CRITICAL: Convert Windows path to URL path
+                            # Convert Windows path to URL path
                             url_path = rel_path.replace('\\', '/')
                             
                             try:
-                                return reverse('customers:serve_webgl_file', kwargs={
+                                # ✅ CHANGED: 'core:serve_webgl_file'
+                                return reverse('core:serve_webgl_file', kwargs={
                                     'slug': self.slug,
                                     'filepath': url_path
                                 })
@@ -354,20 +415,17 @@ class Demo(models.Model):
                                 print(f"❌ Error generating URL: {e}")
                                 return None
         
+        # ✅ CASE 2: Single HTML file (not zipped)
         elif file_ext == '.html':
-            filename = os.path.basename(self.webgl_file.name)
-            try:
-                return reverse('customers:serve_webgl_file', kwargs={
-                    'slug': self.slug,
-                    'filepath': filename
-                })
-            except Exception as e:
-                return self.webgl_file.url
-        
-        elif file_ext in ['.glb', '.gltf']:
+            # Direct S3 URL (since it's not extracted)
             return self.webgl_file.url
         
-        return None    
+        # ✅ CASE 3: 3D Model files (.glb, .gltf)
+        elif file_ext in ['.glb', '.gltf']:
+            # Direct S3 URL
+            return self.webgl_file.url
+        
+        return None
 
     def get_webgl_viewer_type(self):
         """Determine which viewer to use"""

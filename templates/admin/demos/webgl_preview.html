@@ -227,12 +227,12 @@
         </div>
     </div>
     
-    <!-- WebGL Iframe -->
+    <!-- WebGL Iframe - FIXED -->
     {% if demo.get_webgl_index_url %}
         <iframe 
             id="webglFrame"
             class="webgl-iframe" 
-            src="{{ demo.get_webgl_index_url }}"
+            src="{% url 'core:serve_webgl_file' slug=demo.slug filepath='index.html' %}"
             allowfullscreen
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; xr-spatial-tracking"
             sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads"

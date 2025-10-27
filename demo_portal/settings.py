@@ -1,5 +1,5 @@
 """
-Django settings for demo_portal project - UPDATED WITH WEBGL SUPPORT
+Django settings for demo_portal project - UPDATED WITH WEBGL + S3 SUPPORT
 """
 
 from pathlib import Path
@@ -54,8 +54,7 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
-    'django.middleware.gzip.GZipMiddleware',  # ✅ ADD THIS LINE AT TOP
-
+    'django.middleware.gzip.GZipMiddleware',  # ✅ Gzip compression for performance
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -70,7 +69,7 @@ MIDDLEWARE = [
     'customers.middleware.ContentProtectionMiddleware',
     'customers.middleware.WebGLFileMiddleware',
     'customers.middleware.CheckUserStatusMiddleware',
-    
+    'customers.middleware.BrotliContentEncodingMiddleware'
 ]
 
 # ============================================
@@ -184,9 +183,6 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-WEBGL_EXTRACT_DIR = os.path.join(BASE_DIR, 'media', 'webgl_extracted')
-os.makedirs(WEBGL_EXTRACT_DIR, exist_ok=True)
-
 # Demo File Upload Settings
 DEMO_FILE_SETTINGS = {
     # Video settings
@@ -203,10 +199,8 @@ DEMO_FILE_SETTINGS = {
 }
 
 # =====================================
-# FILE UPLOAD SETTINGS - UPDATED
+# FILE UPLOAD SETTINGS
 # =====================================
-
-# UPDATED: Increased from 10MB to 100MB for WebGL files
 FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100MB
 
@@ -216,8 +210,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # =====================================
 # EMAIL CONFIGURATION
 # =====================================
-
-# Email Configuration
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp-mail.outlook.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
@@ -229,7 +221,6 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'support@chrp-india.com')
 # =====================================
 # CORS SETTINGS
 # =====================================
-
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -241,7 +232,6 @@ CORS_ALLOW_CREDENTIALS = True
 # =====================================
 # SITE CONFIGURATION
 # =====================================
-
 SITE_ID = 1
 SITE_NAME = 'Demo Portal'
 SITE_DESCRIPTION = 'Professional Business Demo Portal - CHRP India'
@@ -250,11 +240,8 @@ SITE_URL = 'http://127.0.0.1:8000'
 # =====================================
 # SECURITY SETTINGS - UPDATED FOR WEBGL
 # =====================================
-
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-
-# UPDATED: Changed from 'DENY' to 'SAMEORIGIN' to allow WebGL iframes
 X_FRAME_OPTIONS = 'SAMEORIGIN'  # Changed for WebGL iframe support
 
 # HSTS settings (production only)
@@ -263,13 +250,11 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-# Session security - UPDATED for development/production
+# Session security
 if DEBUG:
-    # Development settings
     SESSION_COOKIE_SECURE = False  
     CSRF_COOKIE_SECURE = False     
 else:
-    # Production settings (HTTPS required)
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
@@ -278,31 +263,15 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_HTTPONLY = False  
 
 # =====================================
-
-# =====================================
 # BLOCKED EMAIL DOMAINS
 # =====================================
-
 BLOCKED_EMAIL_DOMAINS = [
-    # Gmail variants
     'gmail.com', 'googlemail.com',
-    
-    # Yahoo variants
     'yahoo.com', 'yahoo.co.in', 'yahoo.co.uk', 'ymail.com', 'rocketmail.com',
-    
-    # Microsoft/Outlook variants
     'hotmail.com', 'hotmail.co.uk', 'outlook.com', 'live.com', 'msn.com',
-    
-    # AOL
     'aol.com', 'aim.com',
-    
-    # Apple
     'icloud.com', 'me.com', 'mac.com',
-    
-    # Indian personal emails
     'rediffmail.com', 'rediff.com',
-    
-    # Other common personal domains
     'protonmail.com', 'mail.com', 'gmx.com', 'zoho.com',
     'inbox.com', 'fastmail.com', 'hushmail.com'
 ]
@@ -310,13 +279,12 @@ BLOCKED_EMAIL_DOMAINS = [
 # =====================================
 # DEMO BOOKING CONFIGURATION
 # =====================================
-
 DEMO_BOOKING_SETTINGS = {
-    'MORNING_START': 9,    # 9:30 AM
-    'MORNING_END': 13,     # 1:00 PM
-    'AFTERNOON_START': 14, # 2:00 PM  
-    'AFTERNOON_END': 19,   # 7:00 PM
-    'BLOCKED_DAYS': [6],   # Sunday = 6
+    'MORNING_START': 9,
+    'MORNING_END': 13,
+    'AFTERNOON_START': 14,
+    'AFTERNOON_END': 19,
+    'BLOCKED_DAYS': [6],
     'MAX_REQUESTS_PER_DAY': 3,
     'ADVANCE_BOOKING_DAYS': 30,
 }
@@ -324,19 +292,17 @@ DEMO_BOOKING_SETTINGS = {
 # =====================================
 # CACHE CONFIGURATION
 # =====================================
-
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'demo-portal-cache',
-        'TIMEOUT': 300,  # 5 minutes default timeout
+        'TIMEOUT': 300,
     }
 }
 
 # =====================================
 # LOGGING CONFIGURATION
 # =====================================
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -381,7 +347,7 @@ LOGGING = {
     },
 }
 
-# Create logs directory if it doesn't exist
+# Create logs directory
 LOGS_DIR = BASE_DIR / 'logs'
 if not LOGS_DIR.exists():
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
@@ -390,50 +356,91 @@ if not LOGS_DIR.exists():
 # LOGIN REDIRECT
 # =====================================
 LOGIN_REDIRECT_URL = '/admin/dashboard/'
-LOGIN_URL = '/auth/signin/'  # ✅ CHANGED from /accounts/signin/ to /auth/signin/
-LOGOUT_REDIRECT_URL = '/auth/signin/'  # ✅ CHANGED
+LOGIN_URL = '/auth/signin/'
+LOGOUT_REDIRECT_URL = '/auth/signin/'
 
 # Session settings
-SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_COOKIE_AGE = 86400
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-# Media files will use S3
+
+
+# =====================================
+# STORAGE CONFIGURATION - S3 + LOCAL HYBRID FOR WEBGL
+# =====================================
+
 USE_S3 = os.getenv('USE_S3', 'False') == 'True'
 
 if USE_S3:
-    # AWS Settings
+    # ✅ AWS S3 Settings
     AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
-    AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'us-east-1')
-    AWS_S3_CUSTOM_DOMAIN = os.getenv('AWS_S3_CUSTOM_DOMAIN')
+    AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'ap-south-1')
     
-    # S3 Storage Settings
+    # ✅ Custom domain calculation
+    if os.getenv('AWS_S3_CUSTOM_DOMAIN'):
+        AWS_S3_CUSTOM_DOMAIN = os.getenv('AWS_S3_CUSTOM_DOMAIN')
+    else:
+        AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
+    
+    # S3 Object Parameters
     AWS_S3_OBJECT_PARAMETERS = {
         'CacheControl': 'max-age=86400',
     }
-    AWS_DEFAULT_ACL = 'public-read'
-    AWS_QUERYSTRING_AUTH = False
-    AWS_S3_FILE_OVERWRITE = False
-    
-    # ✅ Django 5.2+ Storage Configuration
+        
+    AWS_S3_FILE_MIME_TYPES = {
+        '.wasm': 'application/wasm',
+        '.data': 'application/octet-stream',
+        '.unityweb': 'application/octet-stream',
+        '.js': 'application/javascript',
+        '.json': 'application/json',
+        
+        # ADD THESE FOR BROTLI:
+        '.wasm.br': 'application/wasm',
+        '.js.br': 'application/javascript',
+        '.data.br': 'application/octet-stream',
+        '.framework.js.br': 'application/javascript',
+        '.loader.js.br': 'application/javascript',
+        '.symbols.json.br': 'application/json',
+        
+        '.html': 'text/html',
+        '.css': 'text/css',
+    }
+
+    # Updated S3 Object Parameters
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=86400',
+    }
+
+    # IMPORTANT: Update STORAGES configuration
     STORAGES = {
         "default": {
-            "BACKEND": "custom_storages.MediaStorage",
+            "BACKEND": "custom_storages.MediaStorage",  # CHANGE THIS
         },
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
+    
+    # Media URL (S3)
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
     
+    # ✅ LOCAL PATH for WebGL Extracted Files
+    MEDIA_ROOT = BASE_DIR / 'media'
+    WEBGL_EXTRACT_ROOT = MEDIA_ROOT / 'webgl_extracted'
+    os.makedirs(WEBGL_EXTRACT_ROOT, exist_ok=True)
+    
     print("\n" + "="*60)
-    print("📦 AWS S3 STORAGE: ENABLED")
-    print(f"📍 Bucket: {AWS_STORAGE_BUCKET_NAME}")
+    print("📦 STORAGE MODE: S3 + LOCAL HYBRID")
+    print(f"📍 S3 Bucket: {AWS_STORAGE_BUCKET_NAME}")
     print(f"🌍 Region: {AWS_S3_REGION_NAME}")
+    print(f"📁 Local WebGL Extract: {WEBGL_EXTRACT_ROOT}")
+    print(f"🔗 Media URL: {MEDIA_URL}")
     print("="*60 + "\n")
+
 else:
-    # Local storage (default)
+    # ✅ Local Storage
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -442,9 +449,25 @@ else:
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
+    
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
+    WEBGL_EXTRACT_ROOT = MEDIA_ROOT / 'webgl_extracted'
+    os.makedirs(WEBGL_EXTRACT_ROOT, exist_ok=True)
+    
     print("\n" + "="*60)
-    print("📁 LOCAL STORAGE: ENABLED")
+    print("📁 STORAGE MODE: LOCAL ONLY")
     print(f"📍 Media Root: {MEDIA_ROOT}")
+    print(f"📁 WebGL Extract: {WEBGL_EXTRACT_ROOT}")
     print("="*60 + "\n")
+
+# ✅ WebGL Configuration
+WEBGL_SETTINGS = {
+    'EXTRACT_ROOT': WEBGL_EXTRACT_ROOT,
+    'SERVE_METHOD': 'local',
+    'ALLOWED_EXTENSIONS': ['.html', '.zip', '.gltf', '.glb'],
+    'MAX_SIZE': 100 * 1024 * 1024,
+}
+
+# Backward compatibility
+WEBGL_EXTRACT_DIR = WEBGL_EXTRACT_ROOT

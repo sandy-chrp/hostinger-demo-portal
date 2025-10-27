@@ -1,4 +1,4 @@
-# core/urls.py - UPDATED WITH WEBGL SUPPORT
+# core/urls.py - CORRECTED WITH WEBGL SUPPORT
 
 from django.urls import path
 from . import views
@@ -58,6 +58,7 @@ urlpatterns = [
     path('admin/customers/export/', 
          admin_customer_views.admin_customer_export_view, 
          name='admin_customer_export'),
+    
     # =====================================
     # ADMIN DEMO MANAGEMENT  
     # =====================================
@@ -76,22 +77,42 @@ urlpatterns = [
     path('admin/demos/filter/', demo_request_views.admin_get_filtered_demos, name='admin_filter_demos'),
 
     # =====================================
-    # WEBGL DEMO VIEWING & SERVING (NEW)
+    # ✅ WEBGL DEMO VIEWING & SERVING - CORRECTED
     # =====================================
     
     # Admin WebGL Preview Routes
-    path('admin/webgl-preview/<int:demo_id>/', webgl_views.admin_webgl_preview, name='admin_webgl_preview'),
-    path('admin/universal-preview/<int:demo_id>/', webgl_views.admin_universal_preview, name='admin_universal_preview'),
+    path('admin/webgl-preview/<int:demo_id>/', 
+         webgl_views.webgl_preview, 
+         name='admin_webgl_preview'),
+    
+    path('admin/universal-preview/<int:demo_id>/', 
+         webgl_views.admin_universal_preview, 
+         name='admin_universal_preview'),
     
     # Customer Universal Viewer
-    path('demo/view/<int:demo_id>/', webgl_views.universal_viewer, name='universal_viewer'),
+    path('demo/view/<int:demo_id>/', 
+         webgl_views.universal_viewer, 
+         name='universal_viewer'),
     
-    # WebGL Content Serving
-    path('webgl/serve/<int:demo_id>/', webgl_views.serve_webgl_content, name='serve_webgl_content'),
-    path('api/webgl-asset/<int:demo_id>/<path:asset_path>/', webgl_views.serve_webgl_asset, name='serve_webgl_asset'),
+    # ✅ CRITICAL: Serve WebGL Extracted Files (slug + filepath)
+    path('demo/webgl/<slug:slug>/<path:filepath>', 
+         webgl_views.serve_webgl_file, 
+         name='serve_webgl_file'),
+    
+    # WebGL Content Serving (demo_id based - for backward compatibility)
+    path('webgl/serve/<int:demo_id>/', 
+         webgl_views.serve_webgl_content, 
+         name='serve_webgl_content'),
+    
+    # WebGL Asset Serving (demo_id + asset_path)
+    path('api/webgl-asset/<int:demo_id>/<path:asset_path>/', 
+         webgl_views.serve_webgl_asset, 
+         name='serve_webgl_asset'),
     
     # WebGL Debug/Info (Admin Only)
-    path('admin/webgl-info/<int:demo_id>/', webgl_views.webgl_file_info, name='webgl_file_info'),
+    path('admin/webgl-info/<int:demo_id>/', 
+         webgl_views.webgl_file_info, 
+         name='webgl_file_info'),
 
     # =====================================
     # ADMIN ENQUIRY MANAGEMENT
@@ -123,7 +144,7 @@ urlpatterns = [
     path('admin/demo-requests/<int:request_id>/mark-complete/', 
      demo_request_views.mark_demo_request_complete, 
      name='mark_demo_request_complete'),
-     path('admin/demo-requests/<int:request_id>/update-notes/', demo_request_views.update_admin_notes, name='update_admin_notes'),
+    path('admin/demo-requests/<int:request_id>/update-notes/', demo_request_views.update_admin_notes, name='update_admin_notes'),
           
           
     # =====================================
@@ -244,43 +265,50 @@ urlpatterns = [
      user_activity_analytics_views.ajax_registration_data, 
      name='ajax_registration_data'), 
 
-     path('admin/save-column-preferences/', 
+    path('admin/save-column-preferences/', 
          admin_customer_views.save_column_preferences, 
          name='save_column_preferences'),        
 
 
-     path('admin/demo-requests/<int:request_id>/assign/', 
+    path('admin/demo-requests/<int:request_id>/assign/', 
      demo_request_views.assign_demo_request, 
      name='assign_demo_request'),
 
-     path('admin/demo-requests/<int:request_id>/unassign/', 
+    path('admin/demo-requests/<int:request_id>/unassign/', 
           demo_request_views.unassign_demo_request, 
           name='unassign_demo_request'),
 
-     # API endpoints
-     path('api/demo-requests/check-availability/', 
+    # API endpoints
+    path('api/demo-requests/check-availability/', 
           demo_request_views.check_employee_availability, 
           name='check_employee_availability'),
 
-     path('api/demo-requests/available-employees/', 
+    path('api/demo-requests/available-employees/', 
           demo_request_views.get_available_employees, 
           name='get_available_employees'),
    
 
-     path('employee/demo-requests/', 
+    path('employee/demo-requests/', 
           demo_request_views.employee_demo_requests_list, 
           name='employee_demo_requests'),
 
-     path('employee/demo-requests/<int:request_id>/', 
+    path('employee/demo-requests/<int:request_id>/', 
           demo_request_views.employee_demo_request_detail, 
           name='employee_demo_request_detail'),
-     path('api/demo-requests/available-slots/', demo_request_views.available_time_slots_api, name='api_available_slots'),
-     path('api/demo-requests/available-employees/', demo_request_views.available_employees_api, name='api_available_employees'),
-     path('admin/demo-requests/<int:request_id>/reschedule/', 
+    
+    path('api/demo-requests/available-slots/', 
+         demo_request_views.available_time_slots_api, 
+         name='api_available_slots'),
+    
+    path('api/demo-requests/available-employees/', 
+         demo_request_views.available_employees_api, 
+         name='api_available_employees'),
+    
+    path('admin/demo-requests/<int:request_id>/reschedule/', 
           demo_request_views.reschedule_demo_request, 
           name='reschedule_demo_request'),
 
-     path('admin/demo-requests/<int:request_id>/reactivate/', 
+    path('admin/demo-requests/<int:request_id>/reactivate/', 
           demo_request_views.reactivate_demo_request, 
           name='reactivate_demo_request'),
 ]
