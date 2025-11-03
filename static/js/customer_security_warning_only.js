@@ -45,7 +45,17 @@
         'button[data-bs-toggle]',
         '.btn',
         '.dropdown-toggle',
-        'form'
+        'form',
+        '#tawk-bubble',
+        '.tawk-min-container',
+        '.tawk-chat-panel',
+        '.tawk-button',
+        'iframe[title*="chat"]',
+        'iframe[src*="tawk"]',
+        '.tawk-custom-color',
+        '#tawkchat-minified-box',
+        '#tawkchat-container',
+        '#tawkchat-status-text-container'
     ];
 
     function isExemptedElement(element) {

@@ -505,7 +505,7 @@
             flex-shrink: 0;
             width: 100%;
             max-width: 100%;
-            overflow: hidden;
+            overflow: visible !important; /* ✅ CRITICAL FIX FOR DROPDOWN */
         }
 
         .page-title-wrapper {
@@ -578,6 +578,7 @@
             align-items: center;
             gap: 1rem;
             flex-shrink: 0;
+            overflow: visible !important; /* ✅ CRITICAL FIX FOR DROPDOWN */
         }
 
         .header-action-btn {
@@ -1004,27 +1005,169 @@
         }
 
         /* ========== DROPDOWN IMPROVEMENTS ========== */
-        .dropdown-menu {
+        .custom-dropdown {
+            position: relative;
+            display: inline-block;
+            overflow: visible !important; /* ✅ CRITICAL FIX FOR DROPDOWN */
+        }
+
+        .custom-dropdown-toggle {
+            background: none;
             border: none;
-            box-shadow: var(--shadow-lg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
             border-radius: var(--radius-md);
-            padding: 0.5rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .custom-dropdown-toggle:hover {
+            background-color: var(--gray-100);
+        }
+
+        .custom-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            left: auto;
+            z-index: 10000;
+            display: none;
             min-width: 200px;
+            padding: 0.5rem 0;
+            margin: 0;
+            font-size: var(--font-sm);
+            color: var(--gray-700);
+            text-align: left;
+            list-style: none;
+            background-color: white;
+            background-clip: padding-box;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .custom-dropdown-menu.show {
+            display: block !important;
+            opacity: 1;
+            visibility: visible;
+            animation: dropdownFadeIn 0.2s ease forwards;
+        }
+
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .custom-dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 1rem;
+            clear: both;
+            font-weight: 400;
+            color: var(--gray-700);
+            text-align: inherit;
+            text-decoration: none;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast) ease;
+            cursor: pointer;
+        }
+
+        .custom-dropdown-item:hover {
+            background-color: var(--gray-100);
+            color: var(--dark-color);
+        }
+
+        .custom-dropdown-item.text-danger {
+            color: var(--danger-color);
+        }
+
+        .custom-dropdown-item.text-danger:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        .custom-dropdown-divider {
+            height: 0;
+            margin: 0.5rem 0;
+            overflow: hidden;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        /* Keep old dropdown classes for compatibility */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            left: auto;
+            z-index: 10000;
+            display: none;
+            min-width: 200px;
+            padding: 0.5rem 0;
+            margin: 0;
+            font-size: var(--font-sm);
+            color: var(--gray-700);
+            text-align: left;
+            list-style: none;
+            background-color: white;
+            background-clip: padding-box;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .dropdown-menu.show {
+            display: block !important;
+            opacity: 1;
+            visibility: visible;
+            animation: dropdownFadeIn 0.2s ease forwards;
         }
 
         .dropdown-item {
+            display: block;
+            width: 100%;
             padding: 0.5rem 1rem;
-            font-size: var(--font-sm);
+            clear: both;
+            font-weight: 400;
+            color: var(--gray-700);
+            text-align: inherit;
+            text-decoration: none;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0;
             border-radius: var(--radius-sm);
             transition: all var(--transition-fast) ease;
+            cursor: pointer;
         }
 
         .dropdown-item:hover {
             background-color: var(--gray-100);
+            color: var(--dark-color);
         }
 
         .dropdown-item:active {
             background-color: var(--gray-200);
+        }
+
+        .dropdown-divider {
+            height: 0;
+            margin: 0.5rem 0;
+            overflow: hidden;
+            border-top: 1px solid var(--gray-200);
         }
 
         /* ========== RESPONSIVE DESIGN - COMPREHENSIVE ========== */
@@ -1551,8 +1694,10 @@
                 <div class="header-actions">
                     {% include 'admin/partials/admin_notification_bell.html' %}
 
-                    <div class="dropdown">
-                        <div class="user-menu" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="custom-dropdown" id="adminUserDropdownWrapper">
+                        <button class="custom-dropdown-toggle user-menu" 
+                                type="button" 
+                                id="adminUserDropdownBtn">
                             <div class="user-avatar">
                                 {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
                             </div>
@@ -1561,13 +1706,13 @@
                                 <span class="user-role">Administrator</span>
                             </div>
                             <i class="fas fa-chevron-down" style="font-size: var(--font-sm); color: var(--gray-500);"></i>
+                        </button>
+                        <div class="custom-dropdown-menu" id="adminUserDropdownMenu">
+                            {% comment %} <a class="custom-dropdown-item" href="#"><i class="fas fa-user me-2"></i> Profile</a> {% endcomment %}
+                            {% comment %} <a class="custom-dropdown-item" href="#"><i class="fas fa-cog me-2"></i> Settings</a> {% endcomment %}
+                            {% comment %} <div class="custom-dropdown-divider"></div> {% endcomment %}
+                            <a class="custom-dropdown-item text-danger" href="{% url 'core:admin_logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
                         </div>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            {% comment %} <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i> Profile</a></li> {% endcomment %}
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i> Settings</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'core:admin_logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
-                        </ul>
                     </div>
                 </div>
             </header>
@@ -1873,5 +2018,74 @@
     </script>
 
     {% block admin_extra_js %}{% endblock %}
+    
+    <!-- ✅ ADMIN DROPDOWN FIX - CUSTOMER BASE STYLE -->
+    <script>
+    (function() {
+        'use strict';
+        console.log('🚀 Admin Dropdown Initializing...');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdownBtn = document.getElementById('adminUserDropdownBtn');
+            const dropdownMenu = document.getElementById('adminUserDropdownMenu');
+            const dropdownWrapper = document.getElementById('adminUserDropdownWrapper');
+            
+            if (!dropdownBtn || !dropdownMenu) {
+                console.error('❌ Dropdown elements not found!');
+                return;
+            }
+            
+            console.log('✅ Dropdown elements found');
+            
+            // Toggle dropdown
+            dropdownBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const isVisible = dropdownMenu.classList.contains('show');
+                
+                if (isVisible) {
+                    closeDropdown();
+                    console.log('❌ Dropdown closed');
+                } else {
+                    openDropdown();
+                    console.log('✅ Dropdown opened');
+                }
+            });
+            
+            // Open dropdown function
+            function openDropdown() {
+                dropdownMenu.classList.add('show');
+            }
+            
+            // Close dropdown function
+            function closeDropdown() {
+                dropdownMenu.classList.remove('show');
+            }
+            
+            // Close when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!dropdownWrapper.contains(e.target)) {
+                    closeDropdown();
+                }
+            });
+            
+            // Close on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && dropdownMenu.classList.contains('show')) {
+                    closeDropdown();
+                }
+            });
+            
+            // Touch support
+            dropdownBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                this.click();
+            }, { passive: false });
+            
+            console.log('✅ Admin dropdown initialized successfully');
+        });
+    })();
+    </script>
 </body>
 </html>

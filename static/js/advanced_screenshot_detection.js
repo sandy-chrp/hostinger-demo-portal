@@ -11,47 +11,83 @@
     let lastFocusLoss = 0;
     
     document.addEventListener('visibilitychange', function() {
-        if (document.hidden) {
-            const now = Date.now();
-            const timeSinceLastLoss = now - lastFocusLoss;
-            
-            // If focus lost multiple times quickly (within 5 seconds)
-            if (timeSinceLastLoss < 5000) {
-                focusLossCount++;
-                
-                if (focusLossCount >= 2) {
-                    // Likely screenshot tool
-                    showScreenshotWarning();
-                    blurContentTemporarily();
-                    logToServer('focus_loss_screenshot', `Suspicious focus loss (${focusLossCount} times)`);
-                }
-            } else {
-                focusLossCount = 1;
-            }
-            
-            lastFocusLoss = now;
-            
-            // Always blur content when window loses focus
-            blurContent();
-        } else {
-            // Restore content when focus returns
-            unblurContent();
+    // ✅ CHECK IF TAWK.TO IS ACTIVE - Skip blur if yes
+    const tawkElements = document.querySelectorAll(
+        '#tawkchat-container, .tawk-chat-panel, #tawk-bubble, ' +
+        'iframe[title*="chat" i], iframe[src*="tawk" i], ' +
+        '.tawk-min-container, .tawk-button'
+    );
+    
+    let tawkActive = false;
+    tawkElements.forEach(el => {
+        if (el && (el.offsetWidth > 0 || el.offsetHeight > 0)) {
+            tawkActive = true;
         }
     });
-
-    // ==========================================
-    // 2. DETECT WINDOW BLUR (Snipping Tool Activation)
-    // ==========================================
-    window.addEventListener('blur', function() {
-        console.log('⚠️ Window blur detected - potential screenshot tool');
+    
+    // If Tawk.to is open/visible, don't blur
+    if (tawkActive) {
+        console.log('🟢 Tawk.to active - skipping blur protection');
+        return;
+    }
+    
+    if (document.hidden) {
+        const now = Date.now();
+        const timeSinceLastLoss = now - lastFocusLoss;
+        
+        // If focus lost multiple times quickly (within 5 seconds)
+        if (timeSinceLastLoss < 5000) {
+            focusLossCount++;
+            
+            if (focusLossCount >= 2) {
+                // Likely screenshot tool
+                showScreenshotWarning();
+                blurContentTemporarily();
+                logToServer('focus_loss_screenshot', `Suspicious focus loss (${focusLossCount} times)`);
+            }
+        } else {
+            focusLossCount = 1;
+        }
+        
+        lastFocusLoss = now;
+        
+        // Always blur content when window loses focus
         blurContent();
-        logToServer('window_blur', 'Window lost focus - screenshot tool suspected');
-    });
-
-    window.addEventListener('focus', function() {
-        console.log('✓ Window focus restored');
+    } else {
+        // Restore content when focus returns
         unblurContent();
+    }
+});
+    // ==========================================
+window.addEventListener('blur', function() {
+    // ✅ CHECK IF TAWK.TO IS ACTIVE
+    const tawkElements = document.querySelectorAll(
+        '#tawkchat-container, .tawk-chat-panel, #tawk-bubble, ' +
+        'iframe[title*="chat" i], iframe[src*="tawk" i]'
+    );
+    
+    let tawkActive = false;
+    tawkElements.forEach(el => {
+        if (el && (el.offsetWidth > 0 || el.offsetHeight > 0)) {
+            tawkActive = true;
+        }
     });
+    
+    // Don't blur if Tawk.to is active
+    if (tawkActive) {
+        console.log('🟢 Tawk.to active - skipping window blur protection');
+        return;
+    }
+    
+    console.log('⚠️ Window blur detected - potential screenshot tool');
+    blurContent();
+    logToServer('window_blur', 'Window lost focus - screenshot tool suspected');
+});
+
+window.addEventListener('focus', function() {
+    console.log('✓ Window focus restored');
+    unblurContent();
+});
 
     // ==========================================
     // 3. MONITOR ACTIVE WINDOW TITLE CHANGES

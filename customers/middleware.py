@@ -293,3 +293,72 @@ class BrotliContentEncodingMiddleware(MiddlewareMixin):
                 response['Cache-Control'] = 'public, max-age=31536000, immutable'
                 response['Access-Control-Allow-Origin'] = '*'
         return response
+
+
+# ============================================
+# SMART CSP MIDDLEWARE
+# ============================================
+
+class SmartCSPMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+        from django.conf import settings
+        self.debug = settings.DEBUG
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        
+        if self.debug:
+            # Development: Remove CSP
+            self._remove_csp_headers(response)
+            print("🔓 [DEV] CSP Disabled")
+        else:
+            # Production: Add CSP
+            self._add_production_csp(response)
+            print("🔒 [PROD] CSP Enabled")
+        
+        return response
+    
+    def _remove_csp_headers(self, response):
+        csp_headers = [
+            'Content-Security-Policy',
+            'Content-Security-Policy-Report-Only',
+            'X-Content-Security-Policy',
+            'X-WebKit-CSP',
+        ]
+        
+        for header in csp_headers:
+            if header in response:
+                del response[header]
+    
+    def _add_production_csp(self, response):
+        from django.conf import settings
+        
+        csp_directives = {
+            'default-src': ["'self'"],
+            'script-src': [
+                "'self'",
+                "'unsafe-inline'",
+                "'unsafe-eval'",
+                "https://cdn.jsdelivr.net",
+                "https://cdnjs.cloudflare.com",
+                "https://embed.tawk.to",
+                "https://va.tawk.to",
+            ],
+            'style-src': [
+                "'self'",
+                "'unsafe-inline'",
+                "https://cdn.jsdelivr.net",
+                "https://cdnjs.cloudflare.com",
+            ],
+            'img-src': ["'self'", "data:", "blob:", "https:"],
+            'connect-src': ["'self'", "https://embed.tawk.to", "https://va.tawk.to", "wss://tawk.to"],
+            'frame-src': ["'self'", "https://embed.tawk.to"],
+        }
+        
+        csp_parts = []
+        for directive, values in csp_directives.items():
+            values_str = ' '.join(values)
+            csp_parts.append(f"{directive} {values_str}")
+        
+        response['Content-Security-Policy'] = '; '.join(csp_parts)

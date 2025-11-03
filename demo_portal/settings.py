@@ -57,7 +57,7 @@ MIDDLEWARE = [
     'django.middleware.gzip.GZipMiddleware', 
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    # 'csp.middleware.CSPMiddleware',
+    'customers.middleware.SmartCSPMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
