@@ -16,9 +16,14 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Security Protection -->
-   <script src="{% static 'js/customer_security_warning_only.js' %}" defer></script>
-    <script src="{% static 'js/advanced_screenshot_detection.js' %}"></script>
+<!-- Ultimate Content Protection System -->
+    <script src="{% static 'js/ultimate_content_protection.js' %}"></script>
     <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    
+    <!-- User Email for Watermark (Hidden) -->
+    {% if user.is_authenticated %}
+    <div data-user-email="{{ user.email }}" style="display: none;"></div>
+    {% endif %}
 
     <style>
         /* CSS Variables - MATCHED WITH ADMIN BASE + PROFESSIONAL TYPOGRAPHY */
