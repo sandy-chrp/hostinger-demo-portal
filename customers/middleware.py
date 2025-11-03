@@ -364,158 +364,158 @@ class SmartCSPMiddleware:
         response['Content-Security-Policy'] = '; '.join(csp_parts)
 
 
-class EnhancedContentProtectionMiddleware(MiddlewareMixin):
-    """
-    Enhanced middleware with stricter content protection headers
-    """
+# class EnhancedContentProtectionMiddleware(MiddlewareMixin):
+#     """
+#     Enhanced middleware with stricter content protection headers
+#     """
     
-    def process_response(self, request, response):
-        """Add comprehensive security headers"""
+#     def process_response(self, request, response):
+#         """Add comprehensive security headers"""
         
-        if '/customer/' in request.path and '/webgl-content/' not in request.path:
+#         if '/customer/' in request.path and '/webgl-content/' not in request.path:
             
-            # Prevent embedding in frames
-            response['X-Frame-Options'] = 'DENY'
+#             # Prevent embedding in frames
+#             response['X-Frame-Options'] = 'DENY'
             
-            # Prevent MIME type sniffing
-            response['X-Content-Type-Options'] = 'nosniff'
+#             # Prevent MIME type sniffing
+#             response['X-Content-Type-Options'] = 'nosniff'
             
-            # Enable XSS protection
-            response['X-XSS-Protection'] = '1; mode=block'
+#             # Enable XSS protection
+#             response['X-XSS-Protection'] = '1; mode=block'
             
-            # Comprehensive CSP policy
-            csp_policy = (
-                "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
-                "https://cdn.jsdelivr.net "
-                "https://cdnjs.cloudflare.com "
-                "https://embed.tawk.to "
-                "https://va.tawk.to; "
-                "style-src 'self' 'unsafe-inline' "
-                "https://cdn.jsdelivr.net "
-                "https://cdnjs.cloudflare.com; "
-                "img-src 'self' data: blob: https:; "
-                "media-src 'self' blob:; "
-                "font-src 'self' https://cdnjs.cloudflare.com data:; "
-                "connect-src 'self' https://embed.tawk.to https://va.tawk.to wss://tawk.to; "
-                "frame-src 'self' https://embed.tawk.to; "
-                "object-src 'none'; "
-                "base-uri 'self'; "
-                "form-action 'self'; "
-                "frame-ancestors 'none'; "
-            )
-            response['Content-Security-Policy'] = csp_policy
+#             # Comprehensive CSP policy
+#             csp_policy = (
+#                 "default-src 'self'; "
+#                 "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
+#                 "https://cdn.jsdelivr.net "
+#                 "https://cdnjs.cloudflare.com "
+#                 "https://embed.tawk.to "
+#                 "https://va.tawk.to; "
+#                 "style-src 'self' 'unsafe-inline' "
+#                 "https://cdn.jsdelivr.net "
+#                 "https://cdnjs.cloudflare.com; "
+#                 "img-src 'self' data: blob: https:; "
+#                 "media-src 'self' blob:; "
+#                 "font-src 'self' https://cdnjs.cloudflare.com data:; "
+#                 "connect-src 'self' https://embed.tawk.to https://va.tawk.to wss://tawk.to; "
+#                 "frame-src 'self' https://embed.tawk.to; "
+#                 "object-src 'none'; "
+#                 "base-uri 'self'; "
+#                 "form-action 'self'; "
+#                 "frame-ancestors 'none'; "
+#             )
+#             response['Content-Security-Policy'] = csp_policy
             
-            # Aggressive cache control
-            response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private, max-age=0'
-            response['Pragma'] = 'no-cache'
-            response['Expires'] = '0'
+#             # Aggressive cache control
+#             response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private, max-age=0'
+#             response['Pragma'] = 'no-cache'
+#             response['Expires'] = '0'
             
-            # Referrer policy
-            response['Referrer-Policy'] = 'no-referrer'
+#             # Referrer policy
+#             response['Referrer-Policy'] = 'no-referrer'
             
-            # Permissions policy
-            response['Permissions-Policy'] = (
-                'accelerometer=(), '
-                'camera=(), '
-                'geolocation=(), '
-                'gyroscope=(), '
-                'magnetometer=(), '
-                'microphone=(), '
-                'payment=(), '
-                'usb=()'
-            )
+#             # Permissions policy
+#             response['Permissions-Policy'] = (
+#                 'accelerometer=(), '
+#                 'camera=(), '
+#                 'geolocation=(), '
+#                 'gyroscope=(), '
+#                 'magnetometer=(), '
+#                 'microphone=(), '
+#                 'payment=(), '
+#                 'usb=()'
+#             )
             
-            # Additional security headers
-            response['X-Permitted-Cross-Domain-Policies'] = 'none'
-            response['X-Download-Options'] = 'noopen'
+#             # Additional security headers
+#             response['X-Permitted-Cross-Domain-Policies'] = 'none'
+#             response['X-Download-Options'] = 'noopen'
             
-        return response
+#         return response
 
 
-class SecurityViolationRateLimitMiddleware:
-    """
-    Track and limit excessive security violations
-    """
+# class SecurityViolationRateLimitMiddleware:
+#     """
+#     Track and limit excessive security violations
+#     """
     
-    def __init__(self, get_response):
-        self.get_response = get_response
-        self.violations = {}  # Track violations by IP
+#     def __init__(self, get_response):
+#         self.get_response = get_response
+#         self.violations = {}  # Track violations by IP
     
-    def __call__(self, request):
-        # Only track AJAX violation logging requests
-        if request.path == '/customer/ajax/log-security-violation/':
-            ip = self.get_client_ip(request)
+#     def __call__(self, request):
+#         # Only track AJAX violation logging requests
+#         if request.path == '/customer/ajax/log-security-violation/':
+#             ip = self.get_client_ip(request)
             
-            # Clean old violations (older than 1 hour)
-            self.clean_old_violations()
+#             # Clean old violations (older than 1 hour)
+#             self.clean_old_violations()
             
-            # Track this violation
-            if ip not in self.violations:
-                self.violations[ip] = []
+#             # Track this violation
+#             if ip not in self.violations:
+#                 self.violations[ip] = []
             
-            self.violations[ip].append(timezone.now())
+#             self.violations[ip].append(timezone.now())
             
-            # Check if too many violations in short time
-            recent_violations = [
-                v for v in self.violations[ip]
-                if (timezone.now() - v).seconds < 300  # Last 5 minutes
-            ]
+#             # Check if too many violations in short time
+#             recent_violations = [
+#                 v for v in self.violations[ip]
+#                 if (timezone.now() - v).seconds < 300  # Last 5 minutes
+#             ]
             
-            if len(recent_violations) > 50:  # More than 50 violations in 5 min
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Too many violations detected. Account flagged for review.'
-                }, status=429)
+#             if len(recent_violations) > 50:  # More than 50 violations in 5 min
+#                 return JsonResponse({
+#                     'success': False,
+#                     'error': 'Too many violations detected. Account flagged for review.'
+#                 }, status=429)
         
-        return self.get_response(request)
+#         return self.get_response(request)
     
-    def get_client_ip(self, request):
-        """Get the client's IP address"""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
-        else:
-            ip = request.META.get('REMOTE_ADDR')
-        return ip
+#     def get_client_ip(self, request):
+#         """Get the client's IP address"""
+#         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+#         if x_forwarded_for:
+#             ip = x_forwarded_for.split(',')[0]
+#         else:
+#             ip = request.META.get('REMOTE_ADDR')
+#         return ip
     
-    def clean_old_violations(self):
-        """Remove violations older than 1 hour"""
-        cutoff = timezone.now() - timezone.timedelta(hours=1)
+#     def clean_old_violations(self):
+#         """Remove violations older than 1 hour"""
+#         cutoff = timezone.now() - timezone.timedelta(hours=1)
         
-        for ip in list(self.violations.keys()):
-            self.violations[ip] = [
-                v for v in self.violations[ip]
-                if v > cutoff
-            ]
+#         for ip in list(self.violations.keys()):
+#             self.violations[ip] = [
+#                 v for v in self.violations[ip]
+#                 if v > cutoff
+#             ]
             
-            if not self.violations[ip]:
-                del self.violations[ip]
+#             if not self.violations[ip]:
+#                 del self.violations[ip]
 
 
-class AntiScreenCaptureMiddleware(MiddlewareMixin):
-    """
-    Middleware to inject anti-screen-capture meta tags
-    """
+# class AntiScreenCaptureMiddleware(MiddlewareMixin):
+#     """
+#     Middleware to inject anti-screen-capture meta tags
+#     """
     
-    def process_response(self, request, response):
-        """Inject protection into HTML responses"""
+#     def process_response(self, request, response):
+#         """Inject protection into HTML responses"""
         
-        if '/customer/' in request.path:
-            if hasattr(response, 'content') and b'<!DOCTYPE html>' in response.content:
+#         if '/customer/' in request.path:
+#             if hasattr(response, 'content') and b'<!DOCTYPE html>' in response.content:
                 
-                # Inject meta tags for screen capture prevention
-                protection_meta = b'''
-                <meta name="referrer" content="no-referrer">
-                <meta http-equiv="pragma" content="no-cache">
-                <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
-                <meta http-equiv="expires" content="0">
-                '''
+#                 # Inject meta tags for screen capture prevention
+#                 protection_meta = b'''
+#                 <meta name="referrer" content="no-referrer">
+#                 <meta http-equiv="pragma" content="no-cache">
+#                 <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+#                 <meta http-equiv="expires" content="0">
+#                 '''
                 
-                # Replace closing head tag
-                response.content = response.content.replace(
-                    b'</head>',
-                    protection_meta + b'</head>'
-                )
+#                 # Replace closing head tag
+#                 response.content = response.content.replace(
+#                     b'</head>',
+#                     protection_meta + b'</head>'
+#                 )
         
-        return response
+#         return response
