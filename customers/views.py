@@ -275,24 +275,39 @@ def demo_detail(request, slug):
     # Check if user has liked this demo
     user_liked = DemoLike.objects.filter(demo=demo, user=request.user).exists()
     
-    # Get related demos
-    related_demos = Demo.objects.filter(
-        is_active=True,
-        file_type='video'  # Only show video demos in related
-    ).exclude(id=demo.id)
+    # Check if user has already submitted feedback
+    user_feedback = DemoFeedback.objects.filter(demo=demo, user=request.user).first()
     
-    # Filter by business category if user has one
+    # Get approved feedbacks for display
+    approved_feedbacks = DemoFeedback.objects.filter(
+        demo=demo,
+        is_approved=True
+    ).select_related('user').order_by('-created_at')[:10]
+    
+    # ✅ FIXED: Get latest 10 video demos WITHOUT slicing first
+    latest_video_demos_qs = Demo.objects.filter(
+        is_active=True,
+        file_type='video',
+        video_file__isnull=False
+    ).exclude(
+        id=demo.id  # Exclude current demo
+    ).select_related('created_by')
+    
+    # ✅ FIXED: Filter by user's business category BEFORE slicing
     if request.user.business_category:
-        related_demos = related_demos.filter(
+        latest_video_demos_qs = latest_video_demos_qs.filter(
             target_business_categories=request.user.business_category
         )
     
-    related_demos = related_demos[:3]
+    # ✅ FIXED: Slice at the end
+    latest_video_demos = latest_video_demos_qs.order_by('-created_at')[:10]
     
     context = {
         'demo': demo,
         'user_liked': user_liked,
-        'related_demos': related_demos,
+        'user_feedback': user_feedback,
+        'approved_feedbacks': approved_feedbacks,
+        'latest_video_demos': latest_video_demos,
         'user_email': request.user.email,
     }
     

@@ -1,4 +1,4 @@
-<!-- templates/customers/demo_detail.html - FULLY FIXED WITH WEBGL & FEEDBACK -->
+<!-- templates/customers/demo_detail.html - COMPLETE UPDATED FILE -->
 {% extends 'customers/base.html' %}
 {% load static %}
 
@@ -329,7 +329,7 @@
     }
 
     /* ==========================================
-       📱 RELATED DEMOS SIDEBAR
+       📱 LATEST VIDEOS SIDEBAR
        ========================================== */
     .related-sidebar {
         background: white;
@@ -355,6 +355,15 @@
         color: var(--dark-color);
         margin: 0;
         font-family: var(--heading-font);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .sidebar-header .badge {
+        font-size: var(--font-xs);
+        padding: 0.3rem 0.6rem;
+        background: var(--primary-color);
     }
 
     .sidebar-content {
@@ -384,6 +393,7 @@
         overflow: hidden;
         transition: all 0.3s ease;
         margin-bottom: var(--spacing-md);
+        position: relative;
     }
 
     .related-card:last-child {
@@ -423,6 +433,25 @@
         margin-bottom: var(--spacing-sm);
         display: flex;
         gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .related-date {
+        margin-top: var(--spacing-xs);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .related-date i {
+        font-size: var(--font-xs);
+        color: var(--gray-400);
+    }
+
+    .related-date span {
+        font-size: var(--font-xs);
+        color: var(--gray-500);
     }
 
     .related-card .btn {
@@ -431,24 +460,19 @@
         width: 100%;
     }
 
-    /* Category Badges */
-    .category-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background: var(--primary-color);
+    /* Fresh/New badge for demos less than 7 days old */
+    .fresh-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: var(--success-color);
         color: white;
-        padding: 4px 10px;
-        border-radius: 15px;
         font-size: var(--font-xs);
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
         font-weight: 600;
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-
-    .category-badge:hover {
-        background: var(--secondary-color);
-        color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        z-index: 10;
     }
 
     /* ==========================================
@@ -937,36 +961,62 @@
             </div>
         </div>
 
+        <!-- ✅ RIGHT SIDEBAR: Latest 10 Video Demos -->
         <div class="col-lg-4">
-            {% if related_demos %}
+            {% if latest_video_demos %}
             <div class="related-sidebar">
                 <div class="sidebar-header">
                     <h3 class="sidebar-title">
-                        <i class="fas fa-play-circle me-2"></i>Related Demos
+                        <i class="fas fa-fire"></i>
+                        Latest Videos
                     </h3>
+                    <span class="badge">{{ latest_video_demos|length }}</span>
                 </div>
                 <div class="sidebar-content">
-                    {% for related_demo in related_demos %}
+                    {% for latest_demo in latest_video_demos %}
                     <div class="related-card">
-                        {% if related_demo.thumbnail %}
-                            <img src="{{ related_demo.thumbnail.url }}" 
-                                 alt="{{ related_demo.title }}" 
+                        {% if latest_demo.thumbnail %}
+                            <img src="{{ latest_demo.thumbnail.url }}" 
+                                 alt="{{ latest_demo.title }}" 
                                  class="related-thumbnail">
+                            
+                            {# Show "NEW" badge if demo is less than 7 days old #}
+                            {% load tz %}
+                            {% now "U" as current_timestamp %}
+                            {% with demo_timestamp=latest_demo.created_at|date:"U"|add:"0" %}
+                                {% with time_diff=current_timestamp|add:"-604800" %}
+                                    {% if demo_timestamp > time_diff %}
+                                    <span class="fresh-badge">
+                                        ✨ NEW
+                                    </span>
+                                    {% endif %}
+                                {% endwith %}
+                            {% endwith %}
                         {% else %}
-                            <div class="related-thumbnail" style="background: var(--gray-100); display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-video" style="font-size: 2rem; color: var(--gray-400);"></i>
+                            <div class="related-thumbnail" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-video" style="font-size: 2rem; color: white;"></i>
                             </div>
                         {% endif %}
                         
                         <div class="related-content">
-                            <h4 class="related-title">{{ related_demo.title }}</h4>
+                            <h4 class="related-title">{{ latest_demo.title }}</h4>
+                            
                             <div class="related-meta">
-                                <span><i class="fas fa-eye me-1"></i>{{ related_demo.views_count }}</span>
-                                <span><i class="fas fa-star text-warning me-1"></i>{{ related_demo.likes_count }}</span>
+                                <span><i class="fas fa-eye me-1"></i>{{ latest_demo.views_count }}</span>
+                                <span><i class="fas fa-star text-warning me-1"></i>{{ latest_demo.likes_count }}</span>
+                                {% if latest_demo.duration %}
+                                <span><i class="fas fa-clock me-1"></i>{{ latest_demo.formatted_duration }}</span>
+                                {% endif %}
                             </div>
-                            <a href="{% url 'customers:demo_detail' related_demo.slug %}" 
-                               class="btn btn-primary btn-sm">
-                                <i class="fas fa-play me-1"></i>Watch
+                            
+                            <div class="related-date">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>{{ latest_demo.created_at|timesince }} ago</span>
+                            </div>
+                            
+                            <a href="{% url 'customers:demo_detail' latest_demo.slug %}" 
+                               class="btn btn-primary btn-sm mt-2">
+                                <i class="fas fa-play me-1"></i>Watch Now
                             </a>
                         </div>
                     </div>
@@ -1183,10 +1233,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // ✅ FIXED: Like feature with correct URL
+    // Like feature
     initLikeFeature();
     
-    // ✅ FIXED: Feedback feature with correct URL
+    // Feedback feature
     initFeedback();
     
     function initLikeFeature() {
@@ -1196,9 +1246,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const demoId = this.getAttribute('data-demo-id');
                 this.classList.add('loading');
                 
-                console.log('👍 Liking demo ID:', demoId);
-                
-                // ✅ FIXED URL: Use demo ID not slug
                 fetch(`/customer/ajax/demo/${demoId}/like/`, {
                     method: 'POST',
                     headers: {
@@ -1207,12 +1254,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 })
                 .then(r => {
-                    console.log('Response status:', r.status);
                     if (!r.ok) throw new Error('Network error');
                     return r.json();
                 })
                 .then(data => {
-                    console.log('Like response:', data);
                     if (data.liked !== undefined) {
                         if (data.liked) {
                             this.classList.add('liked');
@@ -1228,10 +1273,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         showToast(data.error || 'Error', 'error');
                     }
                 })
-                .catch((error) => {
-                    console.error('Like error:', error);
-                    showToast('Error liking demo', 'error');
-                })
+                .catch(() => showToast('Error liking demo', 'error'))
                 .finally(() => this.classList.remove('loading'));
             });
         }
@@ -1286,9 +1328,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 btn.disabled = true;
                 
                 const demoId = '{{ demo.id }}';
-                console.log('📝 Submitting feedback:', { demoId, text, rating });
                 
-                // ✅ FIXED URL: Use correct AJAX endpoint with demo ID
                 fetch(`/customer/ajax/demo/${demoId}/feedback/`, {
                     method: 'POST',
                     headers: {
@@ -1296,17 +1336,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        feedback: text,  // ✅ Changed from feedback_text
+                        feedback: text,
                         rating: rating
                     })
                 })
                 .then(r => {
-                    console.log('Feedback response status:', r.status);
                     if (!r.ok) throw new Error('Network error');
                     return r.json();
                 })
                 .then(data => {
-                    console.log('Feedback response:', data);
                     if (data.success) {
                         showToast(data.message || 'Feedback submitted successfully!', 'success');
                         form.style.display = 'none';
@@ -1318,10 +1356,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         showToast(data.error || 'Error submitting feedback', 'error');
                     }
                 })
-                .catch((error) => {
-                    console.error('Feedback error:', error);
-                    showToast('Error submitting feedback', 'error');
-                })
+                .catch(() => showToast('Error submitting feedback', 'error'))
                 .finally(() => {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
