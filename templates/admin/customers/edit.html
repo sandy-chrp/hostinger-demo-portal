@@ -3,59 +3,281 @@
 
 {% block page_title %}Edit Customer{% endblock %}
 
+{% block extra_css %}
+<!-- jQuery (Required for Select2) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<!-- Custom Select2 Styling - Matched to Create -->
+<style>
+.select2-container--default .select2-selection--single {
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 0.5rem !important;
+    height: 38px !important;
+    padding: 0.6rem 0.8rem !important;
+    font-size: 0.75rem !important;
+    font-family: 'Poppins', 'Inter', sans-serif !important;
+    transition: all 0.3s ease !important;
+}
+
+.select2-container--default .select2-selection--single:focus,
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: #087fc2 !important;
+    box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1) !important;
+    outline: none !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 24px !important;
+    padding-left: 0 !important;
+    color: #495057 !important;
+    font-size: 0.75rem !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+    right: 8px !important;
+}
+
+.select2-dropdown {
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 0.5rem !important;
+    font-size: 0.75rem !important;
+    font-family: 'Poppins', 'Inter', sans-serif !important;
+    z-index: 9999 !important;
+}
+
+.select2-results__option {
+    padding: 0.5rem 0.8rem !important;
+    font-size: 0.75rem !important;
+}
+
+.select2-results__option--highlighted {
+    background-color: #087fc2 !important;
+    color: white !important;
+}
+
+.select2-search--dropdown .select2-search__field {
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 0.5rem !important;
+    padding: 0.5rem 0.8rem !important;
+    font-size: 0.75rem !important;
+    font-family: 'Poppins', 'Inter', sans-serif !important;
+}
+
+.select2-search--dropdown .select2-search__field:focus {
+    border-color: #087fc2 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1) !important;
+}
+
+.select2-container.is-invalid .select2-selection--single {
+    border-color: #dc3545 !important;
+}
+
+.select2-container.is-valid .select2-selection--single {
+    border-color: #198754 !important;
+}
+
+.select2-container {
+    width: 100% !important;
+}
+
+/* Dropdown/Select specific styling - Matched to Create */
+.form-control select,
+.form-select,
+select.form-control {
+    font-size: 0.75rem !important;
+    font-family: 'Poppins', 'Inter', sans-serif !important;
+}
+
+/* Dropdown options */
+.form-control option,
+.form-select option,
+select.form-control option {
+    font-size: 0.75rem !important;
+    font-family: 'Poppins', 'Inter', sans-serif !important;
+    padding: 0.5rem !important;
+}
+
+/* Input fields */
+.form-control input,
+input.form-control {
+    font-size: 0.75rem !important;
+    font-family: 'Poppins', 'Inter', sans-serif !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+{% endblock %}
+
 {% block admin_content %}
 <style>
-/* ===== SKIP VERIFICATION BOX - ALWAYS VISIBLE ===== */
+/* ============================================
+   EDIT CUSTOMER PAGE STYLES - MATCHED TO CREATE.HTML
+   ============================================ */
+
+/* Admin Card Header - Compact like Create */
+.admin-card-header {
+    background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 8px 8px 0 0;
+}
+
+.admin-card-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0;
+    color: white !important;
+    font-family: 'Poppins', 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.admin-card-title i {
+    font-size: 0.875rem;
+}
+
+/* Admin Card Body - Matched to Create */
+.admin-card-body {
+    background: white;
+    padding: 0.875rem;
+    border-radius: 0 0 8px 8px;
+    max-height: calc(100vh - 150px);
+    overflow-y: auto;
+}
+
+/* Section Headers - Compact like Create */
+.section-header {
+    padding: 0.25rem 0;
+    margin: 0.5rem 0 0.25rem 0;
+    border-bottom: 1.5px solid #e9ecef;
+}
+
+.section-header h6 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #087fc2;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-family: 'Poppins', 'Inter', sans-serif;
+}
+
+.section-header h6 i {
+    font-size: 0.75rem;
+}
+
+/* Form Labels - Compact like Create */
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    font-family: 'Poppins', 'Inter', sans-serif;
+}
+
+/* Form Controls - Matched to Create */
+.form-control,
+.form-select {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.75rem;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', 'Inter', sans-serif;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #087fc2;
+    box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
+}
+
+/* Small Text - Compact like Create */
+small.text-muted {
+    font-size: 0.675rem;
+    font-weight: 400;
+    color: #6c757d;
+    font-family: 'Poppins', 'Inter', sans-serif;
+}
+
+/* Required Asterisk */
+.text-danger {
+    color: #dc3545 !important;
+    font-weight: 600;
+}
+
+/* Email Row - EXACTLY like Create */
+.email-row-container {
+    margin-bottom: 0.5rem;
+}
+
+/* Skip Verification Box - EXACTLY like Create (Admin Override Column) */
 .skip-verification-box {
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 999 !important;
-    background: #fff3cd !important;
-    border: 2px solid #ffc107 !important;
-    border-radius: 8px !important;
-    padding: 12px 16px !important;
-    margin-bottom: 20px !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    background: #fff3cd;
+    border: 1.5px solid #ffc107;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.skip-verification-box i {
+    font-size: 0.75rem;
+    color: #ffc107;
 }
 
 .skip-verification-box .form-check {
-    margin: 0 !important;
+    margin: 0;
+    display: flex;
+    align-items: center;
 }
 
 .skip-verification-box .form-check-input {
-    width: 3.5rem !important;
-    height: 1.75rem !important;
-    cursor: pointer !important;
-    flex-shrink: 0 !important;
+    margin: 0;
 }
 
 .skip-verification-box .form-check-label {
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-    color: #664d03 !important;
-    cursor: pointer !important;
-    margin: 0 !important;
+    font-size: 0.675rem;
+    font-weight: 500;
+    color: #664d03;
+    cursor: pointer;
+    margin: 0;
+    font-family: 'Poppins', 'Inter', sans-serif;
+    white-space: nowrap;
 }
 
-.skip-verification-icon {
-    font-size: 1.5rem !important;
-    color: #ffc107 !important;
-    flex-shrink: 0 !important;
+/* Small helper text under skip box */
+.skip-helper-text {
+    font-size: 0.625rem;
+    font-weight: 400;
+    color: #6c757d;
+    margin-top: 0.25rem;
+    display: block;
 }
 
-/* ===== EMAIL CHANGE ALERT ===== */
+/* Email Change Alert - Improved Design */
 .email-change-alert {
     background: #d1ecf1;
-    border: 2px solid #0dcaf0;
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin-bottom: 15px;
+    border: 1.5px solid #0dcaf0;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.5rem;
     display: none;
     align-items: center;
-    gap: 10px;
+    gap: 0.5rem;
 }
 
 .email-change-alert.show {
@@ -64,7 +286,8 @@
 
 .email-change-alert i {
     color: #0dcaf0;
-    font-size: 1.3rem;
+    font-size: 0.875rem;
+    flex-shrink: 0;
 }
 
 .email-change-alert .alert-text {
@@ -74,20 +297,25 @@
 .email-change-alert .alert-text strong {
     display: block;
     color: #055160;
-    font-size: 0.95rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.125rem;
 }
 
 .email-change-alert .alert-text small {
     color: #087990;
-    font-size: 0.85rem;
+    font-size: 0.675rem;
 }
 
+/* Password Wrapper - Matched to Create */
 .password-wrapper {
     position: relative;
 }
+
 .password-wrapper .form-control {
-    padding-right: 45px;
+    padding-right: 2.5rem;
 }
+
 .password-toggle-icon {
     position: absolute;
     right: 12px;
@@ -96,101 +324,65 @@
     cursor: pointer;
     color: #6c757d;
     z-index: 10;
+    font-size: 0.75rem;
     transition: color 0.3s ease;
 }
+
 .password-toggle-icon:hover {
     color: #087fc2;
 }
+
+/* Validation Messages - Matched to Create */
 .validation-msg {
-    font-size: 0.875rem;
+    font-size: 0.675rem;
     margin-top: 0.25rem;
     display: none;
     font-weight: 500;
+    font-family: 'Poppins', 'Inter', sans-serif;
 }
+
 .validation-msg.show {
     display: block;
 }
+
 .validation-msg.success {
     color: #198754;
 }
+
 .validation-msg.error {
     color: #dc3545;
 }
-.password-strength {
-    margin-top: 0.5rem;
+
+/* OTP Section - Matched to Create */
+#otpSection {
+    background: #f0f9ff;
+    padding: 0.625rem;
+    border-radius: 6px;
+    border: 1.5px solid #087fc2;
+    margin-bottom: 0.5rem;
 }
-.password-strength .progress {
-    height: 4px;
-    border-radius: 2px;
-}
-.password-strength .progress-bar {
-    transition: width 0.3s ease, background-color 0.3s ease;
-}
-.strength-weak { background-color: #dc3545 !important; }
-.strength-medium { background-color: #ffc107 !important; }
-.strength-strong { background-color: #198754 !important; }
+
 #otpInput {
-    font-size: 1.2rem;
-    letter-spacing: 0.3rem;
+    font-size: 0.875rem;
+    letter-spacing: 0.25rem;
     text-align: center;
     font-weight: 600;
+    font-family: 'Poppins', 'Inter', sans-serif;
 }
 
-.section-header {
-    padding: 0.75rem 0;
-    margin: 1rem 0 0.75rem 0;
-    border-bottom: 2px solid #e9ecef;
-}
-
-.section-header h5 {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: #087fc2;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.section-header h5 i {
-    font-size: 1.25rem;
-}
-
-.form-label {
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.form-control, .form-select {
-    border: 2px solid #dee2e6;
-    border-radius: 8px;
-    padding: 0.625rem 0.875rem;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus, .form-select:focus {
-    border-color: #087fc2;
-    box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
-}
-
-.form-control.is-valid {
-    border-color: #198754;
-    background-image: none;
-}
-
-.form-control.is-invalid {
-    border-color: #dc3545;
-    background-image: none;
-}
-
+/* Buttons - Compact like Create */
 .btn {
-    padding: 0.625rem 1.25rem;
-    font-weight: 600;
-    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    font-weight: 500;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    border-width: 1.5px;
     transition: all 0.3s ease;
+    font-family: 'Poppins', 'Inter', sans-serif;
+}
+
+.btn i {
+    font-size: 0.675rem;
 }
 
 .btn:hover {
@@ -201,92 +393,24 @@
     transform: translateY(0);
 }
 
+.btn-primary {
+    background-color: #087fc2;
+    border-color: #087fc2;
+}
+
+.btn-primary:hover {
+    background-color: #0669a0;
+    border-color: #0669a0;
+}
+
 .btn-outline-primary {
-    border-width: 2px;
     color: #087fc2;
     border-color: #087fc2;
 }
 
 .btn-outline-primary:hover {
     background-color: #087fc2;
-    border-color: #087fc2;
     color: white;
-}
-
-.btn-primary {
-    background-color: #087fc2;
-    border-color: #087fc2;
-}
-
-.btn-primary:hover,
-.btn-primary:focus,
-.btn-primary:active {
-    background-color: #0669a0;
-    border-color: #0669a0;
-}
-
-#otpSection {
-    background: #f0f9ff;
-    padding: 1rem;
-    border-radius: 8px;
-    border: 2px solid #087fc2;
-    margin-bottom: 1rem;
-}
-
-.form-check-label {
-    font-weight: 500;
-    color: #495057;
-}
-
-.admin-card-header {
-    background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
-    color: white;
-    padding: 1.25rem 1.5rem;
-    border-radius: 12px 12px 0 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.admin-card-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
-    color: white !important;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.admin-card-body {
-    background: white;
-    padding: 2rem;
-    border-radius: 0 0 12px 12px;
-}
-
-.text-danger {
-    color: #dc3545 !important;
-    font-weight: 700;
-}
-
-.input-group .btn {
-    border-radius: 0 8px 8px 0;
-}
-
-.spinner-border-sm {
-    width: 1rem;
-    height: 1rem;
-    border-width: 0.15em;
-}
-
-.btn-link {
-    color: #087fc2;
-    text-decoration: none;
-}
-
-.btn-link:hover {
-    color: #0669a0;
-    text-decoration: underline;
 }
 
 .btn-success {
@@ -294,150 +418,235 @@
     border-color: #10b981;
 }
 
-.btn-success:hover,
-.btn-success:focus {
+.btn-success:hover {
     background-color: #059669;
     border-color: #059669;
 }
 
-.btn-outline-success {
-    color: #10b981;
-    border-color: #10b981;
+.btn-link {
+    color: #087fc2;
+    text-decoration: none;
+    font-size: 0.75rem;
 }
 
-.btn-outline-success:hover {
-    background-color: #10b981;
-    border-color: #10b981;
-    color: white;
+.btn-link:hover {
+    color: #0669a0;
+    text-decoration: underline;
+}
+
+/* Input Groups - Matched to Create */
+.input-group .btn {
+    border-radius: 0 6px 6px 0;
+}
+
+/* Form Check Switches - Matched to Create */
+.form-check-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #495057;
+    font-family: 'Poppins', 'Inter', sans-serif;
+}
+
+/* Spinner - Matched to Create */
+.spinner-border-sm {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-width: 0.125em;
+}
+
+/* Row spacing - Matched to Create */
+.row.g-3 > * {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+/* Card - Matched to Create */
+.card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 991.98px) {
+    .admin-card-body {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .admin-card-body {
+        padding: 0.625rem;
+    }
+
+    .skip-verification-box .form-check-label {
+        font-size: 0.625rem;
+    }
+
+    .btn {
+        font-size: 0.675rem;
+        padding: 0.3rem 0.65rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .admin-card-body {
+        padding: 0.5rem;
+    }
 }
 </style>
 
 <div class="container-fluid px-4 py-4">
     <div class="card border-0 shadow-sm">
         <div class="admin-card-header">
-            <h3 class="admin-card-title">
-                <i class="fas fa-user-edit"></i>
-                Edit Customer
-            </h3>
-            <a href="{% url 'core:admin_users' %}" class="btn btn-light">
-                <i class="fas fa-arrow-left me-2"></i>Back to List
-            </a>
+            <div class="d-flex justify-content-between align-items-center" style="width: 100%;">
+                <h5 class="admin-card-title">
+                    <i class="fas fa-user-edit me-2"></i>Edit Customer
+                </h5>
+                <a href="{% url 'core:admin_users' %}" class="btn btn-light btn-sm" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 6px; font-weight: 500;">
+                    <i class="fas fa-arrow-left me-1" style="font-size: 0.75rem;"></i>Back to List
+                </a>
+            </div>
         </div>
         
         <div class="admin-card-body">
-            <!-- ✅ Skip Verification Toggle - ALWAYS VISIBLE -->
-            <div class="skip-verification-box">
-                <i class="fas fa-shield-alt skip-verification-icon"></i>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="skipVerification" name="skip_verification">
-                    <label class="form-check-label" for="skipVerification">
-                        Skip Email Verification (Admin Override)
-                    </label>
-                </div>
-            </div>
-
-            <!-- Email Change Alert -->
-            <div class="email-change-alert" id="emailChangeAlert">
-                <i class="fas fa-info-circle"></i>
-                <div class="alert-text">
-                    <strong>Email Address Changed!</strong>
-                    <small>New email must be verified with OTP before saving (or enable Skip Verification above)</small>
-                </div>
-            </div>
-            
-            <form method="post" id="editCustomerForm">
+            <form method="post" id="editCustomerForm" novalidate>
                 {% csrf_token %}
                 
                 <!-- Personal Information -->
                 <div class="section-header">
-                    <h5><i class="fas fa-user"></i> Personal Information</h5>
+                    <h6><i class="fas fa-user"></i>Personal Information</h6>
                 </div>
                 
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-md-6 mb-2">
                         <label for="id_first_name" class="form-label">First Name <span class="text-danger">*</span></label>
                         {{ form.first_name }}
                         <div id="firstNameMsg" class="validation-msg"></div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6 mb-2">
                         <label for="id_last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
                         {{ form.last_name }}
                         <div id="lastNameMsg" class="validation-msg"></div>
                     </div>
                 </div>
                 
-                <!-- Contact Information -->
+                <!-- Email Verification - EXACTLY like Create -->
                 <div class="section-header">
-                    <h5><i class="fas fa-envelope"></i> Contact Information</h5>
+                    <h6><i class="fas fa-envelope"></i>Email Verification</h6>
                 </div>
                 
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="id_email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                <!-- Email Change Alert -->
+                <div class="email-change-alert" id="emailChangeAlert">
+                    <i class="fas fa-info-circle"></i>
+                    <div class="alert-text">
+                        <strong>Email Address Changed!</strong>
+                        <small>New email must be verified with OTP before saving (or enable Admin Override)</small>
+                    </div>
+                </div>
+                
+                <div class="row email-row-container">
+                    <div class="col-md-8 mb-2">
+                        <label for="id_email" class="form-label">Business Email <span class="text-danger">*</span></label>
                         <div class="input-group">
                             {{ form.email }}
-                            <button class="btn btn-outline-primary" type="button" id="sendOtpBtn">
-                                <i class="fas fa-paper-plane me-1"></i>Send OTP
+                            <button class="btn btn-outline-primary btn-sm" type="button" id="sendOtpBtn" disabled style="padding: 0.35rem 0.75rem; font-weight: 500; border-radius: 0 6px 6px 0; font-size: 0.75rem; border-width: 1.5px; color: #087fc2; border-color: #087fc2;">
+                                <i class="fas fa-paper-plane me-1" style="font-size: 0.675rem;"></i>Send OTP
                             </button>
                         </div>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.675rem; font-weight: 400;">
+                            <i class="fas fa-info-circle"></i> Business email required
+                        </small>
                         <div id="emailMsg" class="validation-msg"></div>
                         <input type="hidden" id="originalEmail" value="{{ form.instance.email }}">
                     </div>
-                    <div class="col-md-6">
-                        <label for="id_mobile" class="form-label">Mobile Number <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            {{ form.country_code }}
-                            {{ form.mobile }}
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">Admin Override</label>
+                        <div class="skip-verification-box">
+                            <i class="fas fa-shield-alt"></i>
+                            <div class="form-check form-switch" style="margin: 0;">
+                                {{ form.skip_email_validation }}
+                                <label class="form-check-label" for="skipVerification" style="font-size: 0.675rem; font-weight: 500; color: #664d03; cursor: pointer; margin: 0; font-family: 'Poppins', 'Inter', sans-serif; white-space: nowrap;">
+                                    Skip OTP
+                                </label>
+                            </div>
                         </div>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.625rem; font-weight: 400;">
+                            <strong>ON</strong>=Bypass | <strong>OFF</strong>=Require
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- OTP Section - Matched to Create -->
+                <div id="otpSection" style="display:none;">
+                    <div class="row">
+                        <div class="col-md-8 mb-2">
+                            <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">Enter OTP <span style="color: #dc3545; font-weight: 600;">*</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="otpInput" maxlength="6" placeholder="000000" inputmode="numeric" style="font-size: 0.875rem; letter-spacing: 0.25rem; text-align: center; font-weight: 600;">
+                                <button type="button" class="btn btn-success btn-sm" id="verifyOtpBtn" style="padding: 0.35rem 0.75rem; font-weight: 500; border-radius: 0 6px 6px 0; font-size: 0.75rem; background-color: #10b981; border-color: #10b981;">
+                                    <i class="fas fa-check me-1" style="font-size: 0.675rem;"></i>Verify
+                                </button>
+                            </div>
+                            <div id="otpMsg" style="font-size: 0.675rem; margin-top: 0.25rem; display: none; font-weight: 500;"></div>
+                            <small class="text-muted" style="font-size: 0.675rem;">Check <strong id="otpEmailDisplay"></strong></small>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">Actions</label>
+                            <div class="d-flex flex-column gap-1">
+                                <button type="button" class="btn btn-link p-0 text-start" id="resendOtpBtn" style="color: #087fc2; text-decoration: none; font-size: 0.75rem; font-weight: 500;">
+                                    <i class="fas fa-redo me-1"></i>Resend OTP
+                                </button>
+                                <small class="text-muted" id="otpTimerDisplay" style="font-size: 0.675rem;"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact Information -->
+                <div class="section-header">
+                    <h6><i class="fas fa-phone"></i>Contact Information</h6>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-3 mb-2">
+                        <label for="id_country_code" class="form-label">Country Code <span class="text-danger">*</span></label>
+                        {{ form.country_code }}
+                        <small class="text-muted d-block mt-1" style="font-size: 0.675rem; font-weight: 400;">
+                            <i class="fas fa-globe"></i> Default: +91 (India)
+                        </small>
+                        <div id="countryCodeMsg" class="validation-msg"></div>
+                    </div>
+                    <div class="col-md-9 mb-2">
+                        <label for="id_mobile" class="form-label">Mobile Number <span class="text-danger">*</span></label>
+                        {{ form.mobile }}
+                        <small class="text-muted d-block mt-1" style="font-size: 0.675rem; font-weight: 400;">
+                            <i class="fas fa-info-circle"></i> 10-digit mobile number (without country code)
+                        </small>
                         <div id="mobileMsg" class="validation-msg"></div>
                     </div>
                 </div>
                 
-                <!-- OTP Verification Section -->
-                <div id="otpSection" style="display: none;">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-6">
-                            <label for="otpInput" class="form-label">Enter 6-Digit OTP</label>
-                            <input type="text" class="form-control" id="otpInput" maxlength="6" placeholder="000000" autocomplete="off">
-                            <div id="otpMsg" class="validation-msg"></div>
-                            <small id="otpTimer" class="text-muted"></small>
-                        </div>
-                        <div class="col-md-6">
-                            <button type="button" class="btn btn-outline-success" id="verifyOtpBtn">
-                                <i class="fas fa-check me-1"></i>Verify OTP
-                            </button>
-                            <button type="button" class="btn btn-link" id="resendOtpBtn" style="display: none;">
-                                <i class="fas fa-redo me-1"></i>Resend OTP
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Password Section - OPTIONAL FOR EDIT -->
+                <!-- Password Section -->
                 <div class="section-header">
-                    <h5><i class="fas fa-lock"></i> Password (Optional - Leave blank to keep current)</h5>
+                    <h6><i class="fas fa-lock"></i>Change Password (Optional)</h6>
                 </div>
                 
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-md-6 mb-2">
                         <label for="id_new_password" class="form-label">New Password</label>
-                        <div class="password-wrapper">
+                        <div class="password-wrapper" style="position: relative;">
                             {{ form.new_password }}
-                            <i class="fas fa-eye password-toggle-icon" data-target="id_new_password"></i>
+                            <i class="fas fa-eye password-toggle-icon" id="togglePassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6c757d; z-index: 10; font-size: 0.75rem;"></i>
                         </div>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.675rem; font-weight: 400;">Leave blank to keep current password</small>
                         <div id="pass1Msg" class="validation-msg"></div>
-                        <div id="passwordStrength" class="password-strength" style="display: none;">
-                            <div class="progress">
-                                <div id="strengthBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                            </div>
-                            <small id="strengthText" class="text-muted"></small>
-                        </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6 mb-2">
                         <label for="id_confirm_new_password" class="form-label">Confirm New Password</label>
-                        <div class="password-wrapper">
+                        <div class="password-wrapper" style="position: relative;">
                             {{ form.confirm_new_password }}
-                            <i class="fas fa-eye password-toggle-icon" data-target="id_confirm_new_password"></i>
+                            <i class="fas fa-eye password-toggle-icon" id="toggleConfirmPassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6c757d; z-index: 10; font-size: 0.75rem;"></i>
                         </div>
                         <div id="pass2Msg" class="validation-msg"></div>
                     </div>
@@ -445,45 +654,44 @@
                 
                 <!-- Business Information -->
                 <div class="section-header">
-                    <h5><i class="fas fa-briefcase"></i> Business Information</h5>
+                    <h6><i class="fas fa-briefcase"></i>Business Information</h6>
                 </div>
                 
                 <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="id_job_title" class="form-label">Job Title</label>
-                        {{ form.job_title }}
-                    </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4 mb-2">
                         <label for="id_organization" class="form-label">Organization</label>
                         {{ form.organization }}
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4 mb-2">
+                        <label for="id_job_title" class="form-label">Job Title</label>
+                        {{ form.job_title }}
+                    </div>
+                    <div class="col-md-4 mb-2">
                         <label for="editCategorySelect" class="form-label">Business Category</label>
                         {{ form.business_category }}
-                        <div id="categoryLoader" style="display: none;">
-                            <small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Loading...</small>
-                        </div>
                     </div>
-                    <div class="col-md-6">
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-12 mb-2">
                         <label for="editSubcategorySelect" class="form-label">Business Subcategory</label>
-                        {{ form.business_subcategory }}
-                        <div id="subcategoryLoader" style="display: none;">
-                            <small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Loading...</small>
+                        <div class="d-flex align-items-center gap-2">
+                            {{ form.business_subcategory }}
+                            <div class="spinner-border spinner-border-sm" id="subcategoryLoader" style="display:none; width: 0.75rem; height: 0.75rem; border-width: 0.125em;"></div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Referral Information -->
                 <div class="section-header">
-                    <h5><i class="fas fa-share-alt"></i> Referral Information</h5>
+                    <h6><i class="fas fa-share-alt"></i>Referral Information</h6>
                 </div>
                 
                 <div class="row g-3">
-                    <div class="col-md-12">
+                    <div class="col-md-12 mb-2">
                         <label for="id_referral_source" class="form-label">Referral Source</label>
                         {{ form.referral_source }}
                     </div>
-                    <div class="col-md-12">
+                    <div class="col-md-12 mb-2">
                         <label for="id_referral_message" class="form-label">Referral Message</label>
                         {{ form.referral_message }}
                     </div>
@@ -491,23 +699,23 @@
                 
                 <!-- Account Status -->
                 <div class="section-header">
-                    <h5><i class="fas fa-cog"></i> Account Status</h5>
+                    <h6><i class="fas fa-cog"></i>Account Status</h6>
                 </div>
                 
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-4 mb-2">
                         <div class="form-check form-switch">
                             {{ form.is_approved }}
                             <label class="form-check-label" for="id_is_approved">Account Approved</label>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4 mb-2">
                         <div class="form-check form-switch">
                             {{ form.is_active }}
                             <label class="form-check-label" for="id_is_active">Account Active</label>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4 mb-2">
                         <div class="form-check form-switch">
                             {{ form.is_email_verified }}
                             <label class="form-check-label" for="id_is_email_verified">Email Verified</label>
@@ -516,12 +724,12 @@
                 </div>
                 
                 <!-- Form Actions -->
-                <div class="mt-4 d-flex gap-3">
-                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
-                        <i class="fas fa-save me-2"></i>Update Customer
+                <div class="mt-2">
+                    <button type="submit" class="btn btn-primary btn-sm" id="submitBtn" style="padding: 0.35rem 0.75rem; font-weight: 500; border-radius: 6px; font-size: 0.75rem; background-color: #087fc2; border-color: #087fc2;">
+                        <i class="fas fa-save me-1" style="font-size: 0.75rem;"></i>Update Customer
                     </button>
-                    <a href="{% url 'core:admin_users' %}" class="btn btn-outline-secondary btn-lg">
-                        <i class="fas fa-times me-2"></i>Cancel
+                    <a href="{% url 'core:admin_users' %}" class="btn btn-outline-secondary btn-sm" style="padding: 0.35rem 0.75rem; font-weight: 500; border-radius: 6px; font-size: 0.75rem;">
+                        <i class="fas fa-times me-1" style="font-size: 0.75rem;"></i>Cancel
                     </a>
                 </div>
             </form>
@@ -538,6 +746,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const firstName = document.getElementById('id_first_name');
     const lastName = document.getElementById('id_last_name');
     const mobile = document.getElementById('id_mobile');
+    const countryCode = document.getElementById('id_country_code');
     const password1 = document.getElementById('id_new_password');
     const password2 = document.getElementById('id_confirm_new_password');
     const skipValidation = document.getElementById('skipVerification');
@@ -546,7 +755,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const otpInput = document.getElementById('otpInput');
     const verifyOtpBtn = document.getElementById('verifyOtpBtn');
     const resendOtpBtn = document.getElementById('resendOtpBtn');
-    const otpTimerDisplay = document.getElementById('otpTimer');
+    const otpTimerDisplay = document.getElementById('otpTimerDisplay');
+    const otpEmailDisplay = document.getElementById('otpEmailDisplay');
     const emailChangeAlert = document.getElementById('emailChangeAlert');
     const category = document.getElementById('editCategorySelect');
     const subcategory = document.getElementById('editSubcategorySelect');
@@ -555,123 +765,128 @@ document.addEventListener('DOMContentLoaded', function() {
     let emailChanged = false;
     let emailVerified = false;
     let otpTimer = null;
+    let resendCooldown = 60;
     
-    const commonPasswords = ['password', '12345678', 'qwerty', 'abc123', 'password123', '123456789'];
+    const commonPasswords = ['password', '12345678', 'qwerty', 'abc123', 'password123'];
     
-    // ✅ CRITICAL: Track email changes
+    // ========================================
+    // INITIALIZE SELECT2 FOR COUNTRY CODE
+    // ========================================
+    if (countryCode && typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {
+        $(countryCode).select2({
+            placeholder: 'Search country code...',
+            allowClear: false,
+            width: '100%',
+            dropdownParent: $(countryCode).parent()
+        });
+        
+        console.log('✅ Select2 initialized for country code');
+        
+        $(countryCode).on('select2:select', function() {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+            $(this).next('.select2-container').removeClass('is-invalid').addClass('is-valid');
+            $('#countryCodeMsg').hide();
+        });
+    }
+    
+    // ========================================
+    // PASSWORD TOGGLE
+    // ========================================
+    const togglePassword = document.getElementById('togglePassword');
+    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+    
+    if (togglePassword && password1) {
+        togglePassword.addEventListener('click', () => {
+            const type = password1.type === 'password' ? 'text' : 'password';
+            password1.type = type;
+            togglePassword.classList.toggle('fa-eye');
+            togglePassword.classList.toggle('fa-eye-slash');
+        });
+    }
+    
+    if (toggleConfirmPassword && password2) {
+        toggleConfirmPassword.addEventListener('click', () => {
+            const type = password2.type === 'password' ? 'text' : 'password';
+            password2.type = type;
+            toggleConfirmPassword.classList.toggle('fa-eye');
+            toggleConfirmPassword.classList.toggle('fa-eye-slash');
+        });
+    }
+    
+    // ========================================
+    // VALIDATION HELPER FUNCTIONS
+    // ========================================
+    function showValidation(field, msgId, isValid, message = '') {
+        if (!field) return;
+        const msg = document.getElementById(msgId);
+        if (!msg) return;
+        
+        field.classList.remove('is-valid', 'is-invalid');
+        msg.classList.remove('show', 'success', 'error');
+        
+        if (isValid) {
+            field.classList.add('is-valid');
+            msg.classList.add('show', 'success');
+        } else {
+            field.classList.add('is-invalid');
+            msg.classList.add('show', 'error');
+        }
+        
+        msg.textContent = message;
+    }
+    
+    function clearValidation(field, msgId) {
+        if (!field) return;
+        field.classList.remove('is-valid', 'is-invalid');
+        const msg = document.getElementById(msgId);
+        if (msg) {
+            msg.classList.remove('show', 'success', 'error');
+            msg.textContent = '';
+        }
+    }
+    
+    // ========================================
+    // EMAIL CHANGE DETECTION
+    // ========================================
     if (email && originalEmail) {
         email.addEventListener('input', function() {
             const currentEmail = this.value.trim().toLowerCase();
             const origEmail = originalEmail.value.trim().toLowerCase();
             emailChanged = (currentEmail !== origEmail);
             
-            // Show/hide email change alert
-            if (emailChangeAlert) {
-                if (emailChanged) {
-                    emailChangeAlert.classList.add('show');
-                    emailVerified = false; // Reset verification when email changes
-                } else {
-                    emailChangeAlert.classList.remove('show');
-                    emailVerified = false;
-                }
+            if (emailChanged) {
+                emailChangeAlert.classList.add('show');
+                emailVerified = false;
+                sendOtpBtn.disabled = false;
+            } else {
+                emailChangeAlert.classList.remove('show');
+                emailVerified = false;
+                sendOtpBtn.disabled = true;
             }
+        });
+    }
+    
+    // ========================================
+    // SKIP VALIDATION TOGGLE
+    // ========================================
+    if (skipValidation) {
+        skipValidation.addEventListener('change', function() {
+            console.log('🔄 Skip Validation:', this.checked ? 'ON' : 'OFF');
             
-            updateSendOtpButton();
-        });
-    }
-    
-    // Password toggle
-    document.querySelectorAll('.password-toggle-icon').forEach(icon => {
-        icon.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            const input = document.getElementById(targetId);
-            if (input) {
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    this.classList.remove('fa-eye');
-                    this.classList.add('fa-eye-slash');
-                } else {
-                    input.type = 'password';
-                    this.classList.remove('fa-eye-slash');
-                    this.classList.add('fa-eye');
-                }
+            if (this.checked) {
+                emailVerified = true;
+                showValidation(email, 'emailMsg', true, '✓ Email verification skipped by admin');
+                if (otpSection) otpSection.style.display = 'none';
+            } else {
+                emailVerified = false;
+                clearValidation(email, 'emailMsg');
             }
         });
-    });
-    
-    // Helper functions
-    function showValidation(element, msgId, isValid, message) {
-        const msg = document.getElementById(msgId);
-        if (!element || !msg) return;
-        
-        if (isValid) {
-            element.classList.remove('is-invalid');
-            element.classList.add('is-valid');
-            msg.className = 'validation-msg success show';
-        } else {
-            element.classList.remove('is-valid');
-            element.classList.add('is-invalid');
-            msg.className = 'validation-msg error show';
-        }
-        msg.textContent = message;
     }
     
-    function clearValidation(element, msgId) {
-        const msg = document.getElementById(msgId);
-        if (!element || !msg) return;
-        element.classList.remove('is-valid', 'is-invalid');
-        msg.className = 'validation-msg';
-        msg.textContent = '';
-    }
-    
-    // Email validation
-    function validateEmail() {
-        if (!email) return false;
-        const value = email.value.trim();
-        
-        if (!value) {
-            showValidation(email, 'emailMsg', false, 'Email is required');
-            return false;
-        }
-        
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) {
-            showValidation(email, 'emailMsg', false, 'Invalid email format');
-            return false;
-        }
-        
-        showValidation(email, 'emailMsg', true, '✓ Valid email format');
-        return true;
-    }
-    
-    if (email) {
-        email.addEventListener('blur', validateEmail);
-        email.addEventListener('input', function() {
-            if (this.classList.contains('is-invalid')) validateEmail();
-        });
-    }
-    
-    // Update Send OTP button state
-    function updateSendOtpButton() {
-        if (!sendOtpBtn || !email) return;
-        
-        const emailValue = email.value.trim();
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const isValidEmail = emailRegex.test(emailValue);
-        
-        // ✅ LOGIC: Only enable Send OTP if email changed AND valid
-        if (emailChanged && isValidEmail) {
-            sendOtpBtn.disabled = false;
-            sendOtpBtn.classList.remove('btn-outline-secondary');
-            sendOtpBtn.classList.add('btn-outline-primary');
-        } else {
-            sendOtpBtn.disabled = true;
-            sendOtpBtn.classList.remove('btn-outline-primary');
-            sendOtpBtn.classList.add('btn-outline-secondary');
-        }
-    }
-    
-    // Send OTP
+    // ========================================
+    // SEND OTP
+    // ========================================
     if (sendOtpBtn && email) {
         sendOtpBtn.addEventListener('click', function() {
             const emailValue = email.value.trim();
@@ -681,7 +896,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            if (clearValidation) clearValidation(email, 'emailMsg');
             sendOtpBtn.disabled = true;
             sendOtpBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
             
@@ -696,38 +910,46 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    showValidation(email, 'emailMsg', true, '✓ ' + data.message);
-                    if (otpSection) otpSection.style.display = 'block';
-                    if (otpInput) {
-                        otpInput.value = '';
-                        otpInput.focus();
+                    showValidation(email, 'emailMsg', true, '✓ OTP sent to ' + emailValue);
+                    if (otpSection) {
+                        otpSection.style.display = 'block';
+                        if (otpInput) otpInput.focus();
                     }
-                    if (resendOtpBtn) resendOtpBtn.style.display = 'inline-block';
-                    startOtpTimer(600);
+                    if (otpEmailDisplay) {
+                        otpEmailDisplay.textContent = emailValue;
+                    }
+                    startResendTimer();
                     sendOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>OTP Sent';
                 } else {
-                    showValidation(email, 'emailMsg', false, data.message);
+                    showValidation(email, 'emailMsg', false, data.message || 'Failed to send OTP');
                     sendOtpBtn.disabled = false;
                     sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send OTP';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showValidation(email, 'emailMsg', false, 'Failed to send OTP');
+                showValidation(email, 'emailMsg', false, 'Network error');
                 sendOtpBtn.disabled = false;
                 sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send OTP';
             });
         });
     }
     
-    // Verify OTP
-    if (verifyOtpBtn && otpInput && email) {
+    // ========================================
+    // VERIFY OTP
+    // ========================================
+    if (verifyOtpBtn && otpInput) {
         verifyOtpBtn.addEventListener('click', function() {
             const otp = otpInput.value.trim();
             const emailValue = email.value.trim();
+            const otpMsg = document.getElementById('otpMsg');
             
             if (!otp || otp.length !== 6) {
-                showValidation(otpInput, 'otpMsg', false, 'Enter 6-digit OTP');
+                if (otpMsg) {
+                    otpMsg.style.display = 'block';
+                    otpMsg.className = 'show error';
+                    otpMsg.textContent = 'Enter 6-digit OTP';
+                }
                 return;
             }
             
@@ -745,209 +967,110 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    showValidation(otpInput, 'otpMsg', true, '✓ Email verified!');
                     emailVerified = true;
-                    verifyOtpBtn.disabled = true;
-                    verifyOtpBtn.innerHTML = '<i class="fas fa-check-circle me-1"></i>Verified';
-                    verifyOtpBtn.classList.remove('btn-outline-success');
-                    verifyOtpBtn.classList.add('btn-success');
-                    if (otpInput) otpInput.disabled = true;
-                    if (resendOtpBtn) resendOtpBtn.style.display = 'none';
-                    clearInterval(otpTimer);
-                    if (otpTimerDisplay) {
-                        otpTimerDisplay.textContent = '✓ Email verified!';
-                        otpTimerDisplay.style.color = '#198754';
+                    if (otpMsg) {
+                        otpMsg.style.display = 'block';
+                        otpMsg.className = 'show success';
+                        otpMsg.textContent = '✅ Email verified successfully!';
                     }
-                    // Hide email change alert after verification
-                    if (emailChangeAlert) emailChangeAlert.classList.remove('show');
-                    updateSendOtpButton();
+                    showValidation(email, 'emailMsg', true, '✓ Email verified');
+                    setTimeout(() => {
+                        if (otpSection) otpSection.style.display = 'none';
+                    }, 2000);
+                    verifyOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verified!';
+                    emailChangeAlert.classList.remove('show');
+                    clearInterval(otpTimer);
                 } else {
-                    showValidation(otpInput, 'otpMsg', false, data.message);
+                    if (otpMsg) {
+                        otpMsg.style.display = 'block';
+                        otpMsg.className = 'show error';
+                        otpMsg.textContent = data.message || 'Invalid OTP';
+                    }
                     verifyOtpBtn.disabled = false;
-                    verifyOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify OTP';
+                    verifyOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify';
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showValidation(otpInput, 'otpMsg', false, 'Verification failed');
-                verifyOtpBtn.disabled = false;
-                verifyOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify OTP';
             });
         });
-    }
-    
-    // Resend OTP
-    if (resendOtpBtn && sendOtpBtn) {
-        resendOtpBtn.addEventListener('click', () => {
-            if (otpInput) clearValidation(otpInput, 'otpMsg');
-            sendOtpBtn.click();
+        
+        otpInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                verifyOtpBtn.click();
+            }
         });
     }
     
-    // OTP Timer
-    function startOtpTimer(seconds) {
-        if (!otpTimerDisplay) return;
+    // ========================================
+    // RESEND OTP
+    // ========================================
+    if (resendOtpBtn) {
+        resendOtpBtn.addEventListener('click', () => sendOtpBtn.click());
+    }
+    
+    // ========================================
+    // RESEND TIMER
+    // ========================================
+    function startResendTimer() {
+        let timeLeft = resendCooldown;
         
-        let remaining = seconds;
-        clearInterval(otpTimer);
+        if (resendOtpBtn) resendOtpBtn.disabled = true;
+        
+        if (otpTimer) clearInterval(otpTimer);
+        
         otpTimer = setInterval(() => {
-            const minutes = Math.floor(remaining / 60);
-            const secs = remaining % 60;
-            otpTimerDisplay.textContent = `⏱ Expires in ${minutes}:${secs.toString().padStart(2, '0')}`;
-            otpTimerDisplay.style.color = remaining <= 60 ? '#dc3545' : '#6c757d';
+            timeLeft--;
             
-            if (remaining <= 0) {
-                clearInterval(otpTimer);
-                otpTimerDisplay.textContent = '⚠ OTP expired. Resend.';
-                otpTimerDisplay.style.color = '#dc3545';
+            if (otpTimerDisplay) {
+                otpTimerDisplay.textContent = `Resend in ${timeLeft}s`;
             }
-            remaining--;
+            
+            if (timeLeft <= 0) {
+                clearInterval(otpTimer);
+                if (resendOtpBtn) resendOtpBtn.disabled = false;
+                if (otpTimerDisplay) otpTimerDisplay.textContent = 'You can resend OTP now';
+            }
         }, 1000);
     }
     
-    // Mobile validation
+    // ========================================
+    // MOBILE VALIDATION
+    // ========================================
     if (mobile) {
         mobile.addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '').slice(0, 10);
         });
         
         mobile.addEventListener('blur', function() {
-            if (!this.value) {
-                clearValidation(this, 'mobileMsg');
-            } else if (this.value.length === 10) {
+            if (this.value.length === 10) {
                 showValidation(this, 'mobileMsg', true, '✓ Valid');
-            } else {
+            } else if (this.value) {
                 showValidation(this, 'mobileMsg', false, 'Must be 10 digits');
             }
         });
     }
     
-    // Password strength
-    if (password1) {
-        password1.addEventListener('input', function() {
-            const value = this.value;
-            const strengthDiv = document.getElementById('passwordStrength');
-            const strengthBar = document.getElementById('strengthBar');
-            const strengthText = document.getElementById('strengthText');
-            
-            if (!strengthDiv || !strengthBar || !strengthText) return;
-            
-            if (!value) {
-                strengthDiv.style.display = 'none';
-                clearValidation(this, 'pass1Msg');
-                return;
-            }
-            strengthDiv.style.display = 'block';
-            let strength = 0;
-            if (value.length >= 8) strength += 20;
-            if (value.length >= 12) strength += 10;
-            if (/[a-z]/.test(value)) strength += 20;
-            if (/[A-Z]/.test(value)) strength += 20;
-            if (/\d/.test(value)) strength += 20;
-            if (/[^a-zA-Z\d]/.test(value)) strength += 10;
-            strengthBar.style.width = strength + '%';
-            if (strength < 50) {
-                strengthBar.className = 'progress-bar strength-weak';
-                strengthText.textContent = 'Weak password';
-            } else if (strength < 75) {
-                strengthBar.className = 'progress-bar strength-medium';
-                strengthText.textContent = 'Medium strength';
-            } else {
-                strengthBar.className = 'progress-bar strength-strong';
-                strengthText.textContent = 'Strong password';
-            }
-            if (this.classList.contains('is-invalid') || value.length >= 8) validatePass1();
-            if (password2 && password2.value) validatePass2();
-        });
-        
-        password1.addEventListener('blur', validatePass1);
-    }
-    
-    function validatePass1() {
-        if (!password1) return false;
-        const value = password1.value;
-        
-        // ✅ PASSWORD IS OPTIONAL IN EDIT MODE
-        if (!value) {
-            clearValidation(password1, 'pass1Msg');
-            return true; // Allow empty password in edit mode
-        }
-        
-        if (value.length < 8) {
-            showValidation(password1, 'pass1Msg', false, 'Min 8 characters');
-            return false;
-        }
-        if (/^\d+$/.test(value)) {
-            showValidation(password1, 'pass1Msg', false, 'Cannot be all numeric');
-            return false;
-        }
-        if (commonPasswords.includes(value.toLowerCase())) {
-            showValidation(password1, 'pass1Msg', false, 'Too common');
-            return false;
-        }
-        const hasLetters = /[a-zA-Z]/.test(value);
-        const hasNumbers = /\d/.test(value);
-        if (!hasLetters || !hasNumbers) {
-            showValidation(password1, 'pass1Msg', false, 'Need letters and numbers');
-            return false;
-        }
-        showValidation(password1, 'pass1Msg', true, '✓ Strong password');
-        return true;
-    }
-    
-    if (password2) {
-        password2.addEventListener('input', validatePass2);
-        password2.addEventListener('blur', validatePass2);
-    }
-    
-    function validatePass2() {
-        if (!password2) return false;
-        
-        // ✅ If password1 is empty, password2 should also be empty or clear
-        if (!password1 || !password1.value) {
-            if (!password2.value) {
-                clearValidation(password2, 'pass2Msg');
-                return true;
-            } else {
-                showValidation(password2, 'pass2Msg', false, 'First password is empty');
-                return false;
-            }
-        }
-        
-        if (!password2.value) {
-            clearValidation(password2, 'pass2Msg');
-            return false;
-        }
-        if (password1.value.length < 8) {
-            showValidation(password2, 'pass2Msg', false, 'First password must be 8+ characters');
-            return false;
-        }
-        if (password2.value !== password1.value) {
-            showValidation(password2, 'pass2Msg', false, 'Passwords do not match');
-            return false;
-        }
-        showValidation(password2, 'pass2Msg', true, '✓ Passwords match');
-        return true;
-    }
-    
-    // Business Category/Subcategory
+    // ========================================
+    // CATEGORY/SUBCATEGORY
+    // ========================================
     if (category && subcategory) {
         category.addEventListener('change', function() {
             const categoryId = this.value;
+            
             if (!categoryId) {
                 subcategory.innerHTML = '<option value="">Select category first</option>';
                 subcategory.disabled = true;
                 return;
             }
+            
             subcategory.disabled = true;
             subcategory.innerHTML = '<option value="">Loading...</option>';
             const loader = document.getElementById('subcategoryLoader');
-            if (loader) loader.style.display = 'block';
+            if (loader) loader.style.display = 'inline-block';
             
             fetch(`/auth/ajax/get-subcategories/?category_id=${categoryId}`)
                 .then(res => res.json())
                 .then(data => {
-                    subcategory.innerHTML = '<option value="">Select subcategory (optional)</option>';
+                    subcategory.innerHTML = '<option value="">Select subcategory</option>';
                     if (data.success && data.subcategories) {
                         data.subcategories.forEach(sub => {
                             subcategory.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
@@ -955,21 +1078,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     subcategory.disabled = false;
                     if (loader) loader.style.display = 'none';
-                })
-                .catch(() => {
-                    subcategory.innerHTML = '<option value="">Error loading</option>';
-                    subcategory.disabled = false;
-                    if (loader) loader.style.display = 'none';
                 });
         });
     }
     
-    // Form Submission
+    // ========================================
+    // FORM SUBMISSION
+    // ========================================
     if (form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            console.log('Submitting - Email changed:', emailChanged, 'Skip:', skipValidation ? skipValidation.checked : 'N/A', 'Verified:', emailVerified);
             
             let isValid = true;
             
@@ -977,49 +1095,69 @@ document.addEventListener('DOMContentLoaded', function() {
                 showValidation(firstName, 'firstNameMsg', false, 'Required');
                 isValid = false;
             }
+            
             if (lastName && !lastName.value.trim()) {
                 showValidation(lastName, 'lastNameMsg', false, 'Required');
                 isValid = false;
             }
-            if (!validateEmail()) isValid = false;
             
-            // ✅ CRITICAL: Email verification check - ONLY if email changed
-            if (skipValidation && email && emailChanged && !skipValidation.checked && !emailVerified) {
-                showValidation(email, 'emailMsg', false, '⚠ New email must be verified with OTP or turn ON "Skip Verification"');
-                isValid = false;
-                console.log('❌ New email not verified!');
+            // Country code validation
+            if (countryCode) {
+                const countryValue = (typeof $ !== 'undefined' && $(countryCode).data('select2')) 
+                    ? $(countryCode).val() 
+                    : countryCode.value;
+                
+                if (!countryValue) {
+                    if (typeof $ !== 'undefined') {
+                        $(countryCode).addClass('is-invalid');
+                        $(countryCode).next('.select2-container').addClass('is-invalid');
+                    }
+                    showValidation(countryCode, 'countryCodeMsg', false, 'Required');
+                    isValid = false;
+                }
             }
             
-            if (mobile && mobile.value && mobile.value.length !== 10) {
+            // Email verification check
+            if (skipValidation && email && emailChanged && !skipValidation.checked && !emailVerified) {
+                showValidation(email, 'emailMsg', false, '⚠ Verify new email or enable Admin Override');
+                isValid = false;
+            }
+            
+            if (mobile && mobile.value.length !== 10) {
                 showValidation(mobile, 'mobileMsg', false, '10 digits required');
                 isValid = false;
             }
             
-            // ✅ ONLY validate passwords if they are filled
+            // Password validation (optional)
             if (password1 && password1.value) {
-                if (!validatePass1()) isValid = false;
-                if (!validatePass2()) isValid = false;
+                if (password1.value.length < 8) {
+                    showValidation(password1, 'pass1Msg', false, 'Min 8 characters');
+                    isValid = false;
+                }
+                if (password2.value !== password1.value) {
+                    showValidation(password2, 'pass2Msg', false, 'Passwords do not match');
+                    isValid = false;
+                }
             }
             
             if (!isValid) {
                 const firstInvalid = form.querySelector('.is-invalid');
                 if (firstInvalid) {
                     firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (typeof $ !== 'undefined' && $(firstInvalid).hasClass('select2-hidden-accessible')) {
+                        $(firstInvalid).select2('open');
+                    } else {
+                        firstInvalid.focus();
+                    }
                 }
                 return;
             }
             
-            console.log('✅ Form validated - submitting');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating Customer...';
-            }
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Updating...';
             form.submit();
         });
     }
-    
-    // Initialize
-    updateSendOtpButton();
 });
 </script>
 {% endblock %}

@@ -1,94 +1,142 @@
-"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
-        .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626; }
-        .info-row { display: flex; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
-        .info-row:last-child { border-bottom: none; }
-        .info-label { font-weight: bold; width: 150px; color: #6b7280; }
-        .info-value { flex: 1; color: #1f2937; }
-        .button { display: inline-block; background: #dc2626; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-        .footer { text-align: center; color: #6b7280; padding: 20px; font-size: 14px; }
-        .reason-box { background: #fee2e2; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #dc2626; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1 style="margin: 0;">🚫 Demo Request Cancelled</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9;">A customer has cancelled their demo request</p>
-        </div>
-        
-        <div class="content">
-            <p>Hello {{ admin_name }},</p>
-            
-            <p><strong>{{ customer_name }}</strong> has cancelled their demo request.</p>
-            
-            <div class="info-box">
-                <h3 style="margin-top: 0; color: #dc2626;">Request Details</h3>
-                
-                <div class="info-row">
-                    <span class="info-label">Request ID:</span>
-                    <span class="info-value">#{{ request_id }}</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="info-label">Demo:</span>
-                    <span class="info-value">{{ demo_title }}</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="info-label">Customer:</span>
-                    <span class="info-value">{{ customer_name }} ({{ customer_email }})</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="info-label">Scheduled Date:</span>
-                    <span class="info-value">{{ requested_date }}</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="info-label">Scheduled Time:</span>
-                    <span class="info-value">{{ requested_time }}</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="info-label">Cancelled At:</span>
-                    <span class="info-value">{{ cancelled_at }}</span>
-                </div>
+{% extends "emails/base.html" %}
+
+{% block title %}Demo Request Cancelled - Admin Notification{% endblock %}
+
+{% block preheader %}{{ customer_name }} has cancelled their demo request{% endblock %}
+
+{% block content %}
+<!-- Alert Icon -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 25px 0;">
+    <tr>
+        <td align="center">
+            <div style="width: 80px; height: 80px; background-color: #ef4444; background-image: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border-radius: 50%; display: inline-block; text-align: center; line-height: 80px; margin-bottom: 20px;">
+                <span style="font-size: 40px; line-height: 80px; vertical-align: middle;">🚫</span>
             </div>
-            
-            <div class="reason-box">
-                <h4 style="margin: 0 0 10px 0; color: #991b1b;">Cancellation Reason</h4>
-                <p style="margin: 0 0 10px 0;"><strong>{{ cancellation_reason }}</strong></p>
-                {% if cancellation_details %}
-                <p style="margin: 0; color: #6b7280;">{{ cancellation_details }}</p>
-                {% endif %}
-            </div>
-            
-            <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
-                <strong>Note:</strong> This time slot is now available for other customers.
+        </td>
+    </tr>
+</table>
+
+<!-- Main Heading -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+        <td align="center">
+            <h1 style="color: #1f2937 !important; font-size: 26px; font-weight: 700; margin: 0 0 10px 0; mso-line-height-rule: exactly; line-height: 34px;">
+                Demo Request Cancelled
+            </h1>
+            <p style="color: #dc2626 !important; font-size: 16px; margin: 0 0 30px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                A customer has cancelled their demo request
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- Greeting -->
+<p style="color: #374151 !important; font-size: 16px; line-height: 24px; margin: 0 0 10px 0; mso-line-height-rule: exactly;">
+    Hello <strong style="color: #1f2937 !important;">{{ admin_name }}</strong>,
+</p>
+
+<p style="color: #374151 !important; font-size: 16px; line-height: 24px; margin: 0 0 25px 0; mso-line-height-rule: exactly;">
+    <strong style="color: #1f2937 !important;">{{ customer_name }}</strong> has cancelled their demo request.
+</p>
+
+<!-- Request Details Box -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color: #ffffff; border-left: 5px solid #dc2626; border-radius: 6px; margin: 0 0 25px 0; border: 1px solid #e5e7eb;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #dc2626 !important; font-size: 15px; margin: 0 0 15px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 22px;">
+                📋 Request Details
             </p>
             
-            <center>
-                <a href="{{ site_url }}/admin/demos/demorequest/{{ request_id }}/change/" class="button">
-                    View Request in Admin Panel
-                </a>
-            </center>
-        </div>
-        
-        <div class="footer">
-            <p>This is an automated notification from {{ site_name }}</p>
-            <p>&copy; 2025 CHRP-INDIA. All rights reserved.</p>
-        </div>
-    </div>
-</body>
-</html>
+            <!-- Info Rows Table -->
+            <table width="100%" cellpadding="8" cellspacing="0" border="0" style="border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="color: #6b7280 !important; font-size: 14px; font-weight: 600; width: 40%; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">Request ID:</td>
+                    <td style="color: #1f2937 !important; font-size: 14px; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">#{{ request_id }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="color: #6b7280 !important; font-size: 14px; font-weight: 600; width: 40%; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">Demo:</td>
+                    <td style="color: #1f2937 !important; font-size: 14px; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ demo_title }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="color: #6b7280 !important; font-size: 14px; font-weight: 600; width: 40%; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">Customer:</td>
+                    <td style="color: #1f2937 !important; font-size: 14px; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ customer_name }} ({{ customer_email }})</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="color: #6b7280 !important; font-size: 14px; font-weight: 600; width: 40%; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">Scheduled Date:</td>
+                    <td style="color: #1f2937 !important; font-size: 14px; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ requested_date }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="color: #6b7280 !important; font-size: 14px; font-weight: 600; width: 40%; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">Scheduled Time:</td>
+                    <td style="color: #1f2937 !important; font-size: 14px; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ requested_time }}</td>
+                </tr>
+                <tr>
+                    <td style="color: #6b7280 !important; font-size: 14px; font-weight: 600; width: 40%; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">Cancelled At:</td>
+                    <td style="color: #1f2937 !important; font-size: 14px; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ cancelled_at }}</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
 
+<!-- Cancellation Reason Box -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#fee2e2" style="background-color: #fee2e2; border-left: 5px solid #dc2626; border-radius: 6px; margin: 0 0 25px 0;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #991b1b !important; font-size: 15px; margin: 0 0 10px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 22px;">
+                Cancellation Reason
+            </p>
+            <p style="color: #7f1d1d !important; font-size: 14px; margin: 0 0 10px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 20px;">
+                {{ cancellation_reason }}
+            </p>
+            {% if cancellation_details %}
+            <p style="color: #991b1b !important; font-size: 13px; margin: 0; mso-line-height-rule: exactly; line-height: 20px;">
+                {{ cancellation_details }}
+            </p>
+            {% endif %}
+        </td>
+    </tr>
+</table>
 
+<!-- Note -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f0f9ff" style="background-color: #f0f9ff; border-radius: 6px; margin: 0 0 25px 0;">
+    <tr>
+        <td style="padding: 15px;">
+            <p style="color: #1e3a8a !important; font-size: 14px; margin: 0; mso-line-height-rule: exactly; line-height: 20px;">
+                <strong style="color: #1e3a8a !important;">📌 Note:</strong> This time slot is now available for other customers.
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- CTA Button -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 20px 0;">
+    <tr>
+        <td align="center">
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ site_url }}/admin/demos/demorequest/{{ request_id }}/change/" style="height:50px;v-text-anchor:middle;width:280px;" arcsize="12%" strokecolor="#dc2626" fillcolor="#dc2626">
+            <w:anchorlock/>
+            <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:600;">📊 View Request in Admin Panel</center>
+            </v:roundrect>
+            <![endif]-->
+            <!--[if !mso]><!-->
+            <table cellpadding="0" cellspacing="0" border="0" bgcolor="#dc2626" style="background-color: #dc2626; background-image: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); border-radius: 10px; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.3);">
+                <tr>
+                    <td>
+                        <a href="{{ site_url }}/admin/demos/demorequest/{{ request_id }}/change/" style="display: inline-block; color: #ffffff !important; text-decoration: none; padding: 16px 40px; font-size: 16px; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                            📊 View Request in Admin Panel
+                        </a>
+                    </td>
+                </tr>
+            </table>
+            <!--<![endif]-->
+        </td>
+    </tr>
+</table>
+
+<!-- Footer Note -->
+<p style="color: #6b7280 !important; font-size: 13px; line-height: 20px; margin: 0; text-align: center; mso-line-height-rule: exactly;">
+    This is an automated notification from {{ site_name }}
+</p>
+{% endblock %}
+
+{% block footer_text %}This is an automated admin notification. Please do not reply to this message.{% endblock %}

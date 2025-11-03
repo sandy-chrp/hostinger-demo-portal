@@ -36,49 +36,25 @@ from django.views.decorators.http import require_POST
 from .utils import log_customer_activity, get_client_ip, log_security_violation
 from django.core.files.storage import default_storage
 from .validators import validate_file_extension, validate_file_size
+from django.db.models import Count, Q
+ 
 
 def get_customer_context(user):
-    """Get common context data for customer views"""
-    context = {
-        # Demo stats
-        'total_demos_watched': DemoView.objects.filter(user=user).count(),
-        'total_demo_requests': DemoRequest.objects.filter(user=user).count(),
-        'pending_demo_requests': DemoRequest.objects.filter(
-            user=user, 
-            status='pending'
-        ).count(),
-        
-        # Enquiry stats
-        'total_enquiries': BusinessEnquiry.objects.filter(user=user).count(),
-        'open_enquiries': BusinessEnquiry.objects.filter(
-            user=user, 
-            status__in=['open', 'in_progress']
-        ).count(),
-        
-        # Notification stats
+    """Helper function to get common customer context"""
+    return {
         'unread_notifications': Notification.objects.filter(
             user=user, 
             is_read=False
         ).count(),
-        
-        # Recent activity
-        'recent_demos': Demo.objects.filter(
-            is_active=True,
-            target_customers=user
-        )[:3] if not Demo.objects.filter(target_customers=user).exists() 
-            else Demo.objects.filter(is_active=True)[:3],
-        
-        'recent_notifications': Notification.objects.filter(
-            user=user
-        ).order_by('-created_at')[:3],
+        'total_demos_watched': DemoView.objects.filter(user=user).count(),
+        'total_demo_requests': DemoRequest.objects.filter(user=user).count(),
+        'total_enquiries': BusinessEnquiry.objects.filter(user=user).count(),
     }
-    return context
 
-from django.db.models import Count, Q
 
 @login_required
 def customer_dashboard(request):
-    """Customer main dashboard - WITH WEBGL SUPPORT"""
+    """Customer main dashboard - WITH CATEGORY FILTER AND PAGINATION"""
     if not request.user.is_approved:
         return redirect('accounts:pending_approval')
     
@@ -88,6 +64,12 @@ def customer_dashboard(request):
     user_business_category = request.user.business_category
     user_business_subcategory = request.user.business_subcategory
     
+    # Get selected category from request
+    selected_category_id = request.GET.get('category', None)
+    
+    # Get all active business categories for the dropdown
+    all_business_categories = BusinessCategory.objects.filter(is_active=True).order_by('name')
+    
     # Get featured demos with business category filtering
     featured_demos_query = Demo.objects.filter(
         is_active=True,
@@ -96,9 +78,20 @@ def customer_dashboard(request):
         'target_business_categories',
         'target_business_subcategories',
         'target_customers'
-    )
+    ).order_by('-created_at')  # Latest first
     
-    # Filter by business categories
+    # Filter by selected category if provided
+    if selected_category_id:
+        try:
+            selected_category = BusinessCategory.objects.get(id=selected_category_id)
+            # ✅ FIXED: Only filter by target_business_categories (removed primary_business_category)
+            featured_demos_query = featured_demos_query.filter(
+                target_business_categories=selected_category
+            ).distinct()
+        except BusinessCategory.DoesNotExist:
+            pass  # Ignore invalid category ID
+    
+    # Filter by business categories and customer access
     featured_demos = []
     for demo in featured_demos_query:
         # Check business category access
@@ -107,10 +100,17 @@ def customer_dashboard(request):
             if demo.can_customer_access(request.user):
                 featured_demos.append(demo)
     
-    # Limit to 12 demos
-    featured_demos = featured_demos[:12]
+    # Pagination for featured demos
+    paginator = Paginator(featured_demos, 12)  # 12 demos per page
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
     
     context.update({
+        'page_obj': page_obj,
+        'featured_demos': page_obj.object_list,
+        'all_business_categories': all_business_categories,
+        'selected_category_id': selected_category_id,
+        
         'recent_demo_requests': DemoRequest.objects.filter(
             user=request.user
         ).select_related('demo').order_by('-created_at')[:3],
@@ -118,8 +118,6 @@ def customer_dashboard(request):
         'recent_enquiries': BusinessEnquiry.objects.filter(
             user=request.user
         ).order_by('-created_at')[:3],
-        
-        'featured_demos': featured_demos,
         
         'stats': {
             'demos_watched': context['total_demos_watched'],
@@ -130,8 +128,6 @@ def customer_dashboard(request):
     })
     
     return render(request, 'customers/dashboard.html', context)
-
-
 
 @login_required
 def browse_demos(request):
@@ -1811,3 +1807,22 @@ def log_security_violation(request):
             'success': False,
             'error': str(e)
         }, status=500)
+@login_required
+def demo_feedback_view(request, slug):
+    """
+    Feedback success page after submitting demo feedback
+    Shows after AJAX feedback submission redirects here
+    """
+    demo = get_object_or_404(Demo, slug=slug, is_active=True)
+    
+    # Check access
+    if not demo.can_customer_access(request.user):
+        messages.error(request, "You don't have permission to access this demo.")
+        return redirect('customers:browse_demos')
+    
+    context = {
+        'demo': demo,
+    }
+    
+    # ✅ FIXED: Use customers/feedback.html since that's where you created it
+    return render(request, 'customers/feedback.html', context)

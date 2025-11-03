@@ -5,186 +5,391 @@
 {% block customer_title %}My Enquiries - Customer Portal{% endblock %}
 {% block page_title %}My Business Enquiries{% endblock %}
 
-{% block customer_extra_css %}
+{% block customer_content %}
 <style>
-    .enquiry-card {
-        background: white;
-        border-radius: var(--radius-xl);
-        box-shadow: var(--shadow-md);
+    /* Header Section with Actions and Filter */
+    .page-header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: var(--spacing-lg);
+        padding: var(--spacing-lg);
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
         border: 1px solid var(--gray-200);
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+    }
+
+    .page-header-title {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .page-header-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    /* Dropdown Customization */
+    .dropdown-menu {
+        min-width: 200px;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--gray-200);
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: var(--font-sm);
+        font-family: var(--primary-font);
+    }
+
+    .dropdown-item:hover {
+        background: var(--gray-100);
+        color: var(--primary-color);
+    }
+
+    .dropdown-item.active {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .dropdown-item.active i {
+        color: white !important;
+    }
+
+    .dropdown-divider {
+        margin: var(--spacing-xs) 0;
+    }
+
+    /* Statistics Cards */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .stat-card {
+        background: white;
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .stat-card-body {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .stat-info {
+        flex: 1;
+    }
+
+    .stat-value {
+        font-size: var(--font-4xl);
+        font-weight: 700;
+        color: var(--dark-color);
+        font-family: var(--primary-font);
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: var(--font-sm);
+        color: var(--gray-600);
+        margin-top: var(--spacing-xs);
+        font-family: var(--primary-font);
+    }
+
+    .stat-icon-wrapper {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-md);
+        font-size: var(--font-xl);
+        color: white;
+    }
+
+    /* Enquiry Cards - Using customer-card pattern */
+    .enquiry-item {
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        margin-bottom: var(--spacing-lg);
         transition: all 0.3s ease;
         overflow: hidden;
     }
 
-    .enquiry-card:hover {
-        transform: translateY(-2px);
+    .enquiry-item:hover {
         box-shadow: var(--shadow-lg);
     }
 
-    .enquiry-header {
+    .enquiry-item-header {
         padding: var(--spacing-lg);
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
         border-bottom: 1px solid var(--gray-200);
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .enquiry-item-header:hover {
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    }
+
+    .enquiry-header-content {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        background: var(--gray-50);
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
     }
 
-    .enquiry-title {
-        font-size: 1.25rem;
+    .enquiry-title-section {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .enquiry-subject {
+        font-size: var(--font-xl);
         font-weight: 700;
         color: var(--dark-color);
         margin: 0 0 var(--spacing-xs) 0;
-    }
-
-    .enquiry-id {
-        color: var(--gray-500);
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    .enquiry-body {
-        padding: var(--spacing-lg);
-    }
-
-    .enquiry-meta {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: var(--spacing-md);
-        margin-bottom: var(--spacing-lg);
-        padding-bottom: var(--spacing-lg);
-        border-bottom: 1px solid var(--gray-200);
-    }
-
-    .meta-item {
+        font-family: var(--heading-font);
         display: flex;
         align-items: center;
         gap: var(--spacing-sm);
     }
 
-    .meta-icon {
-        width: 20px;
+    .collapse-icon {
+        font-size: var(--font-md);
         color: var(--primary-color);
+        transition: transform 0.3s ease;
     }
 
-    .meta-label {
+    .collapse-icon.collapsed {
+        transform: rotate(-90deg);
+    }
+
+    .enquiry-ref {
+        font-size: var(--font-sm);
+        color: var(--gray-500);
+        font-family: var(--primary-font);
+    }
+
+    .enquiry-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: var(--font-xs);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        font-family: var(--primary-font);
+    }
+
+    .status-open {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .status-in_progress {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
+    .status-answered {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+    }
+
+    .status-closed {
+        background: var(--gray-100);
+        color: var(--gray-600);
+        border: 1px solid var(--gray-300);
+    }
+
+    .enquiry-item-body {
+        padding: var(--spacing-lg);
+        display: none;
+    }
+
+    .enquiry-item-body.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Meta Information */
+    .enquiry-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--spacing-md);
+        padding-bottom: var(--spacing-md);
+        border-bottom: 1px solid var(--gray-200);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .meta-field {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-size: var(--font-sm);
+        font-family: var(--primary-font);
+    }
+
+    .meta-field i {
+        color: var(--primary-color);
+        width: 16px;
+        flex-shrink: 0;
+    }
+
+    .meta-field-label {
         font-weight: 600;
         color: var(--gray-700);
         margin-right: var(--spacing-xs);
     }
 
-    .meta-value {
+    .meta-field-value {
         color: var(--gray-600);
     }
 
-    .enquiry-message {
-        background: var(--gray-50);
-        padding: var(--spacing-lg);
+    /* Message Box */
+    .enquiry-message-box {
+        background: var(--gray-100);
+        padding: var(--spacing-md);
         border-radius: var(--radius-md);
         border-left: 4px solid var(--primary-color);
-        margin-bottom: var(--spacing-lg);
+        margin-bottom: var(--spacing-md);
     }
 
-    .enquiry-message h6 {
-        margin-bottom: var(--spacing-sm);
-        color: var(--dark-color);
+    .message-box-title {
+        font-size: var(--font-md);
         font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: var(--spacing-sm);
+        font-family: var(--primary-font);
     }
 
-    .enquiry-message p {
-        margin: 0;
+    .message-box-content {
+        font-size: var(--font-sm);
+        color: var(--gray-700);
         line-height: 1.6;
         white-space: pre-wrap;
+        word-break: break-word;
+        font-family: var(--primary-font);
     }
 
-    /* Attachment Styles */
-    .attachment-section {
-        background: #f0f9ff;
+    /* Attachment Section */
+    .attachment-container {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
         padding: var(--spacing-md);
         border-radius: var(--radius-md);
         border: 1px solid #bae6fd;
-        margin-bottom: var(--spacing-lg);
+        margin-bottom: var(--spacing-md);
     }
 
-    .attachment-header {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-sm);
-        margin-bottom: var(--spacing-sm);
+    .attachment-title {
+        font-size: var(--font-sm);
         font-weight: 600;
         color: var(--primary-color);
+        margin-bottom: var(--spacing-sm);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        font-family: var(--primary-font);
     }
 
-    .attachment-item {
+    .attachment-card {
         display: flex;
         align-items: center;
         justify-content: space-between;
         background: white;
         padding: var(--spacing-md);
         border-radius: var(--radius-md);
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--gray-200);
         transition: all 0.3s ease;
     }
 
-    .attachment-item:hover {
+    .attachment-card:hover {
         border-color: var(--primary-color);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: var(--shadow-sm);
     }
 
-    .attachment-info {
+    .attachment-info-wrapper {
         display: flex;
         align-items: center;
         gap: var(--spacing-md);
         flex: 1;
     }
 
-    .attachment-icon {
-        width: 45px;
-        height: 45px;
+    .attachment-icon-box {
+        width: 40px;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: var(--radius-md);
-        font-size: 1.25rem;
         color: white;
+        font-size: var(--font-lg);
+        flex-shrink: 0;
     }
 
-    .icon-image {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-
-    .icon-pdf {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    }
-
-    .icon-excel {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    }
-
-    .icon-doc {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    }
-
-    .icon-default {
-        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-    }
+    .file-icon-pdf { background: var(--gradient-primary); }
+    .file-icon-doc { background: var(--gradient-success); }
+    .file-icon-image { background: var(--gradient-warning); }
+    .file-icon-default { background: linear-gradient(135deg, var(--gray-600) 0%, var(--gray-700) 100%); }
 
     .attachment-details {
         flex: 1;
+        min-width: 0;
     }
 
-    .attachment-name {
+    .attachment-filename {
+        font-size: var(--font-sm);
         font-weight: 600;
         color: var(--dark-color);
-        margin-bottom: 2px;
-        word-break: break-all;
-        font-size: 0.95rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: var(--primary-font);
     }
 
-    .attachment-meta {
-        font-size: 0.8rem;
+    .attachment-size {
+        font-size: var(--font-xs);
         color: var(--gray-500);
+        font-family: var(--primary-font);
     }
 
     .attachment-actions {
@@ -193,142 +398,67 @@
     }
 
     .btn-attachment {
-        padding: var(--spacing-xs) var(--spacing-sm);
+        padding: 0.375rem 0.75rem;
         border-radius: var(--radius-md);
-        font-size: 0.85rem;
+        font-size: var(--font-sm);
         font-weight: 500;
         text-decoration: none;
-        transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
         gap: var(--spacing-xs);
+        transition: all 0.3s ease;
+        font-family: var(--primary-font);
     }
 
-    .btn-view {
+    .btn-attachment-view {
         background: var(--primary-color);
         color: white;
         border: 1px solid var(--primary-color);
     }
 
-    .btn-view:hover {
-        background: #1e3a8a;
-        color: white;
+    .btn-attachment-view:hover {
+        background: var(--secondary-color);
+        border-color: var(--secondary-color);
         transform: translateY(-1px);
     }
 
-    .btn-download {
+    .btn-attachment-download {
         background: white;
         color: var(--primary-color);
         border: 1px solid var(--primary-color);
     }
 
-    .btn-download:hover {
+    .btn-attachment-download:hover {
         background: var(--primary-color);
         color: white;
         transform: translateY(-1px);
     }
 
-    .status-badge {
-        padding: var(--spacing-xs) var(--spacing-md);
-        border-radius: var(--radius-lg);
-        font-size: 0.875rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .status-open {
-        background: #fef3c7;
-        color: #92400e;
-        border: 1px solid #fde68a;
-    }
-
-    .status-in_progress {
-        background: #dbeafe;
-        color: #1e40af;
-        border: 1px solid #93c5fd;
-    }
-
-    .status-answered {
-        background: #d1fae5;
-        color: #065f46;
-        border: 1px solid #a7f3d0;
-    }
-
-    .status-closed {
-        background: #f3f4f6;
-        color: #374151;
-        border: 1px solid #d1d5db;
-    }
-
-    .priority-badge {
-        padding: var(--spacing-xs) var(--spacing-md);
-        border-radius: var(--radius-lg);
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .priority-low {
-        background: #f0f9ff;
-        color: #0369a1;
-        border: 1px solid #bae6fd;
-    }
-
-    .priority-medium {
-        background: #fffbeb;
-        color: #d97706;
-        border: 1px solid #fed7aa;
-    }
-
-    .priority-high {
-        background: #fef2f2;
-        color: #dc2626;
-        border: 1px solid #fecaca;
-    }
-
-    .priority-urgent {
-        background: #450a0a;
-        color: white;
-        border: 1px solid #991b1b;
-    }
-
-    .filter-section {
-        background: white;
-        padding: var(--spacing-lg);
-        border-radius: var(--radius-xl);
-        box-shadow: var(--shadow-md);
-        margin-bottom: var(--spacing-lg);
-        border: 1px solid var(--gray-200);
-    }
-
-    .form-select {
-        border: 2px solid var(--gray-300);
-        border-radius: var(--radius-lg);
-        padding: var(--spacing-sm) var(--spacing-md);
-        font-size: 0.95rem;
-        transition: all 0.3s ease;
-        max-width: 250px;
-    }
-
-    .form-select:focus {
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
-    }
-
-    .response-section {
-        margin-top: var(--spacing-lg);
-        padding-top: var(--spacing-lg);
+    /* Response Section */
+    .response-container {
+        margin-top: var(--spacing-md);
+        padding-top: var(--spacing-md);
         border-top: 1px solid var(--gray-200);
     }
 
-    .response-item {
-        background: #f8fafc;
-        padding: var(--spacing-lg);
-        border-radius: var(--radius-md);
+    .response-title {
+        font-size: var(--font-md);
+        font-weight: 600;
+        color: var(--dark-color);
         margin-bottom: var(--spacing-md);
-        border-left: 4px solid var(--success-color);
+        font-family: var(--primary-font);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .response-card {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-sm);
+        border: 1px solid #bbf7d0;
+        border-left: 4px solid #16a34a;
     }
 
     .response-header {
@@ -336,45 +466,167 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: var(--spacing-sm);
+        flex-wrap: wrap;
+        gap: var(--spacing-xs);
     }
 
     .response-author {
+        font-size: var(--font-sm);
         font-weight: 600;
-        color: var(--dark-color);
+        color: #15803d;
+        font-family: var(--primary-font);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
     }
 
     .response-date {
-        color: var(--gray-500);
-        font-size: 0.875rem;
+        font-size: var(--font-xs);
+        color: #166534;
+        font-family: var(--primary-font);
     }
 
-    .response-text {
+    .response-content {
+        font-size: var(--font-sm);
+        color: #14532d;
         line-height: 1.6;
+        font-family: var(--primary-font);
         white-space: pre-wrap;
-        margin: 0;
+        word-break: break-word;
     }
 
-    .empty-state {
+    .no-responses-message {
+        background: #fef3c7;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        border-left: 4px solid #f59e0b;
+        margin-top: var(--spacing-md);
+    }
+
+    .no-responses-message p {
+        margin: 0;
+        font-size: var(--font-sm);
+        color: #92400e;
+        font-family: var(--primary-font);
+    }
+
+    /* Action Buttons */
+    .enquiry-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+        margin-top: var(--spacing-md);
+        padding-top: var(--spacing-md);
+        border-top: 1px solid var(--gray-200);
+        flex-wrap: wrap;
+    }
+
+    /* Empty State */
+    .empty-container {
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: 3rem var(--spacing-xl);
         text-align: center;
-        padding: 60px 20px;
-        color: var(--gray-500);
+        border: 1px solid var(--gray-200);
     }
 
     .empty-icon {
         font-size: 4rem;
+        color: var(--gray-300);
         margin-bottom: var(--spacing-lg);
-        opacity: 0.5;
-        color: var(--primary-color);
     }
 
-    .pagination-wrapper {
-        margin-top: var(--spacing-xl);
+    .empty-title {
+        font-size: var(--font-2xl);
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: var(--spacing-sm);
+        font-family: var(--heading-font);
+    }
+
+    .empty-text {
+        font-size: var(--font-md);
+        color: var(--gray-600);
+        margin-bottom: var(--spacing-lg);
+        font-family: var(--primary-font);
+    }
+
+    /* Pagination */
+    .pagination-container {
         display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: var(--spacing-xl);
+        gap: var(--spacing-md);
+    }
+
+    .pagination {
+        display: flex;
+        gap: var(--spacing-xs);
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        flex-wrap: wrap;
         justify-content: center;
     }
 
+    .page-item {
+        display: inline-block;
+    }
+
+    .page-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--spacing-sm) 0.75rem;
+        border: 1px solid var(--gray-300);
+        background: white;
+        color: var(--gray-700);
+        border-radius: var(--radius-md);
+        font-size: var(--font-sm);
+        min-width: 40px;
+        height: 40px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-family: var(--primary-font);
+        font-weight: 500;
+    }
+
+    .page-link:hover {
+        background: var(--gray-100);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .page-item.active .page-link {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+        font-weight: 600;
+        box-shadow: var(--shadow-md);
+    }
+
+    .page-item.disabled .page-link {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+        background: var(--gray-100);
+    }
+
+    .page-info {
+        font-size: var(--font-sm);
+        color: var(--gray-600);
+        font-family: var(--primary-font);
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: white;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--gray-200);
+    }
+
     /* File Preview Modal */
-    .file-preview-modal {
+    .file-modal {
         display: none;
         position: fixed;
         z-index: 9999;
@@ -382,356 +634,645 @@
         top: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0,0,0,0.9);
-        animation: fadeIn 0.3s ease;
+        background: rgba(0, 0, 0, 0.9);
+        padding: var(--spacing-lg);
     }
 
-    .file-preview-content {
+    .file-modal-content {
         position: relative;
-        margin: 2% auto;
-        padding: 0;
-        width: 90%;
-        max-width: 1200px;
-        height: 90vh;
-    }
-
-    .file-preview-close {
-        position: absolute;
-        top: 15px;
-        right: 35px;
-        color: #f1f1f1;
-        font-size: 40px;
-        font-weight: bold;
-        cursor: pointer;
-        z-index: 10000;
-        transition: 0.3s;
-    }
-
-    .file-preview-close:hover {
-        color: #ff4444;
-    }
-
-    .file-preview-iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-        border-radius: var(--radius-lg);
-    }
-
-    .file-preview-image {
-        max-width: 100%;
+        max-width: 90%;
         max-height: 90vh;
-        display: block;
-        margin: 0 auto;
-        border-radius: var(--radius-lg);
+        margin: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
     }
 
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+    .file-modal-close {
+        position: absolute;
+        top: var(--spacing-lg);
+        right: var(--spacing-xl);
+        color: white;
+        font-size: 2rem;
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        z-index: 10000;
+        transition: all 0.3s ease;
     }
 
+    .file-modal-close:hover {
+        background: rgba(0, 0, 0, 0.8);
+        transform: scale(1.1);
+    }
+
+    .file-preview-img {
+        max-width: 100%;
+        max-height: 85vh;
+        object-fit: contain;
+        border-radius: var(--radius-md);
+    }
+
+    .file-preview-frame {
+        width: 100%;
+        height: 85vh;
+        border: none;
+        border-radius: var(--radius-md);
+        background: white;
+    }
+
+    /* Floating Action Button (Mobile) */
+    .fab-container {
+        display: none;
+        position: fixed;
+        bottom: var(--spacing-xl);
+        right: var(--spacing-xl);
+        z-index: 1000;
+    }
+
+    .fab-button {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        box-shadow: var(--shadow-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--font-xl);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .fab-button:hover {
+        background: var(--secondary-color);
+        transform: scale(1.1);
+        box-shadow: var(--shadow-xl);
+        color: white;
+    }
+
+    /* Response Count Badge */
+    .response-count-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: 0.25rem 0.5rem;
+        background: #16a34a;
+        color: white;
+        border-radius: 12px;
+        font-size: var(--font-xs);
+        font-weight: 600;
+        margin-left: var(--spacing-sm);
+    }
+
+    /* Mobile Responsive */
     @media (max-width: 768px) {
-        .enquiry-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: var(--spacing-sm);
+        .page-header-section {
+            padding: var(--spacing-md);
         }
 
-        .enquiry-meta {
+        .page-header-title {
+            width: 100%;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .page-header-title h4 {
+            font-size: var(--font-xl);
+        }
+
+        .page-header-title p {
+            font-size: var(--font-xs);
+        }
+
+        .page-header-actions {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-xs);
+        }
+
+        .page-header-actions .dropdown {
+            grid-column: span 2;
+        }
+
+        .page-header-actions .dropdown button {
+            width: 100%;
+        }
+
+        .page-header-actions .btn {
+            width: 100%;
+            justify-content: center;
+            font-size: var(--font-sm);
+            padding: var(--spacing-sm);
+        }
+
+        .page-header-actions .btn i {
+            font-size: var(--font-sm);
+        }
+
+        .fab-container {
+            display: block;
+            bottom: var(--spacing-lg);
+            right: var(--spacing-lg);
+        }
+
+        .stats-row {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .stat-value {
+            font-size: var(--font-3xl);
+        }
+
+        .enquiry-header-content {
+            flex-direction: column;
+        }
+
+        .enquiry-subject {
+            font-size: var(--font-lg);
+        }
+
+        .enquiry-meta-grid {
             grid-template-columns: 1fr;
-            gap: var(--spacing-md);
         }
 
-        .filter-section .d-flex {
+        .attachment-card {
             flex-direction: column;
-            align-items: stretch !important;
+            align-items: stretch;
         }
 
-        .form-select {
-            max-width: 100%;
-        }
-
-        .attachment-info {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: var(--spacing-sm);
+        .attachment-info-wrapper {
+            margin-bottom: var(--spacing-sm);
         }
 
         .attachment-actions {
             width: 100%;
-            flex-direction: column;
+            justify-content: stretch;
         }
 
         .btn-attachment {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .response-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .enquiry-actions {
+            flex-direction: column;
+        }
+
+        .enquiry-actions .btn {
             width: 100%;
             justify-content: center;
         }
 
-        .file-preview-content {
-            width: 95%;
-            height: 85vh;
+        .pagination {
+            gap: 4px;
         }
 
-        .file-preview-close {
-            top: 10px;
-            right: 20px;
-            font-size: 32px;
+        .page-link {
+            padding: var(--spacing-xs) 0.5rem;
+            min-width: 36px;
+            height: 36px;
+            font-size: var(--font-xs);
+        }
+
+        .page-info {
+            font-size: var(--font-xs);
+            padding: var(--spacing-xs) var(--spacing-sm);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+
+        .enquiry-subject {
+            font-size: var(--font-md);
+        }
+
+        .filter-btn {
+            font-size: var(--font-xs);
+            padding: 0.375rem 0.75rem;
         }
     }
 </style>
-{% endblock %}
 
-{% block customer_content %}
-<!-- Filter Section -->
-<div class="filter-section">
-    <div class="d-flex justify-content-between align-items-center gap-3">
-        <div class="d-flex align-items-center gap-3">
-            <label for="statusFilter" class="mb-0 fw-semibold">Search:</label>
-            <select class="form-select" id="statusFilter" onchange="filterEnquiries(this.value)">
-                <option value="" {% if not request.GET.status %}selected{% endif %}>
-                    All Enquiries ({{ page_obj.paginator.count }})
-                </option>
-                <option value="open" {% if request.GET.status == 'open' %}selected{% endif %}>
-                    Open ({{ status_counts.open|default:0 }})
-                </option>
-                <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>
-                    In Progress ({{ status_counts.in_progress|default:0 }})
-                </option>
-                <option value="answered" {% if request.GET.status == 'answered' %}selected{% endif %}>
-                    Answered ({{ status_counts.answered|default:0 }})
-                </option>
-                <option value="closed" {% if request.GET.status == 'closed' %}selected{% endif %}>
-                    Closed ({{ status_counts.closed|default:0 }})
-                </option>
-            </select>
+<!-- Page Header with Actions and Filter -->
+<div class="page-header-section">
+    <div class="page-header-title">
+        <h4 style="margin: 0; color: var(--dark-color); font-size: var(--font-2xl); font-weight: 600; font-family: var(--heading-font);">
+            <i class="fas fa-envelope" style="color: var(--primary-color); margin-right: var(--spacing-xs);"></i>
+            Business Enquiries Management
+        </h4>
+        <p style="margin: var(--spacing-xs) 0 0 0; color: var(--gray-600); font-size: var(--font-sm);">
+            Track and manage all your business enquiries
+        </p>
+    </div>
+    <div class="page-header-actions">
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-filter me-2"></i>
+                {% if request.GET.status == 'open' %}
+                    Open Enquiries
+                {% elif request.GET.status == 'in_progress' %}
+                    In Progress
+                {% elif request.GET.status == 'answered' %}
+                    Answered
+                {% elif request.GET.status == 'closed' %}
+                    Closed
+                {% else %}
+                    All Enquiries
+                {% endif %}
+                {% if page_obj %}
+                    <span class="badge bg-primary ms-2">{{ page_obj.paginator.count }}</span>
+                {% endif %}
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                <li>
+                    <a class="dropdown-item {% if not request.GET.status %}active{% endif %}" href="{% url 'customers:enquiries' %}">
+                        <i class="fas fa-list me-2"></i>All Enquiries
+                        {% if status_counts.total %}
+                            <span class="badge bg-secondary float-end">{{ status_counts.total }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item {% if request.GET.status == 'open' %}active{% endif %}" href="?status=open">
+                        <i class="fas fa-circle text-success me-2" style="font-size: 0.5rem;"></i>Open
+                        {% if status_counts.open %}
+                            <span class="badge bg-success float-end">{{ status_counts.open }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item {% if request.GET.status == 'in_progress' %}active{% endif %}" href="?status=in_progress">
+                        <i class="fas fa-clock text-warning me-2"></i>In Progress
+                        {% if status_counts.in_progress %}
+                            <span class="badge bg-warning float-end">{{ status_counts.in_progress }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item {% if request.GET.status == 'answered' %}active{% endif %}" href="?status=answered">
+                        <i class="fas fa-check-circle text-info me-2"></i>Answered
+                        {% if status_counts.answered %}
+                            <span class="badge bg-info float-end">{{ status_counts.answered }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item {% if request.GET.status == 'closed' %}active{% endif %}" href="?status=closed">
+                        <i class="fas fa-times-circle text-secondary me-2"></i>Closed
+                        {% if status_counts.closed %}
+                            <span class="badge bg-secondary float-end">{{ status_counts.closed }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+            </ul>
         </div>
-        
         <a href="{% url 'customers:send_enquiry' %}" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Send New Enquiry
+            <i class="fas fa-plus-circle me-2"></i>
+            Send New Enquiry
+        </a>
+        <a href="{% url 'customers:contact_sales' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-headset me-2"></i>
+            Contact Sales
         </a>
     </div>
 </div>
 
-<!-- Enquiries List -->
 {% if page_obj.object_list %}
-    {% for enquiry in page_obj.object_list %}
-        <div class="enquiry-card">
-            <div class="enquiry-header">
-                <div>
-                    <h3 class="enquiry-title">
-                        {% if enquiry.subject %}
-                            {{ enquiry.subject }}
-                        {% else %}
-                            Business Enquiry
+<!-- Enquiries List -->
+{% for enquiry in page_obj.object_list %}
+<div class="enquiry-item fade-in">
+    <div class="enquiry-item-header" onclick="toggleEnquiry('enquiry-{{ enquiry.id }}')">
+        <div class="enquiry-header-content">
+            <div class="enquiry-title-section">
+                <h5 class="enquiry-subject">
+                    <i class="fas fa-chevron-down collapse-icon" id="icon-enquiry-{{ enquiry.id }}"></i>
+                    {{ enquiry.subject }}
+                    {% with response_count=enquiry.responses.all|length %}
+                        {% if response_count > 0 %}
+                            <span class="response-count-badge">
+                                <i class="fas fa-reply"></i>
+                                {{ response_count }}
+                            </span>
                         {% endif %}
-                    </h3>
-                    <div class="enquiry-id">{{ enquiry.enquiry_id }} • {{ enquiry.created_at|date:"M d, Y" }}</div>
-                </div>
-                <div class="d-flex gap-2 align-items-center">
-                    {% if enquiry.priority %}
-                        <span class="priority-badge priority-{{ enquiry.priority }}">
-                            {{ enquiry.get_priority_display }}
-                        </span>
-                    {% endif %}
-                    <span class="status-badge status-{{ enquiry.status }}">
-                        {{ enquiry.get_status_display }}
-                    </span>
+                    {% endwith %}
+                </h5>
+                <div class="enquiry-ref">
+                    <i class="fas fa-hashtag"></i>
+                    {{ enquiry.enquiry_id }}
+                    <span style="margin: 0 var(--spacing-xs); color: var(--gray-400);">•</span>
+                    <i class="fas fa-calendar"></i>
+                    {{ enquiry.created_at|date:"M d, Y" }}
                 </div>
             </div>
-            
-            <div class="enquiry-body">
-                <div class="enquiry-meta">
-                    <div class="meta-item">
-                        <i class="fas fa-folder meta-icon"></i>
-                        <span class="meta-label">Category:</span>
-                        <span class="meta-value">{{ enquiry.category.name|default:"General" }}</span>
+            <span class="enquiry-status-badge status-{{ enquiry.status }}">
+                {% if enquiry.status == 'open' %}
+                    <i class="fas fa-circle" style="font-size: 0.5rem;"></i>
+                {% elif enquiry.status == 'in_progress' %}
+                    <i class="fas fa-clock"></i>
+                {% elif enquiry.status == 'answered' %}
+                    <i class="fas fa-check-circle"></i>
+                {% else %}
+                    <i class="fas fa-times-circle"></i>
+                {% endif %}
+                {{ enquiry.get_status_display }}
+            </span>
+        </div>
+    </div>
+    
+    <div class="enquiry-item-body" id="enquiry-{{ enquiry.id }}">
+        <div class="enquiry-meta-grid">
+            <div class="meta-field">
+                <i class="fas fa-clock"></i>
+                <span class="meta-field-label">Time:</span>
+                <span class="meta-field-value">{{ enquiry.created_at|date:"g:i A" }}</span>
+            </div>
+            <div class="meta-field">
+                <i class="fas fa-tag"></i>
+                <span class="meta-field-label">Type:</span>
+                <span class="meta-field-value">{{ enquiry.enquiry_type|title }}</span>
+            </div>
+            {% if enquiry.priority %}
+            <div class="meta-field">
+                <i class="fas fa-flag"></i>
+                <span class="meta-field-label">Priority:</span>
+                <span class="meta-field-value">{{ enquiry.priority|title }}</span>
+            </div>
+            {% endif %}
+            {% if enquiry.assigned_to %}
+            <div class="meta-field">
+                <i class="fas fa-user-tie"></i>
+                <span class="meta-field-label">Assigned To:</span>
+                <span class="meta-field-value">{{ enquiry.assigned_to.get_full_name }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="enquiry-message-box">
+            <div class="message-box-title">
+                <i class="fas fa-comment-dots"></i> Your Message:
+            </div>
+            <div class="message-box-content">{{ enquiry.message }}</div>
+        </div>
+        
+        {% if enquiry.attachment %}
+        <div class="attachment-container">
+            <div class="attachment-title">
+                <i class="fas fa-paperclip"></i>
+                Attachment
+            </div>
+            <div class="attachment-card">
+                <div class="attachment-info-wrapper">
+                    <div class="attachment-icon-box 
+                        {% if enquiry.attachment.name|lower|slice:'-4:' == '.pdf' %}file-icon-pdf
+                        {% elif enquiry.attachment.name|lower|slice:'-4:' == '.doc' or enquiry.attachment.name|lower|slice:'-5:' == '.docx' %}file-icon-doc
+                        {% elif enquiry.attachment.name|lower|slice:'-4:' == '.png' or enquiry.attachment.name|lower|slice:'-4:' == '.jpg' or enquiry.attachment.name|lower|slice:'-5:' == '.jpeg' %}file-icon-image
+                        {% else %}file-icon-default{% endif %}">
+                        <i class="fas fa-file{% if enquiry.attachment.name|lower|slice:'-4:' == '.pdf' %}-pdf{% elif enquiry.attachment.name|lower|slice:'-4:' == '.doc' or enquiry.attachment.name|lower|slice:'-5:' == '.docx' %}-word{% elif enquiry.attachment.name|lower|slice:'-4:' == '.png' or enquiry.attachment.name|lower|slice:'-4:' == '.jpg' or enquiry.attachment.name|lower|slice:'-5:' == '.jpeg' %}-image{% endif %}"></i>
                     </div>
-                    <div class="meta-item">
-                        <i class="fas fa-clock meta-icon"></i>
-                        <span class="meta-label">Created:</span>
-                        <span class="meta-value">{{ enquiry.created_at|timesince }} ago</span>
+                    <div class="attachment-details">
+                        <div class="attachment-filename">{{ enquiry.attachment_filename }}</div>
+                        <div class="attachment-size">
+                            {% if enquiry.attachment_size_mb %}{{ enquiry.attachment_size_mb }} MB • {% endif %}
+                            {{ enquiry.created_at|date:"M d, Y" }}
+                        </div>
                     </div>
-                    {% if enquiry.attachment %}
-                    <div class="meta-item">
-                        <i class="fas fa-paperclip meta-icon"></i>
-                        <span class="meta-label">Attachment:</span>
-                        <span class="meta-value">
-                            <i class="fas fa-check-circle text-success"></i> File attached
-                        </span>
-                    </div>
+                </div>
+                <div class="attachment-actions">
+                    {% if enquiry.attachment.name|lower|slice:'-4:' == '.png' or enquiry.attachment.name|lower|slice:'-4:' == '.jpg' or enquiry.attachment.name|lower|slice:'-5:' == '.jpeg' or enquiry.attachment.name|lower|slice:'-4:' == '.pdf' %}
+                    <a href="javascript:void(0);" class="btn-attachment btn-attachment-view" 
+                       onclick="event.stopPropagation(); viewFile('{{ enquiry.attachment.url }}', '{{ enquiry.attachment.name }}'); return false;">
+                        <i class="fas fa-eye"></i> View
+                    </a>
                     {% endif %}
+                    <a href="{{ enquiry.attachment.url }}" class="btn-attachment btn-attachment-download" download onclick="event.stopPropagation();">
+                        <i class="fas fa-download"></i> Download
+                    </a>
                 </div>
-                
-                <div class="enquiry-message">
-                    <h6><i class="fas fa-comment-dots me-2"></i>Your Enquiry:</h6>
-                    <p>{{ enquiry.message }}</p>
-                </div>
-
-                <!-- Attachment Section -->
-                {% if enquiry.attachment %}
-                <div class="attachment-section">
-                    <div class="attachment-header">
-                        <i class="fas fa-paperclip"></i>
-                        <span>Attached File</span>
-                    </div>
-                    <div class="attachment-item">
-                        <div class="attachment-info">
-                            <div class="attachment-icon {% if enquiry.attachment.name|lower|slice:'-4:' == '.pdf' %}icon-pdf{% elif enquiry.attachment.name|lower|slice:'-4:' == '.xls' or enquiry.attachment.name|lower|slice:'-5:' == '.xlsx' or enquiry.attachment.name|lower|slice:'-4:' == '.csv' %}icon-excel{% elif enquiry.attachment.name|lower|slice:'-4:' == '.doc' or enquiry.attachment.name|lower|slice:'-5:' == '.docx' %}icon-doc{% elif enquiry.attachment.name|lower|slice:'-4:' == '.png' or enquiry.attachment.name|lower|slice:'-4:' == '.jpg' or enquiry.attachment.name|lower|slice:'-5:' == '.jpeg' or enquiry.attachment.name|lower|slice:'-5:' == '.webp' %}icon-image{% else %}icon-default{% endif %}">
-                                {% if enquiry.attachment.name|lower|slice:'-4:' == '.pdf' %}
-                                    <i class="fas fa-file-pdf"></i>
-                                {% elif enquiry.attachment.name|lower|slice:'-4:' == '.xls' or enquiry.attachment.name|lower|slice:'-5:' == '.xlsx' or enquiry.attachment.name|lower|slice:'-4:' == '.csv' %}
-                                    <i class="fas fa-file-excel"></i>
-                                {% elif enquiry.attachment.name|lower|slice:'-4:' == '.doc' or enquiry.attachment.name|lower|slice:'-5:' == '.docx' %}
-                                    <i class="fas fa-file-word"></i>
-                                {% elif enquiry.attachment.name|lower|slice:'-4:' == '.png' or enquiry.attachment.name|lower|slice:'-4:' == '.jpg' or enquiry.attachment.name|lower|slice:'-5:' == '.jpeg' or enquiry.attachment.name|lower|slice:'-5:' == '.webp' %}
-                                    <i class="fas fa-file-image"></i>
-                                {% else %}
-                                    <i class="fas fa-file"></i>
-                                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if enquiry.admin_notes %}
+        <div class="enquiry-message-box" style="border-left-color: var(--warning-color); background: #fef3c7;">
+            <div class="message-box-title" style="color: #92400e;">
+                <i class="fas fa-sticky-note"></i> Admin Notes:
+            </div>
+            <div class="message-box-content" style="color: #78350f;">{{ enquiry.admin_notes }}</div>
+        </div>
+        {% endif %}
+        
+        {# Response Section - Fixed to show responses properly #}
+        {% with visible_responses=enquiry.responses.all %}
+            {% if visible_responses %}
+                {% for response in visible_responses %}
+                    {% if not response.is_internal_note %}
+                        {% if forloop.first %}
+                        <div class="response-container">
+                            <div class="response-title">
+                                <i class="fas fa-reply"></i> 
+                                Responses from our team
                             </div>
-                            <div class="attachment-details">
-                                <div class="attachment-name">{{ enquiry.attachment_filename }}</div>
-                                <div class="attachment-meta">
-                                    {% if enquiry.attachment_size_mb %}
-                                        {{ enquiry.attachment_size_mb }} MB
-                                    {% endif %}
-                                    • Uploaded {{ enquiry.created_at|date:"M d, Y" }}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="attachment-actions">
-                            {% if enquiry.attachment.name|lower|slice:'-4:' == '.png' or enquiry.attachment.name|lower|slice:'-4:' == '.jpg' or enquiry.attachment.name|lower|slice:'-5:' == '.jpeg' or enquiry.attachment.name|lower|slice:'-5:' == '.webp' or enquiry.attachment.name|lower|slice:'-4:' == '.pdf' %}
-                            <a href="#" class="btn-attachment btn-view" onclick="viewFile('{{ enquiry.attachment.url }}', '{{ enquiry.attachment.name }}'); return false;">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </a>
-                            {% endif %}
-                            {% comment %} <a href="{{ enquiry.attachment.url }}" class="btn-attachment btn-download" download>
-                                <i class="fas fa-download"></i>
-                                Download
-                            </a> {% endcomment %}
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-                
-                {% if enquiry.admin_notes %}
-                <div class="enquiry-message" style="border-left-color: var(--warning-color);">
-                    <h6><i class="fas fa-sticky-note me-2"></i>Admin Notes:</h6>
-                    <p>{{ enquiry.admin_notes }}</p>
-                </div>
-                {% endif %}
-                
-                {% if enquiry.responses.exists %}
-                <div class="response-section">
-                    <h6><i class="fas fa-reply me-2"></i>Responses from our team:</h6>
-                    {% for response in enquiry.responses.all %}
-                        {% if not response.is_internal_note %}
-                        <div class="response-item">
+                        {% endif %}
+                        
+                        <div class="response-card">
                             <div class="response-header">
                                 <span class="response-author">
-                                    <i class="fas fa-user-tie me-1"></i>
-                                    {{ response.responded_by.first_name }} {{ response.responded_by.last_name }}
+                                    <i class="fas fa-user-tie"></i>
+                                    {% if response.responded_by %}
+                                        {{ response.responded_by.get_full_name|default:response.responded_by.username }}
+                                    {% else %}
+                                        Support Team
+                                    {% endif %}
                                 </span>
-                                <span class="response-date">{{ response.created_at|date:"M d, Y H:i" }}</span>
+                                <span class="response-date">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {{ response.created_at|date:"M d, Y - g:i A" }}
+                                </span>
                             </div>
-                            <p class="response-text">{{ response.response_text }}</p>
+                            <div class="response-content">{{ response.response_text }}</div>
+                        </div>
+                        
+                        {% if forloop.last %}
                         </div>
                         {% endif %}
-                    {% endfor %}
-                </div>
-                {% endif %}
-                
-                <div class="d-flex gap-2 mt-3">
-                    {% if enquiry.status == 'open' or enquiry.status == 'in_progress' %}
-                        <a href="{% url 'customers:contact_sales' %}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-headset me-1"></i>Follow Up
-                        </a>
                     {% endif %}
-                    
-                    {% if enquiry.status == 'answered' %}
-                        <span class="badge bg-success">
-                            <i class="fas fa-check me-1"></i>Response Received
-                        </span>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    {% endfor %}
-    
-    {% if page_obj.has_other_pages %}
-        <div class="pagination-wrapper">
-            <nav>
-                <ul class="pagination">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
-                                <i class="fas fa-angle-left"></i>
-                            </a>
-                        </li>
-                    {% endif %}
-                    
-                    {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                            <li class="page-item active">
-                                <span class="page-link">{{ num }}</span>
-                            </li>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
-                    
-                    {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
-                                <i class="fas fa-angle-right"></i>
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </nav>
-        </div>
-    {% endif %}
-    
-{% else %}
-    <div class="empty-state">
-        <div class="empty-icon">
-            <i class="fas fa-envelope-open-text"></i>
-        </div>
-        <h3>No Enquiries Found</h3>
-        {% if request.GET.status %}
-            <p>No enquiries found with status "{{ request.GET.status|title }}".</p>
-            <a href="{% url 'customers:enquiries' %}" class="btn btn-outline-primary mt-3">
-                <i class="fas fa-list me-2"></i>View All Enquiries
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="enquiry-actions">
+            {% if enquiry.status == 'open' or enquiry.status == 'in_progress' %}
+            <a href="{% url 'customers:contact_sales' %}" class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation();">
+                <i class="fas fa-headset me-2"></i>Follow Up
             </a>
-        {% else %}
-            <p>You haven't sent any business enquiries yet.</p>
-            <a href="{% url 'customers:send_enquiry' %}" class="btn btn-primary mt-3">
-                <i class="fas fa-plus me-2"></i>Send Your First Enquiry
-            </a>
-        {% endif %}
+            {% endif %}
+            
+            {% if enquiry.status == 'answered' %}
+            <span class="badge bg-success">
+                <i class="fas fa-check me-1"></i>Response Received
+            </span>
+            {% endif %}
+            
+            {% if enquiry.status == 'closed' %}
+            <span class="badge bg-secondary">
+                <i class="fas fa-check-double me-1"></i>Resolved
+            </span>
+            {% endif %}
+        </div>
     </div>
+</div>
+{% endfor %}
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="pagination-container">
+    <div class="page-info">
+        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} enquiries
+    </div>
+    
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" title="First Page">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" title="Previous Page">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <i class="fas fa-angle-double-left"></i>
+                </span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <i class="fas fa-angle-left"></i>
+                </span>
+            </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" title="Next Page">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" title="Last Page">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <i class="fas fa-angle-right"></i>
+                </span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <i class="fas fa-angle-double-right"></i>
+                </span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+
+{% else %}
+<!-- Empty State -->
+<div class="empty-container">
+    <div class="empty-icon">
+        <i class="fas fa-envelope-open-text"></i>
+    </div>
+    <h3 class="empty-title">No Enquiries Found</h3>
+    {% if request.GET.status %}
+    <p class="empty-text">No enquiries found with status "{{ request.GET.status|title }}".</p>
+    <div style="display: flex; gap: var(--spacing-sm); justify-content: center; flex-wrap: wrap;">
+        <a href="{% url 'customers:enquiries' %}" class="btn btn-outline-primary">
+            <i class="fas fa-list me-2"></i>View All Enquiries
+        </a>
+        <a href="{% url 'customers:send_enquiry' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-2"></i>Send New Enquiry
+        </a>
+    </div>
+    {% else %}
+    <p class="empty-text">You haven't sent any business enquiries yet. Start by creating your first enquiry.</p>
+    <div style="display: flex; gap: var(--spacing-sm); justify-content: center; flex-wrap: wrap; margin-top: var(--spacing-lg);">
+        <a href="{% url 'customers:send_enquiry' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus-circle me-2"></i>Send Your First Enquiry
+        </a>
+        <a href="{% url 'customers:contact_sales' %}" class="btn btn-outline-primary btn-lg">
+            <i class="fas fa-headset me-2"></i>Contact Sales Team
+        </a>
+    </div>
+    {% endif %}
+</div>
 {% endif %}
 
 <!-- File Preview Modal -->
-<div id="filePreviewModal" class="file-preview-modal">
-    <span class="file-preview-close" onclick="closeFilePreview()">&times;</span>
-    <div class="file-preview-content" id="filePreviewContent">
-        <!-- Dynamic content will be inserted here -->
-    </div>
+<div id="filePreviewModal" class="file-modal">
+    <span class="file-modal-close" onclick="closeFilePreview()">&times;</span>
+    <div class="file-modal-content" id="filePreviewContent"></div>
+</div>
+
+<!-- Floating Action Button (Mobile) -->
+<div class="fab-container">
+    <a href="{% url 'customers:send_enquiry' %}" class="fab-button" title="Send New Enquiry">
+        <i class="fas fa-plus"></i>
+    </a>
 </div>
 {% endblock %}
 
 {% block customer_extra_js %}
 <script>
-function filterEnquiries(status) {
-    if (status) {
-        window.location.href = '?status=' + status;
+// Toggle enquiry collapse
+function toggleEnquiry(enquiryId) {
+    const body = document.getElementById(enquiryId);
+    const icon = document.getElementById('icon-' + enquiryId);
+    
+    if (body.classList.contains('show')) {
+        body.classList.remove('show');
+        icon.classList.add('collapsed');
     } else {
-        window.location.href = '{% url "customers:enquiries" %}';
+        body.classList.add('show');
+        icon.classList.remove('collapsed');
     }
 }
 
@@ -741,27 +1282,22 @@ function viewFile(fileUrl, fileName) {
     const content = document.getElementById('filePreviewContent');
     const fileExtension = fileName.toLowerCase().split('.').pop();
     
-    // Clear previous content
     content.innerHTML = '';
     
-    // Check file type and display accordingly
     if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(fileExtension)) {
-        // Display image
         const img = document.createElement('img');
         img.src = fileUrl;
-        img.className = 'file-preview-image';
+        img.className = 'file-preview-img';
         img.alt = fileName;
         content.appendChild(img);
     } else if (fileExtension === 'pdf') {
-        // Display PDF in iframe
         const iframe = document.createElement('iframe');
         iframe.src = fileUrl;
-        iframe.className = 'file-preview-iframe';
+        iframe.className = 'file-preview-frame';
         content.appendChild(iframe);
     } else {
-        // For other file types, show download message
         const message = document.createElement('div');
-        message.style.cssText = 'color: white; text-align: center; padding: 50px; font-size: 1.2rem;';
+        message.style.cssText = 'color: white; text-align: center; padding: 50px;';
         message.innerHTML = `
             <i class="fas fa-file fa-3x mb-3"></i>
             <p>Preview not available for this file type.</p>
@@ -782,7 +1318,6 @@ function closeFilePreview() {
     document.body.style.overflow = 'auto';
 }
 
-// Close modal when clicking outside
 window.onclick = function(event) {
     const modal = document.getElementById('filePreviewModal');
     if (event.target === modal) {
@@ -790,7 +1325,6 @@ window.onclick = function(event) {
     }
 }
 
-// Close modal with Escape key
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         closeFilePreview();
@@ -798,17 +1332,24 @@ document.addEventListener('keydown', function(event) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-    const cards = document.querySelectorAll('.enquiry-card');
+    // Fade in animation
+    const cards = document.querySelectorAll('.enquiry-item');
     cards.forEach((card, index) => {
         card.style.opacity = '0';
         card.style.transform = 'translateY(20px)';
-        card.style.transition = 'all 0.6s ease';
-        
         setTimeout(() => {
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
             card.style.opacity = '1';
             card.style.transform = 'translateY(0)';
         }, index * 100);
     });
+    
+    // Open first enquiry by default if there's only one
+    const enquiries = document.querySelectorAll('.enquiry-item');
+    if (enquiries.length === 1) {
+        const firstEnquiryId = enquiries[0].querySelector('.enquiry-item-body').id;
+        toggleEnquiry(firstEnquiryId);
+    }
 });
 </script>
 {% endblock %}

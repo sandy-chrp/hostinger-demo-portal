@@ -2,6 +2,15 @@
 
 {% block admin_title %}Dashboard Overview{% endblock %}
 
+{% block page_title %}
+    <i class="fas fa-chart-line"></i>
+    Dashboard Overview
+{% endblock %}
+
+{% block page_subtitle %}
+    <p class="page-subtitle">Here's what's happening with your demo portal today.</p>
+{% endblock %}
+
 {% block breadcrumb %}
     <!-- No breadcrumb needed for dashboard -->
 {% endblock %}
@@ -10,32 +19,32 @@
 <style>
     /* Dashboard Specific Styles - Updated with #087fc2 theme */
     .dashboard-stats {
-        margin-bottom: var(--spacing-xl);
+        margin-bottom: 1.5rem;
     }
 
     .chart-container {
         position: relative;
         height: 300px;
-        margin-bottom: var(--spacing-lg);
+        margin-bottom: 1.25rem;
     }
 
     .chart-card {
         background: white;
         border-radius: var(--radius-xl);
-        padding: var(--spacing-lg);
+        padding: 1.25rem;
         box-shadow: var(--shadow-md);
-        margin-bottom: var(--spacing-lg);
+        margin-bottom: 1.25rem;
     }
 
     .chart-title {
-        font-size: 1.1rem;
+        font-size: var(--font-lg);
         font-weight: 600;
         color: var(--dark-color);
-        margin-bottom: var(--spacing-lg);
+        margin-bottom: 1.25rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: var(--spacing-sm);
+        gap: 0.75rem;
     }
 
     .chart-title i {
@@ -48,11 +57,11 @@
     }
 
     .activity-item {
-        padding: var(--spacing-md);
+        padding: 1rem;
         border-bottom: 1px solid var(--gray-200);
         display: flex;
         align-items: start;
-        gap: var(--spacing-md);
+        gap: 1rem;
         transition: background-color 0.2s ease;
     }
 
@@ -71,7 +80,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.875rem;
+        font-size: var(--font-sm);
         flex-shrink: 0;
     }
 
@@ -102,32 +111,32 @@
     .activity-title {
         font-weight: 600;
         color: var(--dark-color);
-        margin-bottom: var(--spacing-xs);
-        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+        font-size: var(--font-sm);
     }
 
     .activity-description {
         color: var(--gray-600);
-        font-size: 0.875rem;
-        margin-bottom: var(--spacing-xs);
+        font-size: var(--font-sm);
+        margin-bottom: 0.5rem;
     }
 
     .activity-time {
         color: var(--gray-500);
-        font-size: 0.8rem;
+        font-size: var(--font-xs);
     }
 
     .quick-action-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: var(--spacing-md);
-        margin-bottom: var(--spacing-xl);
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
     }
 
     .quick-action-card {
         background: white;
         border-radius: var(--radius-lg);
-        padding: var(--spacing-lg);
+        padding: 1.25rem;
         text-align: center;
         box-shadow: var(--shadow-md);
         border: 2px solid transparent;
@@ -145,19 +154,19 @@
     }
 
     .quick-action-icon {
-        font-size: 2rem;
+        font-size: 1.75rem;
         color: #087fc2;
-        margin-bottom: var(--spacing-md);
+        margin-bottom: 1rem;
     }
 
     .quick-action-title {
         font-weight: 600;
-        margin-bottom: var(--spacing-sm);
+        margin-bottom: 0.75rem;
         color: var(--dark-color);
     }
 
     .quick-action-description {
-        font-size: 0.875rem;
+        font-size: var(--font-sm);
         color: var(--gray-600);
     }
 
@@ -176,12 +185,12 @@
         border-bottom: 2px solid var(--gray-200);
         font-weight: 600;
         color: var(--dark-color);
-        font-size: 0.875rem;
+        font-size: var(--font-sm);
     }
 
     .table td {
         vertical-align: middle;
-        font-size: 0.875rem;
+        font-size: var(--font-sm);
     }
 
     .status-badge {
@@ -219,14 +228,14 @@
 
     .empty-state {
         text-align: center;
-        padding: var(--spacing-xl);
+        padding: 1.5rem;
         color: var(--gray-600);
     }
 
     .empty-state i {
         font-size: 3rem;
         color: var(--gray-400);
-        margin-bottom: var(--spacing-lg);
+        margin-bottom: 1.25rem;
     }
 
     /* Activity Filters */
@@ -238,7 +247,7 @@
 
     .activity-filters .btn {
         transition: all 0.3s ease;
-        font-size: 0.875rem;
+        font-size: var(--font-sm);
         padding: 0.375rem 0.75rem;
     }
 
@@ -265,14 +274,14 @@
     .activity-stat-card {
         background: white;
         border-radius: var(--radius-lg);
-        padding: var(--spacing-lg);
+        padding: 1.25rem;
         box-shadow: var(--shadow-sm);
         border: 1px solid var(--gray-200);
         display: flex;
-        gap: var(--spacing-md);
+        gap: 1rem;
         align-items: center;
         transition: all 0.3s ease;
-        margin-bottom: var(--spacing-md);
+        margin-bottom: 1rem;
     }
 
     .activity-stat-card:hover {
@@ -296,7 +305,7 @@
     }
 
     .activity-stat-label {
-        font-size: 0.875rem;
+        font-size: var(--font-sm);
         color: var(--gray-600);
         margin-bottom: 4px;
     }
@@ -374,12 +383,503 @@
     .badge.bg-primary {
         background-color: #087fc2 !important;
     }
+
+    /* Responsive Dashboard Styles */
+    @media (max-width: 1024px) {
+        .chart-card {
+            padding: 1.1rem;
+        }
+        
+        .chart-container {
+            height: 250px;
+        }
+        
+        .quick-action-grid {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.85rem;
+        }
+        
+        .activity-stat-value {
+            font-size: var(--font-3xl);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-stats {
+            margin-bottom: 1.25rem;
+        }
+        
+        .chart-card {
+            padding: 1rem;
+        }
+        
+        .chart-container {
+            height: 220px;
+        }
+        
+        .chart-title {
+            font-size: var(--font-md);
+            margin-bottom: 0.75rem;
+        }
+        
+        .quick-action-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+        
+        .quick-action-card {
+            padding: 1rem;
+        }
+        
+        .quick-action-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .activity-item {
+            padding: 0.75rem;
+            gap: 0.5rem;
+        }
+        
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 0.7rem;
+        }
+        
+        .activity-title {
+            font-size: 0.75rem;
+        }
+        
+        .activity-description {
+            font-size: 0.75rem;
+        }
+        
+        .activity-stat-card {
+            padding: 0.85rem;
+            gap: 0.5rem;
+        }
+        
+        .activity-stat-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.1rem;
+        }
+        
+        .activity-stat-value {
+            font-size: var(--font-2xl);
+        }
+        
+        .activity-stat-label {
+            font-size: 0.7rem;
+        }
+        
+        .table th,
+        .table td {
+            padding: 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .status-badge {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.5rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .chart-container {
+            height: 200px;
+        }
+        
+        .quick-action-grid {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+        
+        .quick-action-card {
+            padding: 0.85rem;
+        }
+        
+        .chart-card {
+            padding: 0.85rem;
+        }
+        
+        .activity-feed {
+            max-height: 300px;
+        }
+        
+        .activity-item {
+            padding: 0.65rem;
+        }
+        
+        .activity-stat-card {
+            padding: 0.75rem;
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .activity-stat-value {
+            font-size: var(--font-xl);
+        }
+        
+        .empty-state {
+            padding: 1.5rem;
+        }
+        
+        .empty-state i {
+            font-size: 2rem;
+        }
+    }
+/* ========== STAT CARDS - ONE ROW, SMALL BOXES ========== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.875rem;
+    margin-bottom: 1.25rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 0.875rem !important;
+    box-shadow: var(--shadow-sm);
+    border-left: 3px solid;
+    transition: all 0.3s ease;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.stat-card.primary {
+    border-left-color: #087fc2;
+}
+
+.stat-card.warning {
+    border-left-color: #f59e0b;
+}
+
+.stat-card.success {
+    border-left-color: #10b981;
+}
+
+.stat-icon {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem !important;
+    margin-bottom: 0.625rem;
+}
+
+.stat-card.primary .stat-icon {
+    background: rgba(8, 127, 194, 0.1);
+    color: #087fc2;
+}
+
+.stat-card.warning .stat-icon {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.stat-card.success .stat-icon {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.stat-number {
+    font-size: 1.5rem !important;
+    font-weight: 700;
+    color: var(--dark-color);
+    line-height: 1;
+    margin: 0.375rem 0;
+}
+
+.stat-label {
+    font-size: var(--font-sm) !important;
+    font-weight: 500;
+    color: var(--gray-600);
+    margin-bottom: 0.375rem;
+}
+
+.stat-change {
+    font-size: var(--font-xs) !important;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: var(--radius-sm);
+}
+
+.stat-change.positive {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+/* User Activity Analytics Header - Buttons to Right */
+.admin-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--gray-200);
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.admin-card-title {
+    font-size: var(--font-lg);
+    font-weight: 600;
+    color: var(--dark-color);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.activity-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.activity-filters .btn {
+    font-size: var(--font-xs);
+    padding: 0.375rem 0.75rem;
+    white-space: nowrap;
+}
+
+/* Responsive Stat Cards */
+@media (max-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stat-card {
+        min-height: 100px;
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.625rem;
+    }
+    
+    .stat-card {
+        padding: 0.75rem !important;
+        min-height: 95px;
+    }
+    
+    .stat-number {
+        font-size: 1.25rem !important;
+    }
+    
+    .stat-icon {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 0.875rem !important;
+    }
+    
+    .admin-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .activity-filters {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .activity-filters .btn {
+        font-size: 0.625rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .stat-card {
+        padding: 0.625rem !important;
+        min-height: 85px;
+    }
+    
+    .stat-number {
+        font-size: 1.125rem !important;
+    }
+}
+
+
+    /* ========== RESPONSIVE IMPROVEMENTS - Added Fixes ========== */
+    
+    /* Stat Cards - More Compact */
+    .stat-card {
+        padding: 0.875rem !important;
+        min-height: 100px;
+    }
+    
+    .stat-icon {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 1rem !important;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem !important;
+    }
+    
+    .stat-label {
+        font-size: var(--font-sm) !important;
+    }
+    
+    /* Chart Cards - Reduced Padding */
+    .chart-card {
+        padding: 1rem !important;
+    }
+    
+    .chart-container {
+        height: 280px !important;
+    }
+    
+    /* Tables - Normal Font Weight */
+    .table td {
+        font-weight: 400 !important; /* NORMAL weight */
+    }
+    
+    .table td strong,
+    .table td b {
+        font-weight: 600; /* Only specific bold elements */
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.625rem 0.75rem !important;
+        font-size: var(--font-sm) !important;
+    }
+    
+    /* Table Responsive */
+    .table-responsive {
+        -webkit-overflow-scrolling: touch;
+        overflow-x: auto;
+    }
+    
+    /* Activity Items - Compact */
+    .activity-item {
+        padding: 0.75rem !important;
+    }
+    
+    .activity-icon {
+        width: 36px !important;
+        height: 36px !important;
+    }
+    
+    /* Welcome Card - Compact */
+    .admin-card-body {
+        padding: 1rem 1.25rem !important;
+    }
+    
+    /* Quick Actions - Compact */
+    .quick-action-card {
+        padding: 1rem !important;
+    }
+    
+    .quick-action-icon {
+        font-size: 1.5rem !important;
+    }
+    
+    /* Additional Responsive Breakpoints */
+    @media (max-width: 1400px) {
+        .stat-number {
+            font-size: 1.375rem !important;
+        }
+    }
+    
+    @media (max-width: 1200px) {
+        .stat-card {
+            padding: 0.75rem !important;
+        }
+        
+        .chart-container {
+            height: 260px !important;
+        }
+    }
+    
+    @media (max-width: 992px) {
+        .stat-number {
+            font-size: 1.25rem !important;
+        }
+        
+        .stat-icon {
+            width: 32px !important;
+            height: 32px !important;
+            font-size: 0.875rem !important;
+        }
+        
+        .chart-container {
+            height: 240px !important;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .stat-card {
+            padding: 0.75rem !important;
+            min-height: 90px;
+        }
+        
+        .stat-number {
+            font-size: 1.125rem !important;
+        }
+        
+        .chart-card {
+            padding: 0.875rem !important;
+        }
+        
+        .chart-container {
+            height: 220px !important;
+        }
+        
+        .activity-item {
+            padding: 0.625rem !important;
+        }
+        
+        .table th,
+        .table td {
+            padding: 0.5rem !important;
+            font-size: var(--font-xs) !important;
+        }
+        
+        .admin-card-body {
+            padding: 0.875rem !important;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .stat-card {
+            padding: 0.625rem !important;
+        }
+        
+        .chart-container {
+            height: 200px !important;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block admin_content %}
 <!-- Welcome Section -->
-<div class="admin-card">
+{% comment %} <div class="admin-card">
     <div class="admin-card-body">
         <div class="row align-items-center">
             <div class="col-lg-12">
@@ -393,7 +893,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> {% endcomment %}
 
 <!-- Statistics Grid -->
 <div class="stats-grid dashboard-stats">

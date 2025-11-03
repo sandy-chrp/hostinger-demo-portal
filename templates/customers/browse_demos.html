@@ -1,648 +1,255 @@
 {% extends 'customers/base.html' %}
+{% load static %}
 
-{% block customer_title %}Browse Demos - Customer Portal{% endblock %}
+{% block customer_title %}Browse Demos{% endblock %}
 {% block page_title %}Browse Demos{% endblock %}
 
-{% block customer_extra_css %}
-<style>
-    body {
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-        -webkit-touch-callout: none;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .demo-card-content, .demo-title, .demo-description {
-        -webkit-user-select: none;
-        user-select: none;
-    }
-
-    a, button, .btn {
-        pointer-events: auto !important;
-        cursor: pointer !important;
-    }
-
-    img, video {
-        -webkit-user-drag: none;
-        user-drag: none;
-    }
-
-    /* Filters Section */
-    .filters-section {
-        background: white;
-        padding: var(--spacing-lg);
-        border-radius: var(--radius-xl);
-        box-shadow: var(--shadow-md);
-        margin-bottom: var(--spacing-xl);
-        border: 1px solid var(--gray-200);
-    }
-
-    .filter-label {
-        font-weight: 600;
-        color: var(--dark-color);
-        margin-bottom: var(--spacing-sm);
-        display: block;
-        font-size: 0.875rem;
-    }
-
-    .form-select {
-        border: 2px solid var(--gray-300);
-        border-radius: var(--radius-lg);
-        padding: 0.625rem 1rem;
-        font-size: 0.875rem;
-        transition: all 0.3s ease;
-        background-color: white;
-    }
-
-    .form-select:focus {
-        border-color: #087fc2;
-        box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
-        outline: none;
-    }
-
-    /* Search Section */
-    .search-section {
-        position: relative;
-    }
-
-    .search-input {
-        padding-left: 45px;
-        border-radius: var(--radius-lg);
-        border: 2px solid var(--gray-300);
-        transition: all 0.3s ease;
-    }
-
-    .search-input:focus {
-        border-color: #087fc2;
-        box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--gray-500);
-    }
-
-    /* Demos Grid */
-    .demos-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-        gap: var(--spacing-xl);
-        margin-top: var(--spacing-xl);
-    }
-
-    .demo-card {
-        background: white;
-        border-radius: var(--radius-xl);
-        overflow: hidden;
-        box-shadow: var(--shadow-md);
-        transition: all 0.3s ease;
-        border: 1px solid var(--gray-200);
-        position: relative;
-    }
-
-    .demo-card:hover {
-        transform: translateY(-8px);
-        box-shadow: var(--shadow-xl);
-    }
-
-    /* Thumbnail */
-    .demo-thumbnail-container {
-        position: relative;
-        height: 200px;
-        overflow: hidden;
-        background: var(--gray-100);
-    }
-
-    .demo-thumbnail {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: all 0.3s ease;
-        -webkit-user-drag: none;
-        pointer-events: none;
-    }
-
-    .demo-card:hover .demo-thumbnail {
-        transform: scale(1.05);
-    }
-
-    /* Overlay - UPDATED */
-    .demo-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(8, 127, 194, 0.85) 0%, rgba(6, 105, 160, 0.7) 100%);
-        opacity: 0;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-    }
-
-    .demo-card:hover .demo-overlay {
-        opacity: 1;
-    }
-
-    .play-button {
-        width: 70px;
-        height: 70px;
-        border-radius: 50%;
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        color: #087fc2;
-        transform: scale(0.8);
-        transition: all 0.3s ease;
-        pointer-events: auto;
-    }
-
-    .demo-card:hover .play-button {
-        transform: scale(1);
-    }
-
-    /* Badges - UPDATED */
-    .demo-badge {
-        position: absolute;
-        top: var(--spacing-md);
-        right: var(--spacing-md);
-        background: #087fc2;
-        color: white;
-        padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--radius-md);
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        z-index: 2;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .demo-badge.webgl {
-        background: rgba(6, 182, 212, 0.95);
-    }
-
-    .demo-badge.video {
-        background: rgba(8, 127, 194, 0.95);
-    }
-
-    .demo-badge.status-watched {
-        background: var(--success-color);
-    }
-
-    .demo-badge.status-new {
-        background: var(--info-color);
-    }
-
-    /* Card Content */
-    .demo-card-content {
-        padding: var(--spacing-lg);
-    }
-
-    .demo-category {
-        color: #087fc2;
-        font-size: 0.875rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: var(--spacing-sm);
-    }
-
-    .demo-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--dark-color);
-        margin-bottom: var(--spacing-sm);
-        line-height: 1.3;
-        -webkit-line-clamp: 2;
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .demo-description {
-        color: var(--gray-600);
-        margin-bottom: var(--spacing-lg);
-        line-height: 1.5;
-        -webkit-line-clamp: 3;
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .demo-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: var(--spacing-lg);
-        font-size: 0.875rem;
-        color: var(--gray-500);
-    }
-
-    .demo-stats {
-        display: flex;
-        gap: var(--spacing-md);
-    }
-
-    /* Action Buttons - UPDATED */
-    .demo-actions {
-        display: flex;
-        gap: var(--spacing-sm);
-    }
-
-    .btn-watch {
-        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
-        color: white;
-        border: none;
-        padding: var(--spacing-sm) var(--spacing-lg);
-        border-radius: var(--radius-lg);
-        font-weight: 600;
-        transition: all 0.3s ease;
-        flex: 1;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .btn-watch:hover {
-        background: linear-gradient(135deg, #0669a0 0%, #055a8a 100%);
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(8, 127, 194, 0.3);
-    }
-
-    .btn-launch {
-        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
-        color: white;
-        border: none;
-        padding: var(--spacing-sm) var(--spacing-lg);
-        border-radius: var(--radius-lg);
-        font-weight: 600;
-        transition: all 0.3s ease;
-        flex: 1;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .btn-launch:hover {
-        background: linear-gradient(135deg, #0669a0 0%, #055a8a 100%);
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(8, 127, 194, 0.3);
-    }
-
-    .btn-consultation {
-        background: #06b6d4;
-        color: white;
-        border: none;
-        padding: var(--spacing-sm) var(--spacing-lg);
-        border-radius: var(--radius-lg);
-        font-weight: 600;
-        transition: all 0.3s ease;
-        flex: 1;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .btn-consultation:hover {
-        background: #0891b2;
-        color: white;
-        transform: translateY(-2px);
-    }
-
-    .btn-request {
-        background: transparent;
-        color: #087fc2;
-        border: 2px solid #087fc2;
-        padding: var(--spacing-sm) var(--spacing-md);
-        border-radius: var(--radius-lg);
-        font-weight: 600;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .btn-request:hover {
-        background: #087fc2;
-        color: white;
-        transform: translateY(-2px);
-    }
-
-    /* Watermark */
-    .demo-watermark {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(-45deg);
-        color: rgba(255, 255, 255, 0.1);
-        font-size: 1.5rem;
-        font-weight: bold;
-        pointer-events: none;
-        z-index: 1;
-        user-select: none;
-    }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: var(--spacing-xl) var(--spacing-lg);
-        color: var(--gray-500);
-    }
-
-    .empty-icon {
-        font-size: 4rem;
-        margin-bottom: var(--spacing-lg);
-        opacity: 0.5;
-    }
-
-    /* Pagination - UPDATED */
-    .pagination-wrapper {
-        margin-top: var(--spacing-xl);
-        display: flex;
-        justify-content: center;
-    }
-
-    .pagination .page-link {
-        border: 2px solid var(--gray-300);
-        color: var(--gray-700);
-        padding: var(--spacing-sm) var(--spacing-md);
-        margin: 0 var(--spacing-xs);
-        border-radius: var(--radius-md);
-        transition: all 0.3s ease;
-    }
-
-    .pagination .page-link:hover {
-        border-color: #087fc2;
-        background: #087fc2;
-        color: white;
-    }
-
-    .pagination .page-item.active .page-link {
-        background: #087fc2;
-        border-color: #087fc2;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .demos-grid {
-            grid-template-columns: 1fr;
-            gap: var(--spacing-lg);
-        }
-        
-        .filters-section .row > div {
-            margin-bottom: var(--spacing-md);
-        }
-        
-        .filters-section .row > div:last-child {
-            margin-bottom: 0;
-        }
-
-        .demo-thumbnail-container {
-            height: 180px;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .demo-actions {
-            flex-direction: column;
-        }
-    }
-</style>
-{% endblock %}
-
 {% block customer_content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <p class="text-muted mb-0">Explore our comprehensive collection of business solutions</p>
-    </div>
-    <div class="d-flex gap-2">
-        <a href="{% url 'customers:request_demo' %}" class="btn btn-primary">
-            <i class="fas fa-calendar-plus me-2"></i>Schedule Demo
-        </a>
-    </div>
-</div>
-
-<!-- Filters Section -->
-<div class="filters-section">
-    <form method="GET" id="filterForm">
-        <div class="row g-3 align-items-end">
-            <div class="col-lg-3 col-md-6">
-                <label class="filter-label">Search Demos</label>
-                <div class="search-section">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" 
-                           name="search" 
-                           value="{{ search_query }}" 
-                           placeholder="Search by title or description..." 
-                           class="form-control search-input">
+<div class="browse-demos-container">
+    <!-- Filter Section -->
+    <div class="customer-card mb-4">
+        <div class="customer-card-header">
+            <h2 class="customer-card-title">
+                <i class="fas fa-filter"></i>
+                Filter Demos
+            </h2>
+        </div>
+        <div class="customer-card-body">
+            <form method="GET" action="{% url 'customers:browse_demos' %}" class="filter-form">
+                <div class="row g-3">
+                    <!-- Search -->
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label for="search" class="form-label">
+                            <i class="fas fa-search me-1"></i>Search
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="search" 
+                               name="search" 
+                               placeholder="Search demos..." 
+                               value="{{ search_query }}">
+                    </div>
+                    
+                    <!-- Business Category -->
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label for="business_category" class="form-label">
+                            <i class="fas fa-building me-1"></i>Business Category
+                        </label>
+                        <select class="form-select" id="business_category" name="business_category">
+                            <option value="">All Categories</option>
+                            {% for category in business_categories %}
+                                <option value="{{ category.id }}" 
+                                        {% if current_business_category == category.id %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Business Subcategory -->
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label for="business_subcategory" class="form-label">
+                            <i class="fas fa-tags me-1"></i>Subcategory
+                        </label>
+                        <select class="form-select" id="business_subcategory" name="business_subcategory">
+                            <option value="">All Subcategories</option>
+                            {% for subcategory in business_subcategories %}
+                                <option value="{{ subcategory.id }}" 
+                                        data-category="{{ subcategory.category.id }}"
+                                        {% if current_business_subcategory == subcategory.id %}selected{% endif %}
+                                        style="display: {% if current_business_category and current_business_category != subcategory.category.id %}none{% else %}block{% endif %}">
+                                    {{ subcategory.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Sort By -->
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label for="sort" class="form-label">
+                            <i class="fas fa-sort me-1"></i>Sort By
+                        </label>
+                        <select class="form-select" id="sort" name="sort">
+                            <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+                            <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+                            <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Most Viewed</option>
+                            <option value="liked" {% if sort_by == 'liked' %}selected{% endif %}>Most Liked</option>
+                            <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title (A-Z)</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="col-lg-2 col-md-6">
-                <label class="filter-label">Business Category</label>
-                <select name="business_category" id="categorySelect" class="form-select">
-                    <option value="">All Categories</option>
-                    {% for category in business_categories %}
-                        <option value="{{ category.id }}" 
-                                {% if current_business_category == category.id %}selected{% endif %}>
-                            {% if category.icon %}{{ category.icon }} {% endif %}{{ category.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="col-lg-2 col-md-6">
-                <label class="filter-label">Subcategory</label>
-                <select name="business_subcategory" id="subcategorySelect" class="form-select">
-                    <option value="">All Subcategories</option>
-                    {% for subcategory in business_subcategories %}
-                        <option value="{{ subcategory.id }}" 
-                                data-category="{{ subcategory.category.id }}"
-                                {% if current_business_subcategory == subcategory.id %}selected{% endif %}>
-                            {{ subcategory.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="col-lg-2 col-md-6">
-                <label class="filter-label">Sort By</label>
-                <select name="sort" class="form-select sort-dropdown">
-                    <option value="title" {% if sort_by == 'title' %}selected{% endif %}>All</option>
-                    <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest</option>
-                    <option value="liked" {% if sort_by == 'liked' %}selected{% endif %}>Most Liked</option>
-                </select>
-            </div>
-            
-            <div class="col-lg-3 col-md-12">
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-fill">
-                        <i class="fas fa-search me-2"></i>Search
+                
+                <!-- Filter Buttons -->
+                <div class="filter-actions mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i>Apply Filters
                     </button>
-                    <a href="{% url 'customers:browse_demos' %}" class="btn btn-outline-secondary" title="Clear All Filters">
-                        <i class="fas fa-times me-2"></i>Clear
+                    <a href="{% url 'customers:browse_demos' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-redo me-1"></i>Reset
                     </a>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Summary -->
+    <div class="results-summary mb-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="results-info">
+                <i class="fas fa-video text-primary me-1"></i>
+                <span class="results-text">
+                    Showing <strong>{{ page_obj.start_index }}</strong> to <strong>{{ page_obj.end_index }}</strong> 
+                    of <strong>{{ page_obj.paginator.count }}</strong> demos
+                </span>
+            </div>
+            {% if search_query %}
+                <div class="search-indicator">
+                    <span class="badge bg-info">
+                        <i class="fas fa-search me-1"></i>Searching: "{{ search_query }}"
+                    </span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Demos Grid -->
+    {% if page_obj %}
+        <div class="demos-grid">
+            {% for demo in page_obj %}
+                <div class="demo-card">
+                    <!-- Demo Thumbnail -->
+                    <div class="demo-thumbnail">
+                        {% if demo.thumbnail %}
+                            <img src="{{ demo.thumbnail.url }}" alt="{{ demo.title }}" class="demo-thumbnail-img">
+                        {% else %}
+                            <div class="demo-thumbnail-placeholder">
+                                <i class="fas fa-video"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Demo Type Badge -->
+                        <div class="demo-type-badge">
+                            {% if demo.demo_type == 'video' %}
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-play-circle me-1"></i>Video
+                                </span>
+                            {% elif demo.demo_type == 'webgl' %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-cube me-1"></i>WebGL
+                                </span>
+                            {% elif demo.demo_type == 'iframe' %}
+                                <span class="badge bg-info">
+                                    <i class="fas fa-window-maximize me-1"></i>Interactive
+                                </span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- New Badge -->
+                        {% if demo.is_new %}
+                            <div class="new-badge">
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-star me-1"></i>New
+                                </span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Demo Info -->
+                    <div class="demo-card-body">
+                        <h3 class="demo-title">{{ demo.title }}</h3>
+                        <p class="demo-description">{{ demo.description|truncatewords:15 }}</p>
+                        
+                        <!-- Demo Meta -->
+                        <div class="demo-meta">
+                            <div class="demo-stats">
+                                <span class="demo-stat-item" title="Views">
+                                    <i class="fas fa-eye"></i>
+                                    <span>{{ demo.views_count }}</span>
+                                </span>
+                                <span class="demo-stat-item" title="Likes">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span>{{ demo.likes_count }}</span>
+                                </span>
+                            </div>
+                            
+                            <div class="demo-date">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>{{ demo.created_at|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Demo Actions -->
+                        <div class="demo-actions">
+                            {# FIX: Open WebGL demos directly with webgl_viewer route, video demos go to demo_detail #}
+                            {% if demo.file_type == 'webgl' %}
+                                <a href="{% url 'customers:webgl_viewer' demo.slug %}" class="btn btn-primary btn-sm w-100">
+                                    <i class="fas fa-cube me-1"></i>View Demo
+                                </a>
+                            {% else %}
+                                <a href="{% url 'customers:demo_detail' demo.slug %}" class="btn btn-primary btn-sm w-100">
+                                    <i class="fas fa-play me-1"></i>View Demo
+                                </a>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- User Interaction Indicators -->
+                        <div class="demo-indicators">
+                            {% if demo.id in user_views %}
+                                <span class="indicator-badge viewed" title="Already viewed">
+                                    <i class="fas fa-check-circle"></i>Viewed
+                                </span>
+                            {% endif %}
+                            {% if demo.id in user_likes %}
+                                <span class="indicator-badge liked" title="You liked this">
+                                    <i class="fas fa-thumbs-up"></i>Liked
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- No Demos Found -->
+        <div class="customer-card text-center py-5">
+            <div class="no-demos-message">
+                <i class="fas fa-video-slash fa-3x text-muted mb-3"></i>
+                <h3 class="text-muted">No Demos Found</h3>
+                <p class="text-muted">Try adjusting your filters or search criteria.</p>
+                <a href="{% url 'customers:browse_demos' %}" class="btn btn-primary mt-3">
+                    <i class="fas fa-redo me-1"></i>Reset Filters
+                </a>
             </div>
         </div>
-    </form>
-</div>
+    {% endif %}
 
-<!-- Results Count -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        {% if page_obj %}
-            <p class="mb-0 text-muted">
-                Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} demos
-                {% if search_query %}
-                    for "<strong>{{ search_query }}</strong>"
-                {% endif %}
-            </p>
-        {% endif %}
-    </div>
-</div>
-
-<!-- Demos Grid -->
-{% if page_obj.object_list %}
-    <div class="demos-grid">
-        {% for demo in page_obj.object_list %}
-            <div class="demo-card">
-                <div class="demo-watermark">{{ user.email }}</div>
-                
-                <div class="demo-thumbnail-container">
-                    {% if demo.thumbnail %}
-                        <img src="{{ demo.thumbnail.url }}" alt="{{ demo.title }}" class="demo-thumbnail">
-                    {% else %}
-                        <div class="demo-thumbnail" style="background: var(--gray-200); display: flex; align-items: center; justify-content: center;">
-                            {% if demo.file_type == 'webgl' %}
-                                <i class="fas fa-cube text-muted" style="font-size: 3rem;"></i>
-                            {% else %}
-                                <i class="fas fa-video text-muted" style="font-size: 3rem;"></i>
-                            {% endif %}
-                        </div>
-                    {% endif %}
-                    
-                    {% if demo.file_type == 'video' and demo.video_file %}
-                    <div class="demo-overlay">
-                        <a href="{% url 'customers:demo_detail' demo.slug %}">                       
-                            <div class="play-button">
-                                <i class="fas fa-play"></i>
-                            </div>
-                        </a>
-                    </div>
-                    {% elif demo.file_type == 'webgl' and demo.webgl_file %}
-                    <div class="demo-overlay">
-                        <a href="{% url 'customers:webgl_viewer' demo.slug %}">                       
-                            <div class="play-button">
-                                <i class="fas fa-cube"></i>
-                            </div>
-                        </a>
-                    </div>
-                    {% endif %}
-                    
-                    {% if demo.id in user_views %}
-                        <div class="demo-badge status-watched">
-                            <i class="fas fa-eye"></i>Watched
-                        </div>
-                    {% elif demo.file_type == 'webgl' %}
-                        <div class="demo-badge webgl">
-                            <i class="fas fa-cube"></i>WebGL
-                        </div>
-                    {% elif demo.file_type == 'video' %}
-                        <div class="demo-badge video">
-                            <i class="fas fa-video"></i>Video
-                        </div>
-                    {% elif demo.is_featured %}
-                        <div class="demo-badge status-new">
-                            <i class="fas fa-star"></i>Featured
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <div class="demo-card-content">
-                    <div class="demo-category">
-                        {% if demo.primary_business_category %}
-                            {{ demo.primary_business_category.name }}
-                        {% else %}
-                            {{ demo.get_demo_type_display }}
-                        {% endif %}
-                    </div>
-                    <h3 class="demo-title">{{ demo.title }}</h3>
-                    <p class="demo-description">{{ demo.description|truncatewords:20 }}</p>
-                    
-                    <div class="demo-meta">
-                        <div class="demo-stats">
-                            <span><i class="fas fa-eye me-1"></i>{{ demo.views_count }}</span>
-                            <span><i class="fas fa-heart me-1"></i>{{ demo.likes_count }}</span>
-                            {% if demo.file_type == 'video' and demo.duration %}
-                                <span><i class="fas fa-clock me-1"></i>{{ demo.formatted_duration }}</span>
-                            {% elif demo.file_type == 'webgl' %}
-                                <span><i class="fas fa-cube me-1"></i>Interactive</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="demo-actions">
-                        {% if demo.file_type == 'video' and demo.video_file %}
-                            <a href="{% url 'customers:demo_detail' demo.slug %}" class="btn-watch">
-                                <i class="fas fa-play me-2"></i>Watch Demo
-                            </a>
-                            <a href="{% url 'customers:request_demo' %}?demo={{ demo.id }}" 
-                               class="btn-request" 
-                               title="Request Live Demo">
-                                <i class="fas fa-calendar"></i>
-                            </a>
-                        {% elif demo.file_type == 'webgl' and demo.webgl_file %}
-                            <a href="{% url 'customers:webgl_viewer' demo.slug %}" class="btn-launch">
-                                <i class="fas fa-cube me-2"></i>View Demo
-                            </a>
-                            <a href="{% url 'customers:request_demo' %}?demo={{ demo.id }}" 
-                               class="btn-request" 
-                               title="Request Live Demo">
-                                <i class="fas fa-calendar"></i>
-                            </a>
-                        {% else %}
-                            <a href="{% url 'customers:request_demo' %}?demo={{ demo.id }}" 
-                               class="btn-consultation">
-                                <i class="fas fa-calendar-plus me-2"></i>Request Demo
-                            </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-    
     <!-- Pagination -->
     {% if page_obj.has_other_pages %}
-        <div class="pagination-wrapper">
-            <nav>
-                <ul class="pagination">
+        <div class="pagination-container mt-4">
+            <nav aria-label="Demo pagination">
+                <ul class="pagination justify-content-center flex-wrap">
+                    <!-- First Page -->
                     {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&business_category={{ current_business_category }}&business_subcategory={{ current_business_subcategory }}&search={{ search_query }}&sort={{ sort_by }}">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page=1" title="First page">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ page_obj.previous_page_number }}" title="Previous page">
                                 <i class="fas fa-angle-left"></i>
                             </a>
                         </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                        </li>
                     {% endif %}
                     
+                    <!-- Page Numbers -->
                     {% for num in page_obj.paginator.page_range %}
                         {% if page_obj.number == num %}
                             <li class="page-item active">
@@ -650,132 +257,479 @@
                             </li>
                         {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ num }}&business_category={{ current_business_category }}&business_subcategory={{ current_business_subcategory }}&search={{ search_query }}&sort={{ sort_by }}">{{ num }}</a>
+                                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ num }}">{{ num }}</a>
                             </li>
                         {% endif %}
                     {% endfor %}
                     
+                    <!-- Last Page -->
                     {% if page_obj.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}&business_category={{ current_business_category }}&business_subcategory={{ current_business_subcategory }}&search={{ search_query }}&sort={{ sort_by }}">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ page_obj.next_page_number }}" title="Next page">
                                 <i class="fas fa-angle-right"></i>
                             </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ page_obj.paginator.num_pages }}" title="Last page">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-angle-right"></i></span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
                         </li>
                     {% endif %}
                 </ul>
             </nav>
+            
+            <!-- Page Info -->
+            <div class="page-info text-center mt-2">
+                <span class="page-info-text">
+                    Page <strong>{{ page_obj.number }}</strong> of <strong>{{ page_obj.paginator.num_pages }}</strong>
+                </span>
+            </div>
         </div>
     {% endif %}
-    
-{% else %}
-    <!-- Empty State -->
-    <div class="empty-state">
-        <div class="empty-icon">
-            <i class="fas fa-search"></i>
-        </div>
-        <h3>No Demos Found</h3>
-        {% if search_query or current_business_category or current_business_subcategory %}
-            <p>No demos match your current filters. Try adjusting your search criteria.</p>
-            <a href="{% url 'customers:browse_demos' %}" class="btn btn-primary mt-3">
-                <i class="fas fa-times me-2"></i>Clear Filters
-            </a>
-        {% else %}
-            <p>No demo videos are currently available. Please check back later.</p>
-        {% endif %}
-    </div>
-{% endif %}
-{% endblock %}
+</div>
 
-{% block customer_extra_js %}
+<style>
+    /* Browse Demos Container */
+    .browse-demos-container {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Filter Form */
+    .filter-form {
+        font-size: var(--font-sm);
+    }
+
+    .filter-form .form-label {
+        font-size: var(--font-sm);
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 0.35rem;
+    }
+
+    .filter-form .form-control,
+    .filter-form .form-select {
+        font-size: var(--font-sm);
+        padding: 0.5rem 0.75rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--gray-300);
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-actions .btn {
+        font-size: var(--font-sm);
+        padding: 0.5rem 1.25rem;
+    }
+
+    /* Results Summary */
+    .results-summary {
+        background: white;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .results-info {
+        font-size: var(--font-sm);
+        color: var(--gray-700);
+    }
+
+    .results-text {
+        font-size: var(--font-sm);
+    }
+
+    .search-indicator .badge {
+        font-size: var(--font-xs);
+        padding: 0.35rem 0.75rem;
+    }
+
+    /* Demos Grid - Responsive */
+    .demos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Demo Card */
+    .demo-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .demo-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Demo Thumbnail */
+    .demo-thumbnail {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        background: var(--gray-200);
+        overflow: hidden;
+    }
+
+    .demo-thumbnail-img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .demo-thumbnail-placeholder {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--gray-200) 0%, var(--gray-300) 100%);
+    }
+
+    .demo-thumbnail-placeholder i {
+        font-size: 3rem;
+        color: var(--gray-400);
+    }
+
+    /* Badges on Thumbnail */
+    .demo-type-badge {
+        position: absolute;
+        top: 0.5rem;
+        left: 0.5rem;
+    }
+
+    .demo-type-badge .badge {
+        font-size: var(--font-xs);
+        font-weight: 600;
+        padding: 0.3rem 0.6rem;
+    }
+
+    .new-badge {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+
+    .new-badge .badge {
+        font-size: var(--font-xs);
+        font-weight: 600;
+        padding: 0.3rem 0.6rem;
+    }
+
+    /* Demo Card Body */
+    .demo-card-body {
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+
+    .demo-title {
+        font-size: var(--font-lg);
+        font-weight: 700;
+        color: var(--dark-color);
+        margin: 0 0 0.5rem 0;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .demo-description {
+        font-size: var(--font-sm);
+        color: var(--gray-600);
+        margin: 0 0 0.75rem 0;
+        line-height: 1.5;
+        flex-grow: 1;
+    }
+
+    /* Demo Meta */
+    .demo-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--gray-200);
+    }
+
+    .demo-stats {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .demo-stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: var(--font-sm);
+        color: var(--gray-600);
+    }
+
+    .demo-stat-item i {
+        font-size: var(--font-sm);
+        color: var(--primary-color);
+    }
+
+    .demo-date {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: var(--font-xs);
+        color: var(--gray-500);
+    }
+
+    .demo-date i {
+        font-size: var(--font-xs);
+    }
+
+    /* Demo Actions */
+    .demo-actions {
+        margin-bottom: 0.5rem;
+    }
+
+    .demo-actions .btn {
+        font-size: var(--font-sm);
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+    }
+
+    /* Demo Indicators */
+    .demo-indicators {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .indicator-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: var(--font-xs);
+        padding: 0.2rem 0.5rem;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+    }
+
+    .indicator-badge.viewed {
+        background: var(--success-color);
+        color: white;
+        order: -1;
+    }
+
+    .indicator-badge.liked {
+        background: var(--primary-color);
+        color: white;
+        order: 1;
+    }
+
+    .indicator-badge i {
+        font-size: var(--font-xs);
+    }
+
+    /* No Demos Message */
+    .no-demos-message {
+        padding: 2rem;
+    }
+
+    .no-demos-message h3 {
+        font-size: var(--font-2xl);
+        margin-bottom: 0.5rem;
+    }
+
+    .no-demos-message p {
+        font-size: var(--font-base);
+    }
+
+    /* Pagination */
+    .pagination-container {
+        background: white;
+        padding: 1.25rem;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .pagination {
+        margin-bottom: 0;
+    }
+
+    .page-link {
+        font-size: var(--font-sm);
+        font-weight: 500;
+        color: var(--primary-color);
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--gray-300);
+        margin: 0 0.15rem;
+        border-radius: var(--radius-sm);
+    }
+
+    .page-link:hover {
+        background-color: var(--gray-100);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .page-item.active .page-link {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+        font-weight: 600;
+    }
+
+    .page-item.disabled .page-link {
+        color: var(--gray-400);
+        background-color: var(--gray-100);
+        border-color: var(--gray-300);
+    }
+
+    .page-info-text {
+        font-size: var(--font-sm);
+        color: var(--gray-600);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .demos-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .demos-grid {
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        }
+        
+        .demo-title {
+            font-size: var(--font-md);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .demos-grid {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.875rem;
+        }
+        
+        .demo-card-body {
+            padding: 0.875rem;
+        }
+        
+        .demo-title {
+            font-size: var(--font-md);
+        }
+        
+        .demo-description {
+            font-size: var(--font-xs);
+        }
+        
+        .filter-actions {
+            flex-direction: column;
+        }
+        
+        .filter-actions .btn {
+            width: 100%;
+        }
+        
+        .results-summary {
+            font-size: var(--font-xs);
+        }
+        
+        .page-link {
+            padding: 0.4rem 0.6rem;
+            font-size: var(--font-xs);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .demos-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+        
+        .demo-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+        
+        .pagination {
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+        
+        .page-item {
+            margin: 0.15rem;
+        }
+    }
+</style>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const categorySelect = document.getElementById('categorySelect');
-    const subcategorySelect = document.getElementById('subcategorySelect');
-    
-    const allSubcategories = [];
-    const subcategoryOptions = subcategorySelect.querySelectorAll('option[data-category]');
-    
-    subcategoryOptions.forEach(option => {
-        allSubcategories.push({
-            value: option.value,
-            text: option.textContent.trim(),
-            categoryId: option.getAttribute('data-category')
-        });
-    });
-    
-    function updateSubcategories() {
-        const selectedCategory = categorySelect.value;
-        const currentSubcategory = '{{ current_business_subcategory }}';
+    // Dynamic subcategory filtering based on selected category
+    document.getElementById('business_category').addEventListener('change', function() {
+        const selectedCategory = this.value;
+        const subcategorySelect = document.getElementById('business_subcategory');
+        const subcategoryOptions = subcategorySelect.querySelectorAll('option');
         
-        subcategorySelect.innerHTML = '<option value="">All Subcategories</option>';
+        // Reset subcategory selection
+        subcategorySelect.value = '';
         
-        let filteredSubs = [];
-        
-        if (!selectedCategory || selectedCategory === '') {
-            filteredSubs = allSubcategories;
-        } else {
-            filteredSubs = allSubcategories.filter(sub => sub.categoryId === selectedCategory);
-        }
-        
-        filteredSubs.forEach(sub => {
-            const option = document.createElement('option');
-            option.value = sub.value;
-            option.textContent = sub.text;
-            option.setAttribute('data-category', sub.categoryId);
-            
-            if (currentSubcategory && sub.value === currentSubcategory) {
-                option.selected = true;
+        // Show/hide subcategories based on selected category
+        subcategoryOptions.forEach(option => {
+            if (option.value === '') {
+                option.style.display = 'block';
+            } else {
+                const categoryId = option.getAttribute('data-category');
+                if (!selectedCategory || categoryId === selectedCategory) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
             }
-            
-            subcategorySelect.appendChild(option);
         });
-        
-        if (filteredSubs.length === 0 && selectedCategory) {
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'No subcategories available';
-            option.disabled = true;
-            subcategorySelect.appendChild(option);
-        }
-    }
-    
-    if (categorySelect) {
-        categorySelect.addEventListener('change', updateSubcategories);
-        updateSubcategories();
-    }
-    
-    const sortSelect = document.querySelector('select[name="sort"]');
-    if (sortSelect) {
-        sortSelect.addEventListener('change', function() {
-            this.form.submit();
-        });
-    }
-    
-    document.addEventListener('contextmenu', function(e) {
-        if (e.target.closest('a') || e.target.closest('button') || e.target.closest('select')) {
-            return true;
-        }
-        e.preventDefault();
-        return false;
     });
     
-    document.addEventListener('keydown', function(e) {
-        if (e.keyCode === 123 || 
-            (e.ctrlKey && e.shiftKey && e.keyCode === 73) ||
-            (e.ctrlKey && e.shiftKey && e.keyCode === 74) ||
-            (e.ctrlKey && e.keyCode === 85) ||
-            e.keyCode === 44) {
-            e.preventDefault();
-            return false;
+    // Trigger filter on change
+    document.querySelectorAll('.filter-form select, .filter-form input').forEach(element => {
+        if (element.id !== 'search') {
+            element.addEventListener('change', function() {
+                // Auto-submit form on select change (optional)
+                // this.form.submit();
+            });
         }
     });
     
-    document.querySelectorAll('.demo-thumbnail').forEach(thumbnail => {
-        thumbnail.addEventListener('dragstart', function(e) {
-            e.preventDefault();
-            return false;
+    // Add smooth scroll to top after pagination
+    document.querySelectorAll('.pagination .page-link').forEach(link => {
+        link.addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     });
-});
 </script>
 {% endblock %}

@@ -43,7 +43,8 @@ urlpatterns = [
     path('ajax/demo/<int:demo_id>/feedback/', views.submit_demo_feedback, name='submit_demo_feedback'),
     path('ajax/notification/<int:notification_id>/mark-read/', views.mark_notification_read, name='mark_notification_read'),
     path('ajax/notifications/mark-all-read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
-    
+    # Feedback success page
+    path('demos/<slug:slug>/feedback/', views.demo_feedback_view, name='demo_feedback'),
     # NEW AJAX ENDPOINTS
     path('ajax/subcategories/<int:category_id>/', views.ajax_subcategories, name='ajax_subcategories'),
     path('ajax/demos/', views.ajax_demos_by_category, name='ajax_demos_by_category'),

@@ -1,4 +1,4 @@
-<!-- templates/admin/customers/detail.html - FRESH COMPLETE VERSION -->
+<!-- templates/admin/customers/detail.html - IMPROVED PROFESSIONAL VERSION -->
 {% extends 'admin/base.html' %}
 {% load static %}
 
@@ -27,11 +27,17 @@
 
 {% block admin_extra_css %}
 <style>
+    /* ========================================
+       PROFESSIONAL TYPOGRAPHY SYSTEM 
+       Matching Admin Base Template
+       ======================================== */
+    
+    /* Customer Header with Professional Font Sizes */
     .customer-header {
         background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
         color: white;
-        border-radius: 0.75rem;
-        padding: 2rem;
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
         margin-bottom: 1.5rem;
         position: relative;
         overflow: hidden;
@@ -48,51 +54,70 @@
         border-radius: 50%;
     }
 
+    /* Avatar with Responsive Sizing */
     .customer-avatar {
-        width: 100px;
-        height: 100px;
+        width: 80px;
+        height: 80px;
         background: rgba(255, 255, 255, 0.2);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
-        font-weight: 700;
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-        border: 4px solid rgba(255, 255, 255, 0.3);
+        font-weight: 600;
+        font-size: var(--font-4xl);
+        margin-bottom: 0.75rem;
+        border: 3px solid rgba(255, 255, 255, 0.3);
         position: relative;
         z-index: 1;
     }
 
+    /* Customer Name - Professional Size */
     .customer-info h1 {
+        font-size: var(--font-3xl);
+        font-weight: 600;
         margin-bottom: 0.5rem;
+        line-height: 1.2;
+        font-family: var(--heading-font);
+    }
+
+    .customer-info p {
+        font-size: var(--font-base);
+        opacity: 0.95;
+        margin-bottom: 0;
     }
 
     .customer-meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 1.5rem;
+        gap: 1rem;
         margin-top: 1rem;
         opacity: 0.95;
+        font-size: var(--font-sm);
     }
 
     .meta-item {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.4rem;
+        font-size: var(--font-sm);
     }
 
+    .meta-item i {
+        font-size: var(--font-sm);
+    }
+
+    /* Professional Status Badge */
     .status-badge {
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.5rem;
-        font-size: 0.8rem;
+        padding: 0.35rem 0.7rem;
+        border-radius: var(--radius-md);
+        font-size: var(--font-xs);
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.025em;
+        letter-spacing: 0.03em;
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.4rem;
     }
 
     .status-approved {
@@ -113,13 +138,13 @@
         border: 1px solid rgba(239, 68, 68, 0.3);
     }
 
-    /* Collapsible Section Styles */
+    /* Collapsible Section with Professional Typography */
     .info-section {
         background: white;
-        border-radius: 0.75rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        border: 1px solid #e5e7eb;
+        border-radius: var(--radius-lg);
+        margin-bottom: 1.25rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
         overflow: hidden;
         transition: all 0.3s ease;
     }
@@ -128,43 +153,45 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1.5rem;
+        padding: 1.25rem 1.5rem;
         cursor: pointer;
         user-select: none;
-        background: linear-gradient(to right, #f9fafb, #ffffff);
-        border-bottom: 1px solid #e5e7eb;
+        background: linear-gradient(to right, var(--gray-100), #ffffff);
+        border-bottom: 1px solid var(--gray-200);
         transition: all 0.3s ease;
     }
 
     .section-header:hover {
-        background: linear-gradient(to right, #f3f4f6, #f9fafb);
+        background: linear-gradient(to right, var(--gray-200), var(--gray-100));
     }
 
+    /* Section Title - Professional Size */
     .section-title {
-        color: #087fc2;
-        font-size: 1.1rem;
+        color: var(--primary-color);
+        font-size: var(--font-lg);
         font-weight: 600;
         display: flex;
         align-items: center;
         margin: 0;
+        font-family: var(--heading-font);
     }
 
     .section-title i {
         background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
         color: white;
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-right: 1rem;
-        font-size: 0.9rem;
+        margin-right: 0.75rem;
+        font-size: var(--font-sm);
     }
 
     .collapse-icon {
-        color: #6b7280;
-        font-size: 1.2rem;
+        color: var(--gray-500);
+        font-size: var(--font-lg);
         transition: transform 0.3s ease;
     }
 
@@ -182,46 +209,57 @@
         display: none;
     }
 
+    /* Info Grid - Responsive */
     .info-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.25rem;
     }
 
     .info-item {
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
+        gap: 0.3rem;
     }
 
+    /* Info Label - Professional Size */
     .info-label {
-        color: #6b7280;
-        font-size: 0.85rem;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.025em;
-    }
-
-    .info-value {
-        color: #1f2937;
+        color: var(--gray-500);
+        font-size: var(--font-xs);
         font-weight: 600;
-        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
     }
 
+    /* Info Value - Professional Size */
+    .info-value {
+        color: var(--gray-800);
+        font-weight: 500;
+        font-size: var(--font-md);
+        word-break: break-word;
+    }
+
+    /* Stats Grid - Fully Responsive */
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
         gap: 1rem;
     }
 
     .stat-card {
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.75rem;
-        padding: 1.5rem;
+        background: var(--gray-100);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        padding: 1.25rem;
         text-align: center;
         position: relative;
         overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
     }
 
     .stat-card::before {
@@ -230,326 +268,562 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
-        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
+        height: 3px;
+        background: var(--gradient-primary);
     }
 
+    /* Stat Number - Professional Size */
     .stat-number {
-        font-size: 2rem;
+        font-size: var(--font-4xl);
         font-weight: 700;
-        color: #087fc2;
+        color: var(--primary-color);
         line-height: 1;
         margin-bottom: 0.5rem;
+        font-family: var(--heading-font);
     }
 
+    /* Stat Icon */
+    .stat-icon {
+        font-size: var(--font-2xl);
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+        opacity: 0.8;
+    }
+
+    /* Stat Label - Professional Size */
     .stat-label {
-        color: #6b7280;
-        font-size: 0.85rem;
+        color: var(--gray-600);
+        font-size: var(--font-sm);
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.025em;
     }
 
-    .stat-sublabel {
-        color: #9ca3af;
-        font-size: 0.75rem;
-        margin-top: 0.25rem;
-    }
-
+    /* Professional Buttons */
     .action-buttons {
-        background: white;
-        border-radius: 0.75rem;
+        margin-top: 2rem;
         padding: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        border: 1px solid #e5e7eb;
-        position: sticky;
-        bottom: 1.5rem;
-        z-index: 10;
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
     }
 
     .btn-group-actions {
         display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column;
+        gap: 1.25rem;
     }
 
+    /* Button Action - Professional Typography */
     .btn-action {
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        border-radius: 0.5rem;
-        border: 2px solid;
-        transition: all 0.3s ease;
-        text-decoration: none;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-md);
+        border: 2px solid transparent;
+        font-size: var(--font-sm);
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
         cursor: pointer;
+        white-space: nowrap;
+        font-family: var(--primary-font);
+    }
+
+    .btn-action i {
+        font-size: var(--font-sm);
     }
 
     .btn-primary-action {
-        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
-        border-color: #087fc2;
-        color: white !important;
+        background: var(--gradient-primary);
+        color: white;
+        border-color: var(--primary-color);
     }
 
     .btn-primary-action:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        text-decoration: none;
+        box-shadow: var(--shadow-lg);
+        color: white;
     }
 
     .btn-success-action {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        border-color: #10b981;
-        color: white !important;
+        background: var(--gradient-success);
+        color: white;
+        border-color: var(--success-color);
     }
 
     .btn-success-action:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        text-decoration: none;
+        box-shadow: var(--shadow-lg);
+        color: white;
     }
 
     .btn-warning-action {
-        background: #f59e0b;
-        border-color: #f59e0b;
-        color: white !important;
+        background: var(--gradient-warning);
+        color: white;
+        border-color: var(--warning-color);
     }
 
     .btn-warning-action:hover {
-        background: #d97706;
         transform: translateY(-2px);
-        text-decoration: none;
+        box-shadow: var(--shadow-lg);
+        color: white;
     }
 
     .btn-outline-action {
-        background: transparent;
-        border-color: #9ca3af;
-        color: #374151 !important;
+        background: white;
+        color: var(--gray-700);
+        border-color: var(--gray-300);
     }
 
     .btn-outline-action:hover {
-        background: #f3f4f6;
-        text-decoration: none;
+        background: var(--gray-100);
+        border-color: var(--gray-400);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
     }
 
-    .expand-collapse-all {
-        position: fixed;
-        bottom: 100px;
-        right: 30px;
-        z-index: 999;
-        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
-        color: white;
-        border: none;
+    /* Timeline Styles */
+    .activity-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+        border-left: 2px solid var(--gray-200);
+        padding-left: 1.5rem;
+    }
+
+    .timeline-item:last-child {
+        border-left: 2px solid transparent;
+        padding-bottom: 0;
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: -6px;
+        top: 0;
+        width: 12px;
+        height: 12px;
         border-radius: 50%;
-        width: 50px;
-        height: 50px;
+        background: var(--primary-color);
+        border: 2px solid white;
+        box-shadow: 0 0 0 2px var(--primary-color);
+    }
+
+    .timeline-content {
+        background: var(--gray-100);
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--gray-200);
+    }
+
+    .timeline-header {
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        justify-content: center;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 0.5rem;
+    }
+
+    .timeline-title {
+        font-size: var(--font-md);
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+
+    .timeline-date {
+        font-size: var(--font-xs);
+        color: var(--gray-500);
+    }
+
+    .timeline-description {
+        font-size: var(--font-sm);
+        color: var(--gray-600);
+        margin: 0;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--gray-500);
+    }
+
+    .empty-state i {
+        font-size: var(--font-5xl);
+        color: var(--gray-300);
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h5 {
+        font-size: var(--font-xl);
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        font-size: var(--font-base);
+        color: var(--gray-500);
+        margin: 0;
+    }
+
+    /* Top Actions Bar */
+    .top-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 1.5rem;
+        gap: 0.75rem;
+    }
+
+    .btn-expand-all {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: white;
+        border: 2px solid var(--gray-300);
+        border-radius: var(--radius-md);
+        color: var(--gray-700);
+        font-size: var(--font-sm);
+        font-weight: 500;
         cursor: pointer;
         transition: all 0.3s ease;
     }
 
-    .expand-collapse-all:hover {
-        transform: scale(1.1);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    .btn-expand-all:hover {
+        background: var(--gray-100);
+        border-color: var(--gray-400);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
     }
 
-    .empty-state {
-        text-align: center;
-        padding: 2rem;
-        color: #6b7280;
+    .btn-expand-all i {
+        font-size: var(--font-md);
+        transition: transform 0.3s ease;
     }
 
-    .empty-state i {
-        font-size: 3rem;
-        color: #9ca3af;
-        margin-bottom: 1rem;
-    }
+    /* ========================================
+       RESPONSIVE DESIGN
+       ======================================== */
 
-    /* Text colors */
-    .text-success {
-        color: #10b981 !important;
-    }
-
-    .text-warning {
-        color: #f59e0b !important;
-    }
-
-    .text-danger {
-        color: #ef4444 !important;
-    }
-
-    .text-info {
-        color: #087fc2 !important;
-    }
-
-    .text-muted {
-        color: #6b7280 !important;
-    }
-
-    /* Links */
-    a {
-        color: #087fc2;
-        text-decoration: none;
-    }
-
-    a:hover {
-        color: #0669a0;
-        text-decoration: none;
-    }
-
-    .breadcrumb-item a {
-        color: #087fc2;
-    }
-
-    .breadcrumb-item a:hover {
-        color: #0669a0;
-    }
-
-    .breadcrumb-item.active {
-        color: #087fc2;
-    }
-
-    @media (max-width: 768px) {
+    /* Tablets and Small Laptops (768px - 1024px) */
+    @media (max-width: 1024px) {
         .customer-header {
-            padding: 1.5rem;
+            padding: 1.25rem;
         }
-        
-        .customer-meta {
-            flex-direction: column;
+
+        .customer-avatar {
+            width: 70px;
+            height: 70px;
+            font-size: var(--font-3xl);
+        }
+
+        .customer-info h1 {
+            font-size: var(--font-2xl);
+        }
+
+        .section-title {
+            font-size: var(--font-md);
+        }
+
+        .stat-number {
+            font-size: var(--font-3xl);
+        }
+
+        .info-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        }
+
+        .btn-group-actions {
             gap: 1rem;
         }
-        
+    }
+
+    /* Mobile Devices (max 768px) */
+    @media (max-width: 768px) {
+        .customer-header {
+            padding: 1rem;
+            border-radius: var(--radius-md);
+        }
+
+        .customer-avatar {
+            width: 60px;
+            height: 60px;
+            font-size: var(--font-2xl);
+            margin-bottom: 0.5rem;
+        }
+
+        .customer-info h1 {
+            font-size: var(--font-xl);
+        }
+
+        .customer-info p {
+            font-size: var(--font-sm);
+        }
+
+        .customer-meta {
+            gap: 0.75rem;
+            font-size: var(--font-xs);
+        }
+
+        .status-badge {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.625rem;
+        }
+
+        .section-header {
+            padding: 1rem 1.25rem;
+        }
+
+        .section-title {
+            font-size: var(--font-base);
+        }
+
+        .section-title i {
+            width: 26px;
+            height: 26px;
+            font-size: var(--font-xs);
+            margin-right: 0.6rem;
+        }
+
+        .section-content {
+            padding: 1.25rem;
+        }
+
         .info-grid {
             grid-template-columns: 1fr;
+            gap: 1rem;
         }
-        
+
         .stats-grid {
             grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
         }
-        
+
+        .stat-card {
+            padding: 1rem;
+        }
+
+        .stat-number {
+            font-size: var(--font-2xl);
+        }
+
+        .stat-label {
+            font-size: var(--font-xs);
+        }
+
+        .info-label {
+            font-size: 0.65rem;
+        }
+
+        .info-value {
+            font-size: var(--font-sm);
+        }
+
+        .action-buttons {
+            padding: 1rem;
+        }
+
         .btn-group-actions {
-            flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.75rem;
         }
-        
+
+        .btn-group-actions > div {
+            flex-direction: column;
+        }
+
+        .btn-group-actions > div > div {
+            width: 100%;
+        }
+
         .btn-action {
             width: 100%;
             justify-content: center;
+            padding: 0.55rem 0.875rem;
+            font-size: var(--font-xs);
         }
 
-        .expand-collapse-all {
-            bottom: 80px;
-            right: 20px;
-            width: 45px;
-            height: 45px;
+        .top-actions {
+            justify-content: center;
+        }
+
+        .activity-timeline {
+            padding-left: 1.5rem;
+        }
+
+        .timeline-item {
+            padding-left: 1.25rem;
+        }
+
+        .timeline-content {
+            padding: 0.875rem;
+        }
+
+        .timeline-title {
+            font-size: var(--font-sm);
+        }
+    }
+
+    /* Small Mobile (max 480px) */
+    @media (max-width: 480px) {
+        .customer-avatar {
+            width: 50px;
+            height: 50px;
+            font-size: var(--font-xl);
+        }
+
+        .customer-info h1 {
+            font-size: var(--font-lg);
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-number {
+            font-size: var(--font-xl);
+        }
+
+        .section-title {
+            font-size: var(--font-sm);
+        }
+
+        .btn-action {
+            font-size: 0.65rem;
+            padding: 0.5rem 0.75rem;
+        }
+    }
+
+    /* Auto Width Management for Collapsed Sidebar */
+    @media (min-width: 1025px) {
+        .admin-main-content {
+            transition: margin-left 0.3s ease, width 0.3s ease;
+        }
+
+        .admin-sidebar.collapsed ~ .admin-main-content {
+            margin-left: var(--admin-sidebar-collapsed);
+            width: calc(100% - var(--admin-sidebar-collapsed));
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        .admin-sidebar,
+        .admin-header,
+        .action-buttons,
+        .top-actions,
+        .sidebar-toggle,
+        .btn-expand-all {
+            display: none !important;
+        }
+
+        .customer-header {
+            background: #087fc2 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .section-content {
+            display: block !important;
         }
     }
 </style>
 {% endblock %}
 
 {% block admin_content %}
+<!-- Top Actions -->
+<div class="top-actions">
+    <button type="button" class="btn-expand-all" onclick="toggleAllSections()">
+        <i class="fas fa-chevron-up" id="expandCollapseIcon"></i>
+        <span>Expand/Collapse All</span>
+    </button>
+</div>
+
 <!-- Customer Header -->
 <div class="customer-header">
-    <div class="customer-info">
+    <div class="d-flex align-items-center">
         <div class="customer-avatar">
-            {{ customer.first_name|first }}{{ customer.last_name|first }}
+            {{ customer.first_name.0|upper }}{{ customer.last_name.0|upper }}
         </div>
-        <h1>{{ customer.full_name }}</h1>
-        <p class="mb-0 opacity-75">{{ customer.email }}</p>
-        
-        <div class="customer-meta">
-            <div class="meta-item">
-                {% if customer.is_approved %}
-                    {% if customer.is_active %}
-                        <span class="status-badge status-approved">
-                            <i class="fas fa-check-circle"></i>Active Customer
-                        </span>
+        <div class="customer-info flex-grow-1">
+            <h1>{{ customer.full_name }}</h1>
+            <p class="mb-0">{{ customer.job_title|default:"Customer" }} 
+                {% if customer.organization %}at {{ customer.organization }}{% endif %}
+            </p>
+            <div class="customer-meta">
+                <div class="meta-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>{{ customer.email }}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-phone"></i>
+                    <span>{{ customer.full_mobile }}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>Joined {{ customer.created_at|date:"d M Y" }}</span>
+                </div>
+                <div class="meta-item">
+                    {% if customer.is_approved %}
+                        {% if customer.is_active %}
+                            <span class="status-badge status-approved">
+                                <i class="fas fa-check-circle"></i>Active
+                            </span>
+                        {% else %}
+                            <span class="status-badge status-blocked">
+                                <i class="fas fa-ban"></i>Blocked
+                            </span>
+                        {% endif %}
                     {% else %}
-                        <span class="status-badge status-blocked">
-                            <i class="fas fa-ban"></i>Blocked Account
+                        <span class="status-badge status-pending">
+                            <i class="fas fa-clock"></i>Pending
                         </span>
                     {% endif %}
-                {% else %}
-                    <span class="status-badge status-pending">
-                        <i class="fas fa-clock"></i>Pending Approval
-                    </span>
-                {% endif %}
+                </div>
             </div>
-            
-            <div class="meta-item">
-                {% if customer.is_email_verified %}
-                    <i class="fas fa-envelope-check"></i>
-                    <span>Email Verified</span>
-                {% else %}
-                    <i class="fas fa-envelope"></i>
-                    <span>Email Not Verified</span>
-                {% endif %}
-            </div>
-            
-            <div class="meta-item">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Member since {{ customer.created_at|date:"M Y" }}</span>
-            </div>
-            
-            {% if customer.last_login %}
-            <div class="meta-item">
-                <i class="fas fa-sign-in-alt"></i>
-                <span>Last login {{ customer.last_login|timesince }} ago</span>
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Expand/Collapse All Button -->
-<button class="expand-collapse-all" 
-        onclick="toggleAllSections()"
-        type="button"
-        title="Expand/Collapse All Sections"
-        aria-label="Expand or collapse all sections">
-    <i class="fas fa-chevron-down" id="expandCollapseIcon"></i>
-</button>
-
-<!-- Customer Statistics -->
+<!-- Statistics Section -->
 <div class="info-section">
     <div class="section-header" onclick="toggleSection('statistics')">
-        <div class="section-title">
+        <h3 class="section-title">
             <i class="fas fa-chart-bar"></i>
-            Customer Statistics
-        </div>
-        <i class="fas fa-chevron-up collapse-icon collapsed" id="icon-statistics"></i>
+            Statistics Overview
+        </h3>
+        <i class="fas fa-chevron-up collapse-icon" id="icon-statistics"></i>
     </div>
-    
-    <div class="section-content collapsed" id="content-statistics">
+    <div class="section-content" id="content-statistics">
         <div class="stats-grid">
             <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-eye"></i></div>
                 <div class="stat-number">{{ customer_stats.demo_views|default:0 }}</div>
                 <div class="stat-label">Demo Views</div>
-                <div class="stat-sublabel">Total videos watched</div>
             </div>
-            
             <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
                 <div class="stat-number">{{ customer_stats.demo_requests|default:0 }}</div>
                 <div class="stat-label">Demo Requests</div>
-                <div class="stat-sublabel">Live sessions requested</div>
             </div>
-            
             <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-envelope-open-text"></i></div>
                 <div class="stat-number">{{ customer_stats.enquiries|default:0 }}</div>
                 <div class="stat-label">Enquiries</div>
-                <div class="stat-sublabel">Business questions asked</div>
             </div>
-            
             <div class="stat-card">
-                <div class="stat-number">{{ customer_stats.notifications|default:0 }}</div>
-                <div class="stat-label">Notifications</div>
-                <div class="stat-sublabel">Messages received</div>
+                <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                <div class="stat-number">{{ customer_stats.engagement_score|default:0 }}%</div>
+                <div class="stat-label">Engagement</div>
             </div>
         </div>
     </div>
@@ -558,33 +832,29 @@
 <!-- Personal Information -->
 <div class="info-section">
     <div class="section-header" onclick="toggleSection('personal')">
-        <div class="section-title">
+        <h3 class="section-title">
             <i class="fas fa-user"></i>
             Personal Information
-        </div>
-        <i class="fas fa-chevron-up collapse-icon collapsed" id="icon-personal"></i>
+        </h3>
+        <i class="fas fa-chevron-up collapse-icon" id="icon-personal"></i>
     </div>
-    
-    <div class="section-content collapsed" id="content-personal">
+    <div class="section-content" id="content-personal">
         <div class="info-grid">
             <div class="info-item">
                 <div class="info-label">Full Name</div>
                 <div class="info-value">{{ customer.full_name }}</div>
             </div>
-            
             <div class="info-item">
                 <div class="info-label">Email Address</div>
                 <div class="info-value">{{ customer.email }}</div>
             </div>
-            
             <div class="info-item">
                 <div class="info-label">Mobile Number</div>
-                <div class="info-value">{{ customer.full_mobile|default:"Not provided" }}</div>
+                <div class="info-value">{{ customer.full_mobile }}</div>
             </div>
-            
             <div class="info-item">
                 <div class="info-label">Country</div>
-                <div class="info-value">{{ customer.get_country_code_display }}</div>
+                <div class="info-value">{{ customer.get_country_code_display|default:"Not specified" }}</div>
             </div>
         </div>
     </div>
@@ -593,58 +863,30 @@
 <!-- Business Information -->
 <div class="info-section">
     <div class="section-header" onclick="toggleSection('business')">
-        <div class="section-title">
-            <i class="fas fa-building"></i>
+        <h3 class="section-title">
+            <i class="fas fa-briefcase"></i>
             Business Information
-        </div>
-        <i class="fas fa-chevron-up collapse-icon collapsed" id="icon-business"></i>
+        </h3>
+        <i class="fas fa-chevron-up collapse-icon" id="icon-business"></i>
     </div>
-    
-    <div class="section-content collapsed" id="content-business">
+    <div class="section-content" id="content-business">
         <div class="info-grid">
-            <div class="info-item">
-                <div class="info-label">Job Title</div>
-                <div class="info-value">{{ customer.job_title|default:"Not specified" }}</div>
-            </div>
-            
             <div class="info-item">
                 <div class="info-label">Organization</div>
                 <div class="info-value">{{ customer.organization|default:"Not specified" }}</div>
             </div>
-
             <div class="info-item">
-                <div class="info-label">Business Category</div>
-                <div class="info-value">
-                    {% if customer.business_category %}
-                        {{ customer.business_category.name }}
-                    {% else %}
-                        Not specified
-                    {% endif %}
-                </div>
+                <div class="info-label">Job Title</div>
+                <div class="info-value">{{ customer.job_title|default:"Not specified" }}</div>
             </div>
-
             <div class="info-item">
-                <div class="info-label">Business Subcategory</div>
-                <div class="info-value">
-                    {% if customer.business_subcategory %}
-                        {{ customer.business_subcategory.name }}
-                    {% else %}
-                        Not specified
-                    {% endif %}
-                </div>
+                <div class="info-label">Industry</div>
+                <div class="info-value">{{ customer.industry|default:"Not specified" }}</div>
             </div>
-            
             <div class="info-item">
-                <div class="info-label">How They Found Us</div>
-                <div class="info-value">{{ customer.get_referral_source_display|default:"Not specified" }}</div>
+                <div class="info-label">Company Size</div>
+                <div class="info-value">{{ customer.company_size|default:"Not specified" }}</div>
             </div>
-            
-            {% if customer.referral_message %}
-            <div class="info-item">
-                <div class="info-label">Referral Message</div>
-                <div class="info-value">{{ customer.referral_message }}</div>
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
@@ -652,125 +894,105 @@
 <!-- Account Information -->
 <div class="info-section">
     <div class="section-header" onclick="toggleSection('account')">
-        <div class="section-title">
-            <i class="fas fa-cog"></i>
+        <h3 class="section-title">
+            <i class="fas fa-shield-alt"></i>
             Account Information
-        </div>
-        <i class="fas fa-chevron-up collapse-icon collapsed" id="icon-account"></i>
+        </h3>
+        <i class="fas fa-chevron-up collapse-icon" id="icon-account"></i>
     </div>
-    
-    <div class="section-content collapsed" id="content-account">
+    <div class="section-content" id="content-account">
         <div class="info-grid">
             <div class="info-item">
                 <div class="info-label">Account Status</div>
                 <div class="info-value">
                     {% if customer.is_approved %}
                         {% if customer.is_active %}
-                            <span class="text-success">
-                                <i class="fas fa-check-circle me-1"></i>Active & Approved
-                            </span>
+                            <span class="text-success"><i class="fas fa-check-circle me-1"></i>Active</span>
                         {% else %}
-                            <span class="text-danger">
-                                <i class="fas fa-ban me-1"></i>Blocked
-                            </span>
+                            <span class="text-danger"><i class="fas fa-ban me-1"></i>Blocked</span>
                         {% endif %}
                     {% else %}
-                        <span class="text-warning">
-                            <i class="fas fa-clock me-1"></i>Pending Approval
-                        </span>
+                        <span class="text-warning"><i class="fas fa-clock me-1"></i>Pending Approval</span>
                     {% endif %}
                 </div>
             </div>
-            
             <div class="info-item">
-                <div class="info-label">Email Verification</div>
+                <div class="info-label">Email Verified</div>
                 <div class="info-value">
                     {% if customer.is_email_verified %}
-                        <span class="text-success">
-                            <i class="fas fa-envelope-check me-1"></i>Verified
-                        </span>
+                        <span class="text-success"><i class="fas fa-check-circle me-1"></i>Verified</span>
                     {% else %}
-                        <span class="text-warning">
-                            <i class="fas fa-envelope me-1"></i>Not Verified
-                        </span>
+                        <span class="text-warning"><i class="fas fa-exclamation-circle me-1"></i>Not Verified</span>
                     {% endif %}
                 </div>
             </div>
-            
             <div class="info-item">
                 <div class="info-label">Registration Date</div>
-                <div class="info-value">{{ customer.created_at|date:"F d, Y \a\t g:i A" }}</div>
+                <div class="info-value">{{ customer.created_at|date:"d M Y, h:i A" }}</div>
             </div>
-            
-            <div class="info-item">
-                <div class="info-label">Last Updated</div>
-                <div class="info-value">{{ customer.updated_at|date:"F d, Y \a\t g:i A" }}</div>
-            </div>
-            
             <div class="info-item">
                 <div class="info-label">Last Login</div>
                 <div class="info-value">
                     {% if customer.last_login %}
-                        {{ customer.last_login|date:"F d, Y \a\t g:i A" }}
-                        <small class="text-muted d-block">{{ customer.last_login|timesince }} ago</small>
+                        {{ customer.last_login|date:"d M Y, h:i A" }}
                     {% else %}
-                        <span class="text-muted">Never logged in</span>
+                        <span class="text-muted">Never</span>
                     {% endif %}
                 </div>
             </div>
-            
-            {% if customer.last_login_ip %}
             <div class="info-item">
-                <div class="info-label">Last Login IP</div>
-                <div class="info-value">{{ customer.last_login_ip }}</div>
+                <div class="info-label">Last Updated</div>
+                <div class="info-value">{{ customer.updated_at|date:"d M Y, h:i A" }}</div>
             </div>
-            {% endif %}
+            <div class="info-item">
+                <div class="info-label">Customer ID</div>
+                <div class="info-value">#{{ customer.id|stringformat:"05d" }}</div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Recent Activity -->
+<!-- Activity Timeline -->
 <div class="info-section">
     <div class="section-header" onclick="toggleSection('activity')">
-        <div class="section-title">
+        <h3 class="section-title">
             <i class="fas fa-history"></i>
             Recent Activity
-        </div>
-        <i class="fas fa-chevron-up collapse-icon collapsed" id="icon-activity"></i>
+        </h3>
+        <i class="fas fa-chevron-up collapse-icon" id="icon-activity"></i>
     </div>
-    
-    <div class="section-content collapsed" id="content-activity">
-        {% if customer_stats.last_activity.0 %}
-        <div class="info-grid">
-            <div class="info-item">
-                <div class="info-label">Last Activity</div>
-                <div class="info-value">
-                    {{ customer_stats.last_activity.1 }}
-                    <small class="text-muted d-block">{{ customer_stats.last_activity.0|timesince }} ago</small>
+    <div class="section-content" id="content-activity">
+        {% if customer.recent_activities %}
+        <div class="activity-timeline">
+            {% for activity in customer.recent_activities %}
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <div class="timeline-title">{{ activity.title }}</div>
+                        <div class="timeline-date">{{ activity.created_at|date:"d M Y" }}</div>
+                    </div>
+                    <p class="timeline-description">{{ activity.description }}</p>
                 </div>
             </div>
-            
-            <div class="info-item">
-                <div class="info-label">Activity Level</div>
-                <div class="info-value">
-                    {% if customer_stats.engagement_score >= 70 %}
-                        <span class="text-success">
-                            <i class="fas fa-battery-full me-1"></i>Very Active
-                        </span>
-                    {% elif customer_stats.engagement_score >= 40 %}
-                        <span class="text-warning">
-                            <i class="fas fa-battery-half me-1"></i>Moderately Active
-                        </span>
-                    {% elif customer_stats.engagement_score >= 20 %}
-                        <span class="text-info">
-                            <i class="fas fa-battery-quarter me-1"></i>Somewhat Active
-                        </span>
-                    {% else %}
-                        <span class="text-muted">
-                            <i class="fas fa-battery-empty me-1"></i>Low Activity
-                        </span>
-                    {% endif %}
-                </div>
+            {% endfor %}
+        </div>
+        <div class="mt-3">
+            <div class="info-label mb-2">Engagement Level</div>
+            <div class="info-value">
+                {% if customer_stats.engagement_score >= 70 %}
+                    <span class="text-success">
+                        <i class="fas fa-chart-line me-1"></i>High Activity
+                    </span>
+                {% elif customer_stats.engagement_score >= 40 %}
+                    <span class="text-warning">
+                        <i class="fas fa-chart-bar me-1"></i>Moderate Activity
+                    </span>
+                {% else %}
+                    <span class="text-muted">
+                        <i class="fas fa-battery-empty me-1"></i>Low Activity
+                    </span>
+                {% endif %}
             </div>
         </div>
         {% else %}
@@ -786,53 +1008,48 @@
 <!-- Quick Actions -->
 <div class="action-buttons">
     <div class="btn-group-actions">
-        <div class="d-flex gap-3 flex-wrap">
-            <a href="{% url 'core:admin_edit_customer' customer.id %}" class="btn-action btn-primary-action">
-                <i class="fas fa-edit"></i>
-                <span>Edit Customer</span>
-            </a>
-            
-            {% if not customer.is_approved %}
-                <form method="post" action="{% url 'core:admin_approve_customer' customer.id %}" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-action btn-success-action" onclick="return confirm('Approve {{ customer.full_name }}?')">
-                        <i class="fas fa-check"></i>
-                        <span>Approve Customer</span>
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+            <div class="d-flex gap-3 flex-wrap">
+                <a href="{% url 'core:admin_edit_customer' customer.id %}" class="btn-action btn-primary-action">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit Customer</span>
+                </a>
+                
+                {% if not customer.is_approved %}
+                    <form method="post" action="{% url 'core:admin_approve_customer' customer.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-action btn-success-action" onclick="return confirm('Approve {{ customer.full_name }}?')">
+                            <i class="fas fa-check"></i>
+                            <span>Approve Customer</span>
+                        </button>
+                    </form>
+                {% endif %}
+                
+                {% if customer.is_active %}
+                    <form method="post" action="{% url 'core:admin_block_customer' customer.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-action btn-warning-action" onclick="return confirm('Block {{ customer.full_name }}?')">
+                            <i class="fas fa-ban"></i>
+                            <span>Block Customer</span>
+                        </button>
+                    </form>
+                {% else %}
+                    <button type="button" class="btn-action btn-success-action" onclick="unblockCustomer()">
+                        <i class="fas fa-unlock"></i>
+                        <span>Unblock Customer</span>
                     </button>
-                </form>
-            {% endif %}
+                {% endif %}
+                
+                <a href="mailto:{{ customer.email }}" class="btn-action btn-outline-action">
+                    <i class="fas fa-envelope"></i>
+                    <span>Send Email</span>
+                </a>
+            </div>
             
-            {% if customer.is_active %}
-                <form method="post" action="{% url 'core:admin_block_customer' customer.id %}" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-action btn-warning-action" onclick="return confirm('Block {{ customer.full_name }}?')">
-                        <i class="fas fa-ban"></i>
-                        <span>Block Customer</span>
-                    </button>
-                </form>
-            {% else %}
-                <button type="button" class="btn-action btn-success-action" onclick="unblockCustomer()">
-                    <i class="fas fa-unlock"></i>
-                    <span>Unblock Customer</span>
-                </button>
-            {% endif %}
-            
-            <a href="mailto:{{ customer.email }}" class="btn-action btn-outline-action">
-                <i class="fas fa-envelope"></i>
-                <span>Send Email</span>
-            </a>
-        </div>
-        
-        <div class="d-flex gap-3">
             <a href="{% url 'core:admin_users' %}" class="btn-action btn-outline-action">
                 <i class="fas fa-arrow-left"></i>
                 <span>Back to Customers</span>
             </a>
-{% comment %}             
-            <button type="button" class="btn-action btn-outline-action" onclick="exportCustomerData()" style="border-color: #10b981; color: #10b981;">
-                <i class="fas fa-download"></i>
-                <span>Export Data</span>
-            </button> {% endcomment %}
         </div>
     </div>
 </div>
@@ -934,46 +1151,6 @@
         }
     }
 
-    function exportCustomerData() {
-        showNotification('Preparing customer data export...', 'info');
-        
-        const customerData = {
-            personal_info: {
-                name: '{{ customer.full_name|escapejs }}',
-                email: '{{ customer.email|escapejs }}',
-                mobile: '{{ customer.full_mobile|escapejs }}',
-                job_title: '{{ customer.job_title|escapejs }}',
-                organization: '{{ customer.organization|escapejs }}'
-            },
-            account_info: {
-                status: '{% if customer.is_approved %}{% if customer.is_active %}Active{% else %}Blocked{% endif %}{% else %}Pending{% endif %}',
-                email_verified: {{ customer.is_email_verified|yesno:"true,false" }},
-                registration_date: '{{ customer.created_at|date:"Y-m-d H:i:s" }}',
-                last_login: '{% if customer.last_login %}{{ customer.last_login|date:"Y-m-d H:i:s" }}{% else %}Never{% endif %}'
-            },
-            statistics: {
-                demo_views: {{ customer_stats.demo_views|default:0 }},
-                demo_requests: {{ customer_stats.demo_requests|default:0 }},
-                enquiries: {{ customer_stats.enquiries|default:0 }},
-                engagement_score: {{ customer_stats.engagement_score|default:0 }}
-            }
-        };
-
-        const dataStr = JSON.stringify(customerData, null, 2);
-        const dataBlob = new Blob([dataStr], {type: 'application/json'});
-        const url = URL.createObjectURL(dataBlob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `customer_${customerData.personal_info.name.replace(/\s+/g, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        showNotification('Customer data exported successfully!', 'success');
-    }
-
     function showNotification(message, type = 'info') {
         const notification = document.createElement('div');
         notification.className = `alert alert-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : type === 'error' ? 'danger' : 'info'} alert-dismissible fade show`;
@@ -982,9 +1159,9 @@
             top: 20px;
             right: 20px;
             z-index: 9999;
-            min-width: 350px;
-            max-width: 500px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            min-width: 300px;
+            max-width: 450px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
         `;
         
         const iconClass = type === 'success' ? 'check-circle' : 

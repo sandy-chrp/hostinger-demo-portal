@@ -1,6 +1,6 @@
 {% extends 'admin/base.html' %}
 
-{% block admin_title %}{{ demo.title }} - 3D Viewer{% endblock %}
+{% block admin_title %}{{ demo.title }} - WebGL Preview{% endblock %}
 {% block page_title %}{{ demo.title }} - WebGL Preview{% endblock %}
 
 {% block breadcrumb %}
@@ -8,9 +8,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item">
-                <a href="{% url 'core:admin_dashboard' %}">
-                    <i class="fas fa-home me-1"></i>Dashboard
-                </a>
+                <a href="{% url 'core:admin_dashboard' %}"><i class="fas fa-home me-1"></i>Dashboard</a>
             </li>
             <li class="breadcrumb-item">
                 <a href="{% url 'core:admin_demos' %}">Demos</a>
@@ -27,7 +25,7 @@
 {% block header_actions %}
 <div class="d-flex align-items-center gap-2">
     <a href="{% url 'core:admin_demo_detail' demo.id %}" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-arrow-left me-1"></i>Back to Demo
+        <i class="fas fa-arrow-left me-1"></i>Back
     </a>
     <button class="btn btn-outline-primary btn-sm" id="fullscreenBtn" onclick="toggleFullscreen()">
         <i class="fas fa-expand me-2" id="fullscreenIcon"></i>
@@ -38,12 +36,8 @@
 
 {% block admin_extra_css %}
 <style>
-    /* Remove default padding */
-    .admin-main-content {
-        padding: 0 !important;
-    }
+    .admin-main-content { padding: 0 !important; }
     
-    /* WebGL Container - Full Screen */
     .webgl-container {
         position: fixed;
         top: var(--admin-header-height);
@@ -58,22 +52,26 @@
         left: var(--admin-sidebar-collapsed);
     }
     
-    /* WebGL Iframe */
     .webgl-iframe {
         width: 100%;
         height: 100%;
         border: none;
         display: block;
+        opacity: 0;
+        transition: opacity 0.5s ease;
     }
     
-    /* Loading Overlay */
+    .webgl-iframe.loaded {
+        opacity: 1;
+    }
+    
     .loading-overlay {
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -90,24 +88,20 @@
         text-align: center;
         color: white;
         max-width: 500px;
-        padding: 30px;
-    }
-    
-    /* Spinner */
-    .spinner-container {
-        position: relative;
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 30px;
+        padding: 40px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
     }
     
     .spinner {
         width: 80px;
         height: 80px;
-        border: 6px solid rgba(255,255,255,0.2);
+        border: 8px solid rgba(255,255,255,0.2);
         border-top-color: white;
         border-radius: 50%;
         animation: spin 1s linear infinite;
+        margin: 0 auto 30px;
     }
     
     @keyframes spin {
@@ -118,26 +112,19 @@
         font-size: 1.5rem;
         font-weight: 700;
         margin-bottom: 15px;
-        animation: pulse 2s ease-in-out infinite;
     }
     
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.7; }
-    }
-    
-    .loading-subtitle {
+    .loading-text {
         font-size: 1rem;
         opacity: 0.9;
         margin-bottom: 20px;
     }
     
-    /* Progress Bar */
     .progress-bar-container {
         width: 100%;
-        height: 4px;
+        height: 6px;
         background: rgba(255, 255, 255, 0.2);
-        border-radius: 2px;
+        border-radius: 3px;
         margin-top: 20px;
         overflow: hidden;
     }
@@ -145,89 +132,45 @@
     .progress-bar-fill {
         height: 100%;
         background: white;
-        border-radius: 2px;
+        border-radius: 3px;
         transition: width 0.3s ease;
         width: 0%;
     }
     
-    /* Admin Badge */
-    .admin-badge {
-        position: fixed;
-        top: calc(var(--admin-header-height) + 15px);
-        right: 15px;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        color: var(--primary-color);
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        z-index: 10;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    
-    /* Error State */
-    .error-container {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        text-align: center;
-        color: white;
-        max-width: 500px;
-        padding: 30px;
-    }
-    
-    .error-icon {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        opacity: 0.5;
-        color: var(--danger-color);
+    .progress-percentage {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-top: 15px;
+        color: #4ade80;
     }
     
     @media (max-width: 1024px) {
-        .webgl-container {
-            left: 0;
-        }
+        .webgl-container { left: 0; }
     }
 </style>
 {% endblock %}
 
 {% block admin_content %}
 <div class="webgl-container">
-    <!-- Loading Overlay -->
+    <!-- Simple Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
-            <!-- Spinner -->
-            <div class="spinner-container">
-                <div class="spinner"></div>
-            </div>
-            
-            <!-- Loading Text -->
+            <div class="spinner"></div>
             <h4 class="loading-title">
                 <i class="fas fa-cube me-2"></i>
                 Loading WebGL Content
             </h4>
-            <p class="loading-subtitle">
+            <p class="loading-text" id="loadingText">
                 Preparing {{ demo.title }}...
             </p>
-            
-            <!-- Progress Bar -->
+            <div class="progress-percentage" id="progressPercent">0%</div>
             <div class="progress-bar-container">
                 <div class="progress-bar-fill" id="progressBar"></div>
             </div>
-            
-            <p style="opacity: 0.6; font-size: 0.85rem; margin-top: 20px;">
-                <i class="fas fa-info-circle me-1"></i>
-                Admin Preview Mode
-            </p>
         </div>
     </div>
     
-    <!-- WebGL Iframe - FIXED -->
+    <!-- WebGL Iframe -->
     {% if demo.get_webgl_index_url %}
         <iframe 
             id="webglFrame"
@@ -236,79 +179,124 @@
             allowfullscreen
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; xr-spatial-tracking"
             sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads"
-            onload="hideLoading()">
+            onload="onIframeLoad()">
         </iframe>
-    {% else %}
-        <!-- Error State -->
-        <div class="error-container">
-            <i class="fas fa-exclamation-triangle error-icon"></i>
-            <h3>Unable to Load WebGL Content</h3>
-            <p style="opacity: 0.8; margin-bottom: 20px;">
-                The WebGL file could not be loaded or is not configured properly.
-            </p>
-            <a href="{% url 'core:admin_demo_detail' demo.id %}" class="btn btn-primary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Demo Details
-            </a>
-        </div>
     {% endif %}
-</div>
-
-<!-- Admin Badge -->
-<div class="admin-badge">
-    <i class="fas fa-shield-alt"></i>
-    <span>Admin Preview</span>
 </div>
 {% endblock %}
 
 {% block admin_extra_js %}
 <script>
-let loadingProgress = 0;
-let progressInterval = null;
+const DEMO_ID = {{ demo.id }};
 const loadStartTime = Date.now();
+let progressValue = 0;
+let progressInterval = null;
+let iframeLoaded = false;
+let apiAvailable = false;
 
-// Update progress bar
-function updateLoadingProgress(progress) {
-    loadingProgress = Math.min(progress, 100);
-    const progressBar = document.getElementById('progressBar');
-    if (progressBar) {
-        progressBar.style.width = `${loadingProgress}%`;
-    }
-    
-    const subtitle = document.querySelector('.loading-subtitle');
-    if (subtitle) {
-        subtitle.textContent = loadingProgress < 100 
-            ? `Loading... ${Math.round(loadingProgress)}%` 
-            : 'Almost ready...';
+// ✅ Check if API available
+async function checkAPI() {
+    try {
+        const response = await fetch(`/api/webgl/extraction-progress/${DEMO_ID}/`);
+        if (response.ok) {
+            apiAvailable = true;
+            console.log('✅ Progress API available');
+            pollProgress();
+        } else {
+            console.log('⚠️ Progress API not available, using fallback');
+            simulateProgress();
+        }
+    } catch (error) {
+        console.log('⚠️ Progress API failed, using fallback');
+        simulateProgress();
     }
 }
 
-// Hide loading
+// ✅ Real progress polling (if API available)
+async function pollProgress() {
+    try {
+        const response = await fetch(`/api/webgl/extraction-progress/${DEMO_ID}/`);
+        const data = await response.json();
+        
+        updateProgress(data.percent, data.message || 'Loading...');
+        
+        if (data.stage !== 'complete' && data.percent < 100) {
+            setTimeout(pollProgress, 500);
+        } else if (iframeLoaded) {
+            setTimeout(hideLoading, 500);
+        }
+    } catch (error) {
+        console.error('Poll error:', error);
+        if (iframeLoaded) {
+            hideLoading();
+        }
+    }
+}
+
+// ✅ Fallback: Simulate progress (if API not available)
+function simulateProgress() {
+    progressInterval = setInterval(() => {
+        if (progressValue < 90) {
+            progressValue += Math.random() * 10 + 5;
+            progressValue = Math.min(progressValue, 90);
+            updateProgress(progressValue, 'Loading...');
+        }
+        
+        if (iframeLoaded && progressValue >= 90) {
+            progressValue = 100;
+            updateProgress(100, 'Complete!');
+            clearInterval(progressInterval);
+            setTimeout(hideLoading, 500);
+        }
+    }, 300);
+}
+
+// ✅ Update progress UI
+function updateProgress(percent, message) {
+    progressValue = percent;
+    document.getElementById('progressBar').style.width = `${percent}%`;
+    document.getElementById('progressPercent').textContent = `${Math.round(percent)}%`;
+    document.getElementById('loadingText').textContent = message;
+}
+
+// ✅ Hide loading overlay
 function hideLoading() {
-    if (progressInterval) clearInterval(progressInterval);
-    updateLoadingProgress(100);
-    
     const overlay = document.getElementById('loadingOverlay');
+    const iframe = document.getElementById('webglFrame');
+    
     if (overlay) {
-        setTimeout(() => {
-            overlay.classList.add('hidden');
-            const loadTime = ((Date.now() - loadStartTime) / 1000).toFixed(1);
-            console.log(`✅ WebGL loaded in ${loadTime}s`);
-        }, 500);
+        overlay.classList.add('hidden');
+    }
+    
+    if (iframe) {
+        iframe.classList.add('loaded');
+    }
+    
+    if (progressInterval) {
+        clearInterval(progressInterval);
+    }
+    
+    const loadTime = ((Date.now() - loadStartTime) / 1000).toFixed(1);
+    console.log(`✅ WebGL loaded in ${loadTime}s`);
+}
+
+// ✅ Iframe loaded successfully
+function onIframeLoad() {
+    console.log('✅ Iframe loaded');
+    iframeLoaded = true;
+    
+    // If using fallback, complete immediately
+    if (!apiAvailable) {
+        updateProgress(100, 'Complete!');
+        setTimeout(hideLoading, 500);
+    }
+    // If API available, wait for 100%
+    else if (progressValue >= 100) {
+        setTimeout(hideLoading, 500);
     }
 }
 
-// Start progress simulation
-progressInterval = setInterval(() => {
-    if (loadingProgress < 90) {
-        const increment = loadingProgress < 30 ? 15 : 
-                        loadingProgress < 60 ? 10 : 
-                        loadingProgress < 80 ? 5 : 2;
-        loadingProgress += increment + Math.random() * 5;
-        updateLoadingProgress(Math.min(loadingProgress, 90));
-    }
-}, 500);
-
-// Toggle Fullscreen
+// ✅ Toggle fullscreen
 function toggleFullscreen() {
     const container = document.querySelector('.webgl-container');
     const icon = document.getElementById('fullscreenIcon');
@@ -320,7 +308,6 @@ function toggleFullscreen() {
             text.textContent = 'Exit Fullscreen';
         }).catch(err => {
             console.error('Fullscreen error:', err);
-            alert('Fullscreen not supported on this device');
         });
     } else {
         document.exitFullscreen().then(() => {
@@ -330,36 +317,24 @@ function toggleFullscreen() {
     }
 }
 
-// Monitor iframe loading
-const iframe = document.getElementById('webglFrame');
-if (iframe) {
-    iframe.onload = hideLoading;
-    iframe.onerror = () => {
-        clearInterval(progressInterval);
-        hideLoading();
-        alert('Failed to load WebGL content');
-    };
-    
-    setTimeout(() => {
-        if (loadingProgress < 90) {
-            console.log('⚠️ Large file detected - still loading...');
-        }
-    }, 10000);
-}
-
-// Auto-hide loading after 30 seconds (fallback)
-setTimeout(() => {
-    if (loadingProgress < 100) {
-        hideLoading();
-    }
-}, 30000);
-
-// Keyboard shortcut - F for fullscreen
+// ✅ Keyboard shortcut (F for fullscreen)
 document.addEventListener('keydown', (e) => {
     if ((e.key === 'f' || e.key === 'F') && !e.target.matches('input, textarea')) {
         e.preventDefault();
         toggleFullscreen();
     }
 });
+
+// ✅ Initialize
+console.log('🚀 WebGL Viewer initialized');
+checkAPI();
+
+// ✅ Fallback timeout (30 seconds max)
+setTimeout(() => {
+    if (!iframeLoaded) {
+        console.warn('⚠️ Load timeout');
+    }
+    hideLoading();
+}, 30000);
 </script>
 {% endblock %}

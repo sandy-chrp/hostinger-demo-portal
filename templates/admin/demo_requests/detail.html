@@ -35,20 +35,32 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .demo-header h1 {
+        font-size: var(--font-2xl);
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    
+    .demo-header .text-secondary {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .info-card {
         background: white;
         border-radius: 8px;
         border: 1px solid #e5e7eb;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
         overflow: hidden;
     }
     
     .info-card-header {
         background-color: #f9fafb;
-        padding: 1rem;
+        padding: 0.875rem 1rem;
         border-bottom: 1px solid #e5e7eb;
         display: flex;
         align-items: center;
@@ -58,30 +70,45 @@
     .info-card-header svg {
         margin-right: 0.5rem;
         color: #0d6efd;
+        font-size: var(--font-md);
+    }
+    
+    .info-card-header h5,
+    .card-title {
+        font-size: var(--font-lg);
+        font-weight: 600;
+        margin-bottom: 0;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .info-card-body {
-        padding: 1.5rem;
+        padding: 1.25rem;
     }
     
     .info-grid {
         display: grid;
         grid-template-columns: 200px 1fr;
-        row-gap: 1.25rem;
+        row-gap: 1rem;
     }
     
     .info-label {
         font-weight: 600;
         color: #374151;
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .info-value {
         color: #1f2937;
+        font-size: var(--font-sm);
+        font-weight: 400;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .info-value a {
         color: #0d6efd;
         text-decoration: none;
+        font-size: var(--font-sm);
     }
     
     .info-value a:hover {
@@ -89,10 +116,11 @@
     }
     
     .badge {
-        padding: 0.375rem 0.75rem;
+        padding: 0.25rem 0.5rem;
         border-radius: 6px;
-        font-size: 0.75rem;
+        font-size: var(--font-xs);
         font-weight: 600;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .badge.bg-warning { background-color: #f59e0b !important; }
@@ -103,16 +131,18 @@
     
     .status-badge-lg {
         display: inline-block;
-        padding: 0.75rem 1.5rem;
+        padding: 0.5rem 1rem;
         border-radius: 8px;
         font-weight: 600;
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .assign-card {
         background-color: rgba(16, 185, 129, 0.1);
         border: 1px solid rgba(16, 185, 129, 0.2);
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1.25rem;
         margin-top: 1rem;
     }
     
@@ -120,7 +150,7 @@
         background-color: rgba(239, 68, 68, 0.1);
         border: 1px solid rgba(239, 68, 68, 0.2);
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1.25rem;
         margin-top: 1rem;
     }
     
@@ -128,35 +158,56 @@
         background-color: rgba(245, 158, 11, 0.1);
         border: 1px solid rgba(245, 158, 11, 0.2);
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1.25rem;
         margin-top: 1rem;
+    }
+    
+    .assign-card h5,
+    .reassign-card h5 {
+        font-size: var(--font-lg);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
 
     .employee-card {
         background-color: #f0f9ff;
         border: 1px solid #e0f2fe;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1.25rem;
         margin-top: 1rem;
         display: flex;
         align-items: center;
     }
     
     .employee-avatar {
-        width: 64px;
-        height: 64px;
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
         background-color: #0ea5e9;
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: var(--font-2xl);
         margin-right: 1rem;
     }
     
     .employee-info {
         flex-grow: 1;
+    }
+    
+    .employee-info h5 {
+        font-size: var(--font-lg);
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    
+    .employee-info p {
+        font-size: var(--font-sm);
+        margin-bottom: 0.25rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .employee-actions {
@@ -166,12 +217,12 @@
     
     .status-timeline {
         position: relative;
-        margin-top: 2rem;
+        margin-top: 1.5rem;
     }
     
     .timeline-item {
         display: flex;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
     }
     
     .timeline-icon {
@@ -186,6 +237,7 @@
         margin-right: 1rem;
         position: relative;
         z-index: 2;
+        font-size: var(--font-sm);
     }
     
     .timeline-icon.bg-warning { background-color: #f59e0b; }
@@ -199,11 +251,14 @@
     .timeline-title {
         font-weight: 600;
         margin-bottom: 0.25rem;
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .timeline-date {
-        font-size: 0.875rem;
+        font-size: var(--font-xs);
         color: #6b7280;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .timeline-line {
@@ -214,6 +269,118 @@
         width: 2px;
         background-color: #e5e7eb;
         z-index: 1;
+    }
+
+    /* Form elements */
+    .form-label {
+        font-size: var(--font-sm);
+        font-weight: 500;
+        margin-bottom: 0.375rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    
+    .form-control, .form-select {
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #087fc2;
+        box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
+    }
+    
+    .form-check-label {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    
+    textarea.form-control {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    /* Buttons */
+    .btn {
+        font-size: var(--font-sm);
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: var(--font-xs);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    /* Workload stats cards */
+    .card {
+        border-radius: 8px;
+    }
+    
+    .card-body h3 {
+        font-size: var(--font-4xl);
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    
+    .card-body .small {
+        font-size: var(--font-xs);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    
+    .card.bg-light {
+        padding: 0.75rem;
+    }
+
+    /* Modal styles */
+    .modal-title {
+        font-size: var(--font-lg);
+        font-weight: 600;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    
+    .modal-body {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        padding: 1.25rem;
+    }
+    
+    .modal-header {
+        padding: 1rem 1.25rem;
+    }
+    
+    .modal-footer {
+        padding: 0.875rem 1.25rem;
+    }
+
+    /* Alert messages */
+    .alert {
+        font-size: var(--font-sm);
+        padding: 0.75rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .text-muted,
+    .text-secondary {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    h6 {
+        font-size: var(--font-md);
+        font-weight: 600;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
 
     /* Always show assignment section */
@@ -232,6 +399,83 @@
         
         .info-label {
             margin-bottom: 0.25rem;
+        }
+        
+        .demo-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .demo-header h1 {
+            font-size: var(--font-xl);
+        }
+        
+        .status-badge-lg {
+            padding: 0.375rem 0.75rem;
+            font-size: var(--font-xs);
+        }
+        
+        .info-card-body {
+            padding: 1rem;
+        }
+        
+        .info-card-header {
+            padding: 0.75rem 1rem;
+        }
+        
+        .employee-card {
+            flex-direction: column;
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        .employee-avatar {
+            width: 48px;
+            height: 48px;
+            margin-right: 0;
+            margin-bottom: 0.75rem;
+        }
+        
+        .employee-actions {
+            margin-top: 0.75rem;
+            width: 100%;
+            flex-direction: column;
+        }
+        
+        .timeline-item {
+            margin-bottom: 1rem;
+        }
+        
+        .card-body h3 {
+            font-size: var(--font-3xl);
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .info-card-body {
+            padding: 0.875rem;
+        }
+        
+        .info-card-header {
+            padding: 0.625rem 0.875rem;
+        }
+        
+        .assign-card,
+        .reassign-card {
+            padding: 1rem;
+        }
+        
+        .demo-header h1 {
+            font-size: var(--font-lg);
+        }
+        
+        .employee-card {
+            padding: 0.875rem;
+        }
+        
+        .card-body h3 {
+            font-size: var(--font-2xl);
         }
     }
 </style>

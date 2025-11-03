@@ -1,205 +1,243 @@
 {% extends 'admin/base.html' %}
-{% load static %}
 
 {% block admin_title %}Permissions{% endblock %}
 {% block page_title %}Permissions{% endblock %}
 
-{% block admin_extra_css %}
+{% block admin_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="mb-1" style="font-weight: 500; color: #2c3e50;">Permission Management</h4>
+        <p class="text-muted mb-0" style="font-size: 0.875rem;">View and manage system permissions</p>
+    </div>
+    <a href="{% url 'accounts:permission_add' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>Add Permission
+    </a>
+</div>
+
+<!-- Search & Filter Card -->
+<div class="admin-card mb-4">
+    <div class="admin-card-body">
+        <form method="get" class="row g-3">
+            <!-- Search -->
+            <div class="col-lg-5 col-md-12">
+                <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">Search</label>
+                <div class="position-relative">
+                    <i class="fas fa-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
+                    <input type="text" 
+                           name="q" 
+                           class="form-control" 
+                           style="padding-left: 2.5rem; font-size: 0.938rem; height: 38px;"
+                           placeholder="Search permissions..." 
+                           value="{{ query }}">
+                </div>
+            </div>
+
+            <!-- Module Filter -->
+            <div class="col-lg-3 col-md-4">
+                <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">Module</label>
+                <select name="module" class="form-select" style="font-size: 0.938rem; height: 38px;">
+                    <option value="">All Modules</option>
+                    {% for code, name in modules %}
+                    <option value="{{ code }}" {% if module_filter == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label d-none d-md-block" style="font-size: 0.875rem;">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100" style="height: 38px;">
+                    <i class="fas fa-search me-1"></i>Search
+                </button>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label d-none d-md-block" style="font-size: 0.875rem;">&nbsp;</label>
+                <a href="{% url 'accounts:permission_list' %}" class="btn btn-outline-secondary w-100" style="height: 38px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-times me-1"></i>Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Stats Card -->
+{% comment %} <div class="row mb-4">
+    <div class="col-12 col-md-4">
+        <div class="admin-card" style="border-left: 4px solid #087fc2;">
+            <div class="admin-card-body text-center">
+                <div style="font-size: 0.875rem; color: #6c757d; margin-bottom: 0.5rem; font-weight: 500;">
+                    Total Permissions
+                </div>
+                <div style="font-size: 2rem; font-weight: 700; color: #087fc2;">
+                    {{ total_permissions }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div> {% endcomment %}
+
+<!-- Permissions by Module -->
+{% if permissions_by_module %}
+    {% for module, perms in permissions_by_module.items %}
+    <div class="permission-module mb-4">
+        <!-- Module Header -->
+        <div class="module-header" data-bs-toggle="collapse" data-bs-target="#module{{ forloop.counter }}">
+            <div class="d-flex justify-content-between align-items-center">
+                <span style="font-size: 1rem; font-weight: 500;">
+                    <i class="fas fa-folder-open me-2"></i>
+                    {{ module }}
+                    <span class="badge bg-light text-dark ms-2" style="font-size: 0.813rem;">{{ perms|length }}</span>
+                </span>
+                <i class="fas fa-chevron-down" style="font-size: 0.875rem; transition: transform 0.3s;"></i>
+            </div>
+        </div>
+        
+        <!-- Module Body -->
+        <div class="collapse show module-body" id="module{{ forloop.counter }}">
+            {% for perm in perms %}
+            <div class="permission-item">
+                <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                    <!-- Permission Info -->
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h6 class="mb-0" style="font-size: 0.938rem; font-weight: 500; color: #2c3e50;">
+                                {{ perm.name }}
+                            </h6>
+                            {% if not perm.is_active %}
+                                <span class="badge bg-warning text-dark" style="font-size: 0.75rem;">Inactive</span>
+                            {% endif %}
+                        </div>
+                        <div class="mb-1">
+                            <code class="text-muted" style="font-size: 0.813rem; background: #f8f9fa; padding: 0.125rem 0.375rem; border-radius: 4px;">
+                                {{ perm.codename }}
+                            </code>
+                        </div>
+                        {% if perm.description %}
+                        <div class="text-muted" style="font-size: 0.875rem;">
+                            {{ perm.description }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a href="{% url 'accounts:permission_edit' perm.id %}" 
+                           class="btn btn-outline-info" 
+                           title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'accounts:permission_delete' perm.id %}" 
+                           class="btn btn-outline-danger" 
+                           onclick="return confirm('Are you sure you want to delete this permission?')"
+                           title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="admin-card">
+        <div class="admin-card-body text-center py-5">
+            <i class="fas fa-key fa-3x text-muted mb-3" style="opacity: 0.3;"></i>
+            <h5 style="font-size: 1rem; font-weight: 500; color: #6c757d;">No permissions found</h5>
+            <p class="text-muted mb-0" style="font-size: 0.875rem;">Try adjusting your search or filters</p>
+            {% if query or module_filter %}
+            <a href="{% url 'accounts:permission_list' %}" class="btn btn-sm btn-outline-primary mt-3">
+                <i class="fas fa-times me-1"></i>Clear Filters
+            </a>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
 <style>
-    .module-section {
-        border: 1px solid #dee2e6;
-        border-radius: 0.5rem;
-        margin-bottom: 1.5rem;
+    /* Permission Module */
+    .permission-module {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
         overflow: hidden;
+        background: white;
     }
+    
     .module-header {
-        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
+        background: #087fc2;
         color: white;
         padding: 1rem 1.25rem;
-        font-weight: 600;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
         cursor: pointer;
+        transition: background 0.3s;
     }
+    
     .module-header:hover {
-        background: linear-gradient(135deg, #0669a0 0%, #087fc2 100%);
+        background: #0669a0;
     }
+    
     .module-body {
         background: #f8f9fa;
     }
+    
     .permission-item {
         background: white;
         border-bottom: 1px solid #e9ecef;
         padding: 1rem 1.25rem;
         transition: background 0.2s;
     }
+    
     .permission-item:hover {
         background: #f8f9fa;
     }
+    
     .permission-item:last-child {
         border-bottom: none;
     }
     
-    @media (max-width: 768px) {
+    /* Chevron rotation */
+    .module-header[aria-expanded="true"] .fa-chevron-down {
+        transform: rotate(180deg);
+    }
+    
+    /* Responsive */
+    @media (max-width: 767.98px) {
         .module-header {
-            padding: 0.75rem 1rem;
-            font-size: 0.9rem;
+            padding: 0.875rem 1rem;
+            font-size: 0.938rem;
         }
+        
         .permission-item {
-            padding: 0.75rem 1rem;
+            padding: 0.875rem 1rem;
         }
     }
 </style>
 {% endblock %}
 
-{% block admin_content %}
-<div class="container-fluid">
-    
-    <!-- Header -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
-        <div>
-            <h2 class="mb-1">Permission Management</h2>
-            <p class="text-muted mb-0">View and manage system permissions</p>
-        </div>
-        <a href="{% url 'accounts:permission_add' %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Add Permission
-        </a>
-    </div>
-
-    <!-- Search & Filter -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get">
-                <div class="row g-3">
-                    <div class="col-12 col-md-5">
-                        <input type="text" name="q" class="form-control" 
-                               placeholder="Search permissions..." value="{{ query }}">
-                    </div>
-                    <div class="col-12 col-md-3">
-                        <select name="module" class="form-select">
-                            <option value="">All Modules</option>
-                            {% for code, name in modules %}
-                            <option value="{{ code }}" {% if module_filter == code %}selected{% endif %}>
-                                {{ name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <button type="submit" class="btn btn-secondary w-100">
-                            <i class="fas fa-search"></i> <span class="d-none d-md-inline">Search</span>
-                        </button>
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <a href="{% url 'accounts:permission_list' %}" class="btn btn-outline-secondary w-100">
-                            Reset
-                        </a>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="row mb-4">
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm border-start border-primary border-4">
-                <div class="card-body text-center">
-                    <h5 class="text-muted mb-2">Total Permissions</h5>
-                    <h2 class="mb-0 text-primary">{{ total_permissions }}</h2>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Permissions by Module -->
-    {% if permissions_by_module %}
-        {% for module, perms in permissions_by_module.items %}
-        <div class="module-section">
-            <div class="module-header" data-bs-toggle="collapse" data-bs-target="#module-{{ forloop.counter }}">
-                <div>
-                    <i class="fas fa-folder-open me-2"></i>
-                    {{ module }}
-                    <span class="badge bg-light text-dark ms-2">{{ perms|length }}</span>
-                </div>
-                <i class="fas fa-chevron-down"></i>
-            </div>
-            
-            <div class="collapse show module-body" id="module-{{ forloop.counter }}">
-                {% for perm in perms %}
-                <div class="permission-item">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                        <div class="flex-grow-1">
-                            <h6 class="mb-1">
-                                {{ perm.name }}
-                                {% if not perm.is_active %}
-                                    <span class="badge bg-warning text-dark">Inactive</span>
-                                {% endif %}
-                            </h6>
-                            <div>
-                                <code class="text-muted">{{ perm.codename }}</code>
-                                {% if perm.description %}
-                                    <span class="text-muted d-none d-md-inline"> - {{ perm.description }}</span>
-                                {% endif %}
-                            </div>
-                            <small class="text-muted d-block d-md-none mt-1">
-                                {{ perm.description|default:"-" }}
-                            </small>
-                        </div>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <a href="{% url 'accounts:permission_edit' perm.id %}" 
-                               class="btn btn-warning" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="{% url 'accounts:permission_delete' perm.id %}" 
-                               class="btn btn-danger" 
-                               onclick="return confirm('Delete this permission?')"
-                               title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endfor %}
-    {% else %}
-        <div class="card">
-            <div class="card-body text-center text-muted py-5">
-                <i class="fas fa-key fa-3x mb-3 d-block opacity-50"></i>
-                <h5>No permissions found</h5>
-                <p class="mb-0">Try adjusting your search or filters</p>
-            </div>
-        </div>
-    {% endif %}
-
-</div>
-{% endblock %}
-
 {% block admin_extra_js %}
 <script>
-// Smooth collapse icon rotation
-document.addEventListener('shown.bs.collapse', function(e) {
-    const header = e.target.previousElementSibling;
-    if (header && header.classList.contains('module-header')) {
-        const icon = header.querySelector('.fa-chevron-down');
-        if (icon) icon.style.transform = 'rotate(180deg)';
-    }
-});
-
-document.addEventListener('hidden.bs.collapse', function(e) {
-    const header = e.target.previousElementSibling;
-    if (header && header.classList.contains('module-header')) {
-        const icon = header.querySelector('.fa-chevron-down');
-        if (icon) icon.style.transform = 'rotate(0deg)';
-    }
-});
-
-// Add transition to icons
-document.querySelectorAll('.module-header .fa-chevron-down').forEach(icon => {
-    icon.style.transition = 'transform 0.3s ease';
+// Update chevron rotation on collapse
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function(element) {
+        element.addEventListener('click', function() {
+            const icon = this.querySelector('.fa-chevron-down');
+            if (icon) {
+                // Toggle expanded attribute for CSS
+                const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                this.setAttribute('aria-expanded', !isExpanded);
+            }
+        });
+    });
+    
+    // Initialize expanded state
+    document.querySelectorAll('.collapse.show').forEach(function(element) {
+        const header = element.previousElementSibling;
+        if (header) {
+            header.setAttribute('aria-expanded', 'true');
+        }
+    });
 });
 </script>
 {% endblock %}

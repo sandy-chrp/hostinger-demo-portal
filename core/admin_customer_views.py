@@ -20,7 +20,7 @@ import json
 import uuid
 import csv
 from accounts.decorators import permission_required
-
+from django.core.paginator import Paginator
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -44,46 +44,51 @@ def is_admin(user):
 @permission_required('view_customers')
 @user_passes_test(is_admin)
 def admin_customers_list(request):
-    """Admin view for listing all customers with all database columns"""
+    """
+    ✅ FIXED CUSTOMER LIST VIEW - NO CHECKBOXES
+    - Proper responsive design for all devices
+    - Removed Organization, Job Title, Last Login from default display
+    - Data in descending order (latest first)
+    - Approve, Block, Unblock actions in Actions column
+    - No checkbox/bulk actions
+    - Compact view for mobile/tablet/laptop
+    """
     from core.models import AdminColumnPreference
     
     # ALL AVAILABLE COLUMNS FROM DATABASE
     ALL_COLUMNS = [
-        {'id': 'checkbox', 'label': 'Select All', 'width': '50px', 'sortable': False, 'always_visible': False},  # ✅ Changed to False
+        # ❌ REMOVED: {'id': 'checkbox', 'label': 'Select', 'width': '50px', 'sortable': False, 'always_visible': False},
         {'id': 'customer_id', 'label': 'ID', 'width': '80px', 'sortable': True},
         {'id': 'customer', 'label': 'Customer Name', 'width': 'auto', 'sortable': True},
         {'id': 'email', 'label': 'Email', 'width': 'auto', 'sortable': True},
-        {'id': 'mobile', 'label': 'Mobile', 'width': 'auto', 'sortable': True},
-        {'id': 'country_code', 'label': 'Country Code', 'width': 'auto', 'sortable': True},
+        {'id': 'mobile', 'label': 'Mobile', 'width': '130px', 'sortable': True},
+        {'id': 'country_code', 'label': 'Country Code', 'width': '100px', 'sortable': True},
         {'id': 'organization', 'label': 'Organization', 'width': 'auto', 'sortable': True},
         {'id': 'job_title', 'label': 'Job Title', 'width': 'auto', 'sortable': True},
-        {'id': 'business_category', 'label': 'Business Category', 'width': 'auto', 'sortable': True},
-        {'id': 'business_subcategory', 'label': 'Business Subcategory', 'width': 'auto', 'sortable': True},
-        {'id': 'status', 'label': 'Status', 'width': 'auto', 'sortable': True},
-        {'id': 'is_email_verified', 'label': 'Email Verified', 'width': 'auto', 'sortable': True},
-        {'id': 'is_approved', 'label': 'Approved', 'width': 'auto', 'sortable': True},
-        {'id': 'is_active', 'label': 'Active', 'width': 'auto', 'sortable': True},
-        {'id': 'registration', 'label': 'Registration Date', 'width': 'auto', 'sortable': True},
-        {'id': 'last_login', 'label': 'Last Login', 'width': 'auto', 'sortable': True},
-        {'id': 'last_login_ip', 'label': 'Last Login IP', 'width': 'auto', 'sortable': True},
-        {'id': 'referral_source', 'label': 'Referral Source', 'width': 'auto', 'sortable': True},
+        {'id': 'business_category', 'label': 'Business Category', 'width': '150px', 'sortable': True},
+        {'id': 'business_subcategory', 'label': 'Business Subcategory', 'width': '150px', 'sortable': True},
+        {'id': 'status', 'label': 'Status', 'width': '100px', 'sortable': True},
+        {'id': 'is_email_verified', 'label': 'Email Verified', 'width': '100px', 'sortable': True},
+        {'id': 'is_approved', 'label': 'Approved', 'width': '100px', 'sortable': True},
+        {'id': 'is_active', 'label': 'Active', 'width': '100px', 'sortable': True},
+        {'id': 'registration', 'label': 'Registration Date', 'width': '140px', 'sortable': True},
+        {'id': 'last_login', 'label': 'Last Login', 'width': '140px', 'sortable': True},
+        {'id': 'last_login_ip', 'label': 'Last Login IP', 'width': '120px', 'sortable': True},
+        {'id': 'referral_source', 'label': 'Referral Source', 'width': '130px', 'sortable': True},
         {'id': 'referral_message', 'label': 'Referral Message', 'width': 'auto', 'sortable': False},
-        {'id': 'country', 'label': 'Country', 'width': 'auto', 'sortable': True},
-        {'id': 'actions', 'label': 'Actions', 'width': '150px', 'sortable': False, 'always_visible': True},  # Actions always visible
+        {'id': 'country', 'label': 'Country', 'width': '120px', 'sortable': True},
+        {'id': 'actions', 'label': 'Actions', 'width': '220px', 'sortable': False, 'always_visible': True},
     ]
     
-    # Default visible columns (commonly used)
+    # ✅ UPDATED DEFAULT COLUMNS - NO CHECKBOX
     DEFAULT_COLUMNS = [
-        'checkbox',  # ✅ Include checkbox in default
+        'customer_id',
         'customer',
         'email',
         'mobile',
-        'organization',
-        'job_title',
         'business_category',
         'status',
         'registration',
-        'last_login',
         'actions'
     ]
     
@@ -104,8 +109,11 @@ def admin_customers_list(request):
     email_verified_filter = request.GET.get('email_verified', '')
     country_filter = request.GET.get('country', '')
     
-    # Base queryset
-    customers = User.objects.filter(is_staff=False).select_related(
+    # Base queryset - Optimized with select_related
+    customers = User.objects.filter(
+        is_staff=False,
+        is_superuser=False
+    ).select_related(
         'business_category',
         'business_subcategory'
     )
@@ -131,7 +139,10 @@ def admin_customers_list(request):
     
     # Apply business category filter
     if business_category_filter:
-        customers = customers.filter(business_category_id=business_category_filter)
+        try:
+            customers = customers.filter(business_category_id=int(business_category_filter))
+        except (ValueError, TypeError):
+            pass
     
     # Apply referral source filter
     if referral_source_filter:
@@ -156,32 +167,49 @@ def admin_customers_list(request):
     if date_to:
         try:
             to_date = datetime.strptime(date_to, '%Y-%m-%d')
-            to_date = to_date + timedelta(days=1)
-            customers = customers.filter(created_at__lt=to_date)
+            # Include the entire day
+            to_date = to_date.replace(hour=23, minute=59, second=59)
+            customers = customers.filter(created_at__lte=to_date)
         except ValueError:
             pass
     
-    # Get statistics
-    total_customers = User.objects.filter(is_staff=False).count()
-    active_customers = User.objects.filter(is_staff=False, is_approved=True, is_active=True).count()
-    pending_approvals = User.objects.filter(is_staff=False, is_approved=False).count()
-    blocked_customers = User.objects.filter(is_staff=False, is_active=False).count()
+    # Get statistics (optimized - use aggregate if needed)
+    total_customers = User.objects.filter(is_staff=False, is_superuser=False).count()
+    active_customers = User.objects.filter(is_staff=False, is_superuser=False, is_approved=True, is_active=True).count()
+    pending_approvals = User.objects.filter(is_staff=False, is_superuser=False, is_approved=False).count()
+    blocked_customers = User.objects.filter(is_staff=False, is_superuser=False, is_active=False).count()
     
     # Get filter options
     from accounts.models import BusinessCategory
     business_categories = BusinessCategory.objects.filter(is_active=True).order_by('name')
     
-    # Get unique country codes
-    country_codes = User.objects.filter(is_staff=False).values_list('country_code', flat=True).distinct()
+    # Get unique country codes (optimized)
+    country_codes = User.objects.filter(
+        is_staff=False, 
+        is_superuser=False
+    ).exclude(
+        country_code__isnull=True
+    ).exclude(
+        country_code=''
+    ).values_list('country_code', flat=True).distinct().order_by('country_code')
     
     # Referral source choices
     referral_sources = User.REFERRAL_CHOICES
     
-    # Pagination
-    paginator = Paginator(customers.order_by('-created_at'), 25)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    # ✅ ORDER BY: Latest customers first (most recent registration at top)
+    customers = customers.order_by('-created_at', '-id')
     
+    # Pagination
+    paginator = Paginator(customers, 25)  # 25 customers per page
+    page_number = request.GET.get('page', 1)
+    
+    try:
+        page_obj = paginator.get_page(page_number)
+    except Exception as e:
+        print(f"Pagination error: {e}")
+        page_obj = paginator.get_page(1)
+    
+    # Build context
     context = {
         'users': page_obj,
         'search': search,
@@ -251,13 +279,22 @@ def admin_create_customer(request):
     if request.method == 'POST':
         form = CustomerCreateForm(request.POST)
         
+        # ✅ DEBUG: Log form data
+        print(f"\n{'='*60}")
+        print(f"📝 FORM SUBMISSION")
+        print(f"   Email: {request.POST.get('email')}")
+        print(f"   Skip Validation: {request.POST.get('skip_email_validation')}")
+        print(f"   Form is valid: {form.is_valid()}")
+        
+        if not form.is_valid():
+            print(f"❌ FORM ERRORS:")
+            for field, errors in form.errors.items():
+                print(f"   {field}: {errors}")
+        print(f"{'='*60}\n")
+        
         if form.is_valid():
             try:
                 email = form.cleaned_data['email']
-                
-                # ✅ CHECK 1: Verify email was validated via OTP (if OTP was required)
-                # This assumes your form has email_verified field or you track it in session
-                # For now, we'll proceed with creation
                 
                 # Create customer
                 customer = form.save(commit=False)
@@ -272,7 +309,7 @@ def admin_create_customer(request):
                 print(f"   Name: {customer.full_name}")
                 print(f"{'='*60}\n")
                 
-                # ✅ SEND WELCOME EMAIL (Always send for admin-created customers)
+                # Send welcome email if enabled
                 send_welcome_email = form.cleaned_data.get('send_welcome_email', True)
                 
                 if send_welcome_email:
@@ -280,7 +317,7 @@ def admin_create_customer(request):
                         result = send_customer_welcome_email_with_validation(
                             customer, 
                             request.user,
-                            request  # ✅ Pass request object
+                            request
                         )
                         
                         if result['success']:
@@ -321,11 +358,16 @@ def admin_create_customer(request):
                 traceback.print_exc()
                 messages.error(request, f'Error creating customer: {str(e)}')
         else:
-            # Form validation errors
-            print("❌ Form validation errors:")
+            # ✅ IMPROVED: Show specific errors to user
+            error_messages = []
             for field, errors in form.errors.items():
-                print(f"   {field}: {errors}")
-            messages.error(request, 'Please correct the errors below.')
+                for error in errors:
+                    error_messages.append(f"{field}: {error}")
+            
+            messages.error(
+                request, 
+                f'Please correct the following errors: {"; ".join(error_messages)}'
+            )
     else:
         form = CustomerCreateForm()
     
@@ -333,61 +375,6 @@ def admin_create_customer(request):
         'form': form,
         'title': 'Create New Customer'
     })
-
-def send_customer_welcome_email_with_validation(customer, created_by):
-    """Send welcome email with delivery validation"""
-    from django.core.mail import EmailMessage
-    from smtplib import SMTPException
-    
-    try:
-        site_url = getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000')
-        
-        subject = 'Welcome to Demo Portal'
-        message = f"""
-Dear {customer.first_name} {customer.last_name},
-
-Welcome to Demo Portal!
-
-Your account has been created by our admin team.
-
-Account Details:
-- Email: {customer.email}
-- Organization: {customer.organization}
-- Job Title: {customer.job_title}
-
-Sign in here: {site_url}/auth/signin/
-
-Use the "Forgot Password" option to set your password.
-
-Best regards,
-Demo Portal Team
-CHRP India
-        """
-        
-        email_msg = EmailMessage(
-            subject=subject,
-            body=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[customer.email],
-        )
-        email_msg.send(fail_silently=False)
-        
-        return {'success': True, 'error': None}
-    
-    except SMTPException as e:
-        error_msg = str(e)
-        print(f"SMTP Error sending welcome email: {error_msg}")
-        
-        if "550" in error_msg or "recipient" in error_msg.lower():
-            return {'success': False, 'error': 'invalid_recipient'}
-        elif "authentication" in error_msg.lower():
-            return {'success': False, 'error': 'auth_failed'}
-        else:
-            return {'success': False, 'error': 'smtp_error'}
-    
-    except Exception as e:
-        print(f"General email error: {e}")
-        return {'success': False, 'error': 'unknown'}
 
 
 @login_required
@@ -604,32 +591,75 @@ def verify_email_otp(request):
 @permission_required('edit_customer')
 @user_passes_test(is_admin)
 def admin_edit_customer(request, customer_id):
-    """Admin view for editing existing customer"""
+    """Admin view for editing existing customer - FIXED"""
     customer = get_object_or_404(User, id=customer_id, is_staff=False)
     
     if request.method == 'POST':
         form = CustomerEditForm(request.POST, instance=customer)
+        
+        # ✅ DEBUG: Log form submission
+        print(f"\n{'='*60}")
+        print(f"📝 EDIT CUSTOMER FORM SUBMISSION")
+        print(f"   Customer: {customer.email}")
+        print(f"   Old Email: {customer.email}")
+        print(f"   New Email: {request.POST.get('email', 'N/A')}")
+        print(f"   Skip Verification: {request.POST.get('skip_email_validation', 'OFF')}")
+        print(f"   Form Valid: {form.is_valid()}")
+        
+        if not form.is_valid():
+            print(f"❌ FORM ERRORS:")
+            for field, errors in form.errors.items():
+                print(f"   {field}: {errors}")
+        print(f"{'='*60}\n")
+        
         if form.is_valid():
             try:
-                # Save changes
+                # Store old values before saving
                 old_email = customer.email
                 old_status = (customer.is_approved, customer.is_active)
                 
+                # ✅ Get skip validation flag from form
+                skip_validation = form.cleaned_data.get('skip_email_validation', False)
+                
+                # Save the form
                 customer = form.save()
                 
-                # Check for email change
+                # ✅ FIXED: Check for email change with proper verification logic
                 if old_email != customer.email:
-                    customer.is_email_verified = False
-                    customer.email_verification_token = str(uuid.uuid4())
-                    customer.save()
-                    messages.info(request, 'Email changed. Customer will need to verify their new email.')
+                    print(f"\n{'='*60}")
+                    print(f"📧 EMAIL CHANGED")
+                    print(f"   Old: {old_email}")
+                    print(f"   New: {customer.email}")
+                    print(f"   Skip Validation: {skip_validation}")
+                    print(f"{'='*60}\n")
+                    
+                    if skip_validation:
+                        # Admin skipped verification - keep email verified
+                        customer.is_email_verified = True
+                        customer.save()
+                        messages.success(
+                            request, 
+                            f'✅ Email updated to {customer.email} (verification skipped by admin)'
+                        )
+                    else:
+                        # Email changed and not skipped - require verification
+                        customer.is_email_verified = False
+                        customer.email_verification_token = str(uuid.uuid4())
+                        customer.save()
+                        messages.warning(
+                            request, 
+                            f'⚠️ Email changed to {customer.email}. Customer will need to verify their new email.'
+                        )
                 
-                # Check for status change
+                # ✅ Check for status change and send notifications
                 new_status = (customer.is_approved, customer.is_active)
                 if old_status != new_status:
-                    send_status_change_notification(customer, old_status, new_status)
+                    send_status_change_notification(customer, old_status, new_status, request)
                 
-                messages.success(request, f'Customer "{customer.full_name}" updated successfully!')
+                # ✅ Success message
+                messages.success(request, f'✅ Customer "{customer.full_name}" updated successfully!')
+                
+                print(f"✅ Customer updated: {customer.email}\n")
                 
                 # Redirect based on action
                 if 'save_and_continue' in request.POST:
@@ -638,9 +668,21 @@ def admin_edit_customer(request, customer_id):
                     return redirect('core:admin_users')
                     
             except Exception as e:
-                messages.error(request, f'Error updating customer: {str(e)}')
+                print(f"❌ Error updating customer: {e}")
+                import traceback
+                traceback.print_exc()
+                messages.error(request, f'❌ Error updating customer: {str(e)}')
         else:
-            messages.error(request, 'Please correct the errors below.')
+            # ✅ IMPROVED: Show specific form errors to user
+            error_messages = []
+            for field, errors in form.errors.items():
+                for error in errors:
+                    error_messages.append(f"{field}: {error}")
+            
+            messages.error(
+                request, 
+                f'❌ Please correct the following errors: {"; ".join(error_messages)}'
+            )
     else:
         form = CustomerEditForm(instance=customer)
     
@@ -712,94 +754,253 @@ def admin_customer_detail(request, customer_id):
     })
 
 @login_required
-@permission_required('approve_customer')
 @user_passes_test(is_admin)
+@permission_required('approve_customer')
 @require_http_methods(["POST"])
 def admin_approve_customer(request, customer_id):
-    """Approve customer account"""
-    customer = get_object_or_404(User, id=customer_id, is_staff=False)
-    
-    if not customer.is_approved:
+    """
+    Approve customer account
+    - Sets is_approved = True
+    - Sets is_active = True
+    - Sends approval email
+    - Returns JSON response for AJAX calls
+    """
+    try:
+        customer = get_object_or_404(User, id=customer_id, is_staff=False)
+        
+        # Check if already approved
+        if customer.is_approved:
+            return JsonResponse({
+                'success': False,
+                'message': f'{customer.full_name} is already approved.'
+            })
+        
+        customer_name = customer.full_name
+        customer_email = customer.email
+        
+        print(f"\n{'='*60}")
+        print(f"✅ APPROVING CUSTOMER")
+        print(f"   ID: {customer_id}")
+        print(f"   Name: {customer_name}")
+        print(f"   Email: {customer_email}")
+        print(f"   Approved by: {request.user.username}")
+        print(f"{'='*60}\n")
+        
+        # Approve customer
         customer.is_approved = True
         customer.is_active = True
         customer.save()
         
-        # Send approval notification
-        send_approval_notification(customer)
+        print(f"✅ Customer approved and activated")
         
-        if request.content_type == 'application/json':
-            return JsonResponse({
-                'success': True, 
-                'message': f'{customer.full_name} has been approved and notified.'
-            })
-        else:
-            messages.success(request, f'{customer.full_name} has been approved and notified.')
-    
-    return redirect('core:admin_users')
+        # Send approval notification
+        try:
+            send_approval_notification(customer, request)
+            print(f"✅ Approval notification email sent")
+        except Exception as e:
+            print(f"⚠️ Failed to send email: {e}")
+            # Continue even if email fails
+        
+        print(f"{'='*60}\n")
+        
+        return JsonResponse({
+            'success': True, 
+            'message': f'{customer_name} has been approved and notified.'
+        })
+        
+    except User.DoesNotExist:
+        print(f"❌ Customer {customer_id} not found")
+        return JsonResponse({
+            'success': False,
+            'message': 'Customer not found.'
+        }, status=404)
+        
+    except Exception as e:
+        print(f"❌ Error approving customer: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'message': f'Error approving customer: {str(e)}'
+        }, status=500)
 
 @login_required
 @user_passes_test(is_admin)
 @permission_required('block_customer')
 @require_http_methods(["POST"])
 def admin_block_customer(request, customer_id):
-    """Block customer account and send notification email"""
-    customer = get_object_or_404(User, id=customer_id, is_staff=False)
-    
-    if customer.is_active:
+    """
+    Block customer account and send notification email
+    - Deactivates account
+    - Sends email notification
+    - Kills all active sessions
+    - Returns JSON response for AJAX calls
+    """
+    try:
+        customer = get_object_or_404(User, id=customer_id, is_staff=False)
+        
+        # Check if customer is already blocked
+        if not customer.is_active:
+            return JsonResponse({
+                'success': False, 
+                'message': f'{customer.full_name} is already blocked.'
+            })
+        
+        # Store name before blocking (for logging)
+        customer_name = customer.full_name
+        customer_email = customer.email
+        
+        print(f"\n{'='*60}")
+        print(f"🚫 BLOCKING CUSTOMER")
+        print(f"   ID: {customer_id}")
+        print(f"   Name: {customer_name}")
+        print(f"   Email: {customer_email}")
+        print(f"   Blocked by: {request.user.username}")
+        print(f"{'='*60}\n")
+        
         # Block the customer
         customer.is_active = False
         customer.save()
         
+        print(f"✅ Customer account blocked")
+        
         # ✅ SEND EMAIL NOTIFICATION
-        send_account_blocked_notification(customer)
+        try:
+            send_account_blocked_notification(customer)
+            print(f"✅ Block notification email sent")
+        except Exception as e:
+            print(f"⚠️ Failed to send email: {e}")
+            # Continue even if email fails
         
         # ✅ KILL ALL ACTIVE SESSIONS
-        from django.contrib.sessions.models import Session
-        from django.utils import timezone
+        try:
+            from django.contrib.sessions.models import Session
+            from django.utils import timezone
+            
+            sessions_deleted = 0
+            for session in Session.objects.filter(expire_date__gte=timezone.now()):
+                session_data = session.get_decoded()
+                # ✅ FIX: Convert to int for comparison
+                if session_data.get('_auth_user_id') == str(customer.id):
+                    session.delete()
+                    sessions_deleted += 1
+            
+            print(f"✅ Deleted {sessions_deleted} active session(s)")
+            
+        except Exception as e:
+            print(f"⚠️ Session deletion error: {e}")
+            # Continue even if session deletion fails
         
-        for session in Session.objects.filter(expire_date__gte=timezone.now()):
-            session_data = session.get_decoded()
-            if session_data.get('_auth_user_id') == str(customer.id):
-                session.delete()
+        print(f"{'='*60}\n")
         
-        if request.content_type == 'application/json':
-            return JsonResponse({
-                'success': True, 
-                'message': f'{customer.full_name} has been blocked and notified via email.'
-            })
-        else:
-            messages.warning(request, f'{customer.full_name} has been blocked and notified via email.')
-    
-    return redirect('core:admin_users')
+        # ✅ ALWAYS RETURN JSON for AJAX calls
+        return JsonResponse({
+            'success': True, 
+            'message': f'{customer_name} has been blocked and notified via email.'
+        })
+        
+    except User.DoesNotExist:
+        print(f"❌ Customer {customer_id} not found")
+        return JsonResponse({
+            'success': False,
+            'message': 'Customer not found.'
+        }, status=404)
+        
+    except Exception as e:
+        print(f"❌ Error blocking customer: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'message': f'Error blocking customer: {str(e)}'
+        }, status=500)
 
 
 @login_required
-@permission_required('block_customer')
 @user_passes_test(is_admin)
+@permission_required('block_customer')
 @require_http_methods(["POST"])
 def admin_unblock_customer(request, customer_id):
-    """Unblock customer account and send notification (email + in-app)"""
-    customer = get_object_or_404(User, id=customer_id, is_staff=False)
-    
-    if not customer.is_active:
-        # ✅ REACTIVATE BOTH FLAGS
+    """
+    Unblock customer account and send notification (email + in-app)
+    - Reactivates account
+    - Auto-approves if needed
+    - Sends email notification
+    - Returns JSON response for AJAX calls
+    """
+    try:
+        customer = get_object_or_404(User, id=customer_id, is_staff=False)
+        
+        # Check if customer is already active
+        if customer.is_active:
+            return JsonResponse({
+                'success': False, 
+                'message': f'{customer.full_name} is already active.'
+            })
+        
+        # Store name before unblocking (for logging)
+        customer_name = customer.full_name
+        customer_email = customer.email
+        
+        print(f"\n{'='*60}")
+        print(f"✅ UNBLOCKING CUSTOMER")
+        print(f"   ID: {customer_id}")
+        print(f"   Name: {customer_name}")
+        print(f"   Email: {customer_email}")
+        print(f"   Unblocked by: {request.user.username}")
+        print(f"{'='*60}\n")
+        
+        # ✅ REACTIVATE ACCOUNT
         customer.is_active = True
-        customer.is_approved = True  
+        
+        # ✅ AUTO-APPROVE IF NOT APPROVED
+        if not customer.is_approved:
+            customer.is_approved = True
+            print(f"✅ Customer auto-approved during unblock")
+        
         customer.save()
+        print(f"✅ Customer account unblocked")
         
         # ✅ SEND NOTIFICATION (EMAIL + IN-APP)
-        from notifications.services import NotificationService
-        NotificationService.notify_account_unblocked(customer, send_email=True)
+        try:
+            # Try using NotificationService if available
+            from notifications.services import NotificationService
+            NotificationService.notify_account_unblocked(customer, send_email=True)
+            print(f"✅ Unblock notification sent via NotificationService")
+        except ImportError:
+            # Fallback to direct email function
+            print(f"⚠️ NotificationService not available, using direct email")
+            try:
+                send_account_unblocked_notification(customer, request)
+                print(f"✅ Unblock notification email sent")
+            except Exception as e:
+                print(f"⚠️ Failed to send email: {e}")
+        except Exception as e:
+            print(f"⚠️ Notification error: {e}")
+            # Continue even if notification fails
+        
+        print(f"{'='*60}\n")
         
         return JsonResponse({
             'success': True, 
-            'message': f'{customer.full_name} has been unblocked and notified.'
+            'message': f'{customer_name} has been unblocked and notified.'
         })
-    
-    return JsonResponse({
-        'success': False, 
-        'message': 'Customer is already active.'
-    })
+        
+    except User.DoesNotExist:
+        print(f"❌ Customer {customer_id} not found")
+        return JsonResponse({
+            'success': False,
+            'message': 'Customer not found.'
+        }, status=404)
+        
+    except Exception as e:
+        print(f"❌ Error unblocking customer: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'message': f'Error unblocking customer: {str(e)}'
+        }, status=500)
 
 @login_required
 @permission_required('delete_customer') 
@@ -1491,18 +1692,29 @@ def send_status_change_notification(customer, old_status, new_status, request=No
     old_approved, old_active = old_status
     new_approved, new_active = new_status
     
+    print(f"\n{'='*60}")
+    print(f"🔔 STATUS CHANGE NOTIFICATION")
+    print(f"   Customer: {customer.email}")
+    print(f"   Old Status: Approved={old_approved}, Active={old_active}")
+    print(f"   New Status: Approved={new_approved}, Active={new_active}")
+    print(f"{'='*60}\n")
+    
     # If approved status changed to True
     if old_approved != new_approved and new_approved:
+        print(f"✅ Sending approval notification to {customer.email}")
         send_approval_notification(customer, request)
     
     # If blocked (active changed from True to False)
     elif old_active and not new_active:
+        print(f"⚠️ Sending account blocked notification to {customer.email}")
         send_account_blocked_notification(customer)
     
     # If unblocked (active changed from False to True)
     elif not old_active and new_active and new_approved:
+        print(f"✅ Sending account unblocked notification to {customer.email}")
         send_account_unblocked_notification(customer, request)
-
+    
+    print(f"✅ Status change notification completed\n")
 
 def send_account_blocked_notification(customer):
     """

@@ -1,25 +1,241 @@
-<!-- templates/admin/settings/settings.html -->
 {% extends 'admin/base.html' %}
-{% load static %}
 
 {% block admin_title %}System Settings{% endblock %}
 {% block page_title %}System Settings{% endblock %}
 
-{% block admin_extra_css %}
+{% block admin_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="mb-1" style="font-weight: 500; color: #2c3e50;">System Settings</h4>
+        <p class="text-muted mb-0" style="font-size: 0.875rem;">Configure and manage your portal settings</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-outline-danger" onclick="clearCache()">
+            <i class="fas fa-trash-alt me-1"></i>Clear Cache
+        </button>
+        <a href="{% url 'core:admin_system_health' %}" class="btn btn-primary">
+            <i class="fas fa-heartbeat me-1"></i>System Health
+        </a>
+    </div>
+</div>
+
+<!-- Settings Categories Grid -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <a href="{% url 'core:admin_site_settings' %}" class="text-decoration-none">
+            <div class="settings-card">
+                <div class="settings-icon icon-primary">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <div class="settings-content">
+                    <h5 class="settings-title">Site Settings</h5>
+                    <p class="settings-desc">Basic site configuration</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <a href="{% url 'core:admin_demo_settings' %}" class="text-decoration-none">
+            <div class="settings-card">
+                <div class="settings-icon icon-success">
+                    <i class="fas fa-video"></i>
+                </div>
+                <div class="settings-content">
+                    <h5 class="settings-title">Demo Settings</h5>
+                    <p class="settings-desc">Demo portal configuration</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <a href="{% url 'core:admin_email_settings' %}" class="text-decoration-none">
+            <div class="settings-card">
+                <div class="settings-icon icon-info">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="settings-content">
+                    <h5 class="settings-title">Email Settings</h5>
+                    <p class="settings-desc">Email configuration</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <a href="{% url 'core:admin_security_settings' %}" class="text-decoration-none">
+            <div class="settings-card">
+                <div class="settings-icon icon-warning">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="settings-content">
+                    <h5 class="settings-title">Security</h5>
+                    <p class="settings-desc">Security settings</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <a href="{% url 'core:admin_maintenance_settings' %}" class="text-decoration-none">
+            <div class="settings-card">
+                <div class="settings-icon icon-danger">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <div class="settings-content">
+                    <h5 class="settings-title">Maintenance</h5>
+                    <p class="settings-desc">Maintenance mode</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <a href="{% url 'core:admin_backup_settings' %}" class="text-decoration-none">
+            <div class="settings-card">
+                <div class="settings-icon icon-primary">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="settings-content">
+                    <h5 class="settings-title">Backup</h5>
+                    <p class="settings-desc">Backup & restore</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <a href="{% url 'core:admin_notification_settings' %}" class="text-decoration-none">
+            <div class="settings-card">
+                <div class="settings-icon icon-success">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div class="settings-content">
+                    <h5 class="settings-title">Notifications</h5>
+                    <p class="settings-desc">Notification settings</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <a href="{% url 'core:admin_system_health' %}" class="text-decoration-none">
+            <div class="settings-card">
+                <div class="settings-icon icon-info">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <div class="settings-content">
+                    <h5 class="settings-title">System Health</h5>
+                    <p class="settings-desc">System status check</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- System Information -->
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="admin-card" style="background: #087fc2; color: white;">
+            <div class="admin-card-header" style="background: transparent; border-bottom: 1px solid rgba(255, 255, 255, 0.2);">
+                <h5 class="mb-0" style="font-weight: 500; font-size: 1rem; color: white;">
+                    <i class="fas fa-info-circle me-2"></i>System Information
+                </h5>
+            </div>
+            <div class="admin-card-body">
+                <div class="info-item">
+                    <span style="font-size: 0.875rem;">Django Version</span>
+                    <strong style="font-size: 0.938rem;">{{ system_info.django_version }}</strong>
+                </div>
+                <div class="info-item">
+                    <span style="font-size: 0.875rem;">Python Version</span>
+                    <strong style="font-size: 0.938rem;">{{ system_info.python_version }}</strong>
+                </div>
+                <div class="info-item">
+                    <span style="font-size: 0.875rem;">Database</span>
+                    <strong style="font-size: 0.938rem;">{{ system_info.database_engine }}</strong>
+                </div>
+                <div class="info-item">
+                    <span style="font-size: 0.875rem;">Time Zone</span>
+                    <strong style="font-size: 0.938rem;">{{ system_info.time_zone }}</strong>
+                </div>
+                <div class="info-item" style="border-bottom: none;">
+                    <span style="font-size: 0.875rem;">Debug Mode</span>
+                    <strong style="font-size: 0.938rem;">
+                        {% if system_info.debug_mode %}
+                            <span class="badge bg-warning text-dark" style="font-size: 0.813rem;">ON</span>
+                        {% else %}
+                            <span class="badge bg-light text-success" style="font-size: 0.813rem;">OFF</span>
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5 class="mb-0" style="font-weight: 500; font-size: 1rem;">
+                    <i class="fas fa-hdd me-2"></i>Storage Information
+                </h5>
+            </div>
+            <div class="admin-card-body">
+                {% if storage_stats.media %}
+                <h6 style="font-size: 0.938rem; font-weight: 500; color: #2c3e50; margin-bottom: 1rem;">
+                    Media Storage
+                </h6>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2" style="font-size: 0.875rem; color: #6c757d;">
+                        <span>Used: {{ storage_stats.media.used }}GB</span>
+                        <span>Total: {{ storage_stats.media.total }}GB</span>
+                    </div>
+                    <div class="storage-bar">
+                        <div class="storage-progress" style="width: {{ storage_stats.media.percent }}%">
+                            {{ storage_stats.media.percent|floatformat:1 }}%
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if storage_stats.database_size %}
+                <h6 style="font-size: 0.938rem; font-weight: 500; color: #2c3e50; margin-bottom: 0.5rem; margin-top: 1.5rem;">
+                    Database Size
+                </h6>
+                <p class="mb-0" style="font-size: 0.875rem; color: #6c757d;">
+                    <i class="fas fa-database me-2"></i>
+                    <strong style="color: #2c3e50;">{{ storage_stats.database_size }}MB</strong>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
+    /* Settings Card */
     .settings-card {
         background: white;
-        border-radius: var(--radius-xl);
-        box-shadow: var(--shadow-md);
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
         transition: all 0.3s ease;
-        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
     
     .settings-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--shadow-lg);
+        transform: translateY(-4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-color: #087fc2;
     }
     
+    /* Settings Icon */
     .settings-icon {
         width: 60px;
         height: 60px;
@@ -30,240 +246,87 @@
         font-size: 1.5rem;
         color: white;
         margin-bottom: 1rem;
+        flex-shrink: 0;
     }
     
-    .icon-primary { background: var(--gradient-primary); }
-    .icon-success { background: var(--gradient-success); }
-    .icon-warning { background: var(--gradient-warning); }
-    .icon-info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-    .icon-danger { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .icon-primary { background: #087fc2; }
+    .icon-success { background: #28a745; }
+    .icon-warning { background: #ffc107; }
+    .icon-info { background: #17a2b8; }
+    .icon-danger { background: #dc3545; }
     
-    .system-info-card {
-        background: var(--gradient-primary);
-        color: white;
-        border-radius: var(--radius-xl);
-        padding: var(--spacing-xl);
+    /* Settings Content */
+    .settings-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
     
+    .settings-title {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .settings-desc {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+    
+    /* Info Item */
     .info-item {
-        padding: var(--spacing-sm) 0;
+        padding: 0.875rem 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     
-    .info-item:last-child {
-        border-bottom: none;
-    }
-    
+    /* Storage Bar */
     .storage-bar {
         height: 30px;
-        background: var(--gray-200);
-        border-radius: var(--radius-lg);
+        background: #e9ecef;
+        border-radius: 6px;
         overflow: hidden;
         position: relative;
     }
     
     .storage-progress {
         height: 100%;
-        background: var(--gradient-primary);
+        background: #087fc2;
         transition: width 0.3s ease;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         font-weight: 600;
+        font-size: 0.813rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 767.98px) {
+        .settings-card {
+            padding: 1.25rem;
+        }
+        
+        .settings-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 1.25rem;
+        }
+        
+        .settings-title {
+            font-size: 0.938rem;
+        }
+        
+        .settings-desc {
+            font-size: 0.813rem;
+        }
     }
 </style>
-{% endblock %}
-
-{% block admin_content %}
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold mb-0">System Settings</h2>
-            <p class="text-muted mb-0">Configure and manage your portal settings</p>
-        </div>
-        <div>
-            <button class="btn btn-outline-danger" onclick="clearCache()">
-                <i class="fas fa-trash-alt me-2"></i>Clear Cache
-            </button>
-            <a href="{% url 'core:admin_system_health' %}" class="btn btn-primary">
-                <i class="fas fa-heartbeat me-2"></i>System Health
-            </a>
-        </div>
-    </div>
-    
-    <!-- Settings Categories Grid -->
-    <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-4">
-            <a href="{% url 'core:admin_site_settings' %}" class="text-decoration-none">
-                <div class="settings-card p-4 text-center">
-                    <div class="settings-icon icon-primary mx-auto">
-                        <i class="fas fa-globe"></i>
-                    </div>
-                    <h5 class="mb-2">Site Settings</h5>
-                    <p class="text-muted mb-0">Basic site configuration</p>
-                </div>
-            </a>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-4">
-            <a href="{% url 'core:admin_demo_settings' %}" class="text-decoration-none">
-                <div class="settings-card p-4 text-center">
-                    <div class="settings-icon icon-success mx-auto">
-                        <i class="fas fa-video"></i>
-                    </div>
-                    <h5 class="mb-2">Demo Settings</h5>
-                    <p class="text-muted mb-0">Demo portal configuration</p>
-                </div>
-            </a>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-4">
-            <a href="{% url 'core:admin_email_settings' %}" class="text-decoration-none">
-                <div class="settings-card p-4 text-center">
-                    <div class="settings-icon icon-info mx-auto">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <h5 class="mb-2">Email Settings</h5>
-                    <p class="text-muted mb-0">Email configuration</p>
-                </div>
-            </a>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-4">
-            <a href="{% url 'core:admin_security_settings' %}" class="text-decoration-none">
-                <div class="settings-card p-4 text-center">
-                    <div class="settings-icon icon-warning mx-auto">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h5 class="mb-2">Security</h5>
-                    <p class="text-muted mb-0">Security settings</p>
-                </div>
-            </a>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-4">
-            <a href="{% url 'core:admin_maintenance_settings' %}" class="text-decoration-none">
-                <div class="settings-card p-4 text-center">
-                    <div class="settings-icon icon-danger mx-auto">
-                        <i class="fas fa-tools"></i>
-                    </div>
-                    <h5 class="mb-2">Maintenance</h5>
-                    <p class="text-muted mb-0">Maintenance mode</p>
-                </div>
-            </a>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-4">
-            <a href="{% url 'core:admin_backup_settings' %}" class="text-decoration-none">
-                <div class="settings-card p-4 text-center">
-                    <div class="settings-icon icon-primary mx-auto">
-                        <i class="fas fa-database"></i>
-                    </div>
-                    <h5 class="mb-2">Backup</h5>
-                    <p class="text-muted mb-0">Backup & restore</p>
-                </div>
-            </a>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-4">
-            <a href="{% url 'core:admin_notification_settings' %}" class="text-decoration-none">
-                <div class="settings-card p-4 text-center">
-                    <div class="settings-icon icon-success mx-auto">
-                        <i class="fas fa-bell"></i>
-                    </div>
-                    <h5 class="mb-2">Notifications</h5>
-                    <p class="text-muted mb-0">Notification settings</p>
-                </div>
-            </a>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-4">
-            <a href="{% url 'core:admin_system_health' %}" class="text-decoration-none">
-                <div class="settings-card p-4 text-center">
-                    <div class="settings-icon icon-info mx-auto">
-                        <i class="fas fa-heartbeat"></i>
-                    </div>
-                    <h5 class="mb-2">System Health</h5>
-                    <p class="text-muted mb-0">System status check</p>
-                </div>
-            </a>
-        </div>
-    </div>
-    
-    <!-- System Information -->
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="system-info-card">
-                <h5 class="mb-4">
-                    <i class="fas fa-info-circle me-2"></i>System Information
-                </h5>
-                
-                <div class="info-item d-flex justify-content-between">
-                    <span>Django Version</span>
-                    <strong>{{ system_info.django_version }}</strong>
-                </div>
-                <div class="info-item d-flex justify-content-between">
-                    <span>Python Version</span>
-                    <strong>{{ system_info.python_version }}</strong>
-                </div>
-                <div class="info-item d-flex justify-content-between">
-                    <span>Database</span>
-                    <strong>{{ system_info.database_engine }}</strong>
-                </div>
-                <div class="info-item d-flex justify-content-between">
-                    <span>Time Zone</span>
-                    <strong>{{ system_info.time_zone }}</strong>
-                </div>
-                <div class="info-item d-flex justify-content-between">
-                    <span>Debug Mode</span>
-                    <strong>
-                        {% if system_info.debug_mode %}
-                            <span class="badge bg-warning">ON</span>
-                        {% else %}
-                            <span class="badge bg-success">OFF</span>
-                        {% endif %}
-                    </strong>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-hdd me-2"></i>Storage Information
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if storage_stats.media %}
-                    <h6>Media Storage</h6>
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Used: {{ storage_stats.media.used }}GB</span>
-                            <span>Total: {{ storage_stats.media.total }}GB</span>
-                        </div>
-                        <div class="storage-bar">
-                            <div class="storage-progress" style="width: {{ storage_stats.media.percent }}%">
-                                {{ storage_stats.media.percent|floatformat:1 }}%
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-                    
-                    {% if storage_stats.database_size %}
-                    <h6>Database Size</h6>
-                    <p class="mb-0">
-                        <i class="fas fa-database me-2"></i>
-                        <strong>{{ storage_stats.database_size }}MB</strong>
-                    </p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block admin_extra_js %}
@@ -276,7 +339,14 @@ function clearCache() {
                 'X-CSRFToken': '{{ csrf_token }}'
             }
         }).then(response => {
-            location.reload();
+            if (response.ok) {
+                alert('Cache cleared successfully!');
+                location.reload();
+            } else {
+                alert('Failed to clear cache. Please try again.');
+            }
+        }).catch(error => {
+            alert('Error clearing cache: ' + error);
         });
     }
 }

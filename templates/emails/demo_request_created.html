@@ -1,48 +1,237 @@
 {% extends "emails/base.html" %}
 
-{% block email_title %}Demo Request Received{% endblock %}
+{% block title %}Demo Request Received - Demo Portal{% endblock %}
 
-{% block email_content %}
-<div class="email-greeting">
-    Hi {{ user.first_name }}!
-</div>
+{% block preheader %}Thank you! Your demo request has been received{% endblock %}
 
-<div class="email-content">
-    <p>Thank you for your interest! Your demo request has been <strong>successfully received</strong>.</p>
-    
-    <div class="notification-card">
-        <h3>✓ Request Received</h3>
-        <p>We have received your demo request and our team is currently reviewing it.</p>
-    </div>
-    
-    <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <p style="margin: 0; color: #0369a1;">
-            <strong>Demo:</strong> {{ demo.title }}<br>
-            <strong>Status:</strong> <span style="color: #f59e0b;">Pending Review</span><br>
-            <strong>Requested Date:</strong> {{ requested_date|date:"F d, Y" }}<br>
-            <strong>Requested Time:</strong> {{ time_slot }}
-            {% if demo_request.business_category %}<br>
-            <strong>Business Category:</strong> {{ demo_request.business_category.name }}{% endif %}
-            {% if demo_request.business_subcategory %}<br>
-            <strong>Business Subcategory:</strong> {{ demo_request.business_subcategory.name }}{% endif %}
-        </p>
-    </div>
-    
-    <div style="background: #eff6ff; padding: 15px; border-left: 4px solid #3b82f6; border-radius: 4px; margin: 20px 0;">
-        <p style="margin: 0; color: #1e40af; font-size: 14px;">
-            <strong>📌 What's Next?</strong><br>
-            • Our team will review your request within 24 hours<br>
-            • You'll receive a confirmation email once your demo is scheduled<br>
-            • We may contact you if we need additional information
-        </p>
-    </div>
-    
-    <div style="text-align: center; margin: 30px 0;">
-        <a href="{{ site_url }}/customer/demo-requests/" class="email-button">
-            View Request Details
-        </a>
-    </div>
-    
-    <p>We're excited to showcase our solution to you!</p>
-</div>
+{% block content %}
+<!-- Info Icon -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 25px 0;">
+    <tr>
+        <td align="center">
+            <div style="width: 80px; height: 80px; background-color: #3b82f6; background-image: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 50%; display: inline-block; text-align: center; line-height: 80px; margin-bottom: 20px;">
+                <span style="font-size: 40px; line-height: 80px; vertical-align: middle;">✓</span>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<!-- Main Heading -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+        <td align="center">
+            <h1 style="color: #1f2937 !important; font-size: 28px; font-weight: 700; margin: 0 0 10px 0; mso-line-height-rule: exactly; line-height: 36px;">
+                Demo Request Received!
+            </h1>
+            <p style="color: #3b82f6 !important; font-size: 16px; margin: 0 0 30px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                We're reviewing your request
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- Greeting -->
+<p style="color: #374151 !important; font-size: 16px; line-height: 24px; margin: 0 0 10px 0; mso-line-height-rule: exactly;">
+    Hi <strong style="color: #1f2937 !important;">{{ user.first_name }}</strong>!
+</p>
+
+<p style="color: #374151 !important; font-size: 16px; line-height: 24px; margin: 0 0 25px 0; mso-line-height-rule: exactly;">
+    Thank you for your interest! Your demo request has been <strong style="color: #3b82f6 !important;">successfully received</strong>.
+</p>
+
+<!-- Confirmation Card -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#dbeafe" style="background-color: #dbeafe; border-left: 5px solid #3b82f6; border-radius: 6px; margin: 0 0 25px 0;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #1e40af !important; font-size: 16px; margin: 0 0 10px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                ✓ Request Received
+            </p>
+            <p style="color: #1e40af !important; font-size: 14px; margin: 0; mso-line-height-rule: exactly; line-height: 20px;">
+                We have received your demo request and our team is currently reviewing it.
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- Demo Details Box -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f0f9ff" style="background-color: #f0f9ff; border-radius: 8px; margin: 0 0 25px 0; border: 1px solid #bfdbfe;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #1e3a8a !important; font-size: 14px; margin: 0 0 15px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 20px;">
+                📋 Request Details
+            </p>
+            
+            <!-- Info Rows -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td style="color: #0369a1 !important; font-size: 14px; font-weight: 600; width: 40%; mso-line-height-rule: exactly; line-height: 20px;">Demo:</td>
+                                <td style="color: #0c4a6e !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">{{ demo.title }}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td style="color: #0369a1 !important; font-size: 14px; font-weight: 600; width: 40%; mso-line-height-rule: exactly; line-height: 20px;">Status:</td>
+                                <td style="color: #f59e0b !important; font-size: 14px; font-weight: 600; mso-line-height-rule: exactly; line-height: 20px;">⏳ Pending Review</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td style="color: #0369a1 !important; font-size: 14px; font-weight: 600; width: 40%; mso-line-height-rule: exactly; line-height: 20px;">Requested Date:</td>
+                                <td style="color: #0c4a6e !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">{{ requested_date|date:"F d, Y" }}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td style="color: #0369a1 !important; font-size: 14px; font-weight: 600; width: 40%; mso-line-height-rule: exactly; line-height: 20px;">Requested Time:</td>
+                                <td style="color: #0c4a6e !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">{{ time_slot }}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                {% if demo_request.business_category %}
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td style="color: #0369a1 !important; font-size: 14px; font-weight: 600; width: 40%; mso-line-height-rule: exactly; line-height: 20px;">Business Category:</td>
+                                <td style="color: #0c4a6e !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">{{ demo_request.business_category.name }}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                {% endif %}
+                {% if demo_request.business_subcategory %}
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td style="color: #0369a1 !important; font-size: 14px; font-weight: 600; width: 40%; mso-line-height-rule: exactly; line-height: 20px;">Business Subcategory:</td>
+                                <td style="color: #0c4a6e !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">{{ demo_request.business_subcategory.name }}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                {% endif %}
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- What's Next Box -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#eff6ff" style="background-color: #eff6ff; border-left: 5px solid #3b82f6; border-radius: 6px; margin: 0 0 25px 0;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #1e40af !important; font-size: 15px; margin: 0 0 12px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 22px;">
+                📌 What's Next?
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td style="padding: 5px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding-right: 10px; vertical-align: top;">
+                                    <span style="color: #3b82f6 !important; font-size: 16px;">•</span>
+                                </td>
+                                <td>
+                                    <span style="color: #1e40af !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">Our team will review your request within 24 hours</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding-right: 10px; vertical-align: top;">
+                                    <span style="color: #3b82f6 !important; font-size: 16px;">•</span>
+                                </td>
+                                <td>
+                                    <span style="color: #1e40af !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">You'll receive a confirmation email once your demo is scheduled</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding-right: 10px; vertical-align: top;">
+                                    <span style="color: #3b82f6 !important; font-size: 16px;">•</span>
+                                </td>
+                                <td>
+                                    <span style="color: #1e40af !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">We may contact you if we need additional information</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- CTA Button -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 25px 0;">
+    <tr>
+        <td align="center">
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ site_url }}/customer/demo-requests/" style="height:50px;v-text-anchor:middle;width:240px;" arcsize="20%" strokecolor="#087fc2" fillcolor="#087fc2">
+            <w:anchorlock/>
+            <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:600;">📋 View Request Details</center>
+            </v:roundrect>
+            <![endif]-->
+            <!--[if !mso]><!-->
+            <table cellpadding="0" cellspacing="0" border="0" bgcolor="#087fc2" style="background-color: #087fc2; background-image: linear-gradient(135deg, #087fc2 0%, #0669a0 100%); border-radius: 10px; box-shadow: 0 4px 6px rgba(8, 127, 194, 0.3);">
+                <tr>
+                    <td>
+                        <a href="{{ site_url }}/customer/demo-requests/" style="display: inline-block; color: #ffffff !important; text-decoration: none; padding: 16px 40px; font-size: 16px; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                            📋 View Request Details
+                        </a>
+                    </td>
+                </tr>
+            </table>
+            <!--<![endif]-->
+        </td>
+    </tr>
+</table>
+
+<!-- Closing Message -->
+<p style="color: #374151 !important; font-size: 15px; line-height: 24px; margin: 0 0 20px 0; text-align: center; mso-line-height-rule: exactly;">
+    We're excited to showcase our solution to you!
+</p>
+
+<!-- Support Section -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 25px 0 0 0; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+    <tr>
+        <td align="center">
+            <p style="color: #1f2937 !important; font-size: 14px; margin: 0 0 10px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 20px;">
+                📞 Questions?
+            </p>
+            <p style="color: #374151 !important; font-size: 13px; line-height: 20px; margin: 0; mso-line-height-rule: exactly;">
+                Email: <a href="mailto:reach@chrp-india.com" style="color: #087fc2 !important; text-decoration: none; font-weight: 600;">reach@chrp-india.com</a><br>
+                Phone: <a href="tel:+918008987948" style="color: #087fc2 !important; text-decoration: none; font-weight: 600;">+91-8008987948</a><br>
+                Hours: 9:00 AM - 7:00 PM (Mon-Sat)
+            </p>
+        </td>
+    </tr>
+</table>
 {% endblock %}
+
+{% block footer_text %}Thank you for choosing CHRP India Demo Portal. We look forward to serving you!{% endblock %}

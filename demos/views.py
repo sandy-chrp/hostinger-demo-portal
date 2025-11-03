@@ -3,13 +3,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.core.paginator import Paginator
-from django.db.models import Q, Count
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 import json
-
+from django.db.models import Q, Count, F
 from .models import Demo, DemoCategory, DemoRequest, DemoView, DemoLike, DemoFeedback, TimeSlot
 from .forms import DemoRequestForm, DemoFeedbackForm, DemoFilterForm
 from accounts.models import CustomUser
@@ -73,40 +72,58 @@ def demo_list_view(request):
 
 @login_required
 def demo_detail_view(request, slug):
-    """Demo detail view"""
+    """
+    Demo detail/hub page - FIXED
+    """
     if not request.user.is_approved:
+        messages.error(request, "Your account is pending approval.")
         return redirect('accounts:pending_approval')
     
     demo = get_object_or_404(Demo, slug=slug, is_active=True)
     
-    # Check if user has viewed
-    user_has_viewed = DemoView.objects.filter(user=request.user, demo=demo).exists()
+    # Record demo view
+    DemoView.objects.update_or_create(
+        demo=demo,
+        user=request.user,
+        defaults={'ip_address': get_client_ip(request)}
+    )
+    
+    # ✅ FIX: Increment view count properly
+    Demo.objects.filter(id=demo.id).update(views_count=F('views_count') + 1)
+    demo.refresh_from_db()  # Get actual count
     
     # Check if user has liked
-    user_has_liked = DemoLike.objects.filter(user=request.user, demo=demo).exists()
+    user_liked = DemoLike.objects.filter(demo=demo, user=request.user).exists()
     
-    # Get user feedback
-    user_feedback = None
-    try:
-        user_feedback = DemoFeedback.objects.get(user=request.user, demo=demo)
-    except DemoFeedback.DoesNotExist:
-        pass
+    # Get user's feedback
+    user_feedback = DemoFeedback.objects.filter(
+        demo=demo, 
+        user=request.user
+    ).first()
+    
+    # Get approved feedbacks
+    approved_feedbacks = DemoFeedback.objects.filter(
+        demo=demo,
+        is_approved=True
+    ).exclude(
+        user=request.user
+    ).select_related('user').order_by('-created_at')[:10]
     
     # Get related demos
     related_demos = Demo.objects.filter(
-        category=demo.category,
         is_active=True
-    ).exclude(id=demo.id)[:4]
+    ).exclude(id=demo.id).order_by('-views_count')[:3]
     
     context = {
         'demo': demo,
-        'user_has_viewed': user_has_viewed,
-        'user_has_liked': user_has_liked,
-        'user_feedback': user_feedback,
+        'user_liked': user_liked,
+        'user_feedback': user_feedback, 
+        'approved_feedbacks': approved_feedbacks, 
         'related_demos': related_demos,
+        'user_email': request.user.email,
     }
     
-    return render(request, 'demos/detail.html', context)
+    return render(request, 'customers/demo_detail.html', context)
 
 @login_required
 def watch_demo_view(request, slug):
@@ -200,7 +217,7 @@ def demo_feedback_view(request, slug):
         'feedback': feedback,
     }
     
-    return render(request, 'demos/feedback.html', context)
+    return render(request, 'customers/feedback.html', context)
 
 @login_required
 def request_demo_view(request, slug=None):

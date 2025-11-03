@@ -61,6 +61,23 @@
             --radius-md: 0.5rem;
             --radius-lg: 0.75rem;
             --radius-xl: 1rem;
+            
+            /* Professional Typography System from base.html */
+            --primary-font: Verdana, Geneva, Tahoma, sans-serif;
+            --heading-font: Verdana, Geneva, Tahoma, sans-serif;
+            --monospace-font: 'Courier New', Courier, monospace;
+            
+            /* Professional Font Sizes from base.html */
+            --font-xs: 0.6875rem;    /* 11px - tiny labels */
+            --font-sm: 0.75rem;      /* 12px - small text */
+            --font-base: 0.8125rem;  /* 13px - body text */
+            --font-md: 0.875rem;     /* 14px - secondary headings */
+            --font-lg: 0.9375rem;    /* 15px - primary headings */
+            --font-xl: 1rem;         /* 16px - main headings */
+            --font-2xl: 1.125rem;    /* 18px - section titles */
+            --font-3xl: 1.25rem;     /* 20px - page titles */
+            --font-4xl: 1.5rem;      /* 24px - dashboard stats */
+            --font-5xl: 2rem;        /* 32px - large numbers */
         }
 
         * {
@@ -70,7 +87,7 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: var(--primary-font);
             background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
             min-height: 100vh;
             display: flex;
@@ -79,6 +96,7 @@
             padding: 1rem;
             position: relative;
             color: var(--text-primary);
+            font-size: var(--font-base);
         }
 
         /* Subtle background pattern */
@@ -153,8 +171,8 @@
         }
 
         .login-title {
-            font-family: 'Poppins', sans-serif;
-            font-size: 1.5rem;
+            font-family: var(--heading-font);
+            font-size: var(--font-3xl);
             font-weight: 600;
             margin-bottom: 0.5rem;
             letter-spacing: -0.025em;
@@ -162,7 +180,7 @@
 
         .login-subtitle {
             opacity: 0.9;
-            font-size: 0.95rem;
+            font-size: var(--font-md);
             font-weight: 400;
         }
 
@@ -185,7 +203,7 @@
 
         .security-badge-icon {
             color: var(--tech-blue);
-            font-size: 1.25rem;
+            font-size: var(--font-xl);
             margin-top: 0.125rem;
             flex-shrink: 0;
             animation: pulse 2s ease-in-out infinite;
@@ -197,7 +215,7 @@
         }
 
         .security-badge-content {
-            font-size: 0.9rem;
+            font-size: var(--font-base);
             color: var(--text-secondary);
             line-height: 1.6;
         }
@@ -216,7 +234,7 @@
             color: var(--text-primary);
             margin-bottom: 0.5rem;
             display: block;
-            font-size: 0.875rem;
+            font-size: var(--font-sm);
             letter-spacing: 0.025em;
         }
 
@@ -224,11 +242,11 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
             padding: 0.875rem 1rem;
-            font-size: 0.95rem;
+            font-size: var(--font-base);
             transition: all 0.2s ease;
             background: var(--background-primary);
             width: 100%;
-            font-family: inherit;
+            font-family: var(--primary-font);
         }
 
         .form-control:focus {
@@ -252,18 +270,18 @@
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
-            font-size: 0.875rem;
+            font-size: var(--font-md);
             z-index: 5;
         }
 
-        /* ✅ NEW: Password Toggle Icon */
+        /* Password Toggle Icon */
         .password-toggle-icon {
             position: absolute;
             right: 1rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
-            font-size: 1rem;
+            font-size: var(--font-md);
             z-index: 10;
             cursor: pointer;
             transition: color 0.2s ease;
@@ -277,7 +295,7 @@
             padding-left: 2.5rem;
         }
 
-        /* ✅ NEW: Password field with both icons */
+        /* Password field with both icons */
         .form-control.with-both-icons {
             padding-left: 2.5rem;
             padding-right: 3rem;
@@ -290,12 +308,12 @@
             font-weight: 500;
             padding: 0.875rem 1.5rem;
             border-radius: var(--radius-lg);
-            font-size: 0.95rem;
+            font-size: var(--font-base);
             width: 100%;
             transition: all 0.2s ease;
             position: relative;
             overflow: hidden;
-            font-family: inherit;
+            font-family: var(--primary-font);
             letter-spacing: 0.025em;
             cursor: pointer;
         }
@@ -334,7 +352,7 @@
             padding: 1.5rem 2rem;
             text-align: center;
             color: var(--text-secondary);
-            font-size: 0.85rem;
+            font-size: var(--font-sm);
             border-top: 1px solid var(--border-color);
         }
 
@@ -370,6 +388,7 @@
             gap: 0.75rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             animation: slideIn 0.3s ease-out;
+            font-size: var(--font-base);
         }
 
         @keyframes slideIn {
@@ -409,9 +428,16 @@
         }
 
         .alert-icon {
-            font-size: 1.125rem;
+            font-size: var(--font-lg);
             flex-shrink: 0;
             margin-top: 0.125rem;
+        }
+
+        /* Field errors */
+        .field-error {
+            color: var(--danger-color);
+            font-size: var(--font-xs);
+            margin-top: 0.25rem;
         }
 
         @media (max-width: 480px) {
@@ -424,7 +450,7 @@
             }
             
             .login-title {
-                font-size: 1.25rem;
+                font-size: var(--font-2xl);
             }
         }
     </style>
@@ -438,20 +464,12 @@
                     {% load static %}
                     <img src="{% static 'images/logo.webp' %}" alt="CHRP India Logo" class="company-logo">
                 </div>
-                <h1 class="login-title">Administrator Portal</h1>
-                <p class="login-subtitle">Secure Access for Demo Portal Administration</p>
+                <h1 class="login-title">Administrator Portal Login</h1>
+                <p class="login-subtitle">Manage. Monitor. Empower.</p>
             </div>
 
             <!-- Body -->
             <div class="login-body">
-                <!-- Security Notice -->
-                {% comment %} <div class="security-badge">
-                    <i class="fas fa-shield-halved security-badge-icon"></i>
-                    <div class="security-badge-content">
-                        <strong>Secure Login:</strong> This area is restricted to authorized administrators and staff members only. All access attempts are monitored and logged.
-                    </div>
-                </div> {% endcomment %}
-
                 <!-- Alert Messages -->
                 {% if messages %}
                     {% for message in messages %}
@@ -502,7 +520,7 @@
                                    required 
                                    autocomplete="current-password"
                                    placeholder="Enter your password">
-                            <!-- ✅ NEW: Eye Icon for Password Toggle -->
+                            <!-- Eye Icon for Password Toggle -->
                             <i class="fas fa-eye password-toggle-icon" id="togglePassword"></i>
                         </div>
                     </div>
@@ -541,7 +559,7 @@
             const passwordInput = document.getElementById('password');
             const togglePassword = document.getElementById('togglePassword');
             
-            // ✅ NEW: Password Toggle Functionality
+            // Password Toggle Functionality
             if (togglePassword && passwordInput) {
                 togglePassword.addEventListener('click', function() {
                     // Toggle password visibility
@@ -579,9 +597,6 @@
                 
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'field-error';
-                errorDiv.style.color = 'var(--danger-color)';
-                errorDiv.style.fontSize = '0.8rem';
-                errorDiv.style.marginTop = '0.25rem';
                 errorDiv.textContent = message;
                 
                 field.parentNode.appendChild(errorDiv);

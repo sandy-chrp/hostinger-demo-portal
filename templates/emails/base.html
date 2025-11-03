@@ -10,64 +10,83 @@
         body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
     </style>
     <![endif]-->
+    <style type="text/css">
+        /* Reset styles for better email client compatibility */
+        body { margin: 0 !important; padding: 0 !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table { border-collapse: collapse !important; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+        
+        /* Responsive styles */
+        @media only screen and (max-width: 600px) {
+            .email-container { width: 100% !important; max-width: 100% !important; }
+            .mobile-padding { padding: 20px !important; }
+            .mobile-font { font-size: 14px !important; }
+        }
+    </style>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
     
     <!-- Email Wrapper -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f7fa; padding: 40px 20px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f4f7fa" style="background-color: #f4f7fa; padding: 40px 20px;">
         <tr>
             <td align="center">
                 
                 <!-- Main Container -->
-                <table class="email-container" width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; max-width: 600px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <table class="email-container" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color: #ffffff; max-width: 600px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                     
                     <!-- Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%); padding: 40px 30px; text-align: center;">
+                        <td bgcolor="#087fc2" style="background-color: #087fc2; background-image: linear-gradient(135deg, #087fc2 0%, #0669a0 100%); padding: 40px 30px; text-align: center;">
                             {% load static %}
                             <!-- Logo - Replace with actual logo URL -->
-                            <img src="{% static 'https://chrp-india.com/static/images/logo.webp' %}" alt="CHRP India Logo" style="max-width: 180px; height: auto; margin-bottom: 10px;">
-                            <h2 style="color: #ffffff; margin: 10px 0 0 0; font-size: 20px; font-weight: 600; letter-spacing: 0.5px;">
+                            <img src="{% static 'https://demo.chrp-india.com/static/images/logo.webp' %}" alt="CHRP India Logo" style="max-width: 180px; height: auto; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;">
+                            <h2 style="color: #ffffff !important; margin: 10px 0 0 0; font-size: 20px; font-weight: 600; letter-spacing: 0.5px; mso-line-height-rule: exactly; line-height: 28px;">
                                 Demo Portal
                             </h2>
                         </td>
                     </tr>
                     
                     <!-- Content -->
-                    {% block content %}
-                    <!-- Child templates will override this -->
-                    {% endblock %}
+                    <tr>
+                        <td bgcolor="#ffffff" style="background-color: #ffffff; padding: 30px; color: #333333;">
+                            {% block content %}
+                            <!-- Child templates will override this -->
+                            {% endblock %}
+                        </td>
+                    </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-                            <p style="color: #4b5563; font-size: 13px; line-height: 20px; margin: 0 0 15px 0;">
+                        <td bgcolor="#f8f9fa" style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                            <p style="color: #4b5563 !important; font-size: 13px; line-height: 20px; margin: 0 0 15px 0; mso-line-height-rule: exactly;">
                                 {% block footer_text %}
-                                This email was sent from <strong style="color: #374151;">Demo Portal</strong> by <strong style="color: #374151;">CHRP India</strong>.
+                                This email was sent from <strong style="color: #374151 !important;">Demo Portal</strong> by <strong style="color: #374151 !important;">CHRP India</strong>.
                                 {% endblock %}
                             </p>
                             
-                            <!-- Social Links (Optional) -->
+                            <!-- Social Links -->
                             <div style="margin: 20px 0 15px 0;">
-                                <a href="#" style="display: inline-block; margin: 0 8px; text-decoration: none;">
-                                    <img src="https://img.icons8.com/color/48/000000/facebook-new.png" alt="Facebook" style="width: 28px; height: 28px;">
+                                <a href="https://www.youtube.com/@CHRPINDIA-XR-SOLUTIONS" target="_blank" style="display: inline-block; margin: 0 8px; text-decoration: none;">
+                                    <img src="https://img.icons8.com/color/48/000000/youtube-play.png" alt="YouTube" style="width: 28px; height: 28px; border: 0; display: inline-block;">
                                 </a>
-                                <a href="#" style="display: inline-block; margin: 0 8px; text-decoration: none;">
-                                    <img src="https://img.icons8.com/color/48/000000/linkedin.png" alt="LinkedIn" style="width: 28px; height: 28px;">
+                                <a href="https://in.linkedin.com/company/chrp-india-pvt-ltd-" target="_blank" style="display: inline-block; margin: 0 8px; text-decoration: none;">
+                                    <img src="https://img.icons8.com/color/48/000000/linkedin.png" alt="LinkedIn" style="width: 28px; height: 28px; border: 0; display: inline-block;">
                                 </a>
-                                <a href="#" style="display: inline-block; margin: 0 8px; text-decoration: none;">
-                                    <img src="https://img.icons8.com/color/48/000000/twitter--v1.png" alt="Twitter" style="width: 28px; height: 28px;">
+                                <a href="https://x.com/chrp_india" target="_blank" style="display: inline-block; margin: 0 8px; text-decoration: none;">
+                                    <img src="https://img.icons8.com/color/48/000000/twitter--v1.png" alt="X (Twitter)" style="width: 28px; height: 28px; border: 0; display: inline-block;">
+                                </a>
+                                <a href="https://www.instagram.com/chrp_india/" target="_blank" style="display: inline-block; margin: 0 8px; text-decoration: none;">
+                                    <img src="https://img.icons8.com/color/48/000000/instagram-new.png" alt="Instagram" style="width: 28px; height: 28px; border: 0; display: inline-block;">
                                 </a>
                             </div>
                             
-                            <p style="color: #6b7280; font-size: 12px; line-height: 18px; margin: 10px 0 5px 0;">
+                            <p style="color: #6b7280 !important; font-size: 12px; line-height: 18px; margin: 10px 0 5px 0; mso-line-height-rule: exactly;">
                                 &copy; {{ year|default:"2025" }} CHRP India. All rights reserved.
                             </p>
                             
-                            <p style="color: #6b7280; font-size: 11px; line-height: 16px; margin: 10px 0 0 0;">
-                                <a href="#" style="color: #087fc2; text-decoration: none; margin: 0 8px;">Privacy Policy</a> | 
-                                <a href="#" style="color: #087fc2; text-decoration: none; margin: 0 8px;">Terms of Service</a> | 
-                                <a href="#" style="color: #087fc2; text-decoration: none; margin: 0 8px;">Contact Support</a>
+                            <p style="color: #6b7280 !important; font-size: 11px; line-height: 16px; margin: 10px 0 0 0; mso-line-height-rule: exactly;">
+                                <a href="https://chrp-india.com/privacy-policy/" target="_blank" style="color: #087fc2 !important; text-decoration: none; margin: 0 8px;">Privacy Policy</a> | 
+                                <a href="mailto:reach@chrp-india.com" style="color: #087fc2 !important; text-decoration: none; margin: 0 8px;">Contact Support</a>
                             </p>
                         </td>
                     </tr>
@@ -75,7 +94,7 @@
                 </table>
                 
                 <!-- Preheader Text (Hidden) -->
-                <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">
+                <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; max-width: 0; opacity: 0;">
                     {% block preheader %}{% endblock %}
                 </div>
                 

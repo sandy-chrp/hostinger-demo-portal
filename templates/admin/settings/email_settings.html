@@ -4,118 +4,197 @@
 {% block page_title %}Email Configuration{% endblock %}
 
 {% block admin_content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-lg-8 mx-auto">
-            <!-- Email Configuration Display -->
-            <div class="card mb-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-server me-2"></i>Current Email Configuration
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="mb-1" style="font-weight: 500; color: #2c3e50;">Email Configuration</h4>
+        <p class="text-muted mb-0" style="font-size: 0.875rem;">Manage email server settings and options</p>
+    </div>
+    <a href="{% url 'core:admin_settings' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Current Email Configuration -->
+        <div class="admin-card mb-4">
+            <div class="admin-card-header">
+                <h5 class="mb-0" style="font-weight: 500; font-size: 1rem;">
+                    <i class="fas fa-server me-2"></i>Current Email Configuration
+                </h5>
+            </div>
+            <div class="admin-card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
                             <tr>
-                                <th width="30%">Backend</th>
-                                <td>{{ email_config.backend|default:"Not configured" }}</td>
+                                <th width="30%" style="padding: 0.75rem 0; font-size: 0.875rem; font-weight: 500; color: #6c757d;">
+                                    Backend
+                                </th>
+                                <td style="padding: 0.75rem 0; font-size: 0.875rem; color: #2c3e50;">
+                                    <code style="background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.813rem;">
+                                        {{ email_config.backend|default:"Not configured" }}
+                                    </code>
+                                </td>
                             </tr>
                             <tr>
-                                <th>SMTP Host</th>
-                                <td>{{ email_config.host|default:"Not configured" }}</td>
+                                <th style="padding: 0.75rem 0; font-size: 0.875rem; font-weight: 500; color: #6c757d;">
+                                    SMTP Host
+                                </th>
+                                <td style="padding: 0.75rem 0; font-size: 0.875rem; color: #2c3e50;">
+                                    {{ email_config.host|default:"Not configured" }}
+                                </td>
                             </tr>
                             <tr>
-                                <th>SMTP Port</th>
-                                <td>{{ email_config.port|default:"Not configured" }}</td>
+                                <th style="padding: 0.75rem 0; font-size: 0.875rem; font-weight: 500; color: #6c757d;">
+                                    SMTP Port
+                                </th>
+                                <td style="padding: 0.75rem 0; font-size: 0.875rem; color: #2c3e50;">
+                                    {{ email_config.port|default:"Not configured" }}
+                                </td>
                             </tr>
                             <tr>
-                                <th>Username</th>
-                                <td>{{ email_config.username|default:"Not configured" }}</td>
+                                <th style="padding: 0.75rem 0; font-size: 0.875rem; font-weight: 500; color: #6c757d;">
+                                    Username
+                                </th>
+                                <td style="padding: 0.75rem 0; font-size: 0.875rem; color: #2c3e50;">
+                                    {{ email_config.username|default:"Not configured" }}
+                                </td>
                             </tr>
                             <tr>
-                                <th>Use TLS</th>
-                                <td>
+                                <th style="padding: 0.75rem 0; font-size: 0.875rem; font-weight: 500; color: #6c757d;">
+                                    Use TLS
+                                </th>
+                                <td style="padding: 0.75rem 0; font-size: 0.875rem;">
                                     {% if email_config.use_tls %}
-                                        <span class="badge bg-success">Enabled</span>
+                                        <span class="badge bg-success" style="font-size: 0.813rem;">
+                                            <i class="fas fa-lock me-1"></i>Enabled
+                                        </span>
                                     {% else %}
-                                        <span class="badge bg-secondary">Disabled</span>
+                                        <span class="badge bg-secondary" style="font-size: 0.813rem;">
+                                            <i class="fas fa-lock-open me-1"></i>Disabled
+                                        </span>
                                     {% endif %}
                                 </td>
                             </tr>
                             <tr>
-                                <th>From Email</th>
-                                <td>{{ email_config.from_email|default:"Not configured" }}</td>
+                                <th style="padding: 0.75rem 0; font-size: 0.875rem; font-weight: 500; color: #6c757d; border-bottom: none;">
+                                    From Email
+                                </th>
+                                <td style="padding: 0.75rem 0; font-size: 0.875rem; color: #2c3e50; border-bottom: none;">
+                                    {{ email_config.from_email|default:"Not configured" }}
+                                </td>
                             </tr>
-                        </table>
-                    </div>
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Email server configuration must be set in Django settings.py file
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert alert-info mt-3" style="border-left: 4px solid #17a2b8; background: #e7f7fb; border-radius: 8px; margin-bottom: 0;">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="fas fa-info-circle" style="font-size: 1.125rem; color: #17a2b8; margin-top: 0.125rem;"></i>
+                        <div style="font-size: 0.875rem; color: #0c5460;">
+                            Email server configuration must be set in Django <code>settings.py</code> file
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Email Options -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-cog me-2"></i>Email Options
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="update">
-                        
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" name="welcome_email_enabled" 
-                                   id="welcomeEmail" {% if site_settings.welcome_email_enabled %}checked{% endif %}>
-                            <label class="form-check-label" for="welcomeEmail">
-                                <strong>Send Welcome Email</strong>
-                                <small class="text-muted d-block">Send welcome email when user account is approved</small>
+        </div>
+        
+        <!-- Email Options -->
+        <div class="admin-card mb-4">
+            <div class="admin-card-header">
+                <h5 class="mb-0" style="font-weight: 500; font-size: 1rem;">
+                    <i class="fas fa-cog me-2"></i>Email Options
+                </h5>
+            </div>
+            <div class="admin-card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update">
+                    
+                    <!-- Welcome Email -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   name="welcome_email_enabled" 
+                                   id="welcomeEmail"
+                                   style="width: 3rem; height: 1.5rem; cursor: pointer;"
+                                   {% if site_settings.welcome_email_enabled %}checked{% endif %}>
+                            <label class="form-check-label ms-2" 
+                                   for="welcomeEmail"
+                                   style="font-size: 0.875rem; font-weight: 500; cursor: pointer;">
+                                Send Welcome Email
                             </label>
                         </div>
-                        
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" name="notification_emails_enabled" 
-                                   id="notificationEmails" {% if site_settings.notification_emails_enabled %}checked{% endif %}>
-                            <label class="form-check-label" for="notificationEmails">
-                                <strong>Send Notification Emails</strong>
-                                <small class="text-muted d-block">Send email notifications for important events</small>
+                        <small class="text-muted d-block ms-5" style="font-size: 0.813rem;">
+                            <i class="fas fa-envelope me-1"></i>Send welcome email when user account is approved
+                        </small>
+                    </div>
+                    
+                    <!-- Notification Emails -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   name="notification_emails_enabled" 
+                                   id="notificationEmails"
+                                   style="width: 3rem; height: 1.5rem; cursor: pointer;"
+                                   {% if site_settings.notification_emails_enabled %}checked{% endif %}>
+                            <label class="form-check-label ms-2" 
+                                   for="notificationEmails"
+                                   style="font-size: 0.875rem; font-weight: 500; cursor: pointer;">
+                                Send Notification Emails
                             </label>
                         </div>
-                        
+                        <small class="text-muted d-block ms-5" style="font-size: 0.813rem;">
+                            <i class="fas fa-bell me-1"></i>Send email notifications for important events
+                        </small>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="d-flex gap-2 justify-content-end pt-3 border-top">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i>Save Email Settings
+                            <i class="fas fa-save me-1"></i>Save Email Settings
                         </button>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
-            
-            <!-- Test Email -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-paper-plane me-2"></i>Send Test Email
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="test">
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Test Email Address</label>
-                            <input type="email" name="test_email" class="form-control" 
-                                   placeholder="Enter email to send test" required>
-                        </div>
-                        
+        </div>
+        
+        <!-- Test Email -->
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5 class="mb-0" style="font-weight: 500; font-size: 1rem;">
+                    <i class="fas fa-paper-plane me-2"></i>Send Test Email
+                </h5>
+            </div>
+            <div class="admin-card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="test">
+                    
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">
+                            Test Email Address <span class="text-danger">*</span>
+                        </label>
+                        <input type="email" 
+                               name="test_email" 
+                               class="form-control" 
+                               style="font-size: 0.938rem; height: 38px;"
+                               placeholder="Enter email address to send test" 
+                               required>
+                        <small class="text-muted" style="font-size: 0.813rem;">
+                            <i class="fas fa-info-circle me-1"></i>A test email will be sent to verify your configuration
+                        </small>
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-end">
                         <button type="submit" class="btn btn-success">
-                            <i class="fas fa-paper-plane me-2"></i>Send Test Email
+                            <i class="fas fa-paper-plane me-1"></i>Send Test Email
                         </button>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

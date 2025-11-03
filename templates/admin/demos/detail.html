@@ -23,7 +23,252 @@
 
 {% block admin_extra_css %}
 <style>
-    /* Same styling as add page */
+    /* ============================================================================ */
+    /* UPLOAD PROGRESS MODAL */
+    /* ============================================================================ */
+    .upload-progress-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(10px);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .upload-progress-overlay.active {
+        display: flex;
+    }
+
+    .upload-modal-compact {
+        background: white;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 420px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        animation: slideUp 0.3s ease;
+        overflow: hidden;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-header-compact {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.25rem 1.5rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .upload-icon-small {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, var(--primary-color), #0669a0);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(8, 127, 194, 0.3);
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .upload-icon-small i {
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .modal-title-area {
+        flex: 1;
+    }
+
+    .modal-title-small {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0 0 0.25rem;
+    }
+
+    .modal-subtitle-small {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .modal-body-compact {
+        padding: 1.5rem;
+    }
+
+    .percentage-display-small {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .percentage-display-small span {
+        font-size: 2.75rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary-color), #0669a0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+    }
+
+    .progress-track-small {
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .progress-fill-small {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-color), #0669a0);
+        border-radius: 10px;
+        width: 0%;
+        transition: width 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .progress-fill-small::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .stats-row-small {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-item-small {
+        background: #f8fafc;
+        padding: 0.75rem 0.5rem;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+    }
+
+    .stat-item-small i {
+        display: block;
+        font-size: 1rem;
+        color: var(--primary-color);
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-item-small span {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #475569;
+    }
+
+    .modal-footer-compact {
+        padding: 0.75rem 1.5rem;
+        background: #fef3c7;
+        border-top: 1px solid #fde68a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+        color: #92400e;
+    }
+
+    .modal-footer-compact i {
+        color: #f59e0b;
+    }
+
+    /* SUCCESS STATE */
+    .success-message {
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+
+    .success-icon-wrapper {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: successPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes successPop {
+        0% { transform: scale(0); opacity: 0; }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .success-icon-wrapper i {
+        font-size: 2.5rem;
+        color: white;
+    }
+
+    .success-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #065f46;
+        margin: 0 0 0.5rem;
+    }
+
+    .success-text {
+        font-size: 0.95rem;
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .upload-modal-compact.success .progress-track-small,
+    .upload-modal-compact.success #uploadStats {
+        display: none !important;
+    }
+
+    .upload-modal-compact.success .percentage-display-small {
+        display: none !important;
+    }
+
+    .upload-icon-small.success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        animation: none !important;
+    }
+
+    .upload-icon-small.success i::before {
+        content: "\f00c" !important;
+    }
+
+    /* ============================================================================ */
+    /* MAIN LAYOUT */
+    /* ============================================================================ */
     .page-container {
         display: grid;
         grid-template-columns: 1fr;
@@ -58,6 +303,108 @@
 
     .form-grid .full-width {
         grid-column: 1 / -1;
+    }
+
+    /* FILE UPLOAD AREA */
+    .file-upload-area {
+        border: 2px dashed var(--gray-300);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        text-align: center;
+        background: var(--gray-50);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .file-upload-area:hover {
+        border-color: var(--primary-color);
+        background: rgba(8, 127, 194, 0.05);
+    }
+
+    .file-upload-area.has-file {
+        border-color: var(--success-color);
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .file-upload-icon {
+        font-size: 2rem;
+        color: var(--gray-400);
+        margin-bottom: 0.5rem;
+    }
+
+    .file-upload-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 0.25rem;
+    }
+
+    .file-upload-hint {
+        font-size: 0.8rem;
+        color: var(--gray-600);
+    }
+
+    .file-preview {
+        display: none;
+        margin-top: var(--spacing-sm);
+        padding: var(--spacing-sm);
+        background: white;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--gray-200);
+    }
+
+    .file-preview.active {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .file-preview-icon {
+        font-size: 1.25rem;
+        color: var(--success-color);
+    }
+
+    .file-preview-info {
+        flex: 1;
+        text-align: left;
+    }
+
+    .file-preview-name {
+        font-weight: 600;
+        color: var(--dark-color);
+        font-size: 0.85rem;
+        word-break: break-all;
+    }
+
+    .file-preview-size {
+        font-size: 0.75rem;
+        color: var(--gray-600);
+    }
+
+    .file-preview-remove {
+        color: var(--danger-color);
+        cursor: pointer;
+        padding: var(--spacing-xs);
+        font-size: 1.1rem;
+    }
+
+    .file-preview-remove:hover {
+        color: #c53030;
+    }
+
+    .current-file-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background: var(--gray-100);
+        border-radius: var(--radius-sm);
+        font-size: 0.8rem;
+        color: var(--gray-700);
+        margin-top: 0.5rem;
+    }
+
+    .current-file-badge i {
+        color: var(--success-color);
+        margin-right: 0.25rem;
     }
 
     .selection-box {
@@ -137,7 +484,7 @@
         border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     }
 
-    /* Tabs styling - Better design */
+    /* TABS */
     .nav-tabs {
         border-bottom: 2px solid var(--gray-200);
         margin-bottom: 0;
@@ -185,11 +532,7 @@
         font-size: 1rem;
     }
 
-    .nav-tabs .nav-link.active::after {
-        display: none;
-    }
-
-    /* Stats cards */
+    /* STAT CARDS */
     .stat-card {
         background: white;
         border-radius: var(--radius-lg);
@@ -245,17 +588,71 @@
 {% endblock %}
 
 {% block admin_content %}
+
+<!-- UPLOAD PROGRESS MODAL -->
+<div class="upload-progress-overlay" id="uploadProgressOverlay">
+    <div class="upload-modal-compact">
+        <div class="modal-header-compact">
+            <div class="upload-icon-small" id="uploadIcon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <div class="modal-title-area">
+                <h4 class="modal-title-small" id="uploadTitle">Updating Demo</h4>
+                <p class="modal-subtitle-small" id="uploadSubtitle">Please wait...</p>
+            </div>
+        </div>
+        
+        <div class="modal-body-compact">
+            <div class="percentage-display-small">
+                <span id="uploadPercent">0%</span>
+            </div>
+            
+            <div class="progress-track-small">
+                <div class="progress-fill-small" id="uploadProgressBar"></div>
+            </div>
+            
+            <div class="stats-row-small" id="uploadStats">
+                <div class="stat-item-small">
+                    <i class="fas fa-database"></i>
+                    <span><span id="uploadedSize">0 MB</span> / <span id="totalSize">0 MB</span></span>
+                </div>
+                <div class="stat-item-small">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span id="uploadSpeed">0 MB/s</span>
+                </div>
+                <div class="stat-item-small">
+                    <i class="fas fa-clock"></i>
+                    <span id="timeRemaining">--</span>
+                </div>
+            </div>
+
+            <div class="success-message" id="successMessage" style="display: none;">
+                <div class="success-icon-wrapper">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3 class="success-title">Update Successful!</h3>
+                <p class="success-text">Your demo has been updated successfully.</p>
+            </div>
+        </div>
+        
+        <div class="modal-footer-compact" id="uploadWarning">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Don't close or refresh this window</span>
+        </div>
+    </div>
+</div>
+
 <div class="page-container">
     <!-- Tabs -->
     <ul class="nav nav-tabs" id="demoTabs" role="tablist">
         <li class="nav-item">
             <button class="nav-link active" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit" type="button">
-                <i class="fas fa-edit me-2"></i>Edit
+                <i class="fas fa-edit"></i>Edit
             </button>
         </li>
         <li class="nav-item">
             <button class="nav-link" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button">
-                <i class="fas fa-chart-bar me-2"></i>Details & Stats
+                <i class="fas fa-chart-bar"></i>Details & Stats
             </button>
         </li>
     </ul>
@@ -286,31 +683,109 @@
 
                     <!-- File Upload -->
                     <div class="section-header">
-                        <i class="fas fa-file-upload"></i> File Upload (Optional - upload to update)
+                        <i class="fas fa-file-upload"></i> Update Files <small class="text-muted">(Optional - only upload to update)</small>
                     </div>
                     <div class="form-grid">
                         <div class="full-width">
                             <label for="id_thumbnail" class="form-label">Thumbnail</label>
-                            <input type="file" name="thumbnail" id="id_thumbnail" class="form-control" accept="image/*">
-                            <small class="text-muted">Current: {{ demo.thumbnail.name|default:"None" }}</small>
+                            <div class="file-upload-area" onclick="document.getElementById('id_thumbnail').click()">
+                                <i class="fas fa-image file-upload-icon"></i>
+                                <p class="file-upload-title">Click to update thumbnail</p>
+                                <small class="file-upload-hint">JPG, PNG (Max: 10 MB)</small>
+                            </div>
+                            {% if demo.thumbnail %}
+                            <div class="current-file-badge">
+                                <i class="fas fa-check-circle"></i>Current: {{ demo.thumbnail.name|truncatechars:40 }}
+                            </div>
+                            {% endif %}
+                            <input type="file" name="thumbnail" id="id_thumbnail" class="d-none" accept="image/*">
+                            <div class="file-preview" id="thumbnailPreview">
+                                <i class="fas fa-image file-preview-icon"></i>
+                                <div class="file-preview-info">
+                                    <div class="file-preview-name" id="thumbnailName"></div>
+                                    <div class="file-preview-size" id="thumbnailSize"></div>
+                                </div>
+                                <i class="fas fa-times file-preview-remove" onclick="removeThumbnail(event)"></i>
+                            </div>
                         </div>
+                        
                         {% if demo.file_type == 'video' %}
                         <div class="full-width">
                             <label for="id_video_file" class="form-label">Video File</label>
-                            <input type="file" name="video_file" id="id_video_file" class="form-control" accept="video/*">
-                            <small class="text-muted">Current: {{ demo.video_file.name|default:"None" }}</small>
+                            <div class="file-upload-area" onclick="document.getElementById('id_video_file').click()">
+                                <i class="fas fa-video file-upload-icon"></i>
+                                <p class="file-upload-title">Click to update video</p>
+                                <small class="file-upload-hint">MP4, AVI, MOV (Max: 200 MB)</small>
+                            </div>
+                            {% if demo.video_file %}
+                            <div class="current-file-badge">
+                                <i class="fas fa-check-circle"></i>Current: {{ demo.video_file.name|truncatechars:40 }}
+                            </div>
+                            {% endif %}
+                            <input type="file" name="video_file" id="id_video_file" class="d-none" accept="video/*">
+                            <div class="file-preview" id="videoFilePreview">
+                                <i class="fas fa-video file-preview-icon"></i>
+                                <div class="file-preview-info">
+                                    <div class="file-preview-name" id="videoFileName"></div>
+                                    <div class="file-preview-size" id="videoFileSize"></div>
+                                </div>
+                                <i class="fas fa-times file-preview-remove" onclick="removeVideoFile(event)"></i>
+                            </div>
                         </div>
                         {% endif %}
+                        
                         {% if demo.file_type == 'webgl' %}
                         <div class="full-width">
                             <label for="id_webgl_file" class="form-label">WebGL File</label>
-                            <input type="file" name="webgl_file" id="id_webgl_file" class="form-control">
-                            <small class="text-muted">Current: {{ demo.webgl_file.name|default:"None" }}</small>
+                            <div class="file-upload-area" onclick="document.getElementById('id_webgl_file').click()">
+                                <i class="fas fa-cube file-upload-icon"></i>
+                                <p class="file-upload-title">Click to update WebGL file</p>
+                                <small class="file-upload-hint">HTML, ZIP (Max: 3 GB)</small>
+                            </div>
+                            {% if demo.webgl_file %}
+                            <div class="current-file-badge">
+                                <i class="fas fa-check-circle"></i>Current: {{ demo.webgl_file.name|truncatechars:40 }}
+                            </div>
+                            {% endif %}
+                            <input type="file" name="webgl_file" id="id_webgl_file" class="d-none" accept=".html,.zip,.gltf,.glb">
+                            <div class="file-preview" id="webglFilePreview">
+                                <i class="fas fa-cube file-preview-icon"></i>
+                                <div class="file-preview-info">
+                                    <div class="file-preview-name" id="webglFileName"></div>
+                                    <div class="file-preview-size" id="webglFileSize"></div>
+                                </div>
+                                <i class="fas fa-times file-preview-remove" onclick="removeWebglFile(event)"></i>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if demo.file_type == 'lms' %}
+                        <div class="full-width">
+                            <label for="id_lms_file" class="form-label">LMS File</label>
+                            <div class="file-upload-area" onclick="document.getElementById('id_lms_file').click()">
+                                <i class="fas fa-graduation-cap file-upload-icon"></i>
+                                <p class="file-upload-title">Click to update LMS file</p>
+                                <small class="file-upload-hint">ZIP, SCORM (Max: 4 GB)</small>
+                            </div>
+                            {% if demo.lms_file %}
+                            <div class="current-file-badge">
+                                <i class="fas fa-check-circle"></i>Current: {{ demo.lms_file.name|truncatechars:40 }}
+                            </div>
+                            {% endif %}
+                            <input type="file" name="lms_file" id="id_lms_file" class="d-none" accept=".zip,.scorm">
+                            <div class="file-preview" id="lmsFilePreview">
+                                <i class="fas fa-graduation-cap file-preview-icon"></i>
+                                <div class="file-preview-info">
+                                    <div class="file-preview-name" id="lmsFileName"></div>
+                                    <div class="file-preview-size" id="lmsFileSize"></div>
+                                </div>
+                                <i class="fas fa-times file-preview-remove" onclick="removeLmsFile(event)"></i>
+                            </div>
                         </div>
                         {% endif %}
                     </div>
 
-                    <!-- Business Categories & Customers -->
+                    <!-- Target Audience -->
                     <div class="section-header mt-4">
                         <i class="fas fa-bullseye"></i> Target Audience
                     </div>
@@ -344,12 +819,12 @@
 
                         <div>
                             <div class="form-check form-switch mb-2">
-                                <input class="form-check-input" type="checkbox" id="allCustomersCheckbox" checked>
+                                <input class="form-check-input" type="checkbox" id="allCustomersCheckbox" {% if not form_data.selected_customers %}checked{% endif %}>
                                 <label class="form-check-label" for="allCustomersCheckbox">
                                     <strong>All Customers</strong>
                                 </label>
                             </div>
-                            <div id="customerSelectionArea" class="selection-box disabled">
+                            <div id="customerSelectionArea" class="selection-box {% if not form_data.selected_customers %}disabled{% endif %}">
                                 <div class="search-box">
                                     <i class="fas fa-search"></i>
                                     <input type="text" id="customerSearch" class="form-control form-control-sm" placeholder="Search customers...">
@@ -384,7 +859,7 @@
                     <!-- Form Actions -->
                     <div class="form-actions">
                         <button type="button" class="btn btn-outline-secondary btn-sm btn-back">
-                            <i class="fas fa-times me-1"></i>Cancel
+                            <i class="fas fa-arrow-left me-1"></i>Back to List
                         </button>
                         <button type="submit" class="btn btn-primary btn-sm" id="submitBtn">
                             <i class="fas fa-save me-1"></i>Update Demo
@@ -505,8 +980,101 @@
 </div>
 
 <script>
+const FILE_SIZE_LIMITS = {
+    video: 200 * 1024 * 1024,
+    webgl: 3 * 1024 * 1024 * 1024,
+    lms: 4 * 1024 * 1024 * 1024,
+    thumbnail: 10 * 1024 * 1024
+};
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 MB';
+    const k = 1024;
+    if (bytes >= k * k * k) return (bytes / (k * k * k)).toFixed(2) + ' GB';
+    if (bytes >= k * k) return (bytes / (k * k)).toFixed(2) + ' MB';
+    if (bytes >= k) return (bytes / k).toFixed(2) + ' KB';
+    return bytes + ' Bytes';
+}
+
+function formatTime(seconds) {
+    if (!seconds || seconds < 0) return 'Calculating...';
+    if (seconds < 60) return `${Math.round(seconds)}s`;
+    const minutes = Math.floor(seconds / 60);
+    const secs = Math.round(seconds % 60);
+    return `${minutes}m ${secs}s`;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Category selection
+    setupFileUpload();
+    setupCategorySelection();
+    setupCustomerSelection();
+    setupFormSubmission();
+    setupBackButton();
+});
+
+function setupFileUpload() {
+    // Thumbnail
+    document.getElementById('id_thumbnail')?.addEventListener('change', function() {
+        handleFileSelection(this, 'thumbnail', 'thumbnailPreview', 'thumbnailName', 'thumbnailSize');
+    });
+    
+    // Video
+    document.getElementById('id_video_file')?.addEventListener('change', function() {
+        handleFileSelection(this, 'video', 'videoFilePreview', 'videoFileName', 'videoFileSize');
+    });
+    
+    // WebGL
+    document.getElementById('id_webgl_file')?.addEventListener('change', function() {
+        handleFileSelection(this, 'webgl', 'webglFilePreview', 'webglFileName', 'webglFileSize');
+    });
+    
+    // LMS
+    document.getElementById('id_lms_file')?.addEventListener('change', function() {
+        handleFileSelection(this, 'lms', 'lmsFilePreview', 'lmsFileName', 'lmsFileSize');
+    });
+}
+
+function handleFileSelection(input, fileType, previewId, nameId, sizeId) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const maxSize = FILE_SIZE_LIMITS[fileType];
+    if (file.size > maxSize) {
+        alert(`File size exceeds limit (${formatFileSize(maxSize)})`);
+        input.value = '';
+        return;
+    }
+    
+    document.getElementById(nameId).textContent = file.name;
+    document.getElementById(sizeId).textContent = formatFileSize(file.size);
+    document.getElementById(previewId).classList.add('active');
+}
+
+function removeThumbnail(event) {
+    event.stopPropagation();
+    document.getElementById('id_thumbnail').value = '';
+    document.getElementById('thumbnailPreview').classList.remove('active');
+}
+
+function removeVideoFile(event) {
+    event.stopPropagation();
+    document.getElementById('id_video_file').value = '';
+    document.getElementById('videoFilePreview').classList.remove('active');
+}
+
+function removeWebglFile(event) {
+    event.stopPropagation();
+    document.getElementById('id_webgl_file').value = '';
+    document.getElementById('webglFilePreview').classList.remove('active');
+}
+
+function removeLmsFile(event) {
+    event.stopPropagation();
+    document.getElementById('id_lms_file').value = '';
+    document.getElementById('lmsFilePreview').classList.remove('active');
+}
+
+function setupCategorySelection() {
     const allCategoriesCheckbox = document.getElementById('allBusinessCategoriesCheckbox');
     const categorySelectionArea = document.getElementById('categorySelectionArea');
     const categoryCheckboxes = document.querySelectorAll('.category-checkbox');
@@ -545,7 +1113,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Show subcategories if parent is checked on load
         if (checkbox.checked) {
             const subcategoryList = document.getElementById('subcat_list_' + checkbox.value);
             if (subcategoryList) {
@@ -553,8 +1120,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-    
-    // Customer selection
+}
+
+function setupCustomerSelection() {
     const allCustomersCheckbox = document.getElementById('allCustomersCheckbox');
     const customerSelectionArea = document.getElementById('customerSelectionArea');
     const customerSearch = document.getElementById('customerSearch');
@@ -577,8 +1145,129 @@ document.addEventListener('DOMContentLoaded', function() {
             item.style.display = searchData.includes(searchTerm) ? 'flex' : 'none';
         });
     });
+}
+
+function setupFormSubmission() {
+    const form = document.getElementById('demoForm');
+    const submitBtn = document.getElementById('submitBtn');
     
-    // Cancel button confirmation - ALWAYS confirm
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Preparing...';
+        
+        // Check if any files are being uploaded
+        const hasFiles = document.getElementById('id_thumbnail')?.files.length > 0 ||
+                        document.getElementById('id_video_file')?.files.length > 0 ||
+                        document.getElementById('id_webgl_file')?.files.length > 0 ||
+                        document.getElementById('id_lms_file')?.files.length > 0;
+        
+        if (hasFiles) {
+            uploadFormWithProgress(form);
+        } else {
+            // No files - simple submit
+            form.submit();
+        }
+    });
+}
+
+function uploadFormWithProgress(form) {
+    const formData = new FormData(form);
+    const xhr = new XMLHttpRequest();
+    
+    document.getElementById('uploadProgressOverlay').classList.add('active');
+    
+    // Reset modal
+    document.getElementById('uploadPercent').textContent = '0%';
+    document.getElementById('uploadProgressBar').style.width = '0%';
+    document.getElementById('uploadStats').style.display = 'grid';
+    document.getElementById('uploadWarning').style.display = 'flex';
+    document.getElementById('successMessage').style.display = 'none';
+    document.querySelector('.upload-modal-compact').classList.remove('success');
+    document.getElementById('uploadIcon').classList.remove('success');
+    
+    let lastLoaded = 0;
+    let lastTime = Date.now();
+    
+    xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+            const currentTime = Date.now();
+            const timeDiff = (currentTime - lastTime) / 1000;
+            
+            const percent = Math.round((e.loaded / e.total) * 100);
+            document.getElementById('uploadPercent').textContent = percent + '%';
+            document.getElementById('uploadProgressBar').style.width = percent + '%';
+            
+            document.getElementById('uploadedSize').textContent = formatFileSize(e.loaded);
+            document.getElementById('totalSize').textContent = formatFileSize(e.total);
+            
+            if (timeDiff > 0.5) {
+                const bytesUploaded = e.loaded - lastLoaded;
+                const speed = bytesUploaded / timeDiff;
+                document.getElementById('uploadSpeed').textContent = formatFileSize(speed) + '/s';
+                
+                const remaining = e.total - e.loaded;
+                if (speed > 0) {
+                    const secondsRemaining = remaining / speed;
+                    document.getElementById('timeRemaining').textContent = formatTime(secondsRemaining);
+                }
+                
+                lastLoaded = e.loaded;
+                lastTime = currentTime;
+            }
+        }
+    });
+    
+    xhr.addEventListener('load', function() {
+        if (xhr.status === 200 || xhr.status === 302) {
+            document.getElementById('uploadPercent').textContent = '100%';
+            document.getElementById('uploadProgressBar').style.width = '100%';
+            document.getElementById('timeRemaining').textContent = '0s';
+            
+            setTimeout(() => {
+                document.getElementById('uploadStats').style.display = 'none';
+                document.getElementById('uploadWarning').style.display = 'none';
+                
+                document.getElementById('uploadIcon').classList.add('success');
+                document.getElementById('uploadTitle').textContent = 'Success!';
+                document.getElementById('uploadSubtitle').textContent = 'Demo updated successfully';
+                
+                document.getElementById('successMessage').style.display = 'block';
+                document.querySelector('.upload-modal-compact').classList.add('success');
+                
+                setTimeout(() => {
+                    window.location.href = '{% url "core:admin_demos" %}';
+                }, 2000);
+            }, 500);
+        } else {
+            showUploadError('Update failed. Please try again.');
+        }
+    });
+    
+    xhr.addEventListener('error', function() {
+        showUploadError('Network error. Please check your connection.');
+    });
+    
+    xhr.addEventListener('timeout', function() {
+        showUploadError('Upload timeout. File may be too large.');
+    });
+    
+    xhr.open('POST', form.action, true);
+    xhr.timeout = 600000;
+    xhr.setRequestHeader('X-CSRFToken', formData.get('csrfmiddlewaretoken'));
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.send(formData);
+}
+
+function showUploadError(message) {
+    document.getElementById('uploadProgressOverlay').classList.remove('active');
+    alert(message);
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save me-1"></i>Update Demo';
+}
+
+function setupBackButton() {
     let formChanged = false;
     const demoForm = document.getElementById('demoForm');
     const backButtons = document.querySelectorAll('.btn-back');
@@ -595,22 +1284,16 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             
-            // ALWAYS ask for confirmation
             if (formChanged) {
-                // Has changes - ask to save
                 if (confirm('You have unsaved changes!\n\nClick OK to SAVE changes\nClick Cancel to DISCARD changes')) {
-                    // User wants to save
                     demoForm.submit();
                 } else {
-                    // User wants to discard - confirm again
                     if (confirm('Are you sure you want to DISCARD all changes?\n\nClick OK to leave without saving\nClick Cancel to stay')) {
-                        // Confirmed discard
                         formChanged = false;
                         window.location.href = "{% url 'core:admin_demos' %}";
                     }
                 }
             } else {
-                // No changes - still confirm before leaving
                 if (confirm('Are you sure you want to go back?')) {
                     window.location.href = "{% url 'core:admin_demos' %}";
                 }
@@ -618,10 +1301,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Disable warning on form submit
     demoForm.addEventListener('submit', function() {
         formChanged = false;
     });
-});
+}
+
+console.log('✅ Demo Edit with Upload Progress - Ready');
 </script>
 {% endblock %}

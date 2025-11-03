@@ -5,84 +5,89 @@
 {% block preheader %}Your verification code is {{ otp }}. Valid for 10 minutes.{% endblock %}
 
 {% block content %}
-<tr>
-    <td style="padding: 40px 30px;">
-        
-        <!-- Main Heading -->
-        <table width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr>
-                <td align="center">
-                    <h1 style="color: #1a1a1a; font-size: 26px; font-weight: 600; margin: 0 0 25px 0;">
-                        ✉️ Email Verification
-                    </h1>
-                </td>
-            </tr>
-        </table>
-        
-        <!-- Greeting -->
-        <p style="color: #000000; font-size: 16px; line-height: 24px; margin: 0 0 10px 0;">
-            Dear <strong style="color: #000000;">{{ name }}</strong>,
-        </p>
-        
-        <p style="color: #000000; font-size: 16px; line-height: 24px; margin: 0 0 30px 0;">
-            Thank you for signing up with <strong style="color: #087fc2;">Demo Portal</strong>. To complete your registration, please use the verification code below:
-        </p>
-        
-        <!-- OTP Box -->
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 30px 0;">
-            <tr>
-                <td align="center">
-                    <table cellpadding="0" cellspacing="0" border="0" style="background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%); border-radius: 12px; padding: 35px 20px; max-width: 450px; width: 100%;">
-                        <tr>
-                            <td align="center">
-                                <p style="color: #ffffff; font-size: 13px; margin: 0 0 18px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
-                                    YOUR VERIFICATION CODE
-                                </p>
-                                <table cellpadding="0" cellspacing="0" border="0" style="background-color: rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 25px 50px; border: 2px solid rgba(255,255,255,0.3);">
-                                    <tr>
-                                        <td align="center">
-                                            <span style="color: #ffffff; font-size: 48px; font-weight: bold; letter-spacing: 14px; font-family: 'Courier New', Courier, monospace; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                                                {{ otp }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-        
-        <!-- Important Notice - Warning Box -->
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fff3cd; border-left: 5px solid #ffc107; border-radius: 6px; margin: 0 0 25px 0;">
-            <tr>
-                <td style="padding: 18px 20px;">
-                    <p style="color: #624a00; font-size: 14px; margin: 0; line-height: 22px; font-weight: 500;">
-                        <strong style="color: #624a00;">⏱️ Important:</strong> This verification code will expire in <strong style="color: #624a00;">10 minutes</strong>. Please enter it soon to verify your email address.
-                    </p>
-                </td>
-            </tr>
-        </table>
-        
-        <!-- Additional Info -->
-        <p style="color: #2d3748; font-size: 14px; line-height: 22px; margin: 0 0 20px 0;">
-            If you didn't request this verification code, please ignore this email. Your account will not be created without verification.
-        </p>
-        
-        <!-- Security Tip -->
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 25px 0 0 0; padding-top: 20px; border-top: 2px solid #e5e7eb;">
-            <tr>
-                <td>
-                    <p style="color: #4b5563; font-size: 13px; line-height: 20px; margin: 0;">
-                        <strong style="color: #374151;">🔒 Security Tip:</strong> Never share your verification code with anyone. Demo Portal will never ask for your code via phone or email.
-                    </p>
-                </td>
-            </tr>
-        </table>
-        
-    </td>
-</tr>
+<!-- Email Icon -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 25px 0;">
+    <tr>
+        <td align="center">
+            <div style="width: 80px; height: 80px; background-color: #3b82f6; background-image: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 50%; display: inline-block; text-align: center; line-height: 80px; margin-bottom: 20px;">
+                <span style="font-size: 40px; line-height: 80px; vertical-align: middle;">✉️</span>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<!-- Main Heading -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+        <td align="center">
+            <h1 style="color: #1f2937 !important; font-size: 28px; font-weight: 700; margin: 0 0 30px 0; mso-line-height-rule: exactly; line-height: 36px;">
+                Email Verification
+            </h1>
+        </td>
+    </tr>
+</table>
+
+<!-- Greeting -->
+<p style="color: #374151 !important; font-size: 16px; line-height: 24px; margin: 0 0 10px 0; mso-line-height-rule: exactly;">
+    Dear <strong style="color: #1f2937 !important;">{{ name }}</strong>,
+</p>
+
+<p style="color: #374151 !important; font-size: 16px; line-height: 24px; margin: 0 0 30px 0; mso-line-height-rule: exactly;">
+    Thank you for signing up with <strong style="color: #087fc2 !important;">Demo Portal</strong>. To complete your registration, please use the verification code below:
+</p>
+
+<!-- OTP Box -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 30px 0;">
+    <tr>
+        <td align="center">
+            <table cellpadding="0" cellspacing="0" border="0" bgcolor="#087fc2" style="background-color: #087fc2; background-image: linear-gradient(135deg, #087fc2 0%, #0669a0 100%); border-radius: 12px; max-width: 450px; width: 100%;">
+                <tr>
+                    <td style="padding: 35px 20px;" align="center">
+                        <p style="color: #ffffff !important; font-size: 13px; margin: 0 0 18px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; mso-line-height-rule: exactly; line-height: 18px;">
+                            YOUR VERIFICATION CODE
+                        </p>
+                        <table cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color: rgba(255, 255, 255, 0.25); border-radius: 10px; border: 2px solid rgba(255,255,255,0.4);">
+                            <tr>
+                                <td style="padding: 25px 50px;" align="center">
+                                    <span style="color: #ffffff !important; font-size: 48px; font-weight: 700; letter-spacing: 14px; font-family: 'Courier New', Courier, monospace; mso-line-height-rule: exactly; line-height: 58px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                                        {{ otp }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- Important Notice - Warning Box -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#fff3cd" style="background-color: #fff3cd; border-left: 5px solid #ffc107; border-radius: 6px; margin: 0 0 25px 0;">
+    <tr>
+        <td style="padding: 18px 20px;">
+            <p style="color: #624a00 !important; font-size: 14px; margin: 0; line-height: 22px; font-weight: 600; mso-line-height-rule: exactly;">
+                <strong style="color: #624a00 !important;">⏱️ Important:</strong> This verification code will expire in <strong style="color: #624a00 !important;">10 minutes</strong>. Please enter it soon to verify your email address.
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- Additional Info -->
+<p style="color: #374151 !important; font-size: 14px; line-height: 22px; margin: 0 0 20px 0; mso-line-height-rule: exactly;">
+    If you didn't request this verification code, please ignore this email. Your account will not be created without verification.
+</p>
+
+<!-- Security Tip -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 25px 0 0 0; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+    <tr>
+        <td>
+            <p style="color: #4b5563 !important; font-size: 13px; line-height: 20px; margin: 0; mso-line-height-rule: exactly;">
+                <strong style="color: #374151 !important;">🔒 Security Tip:</strong> Never share your verification code with anyone. Demo Portal will never ask for your code via phone or email.
+            </p>
+        </td>
+    </tr>
+</table>
 {% endblock %}
 
 {% block footer_text %}If you have any questions or need assistance, please contact our support team.{% endblock %}

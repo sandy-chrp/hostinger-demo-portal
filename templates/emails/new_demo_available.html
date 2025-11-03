@@ -1,0 +1,144 @@
+{% extends "emails/base.html" %}
+
+{% block title %}New Demo Available - CHRP India{% endblock %}
+
+{% block preheader %}A new demo "{{ demo.title }}" is now available for you!{% endblock %}
+
+{% block content %}
+<!-- Celebration Icon -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 25px 0;">
+    <tr>
+        <td align="center">
+            <div style="width: 80px; height: 80px; background-color: #087fc2; background-image: linear-gradient(135deg, #087fc2 0%, #0669a0 100%); border-radius: 50%; display: inline-block; text-align: center; line-height: 80px; margin-bottom: 20px;">
+                <span style="font-size: 40px; line-height: 80px; vertical-align: middle;">🎉</span>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<!-- Main Heading -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+        <td align="center">
+            <h1 style="color: #087fc2 !important; font-size: 28px; font-weight: 700; margin: 0 0 30px 0; mso-line-height-rule: exactly; line-height: 36px;">
+                🎉 New Demo Available!
+            </h1>
+        </td>
+    </tr>
+</table>
+
+<!-- Greeting -->
+<p style="color: #374151 !important; font-size: 16px; line-height: 24px; margin: 0 0 10px 0; mso-line-height-rule: exactly;">
+    Hello <strong style="color: #1f2937 !important;">{{ customer.get_full_name }}</strong>,
+</p>
+
+<p style="color: #374151 !important; font-size: 16px; line-height: 24px; margin: 0 0 25px 0; mso-line-height-rule: exactly;">
+    We're excited to inform you that a new demo is now available in your Demo Portal:
+</p>
+
+<!-- Demo Card -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f8f9fa" style="background-color: #f8f9fa; border-radius: 8px; margin: 0 0 25px 0; border: 1px solid #e5e7eb;">
+    <tr>
+        <td style="padding: 25px;">
+            <h2 style="color: #1f2937 !important; font-size: 20px; font-weight: 600; margin: 0 0 12px 0; mso-line-height-rule: exactly; line-height: 28px;">
+                {{ demo.title }}
+            </h2>
+            <p style="color: #6b7280 !important; font-size: 14px; line-height: 22px; margin: 0 0 15px 0; mso-line-height-rule: exactly;">
+                {{ demo.description|truncatewords:30 }}
+            </p>
+            
+            <!-- Badges -->
+            <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td style="padding-right: 10px;">
+                        <table cellpadding="0" cellspacing="0" border="0" bgcolor="#dbeafe" style="background-color: #dbeafe; border-radius: 12px;">
+                            <tr>
+                                <td style="padding: 6px 12px;">
+                                    <span style="color: #1e40af !important; font-size: 12px; font-weight: 600; mso-line-height-rule: exactly; line-height: 16px;">
+                                        {{ demo.get_file_type_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    {% if demo.is_featured %}
+                    <td>
+                        <table cellpadding="0" cellspacing="0" border="0" bgcolor="#fef3c7" style="background-color: #fef3c7; border-radius: 12px;">
+                            <tr>
+                                <td style="padding: 6px 12px;">
+                                    <span style="color: #92400e !important; font-size: 12px; font-weight: 600; mso-line-height-rule: exactly; line-height: 16px;">
+                                        ⭐ Featured
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    {% endif %}
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- Why This Demo Section -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#eff6ff" style="background-color: #eff6ff; border-left: 5px solid #3b82f6; border-radius: 6px; margin: 0 0 25px 0;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #1e40af !important; font-size: 15px; margin: 0 0 10px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 22px;">
+                💡 Why You'll Love This Demo
+            </p>
+            <p style="color: #1e40af !important; font-size: 14px; margin: 0; mso-line-height-rule: exactly; line-height: 20px;">
+                This demo has been specially added to help you explore our latest solutions and innovations. Login now to experience it firsthand!
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- CTA Button -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 25px 0;">
+    <tr>
+        <td align="center">
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ portal_url }}" style="height:50px;v-text-anchor:middle;width:200px;" arcsize="16%" strokecolor="#087fc2" fillcolor="#087fc2">
+            <w:anchorlock/>
+            <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:600;">🚀 View Demo Now</center>
+            </v:roundrect>
+            <![endif]-->
+            <!--[if !mso]><!-->
+            <table cellpadding="0" cellspacing="0" border="0" bgcolor="#087fc2" style="background-color: #087fc2; background-image: linear-gradient(135deg, #087fc2 0%, #0669a0 100%); border-radius: 10px; box-shadow: 0 4px 6px rgba(8, 127, 194, 0.3);">
+                <tr>
+                    <td>
+                        <a href="{{ portal_url }}" style="display: inline-block; color: #ffffff !important; text-decoration: none; padding: 16px 40px; font-size: 16px; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                            🚀 View Demo Now
+                        </a>
+                    </td>
+                </tr>
+            </table>
+            <!--<![endif]-->
+        </td>
+    </tr>
+</table>
+
+<!-- Additional Info -->
+<p style="color: #6b7280 !important; font-size: 13px; line-height: 20px; margin: 0 0 20px 0; text-align: center; mso-line-height-rule: exactly;">
+    Login to your portal to explore this demo and discover more content.
+</p>
+
+<!-- Support Section -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 25px 0 0 0; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+    <tr>
+        <td align="center">
+            <p style="color: #1f2937 !important; font-size: 14px; margin: 0 0 10px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 20px;">
+                📞 Need Help?
+            </p>
+            <p style="color: #374151 !important; font-size: 13px; line-height: 20px; margin: 0; mso-line-height-rule: exactly;">
+                Email: <a href="mailto:reach@chrp-india.com" style="color: #087fc2 !important; text-decoration: none; font-weight: 600;">reach@chrp-india.com</a><br>
+                Phone: <a href="tel:+918008987948" style="color: #087fc2 !important; text-decoration: none; font-weight: 600;">+91-8008987948</a><br>
+                Hours: 9:00 AM - 7:00 PM (Mon-Sat)
+            </p>
+        </td>
+    </tr>
+</table>
+{% endblock %}
+
+{% block footer_text %}You received this email because a new demo matching your interests was added to the Demo Portal.{% endblock %}

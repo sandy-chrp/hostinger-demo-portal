@@ -1,65 +1,34 @@
-# accounts/views/user_management_views.py
+# accounts/views/user_management_views.py (FIXED VERSION - EMPLOYEES ONLY)
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Max
 from django.core.paginator import Paginator
 from django.contrib.auth.hashers import make_password
+from django.http import JsonResponse
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 import re
 
 from accounts.decorators import permission_required
 from accounts.models import CustomUser, Role, BusinessCategory, BusinessSubCategory
-from django.http import JsonResponse
-from django.conf import settings
-
-
-def generate_next_employee_id():
-    """Generate next employee ID in format EMP00001, EMP00002, etc."""
-    # Get the last employee ID
-    last_employee = CustomUser.objects.filter(
-        employee_id__startswith='EMP',
-        employee_id__regex=r'^EMP\d{5}$'
-    ).order_by('-employee_id').first()
-    
-    if last_employee and last_employee.employee_id:
-        # Extract number part and increment
-        last_number = int(last_employee.employee_id[3:])  # Remove 'EMP' prefix
-        next_number = last_number + 1
-    else:
-        # Start from 1 if no employees exist
-        next_number = 1
-    
-    # Format with leading zeros (5 digits)
-    return f"EMP{next_number:05d}"
-
-
-def validate_employee_id_format(employee_id):
-    """
-    Validate Employee ID format: EMP followed by 5 digits
-    Returns: (is_valid, error_message)
-    """
-    if not employee_id:
-        return False, "Employee ID is required"
-    
-    # Check format: EMP + 5 digits
-    pattern = r'^EMP\d{5}$'
-    if not re.match(pattern, employee_id):
-        return False, "Employee ID must be in format EMP00000 (EMP followed by 5 digits)"
-    
-    return True, None
 
 
 @login_required
 @permission_required('view_customers')
 def user_list(request):
-    """List all users (employees only - customers excluded)"""
+    """List all employees (NOT customers)"""
     
     query = request.GET.get('q', '')
+    user_type = request.GET.get('type', '')
     role_filter = request.GET.get('role', '')
     status_filter = request.GET.get('status', '')
     
-    # ✅ Filter only employees
-    users = CustomUser.objects.filter(user_type='employee').select_related('role', 'business_category')
+    # ✅ FIX: Default to showing ONLY employees
+    users = CustomUser.objects.filter(
+        user_type='employee',  # Only employees
+        is_staff=True          # Only staff members
+    ).select_related('role', 'business_category')
     
     # Search
     if query:
@@ -92,6 +61,7 @@ def user_list(request):
     context = {
         'users': users_page,
         'query': query,
+        'user_type': user_type,
         'role_filter': role_filter,
         'status_filter': status_filter,
         'roles': roles,
@@ -99,6 +69,25 @@ def user_list(request):
     }
     
     return render(request, 'admin/users/user_list.html', context)
+
+
+def get_next_employee_id():
+    """Generate next employee ID in format EMP00001"""
+    last_employee = CustomUser.objects.filter(
+        employee_id__isnull=False
+    ).order_by('-employee_id').first()
+    
+    if last_employee and last_employee.employee_id:
+        # Extract number from EMP00001
+        try:
+            last_number = int(last_employee.employee_id[3:])
+            next_number = last_number + 1
+            return f"EMP{next_number:05d}"
+        except (ValueError, IndexError):
+            return "EMP00001"
+    
+    return "EMP00001"
+
 
 @login_required
 @permission_required('add_customer')
@@ -108,41 +97,90 @@ def user_add(request):
     if request.method == 'POST':
         try:
             # Validate passwords match
-            password = request.POST.get('password')
-            confirm_password = request.POST.get('confirm_password')
+            password = request.POST.get('password', '').strip()
+            confirm_password = request.POST.get('confirm_password', '').strip()
             
             if password != confirm_password:
                 messages.error(request, 'Passwords do not match!')
-                return redirect('accounts:user_add')
+                # Preserve form data
+                context = {
+                    'form_data': request.POST,
+                    'roles': Role.objects.filter(is_active=True),
+                    'categories': BusinessCategory.objects.filter(is_active=True),
+                    'next_employee_id': get_next_employee_id(),
+                }
+                return render(request, 'admin/users/user_add.html', context)
+            
+            # Validate email
+            email = request.POST.get('email', '').strip()
+            try:
+                validate_email(email)
+            except ValidationError:
+                messages.error(request, 'Invalid email address!')
+                context = {
+                    'form_data': request.POST,
+                    'roles': Role.objects.filter(is_active=True),
+                    'categories': BusinessCategory.objects.filter(is_active=True),
+                    'next_employee_id': get_next_employee_id(),
+                }
+                return render(request, 'admin/users/user_add.html', context)
+            
+            # Check if email already exists
+            if CustomUser.objects.filter(email=email).exists():
+                messages.error(request, 'This email is already registered!')
+                context = {
+                    'form_data': request.POST,
+                    'roles': Role.objects.filter(is_active=True),
+                    'categories': BusinessCategory.objects.filter(is_active=True),
+                    'next_employee_id': get_next_employee_id(),
+                }
+                return render(request, 'admin/users/user_add.html', context)
+            
+            # Validate employee ID format if provided
+            employee_id = request.POST.get('employee_id', '').strip().upper()
+            if employee_id:
+                pattern = r'^EMP\d{5}$'
+                if not re.match(pattern, employee_id):
+                    messages.error(request, 'Employee ID must be in format EMP00001 (EMP followed by 5 digits)')
+                    context = {
+                        'form_data': request.POST,
+                        'roles': Role.objects.filter(is_active=True),
+                        'categories': BusinessCategory.objects.filter(is_active=True),
+                        'next_employee_id': get_next_employee_id(),
+                    }
+                    return render(request, 'admin/users/user_add.html', context)
+                
+                # Check if employee ID already exists
+                if CustomUser.objects.filter(employee_id=employee_id).exists():
+                    messages.error(request, f'Employee ID {employee_id} is already in use!')
+                    context = {
+                        'form_data': request.POST,
+                        'roles': Role.objects.filter(is_active=True),
+                        'categories': BusinessCategory.objects.filter(is_active=True),
+                        'next_employee_id': get_next_employee_id(),
+                    }
+                    return render(request, 'admin/users/user_add.html', context)
+            
+            # Get country code and mobile
+            country_code = request.POST.get('country_code', '+91')
+            mobile = request.POST.get('mobile', '').strip()
             
             # Create user
             user = CustomUser.objects.create(
-                username=request.POST.get('email'),  # Use email as username
-                email=request.POST.get('email'),
-                first_name=request.POST.get('first_name'),
-                last_name=request.POST.get('last_name'),
-                mobile=request.POST.get('mobile'),
-                country_code=request.POST.get('country_code', '+91'),
-                employee_id=request.POST.get('employee_id') or None,
-                system_mac_id=request.POST.get('system_mac_id') or None,
-                system_ip_address=request.POST.get('system_ip_address') or None,
-                user_type=request.POST.get('user_type', 'employee'),
+                username=email,  # Use email as username
+                email=email,
+                first_name=request.POST.get('first_name', '').strip(),
+                last_name=request.POST.get('last_name', '').strip(),
+                country_code=country_code,
+                mobile=mobile,
+                employee_id=employee_id if employee_id else None,
+                system_mac_address=request.POST.get('system_mac_id', '').strip() or None,
+                last_login_ip=request.POST.get('system_ip_address', '').strip() or None,
+                user_type='employee',  # ✅ Always employee for this form
                 is_active=request.POST.get('is_active') == 'on',
-                is_staff=True,  # Always true for employees
+                is_staff=True,  # ✅ Employees are staff
                 password=make_password(password)
             )
-            
-            # Handle email verification options
-            email_verification = request.POST.get('email_verification')
-            if email_verification == 'verify_now':
-                user.is_email_verified = True
-            elif email_verification == 'send_verification_email':
-                user.is_email_verified = False
-                # Send verification email logic
-                send_verification_email(user, request)
-            elif email_verification == 'skip_verification':
-                user.is_email_verified = False
-                # No email sent, just allow login without verification
             
             # Assign role
             role_id = request.POST.get('role')
@@ -158,98 +196,53 @@ def user_add(request):
             if subcategory_id:
                 user.business_subcategory_id = subcategory_id
             
+            # Handle email verification
+            email_verification = request.POST.get('email_verification', 'verify_now')
+            if email_verification == 'verify_now':
+                user.is_email_verified = True
+                user.is_approved = True  # Auto-approve for employees
+            elif email_verification == 'skip_verification':
+                user.is_email_verified = False
+                user.is_approved = True  # Auto-approve but not verified
+            # For 'send_verification_email', you'll need to implement email sending logic
+            
             user.save()
             
-            messages.success(request, f'User "{user.full_name}" created successfully!')
+            messages.success(request, f'Employee "{user.full_name}" created successfully with ID {user.employee_id}!')
             return redirect('accounts:user_detail', user_id=user.id)
         
         except Exception as e:
-            messages.error(request, f'Error: {str(e)}')
-            return redirect('accounts:user_add')
+            messages.error(request, f'Error creating user: {str(e)}')
+            context = {
+                'form_data': request.POST,
+                'roles': Role.objects.filter(is_active=True),
+                'categories': BusinessCategory.objects.filter(is_active=True),
+                'next_employee_id': get_next_employee_id(),
+            }
+            return render(request, 'admin/users/user_add.html', context)
     
     # GET request - show form
     roles = Role.objects.filter(is_active=True)
     categories = BusinessCategory.objects.filter(is_active=True)
     
-    # Generate next employee ID suggestion
-    last_employee = CustomUser.objects.filter(
-        employee_id__isnull=False
-    ).order_by('-employee_id').first()
-    
-    if last_employee and last_employee.employee_id:
-        try:
-            emp_number = int(last_employee.employee_id[3:])
-            next_employee_id = f"EMP{(emp_number + 1):05d}"
-        except:
-            next_employee_id = "EMP00001"
-    else:
-        next_employee_id = "EMP00001"
-    
     context = {
         'roles': roles,
         'categories': categories,
-        'next_employee_id': next_employee_id,
+        'next_employee_id': get_next_employee_id(),
     }
     
     return render(request, 'admin/users/user_add.html', context)
 
-def send_verification_email(user, request):
-    """Send verification email to user"""
-    import secrets
-    from django.utils import timezone
-    from datetime import timedelta
-    from django.core.mail import send_mail
-    from django.conf import settings
-    from django.urls import reverse
-    
-    # Generate token
-    token = secrets.token_urlsafe(32)
-    user.email_verification_token = token
-    user.save()
-    
-    # Build verification URL
-    verify_url = request.build_absolute_uri(
-        reverse('accounts:verify_email', args=[token])
-    )
-    
-    # Email content
-    subject = "Verify your email address"
-    message = f"""
-    Hello {user.full_name},
-    
-    Please verify your email address by clicking the link below:
-    
-    {verify_url}
-    
-    This link will expire in 24 hours.
-    
-    Thank you,
-    {settings.SITE_NAME if hasattr(settings, 'SITE_NAME') else 'Company'} Team
-    """
-    
-    # Send email
-    try:
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            fail_silently=False,
-        )
-        return True
-    except Exception as e:
-        print(f"Email sending error: {str(e)}")
-        return False
 
 @login_required
 @permission_required('view_customers')
 def user_detail(request, user_id):
     """View user details"""
     
-    user_obj = get_object_or_404(CustomUser, id=user_id)
+    user = get_object_or_404(CustomUser, id=user_id)
     
     context = {
-        'user_obj': user_obj,
+        'user_obj': user,
     }
     
     return render(request, 'admin/users/user_detail.html', context)
@@ -258,153 +251,59 @@ def user_detail(request, user_id):
 @login_required
 @permission_required('edit_customer')
 def user_edit(request, user_id):
-    """Edit employee details"""
+    """Edit user"""
     
-    user_obj = get_object_or_404(CustomUser, id=user_id)
+    user = get_object_or_404(CustomUser, id=user_id)
     
     if request.method == 'POST':
         try:
-            email = request.POST.get('email')
-            
-            # ✅ VALIDATION 1: Check business email (only if email changed)
-            if email != user_obj.email:
-                blocked_domains = [
-                    'gmail.com', 'yahoo.com', 'yahoo.co.in', 'hotmail.com', 
-                    'outlook.com', 'live.com', 'msn.com', 'icloud.com', 
-                    'me.com', 'aol.com', 'ymail.com', 'rediffmail.com', 
-                    'protonmail.com', 'mail.com', 'zoho.com'
-                ]
-                
-                try:
-                    domain = email.split('@')[1].lower()
-                    if domain in blocked_domains:
-                        messages.error(request, f'Personal email not allowed. Please use business email (not {domain}).')
-                        context = {
-                            'user_obj': user_obj,
-                            'roles': Role.objects.filter(is_active=True),
-                            'categories': BusinessCategory.objects.filter(is_active=True),
-                            'subcategories': BusinessSubCategory.objects.filter(is_active=True),
-                        }
-                        return render(request, 'admin/users/user_edit.html', context)
-                except (IndexError, AttributeError):
-                    messages.error(request, 'Invalid email format!')
-                    context = {
-                        'user_obj': user_obj,
-                        'roles': Role.objects.filter(is_active=True),
-                        'categories': BusinessCategory.objects.filter(is_active=True),
-                        'subcategories': BusinessSubCategory.objects.filter(is_active=True),
-                    }
-                    return render(request, 'admin/users/user_edit.html', context)
-                
-                # ✅ VALIDATION 2: Check if email already exists (excluding current user)
-                if CustomUser.objects.filter(email=email).exclude(id=user_obj.id).exists():
-                    messages.error(request, 'Email already exists!')
-                    context = {
-                        'user_obj': user_obj,
-                        'roles': Role.objects.filter(is_active=True),
-                        'categories': BusinessCategory.objects.filter(is_active=True),
-                        'subcategories': BusinessSubCategory.objects.filter(is_active=True),
-                    }
-                    return render(request, 'admin/users/user_edit.html', context)
-            
-            # ✅ VALIDATION 3: Validate Employee ID format (only if changed)
-            employee_id = request.POST.get('employee_id', '').strip().upper()
-            
-            if employee_id != user_obj.employee_id:
-                is_valid, error_msg = validate_employee_id_format(employee_id)
-                
-                if not is_valid:
-                    messages.error(request, error_msg)
-                    context = {
-                        'user_obj': user_obj,
-                        'roles': Role.objects.filter(is_active=True),
-                        'categories': BusinessCategory.objects.filter(is_active=True),
-                        'subcategories': BusinessSubCategory.objects.filter(is_active=True),
-                    }
-                    return render(request, 'admin/users/user_edit.html', context)
-                
-                # ✅ VALIDATION 4: Check if employee_id already exists (excluding current user)
-                if CustomUser.objects.filter(employee_id=employee_id).exclude(id=user_obj.id).exists():
-                    messages.error(request, f'Employee ID {employee_id} already exists!')
-                    context = {
-                        'user_obj': user_obj,
-                        'roles': Role.objects.filter(is_active=True),
-                        'categories': BusinessCategory.objects.filter(is_active=True),
-                        'subcategories': BusinessSubCategory.objects.filter(is_active=True),
-                    }
-                    return render(request, 'admin/users/user_edit.html', context)
-            
-            # ✅ Update basic fields
-            user_obj.first_name = request.POST.get('first_name')
-            user_obj.last_name = request.POST.get('last_name')
-            user_obj.email = email
-            user_obj.mobile = request.POST.get('mobile')
-            user_obj.country_code = request.POST.get('country_code', '+91')
-            user_obj.employee_id = employee_id or None
-            user_obj.system_mac_address = request.POST.get('system_mac_address') or None
-            
-            # ✅ FIX: Always keep user_type as employee
-            user_obj.user_type = 'employee'
-            user_obj.is_staff = True
-            
-            # ✅ Status fields
-            user_obj.is_active = request.POST.get('is_active') == 'on'
-            user_obj.is_email_verified = request.POST.get('is_email_verified') == 'on'
-            user_obj.is_approved = request.POST.get('is_approved') == 'on'
-            
-            # ✅ Organization always CHRP-HYD
-            user_obj.organization = 'CHRP-HYD'
+            user.first_name = request.POST.get('first_name', '').strip()
+            user.last_name = request.POST.get('last_name', '').strip()
+            user.email = request.POST.get('email', '').strip()
+            user.country_code = request.POST.get('country_code', '+91')
+            user.mobile = request.POST.get('mobile', '').strip()
+            user.employee_id = request.POST.get('employee_id', '').strip().upper() or None
+            user.system_mac_address = request.POST.get('system_mac_id', '').strip() or None
+            user.last_login_ip = request.POST.get('system_ip_address', '').strip() or None
+            user.user_type = request.POST.get('user_type', 'employee')
+            user.is_active = request.POST.get('is_active') == 'on'
+            user.is_staff = request.POST.get('user_type') == 'employee'
             
             # Update role
             role_id = request.POST.get('role')
-            user_obj.role_id = role_id if role_id else None
+            user.role_id = role_id if role_id else None
             
             # Update category
             category_id = request.POST.get('business_category')
-            user_obj.business_category_id = category_id if category_id else None
+            user.business_category_id = category_id if category_id else None
             
-            # Update subcategory
             subcategory_id = request.POST.get('business_subcategory')
-            user_obj.business_subcategory_id = subcategory_id if subcategory_id else None
+            user.business_subcategory_id = subcategory_id if subcategory_id else None
             
-            # ✅ VALIDATION 5: Update password if provided
-            new_password = request.POST.get('new_password')
+            # Update password if provided
+            new_password = request.POST.get('new_password', '').strip()
             if new_password:
-                confirm_password = request.POST.get('confirm_password')
+                confirm_password = request.POST.get('confirm_password', '').strip()
                 if new_password == confirm_password:
-                    user_obj.password = make_password(new_password)
+                    user.password = make_password(new_password)
                 else:
                     messages.error(request, 'Passwords do not match!')
-                    context = {
-                        'user_obj': user_obj,
-                        'roles': Role.objects.filter(is_active=True),
-                        'categories': BusinessCategory.objects.filter(is_active=True),
-                        'subcategories': BusinessSubCategory.objects.filter(is_active=True),
-                    }
-                    return render(request, 'admin/users/user_edit.html', context)
+                    return redirect('accounts:user_edit', user_id=user_id)
             
-            user_obj.save()
+            user.save()
             
-            messages.success(request, f'✅ Employee "{user_obj.full_name}" ({user_obj.employee_id}) updated successfully!')
-            return redirect('accounts:user_detail', user_id=user_obj.id)
+            messages.success(request, f'User "{user.full_name}" updated successfully!')
+            return redirect('accounts:user_detail', user_id=user.id)
         
         except Exception as e:
-            messages.error(request, f'❌ Error: {str(e)}')
-            context = {
-                'user_obj': user_obj,
-                'roles': Role.objects.filter(is_active=True),
-                'categories': BusinessCategory.objects.filter(is_active=True),
-                'subcategories': BusinessSubCategory.objects.filter(is_active=True),
-            }
-            return render(request, 'admin/users/user_edit.html', context)
+            messages.error(request, f'Error updating user: {str(e)}')
     
-    # GET request - Show form
     roles = Role.objects.filter(is_active=True)
     categories = BusinessCategory.objects.filter(is_active=True)
     subcategories = BusinessSubCategory.objects.filter(is_active=True)
     
     context = {
-        'user_obj': user_obj,
+        'user_obj': user,
         'roles': roles,
         'categories': categories,
         'subcategories': subcategories,
@@ -412,74 +311,99 @@ def user_edit(request, user_id):
     
     return render(request, 'admin/users/user_edit.html', context)
 
+
 @login_required
 @permission_required('delete_customer')
 def user_delete(request, user_id):
     """Delete user"""
     
-    user_obj = get_object_or_404(CustomUser, id=user_id)
+    user = get_object_or_404(CustomUser, id=user_id)
     
     # Prevent self-deletion
-    if user_obj.id == request.user.id:
+    if user.id == request.user.id:
         messages.error(request, 'You cannot delete your own account!')
         return redirect('accounts:user_list')
     
     if request.method == 'POST':
-        user_name = user_obj.full_name
-        user_obj.delete()
+        user_name = user.full_name
+        user.delete()
         messages.success(request, f'User "{user_name}" deleted successfully!')
         return redirect('accounts:user_list')
     
     context = {
-        'user_obj': user_obj,
+        'user_obj': user,
     }
     
     return render(request, 'admin/users/user_delete.html', context)
 
-@login_required
+
+# ==========================================
+# AJAX ENDPOINTS
+# ==========================================
+
 def check_employee_email(request):
-    """Check if employee email already exists"""
-    email = request.GET.get('email', '')
+    """AJAX endpoint to check if employee email is available"""
+    email = request.GET.get('email', '').strip().lower()
     
-    # Check if this is a valid business email
+    if not email:
+        return JsonResponse({
+            'available': False,
+            'message': 'Email is required'
+        })
+    
+    # Validate email format
+    try:
+        validate_email(email)
+    except ValidationError:
+        return JsonResponse({
+            'available': False,
+            'message': 'Invalid email format'
+        })
+    
+    # Check blocked domains
+    blocked_domains = [
+        'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com',
+        'live.com', 'ymail.com', 'aol.com', 'icloud.com',
+        'rediffmail.com', 'protonmail.com'
+    ]
+    
     try:
         domain = email.split('@')[1].lower()
-        blocked_domains = ['gmail.com', 'yahoo.com', 'hotmail.com', 
-                          'outlook.com', 'live.com', 'ymail.com', 
-                          'aol.com', 'icloud.com']
-        
         if domain in blocked_domains:
             return JsonResponse({
                 'available': False,
-                'message': f'Personal email domains ({domain}) not allowed.'
+                'message': 'Personal email domains not allowed. Use business email.'
             })
-    except:
+    except IndexError:
         return JsonResponse({
             'available': False,
-            'message': 'Invalid email format.'
+            'message': 'Invalid email format'
         })
     
-    # Check if email exists
-    exists = CustomUser.objects.filter(email=email).exists()
-    
-    if exists:
+    # Check if email already exists
+    if CustomUser.objects.filter(email=email).exists():
         return JsonResponse({
             'available': False,
-            'message': 'Email already registered.'
+            'message': 'This email is already registered'
         })
     
     return JsonResponse({
         'available': True,
-        'message': 'Email available.'
+        'message': 'Email is available'
     })
 
-@login_required
+
 def check_employee_id(request):
-    """Check if employee ID already exists"""
+    """AJAX endpoint to check if employee ID is available"""
     employee_id = request.GET.get('employee_id', '').strip().upper()
     
+    if not employee_id:
+        return JsonResponse({
+            'available': False,
+            'message': 'Employee ID is required'
+        })
+    
     # Validate format
-    import re
     pattern = r'^EMP\d{5}$'
     if not re.match(pattern, employee_id):
         return JsonResponse({
@@ -488,23 +412,13 @@ def check_employee_id(request):
         })
     
     # Check if exists
-    exists = CustomUser.objects.filter(employee_id=employee_id).exists()
-    
-    if exists:
+    if CustomUser.objects.filter(employee_id=employee_id).exists():
         return JsonResponse({
             'available': False,
-            'message': f'Employee ID {employee_id} is already in use.'
+            'message': f'Employee ID {employee_id} is already in use'
         })
     
     return JsonResponse({
         'available': True,
-        'message': 'Employee ID available.'
-    })
-
-@login_required
-def get_next_employee_id(request):
-    """AJAX endpoint to get next available employee ID"""
-    next_id = generate_next_employee_id()
-    return JsonResponse({
-        'next_employee_id': next_id
+        'message': 'Employee ID is available'
     })

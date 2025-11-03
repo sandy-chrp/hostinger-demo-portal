@@ -1,0 +1,74 @@
+/* ============================================
+   VERDANA FONT FAMILY - GLOBAL CONFIGURATION
+   ============================================ */
+
+/* CSS Variables */
+:root {
+    --primary-font: Verdana, Geneva, Tahoma, sans-serif;
+    --secondary-font: Verdana, Geneva, Tahoma, sans-serif;
+    --heading-font: Verdana, Geneva, Tahoma, sans-serif;
+    --monospace-font: 'Courier New', Courier, monospace;
+    
+    /* Font weights */
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 700;
+}
+
+/* Universal selector - sabhi elements par apply */
+* {
+    font-family: var(--primary-font);
+}
+
+body {
+    font-family: var(--primary-font);
+    font-weight: var(--font-weight-normal);
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--heading-font);
+    font-weight: var(--font-weight-bold);
+}
+
+/* Buttons & Form elements */
+button, .btn, input[type="submit"], input[type="button"] {
+    font-family: var(--primary-font);
+}
+
+input, textarea, select {
+    font-family: var(--primary-font);
+}
+
+/* Tables */
+table, th, td {
+    font-family: var(--primary-font);
+}
+
+/* Code blocks */
+code, pre, .code-block {
+    font-family: var(--monospace-font);
+}
+
+/* Text elements */
+p, span, div, a, li, label {
+    font-family: var(--primary-font);
+}
+
+/* Utility classes */
+.font-primary {
+    font-family: var(--primary-font);
+}
+
+.font-heading {
+    font-family: var(--heading-font);
+}
+
+.font-mono {
+    font-family: var(--monospace-font);
+}
+
+/* Override inline styles (agar purane inline styles hain) */
+[style*="font-family"] {
+    font-family: var(--primary-font) !important;
+}

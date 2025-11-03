@@ -151,8 +151,27 @@ class DemoFilterForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-select'})
     )
 
+
+
+
 class AdminDemoForm(forms.ModelForm):
-    """Admin form for creating/editing demos with business category targeting"""
+    """Admin form for creating/editing demos - Supports Video, WebGL, LMS"""
+    
+    # File Type Selection
+    file_type = forms.ChoiceField(
+        choices=[
+            ('video', '🎥 Video Demo (MP4, AVI, MOV)'),
+            ('webgl', '🧊 WebGL Interactive (HTML, ZIP, 3D)'),
+            ('lms', '🎓 LMS/SCORM Package (ZIP)'),
+        ],
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'id': 'id_file_type'
+        }),
+        label='File Type',
+        required=True,
+        initial='video'
+    )
     
     # Business Categories - ManyToMany field
     target_business_categories = forms.ModelMultipleChoiceField(
@@ -171,13 +190,13 @@ class AdminDemoForm(forms.ModelForm):
         widget=forms.CheckboxSelectMultiple(attrs={
             'class': 'form-check-input subcategory-checkbox'
         }),
-        help_text='Select specific subcategories this demo is relevant for. Leave empty for all subcategories.'
+        help_text='Select specific subcategories this demo is relevant for.'
     )
     
     # Customer Selection - ManyToMany field
     target_customers = forms.ModelMultipleChoiceField(
         queryset=CustomUser.objects.filter(
-            is_approved=True,
+            user_type='customer',
             is_active=True
         ).order_by('first_name', 'last_name'),
         required=False,
@@ -212,12 +231,14 @@ class AdminDemoForm(forms.ModelForm):
     class Meta:
         model = Demo
         fields = [
-            'title', 
-            'description', 
+            'title',
+            'description',
+            'file_type',
+            'video_file',
+            'webgl_file',
+            'lms_file',
+            'thumbnail',
             'demo_type',
-            'video_file', 
-            'thumbnail', 
-            'duration', 
             'target_business_categories',
             'target_business_subcategories',
             'target_customers',
@@ -229,34 +250,46 @@ class AdminDemoForm(forms.ModelForm):
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter demo title',
-                'required': True
+                'required': True,
+                'id': 'id_title'
             }),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
-                'rows': 4,
+                'rows': 3,
                 'placeholder': 'Describe what this demo showcases...',
-                'required': True
+                'required': True,
+                'id': 'id_description'
             }),
             'demo_type': forms.Select(attrs={
                 'class': 'form-select'
             }),
             'video_file': forms.FileInput(attrs={
-                'class': 'form-control',
-                'accept': 'video/mp4,video/avi,video/mov,video/wmv'
+                'class': 'd-none',
+                'accept': 'video/*',
+                'id': 'id_video_file'
+            }),
+            'webgl_file': forms.FileInput(attrs={
+                'class': 'd-none',
+                'accept': '.html,.zip,.gltf,.glb',
+                'id': 'id_webgl_file'
+            }),
+            'lms_file': forms.FileInput(attrs={
+                'class': 'd-none',
+                'accept': '.zip,.scorm',
+                'id': 'id_lms_file'
             }),
             'thumbnail': forms.FileInput(attrs={
-                'class': 'form-control',
-                'accept': 'image/jpeg,image/jpg,image/png,image/webp'
-            }),
-            'duration': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'HH:MM:SS'
+                'class': 'd-none',
+                'accept': 'image/*',
+                'id': 'id_thumbnail'
             }),
             'is_featured': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
+                'class': 'form-check-input',
+                'id': 'id_is_featured'
             }),
             'is_active': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
+                'class': 'form-check-input',
+                'id': 'id_is_active'
             }),
             'sort_order': forms.NumberInput(attrs={
                 'class': 'form-control',
@@ -282,10 +315,11 @@ class AdminDemoForm(forms.ModelForm):
                 self.fields['all_customers'].initial = False
         
         # Improve field labels
-        self.fields['demo_type'].label = "Demo Type"
-        self.fields['is_featured'].label = "Feature this demo"
-        self.fields['is_active'].label = "Make demo active"
-        self.fields['sort_order'].label = "Display Order"
+        self.fields['file_type'].label = "File Type"
+        self.fields['is_featured'].label = "Featured Demo"
+        self.fields['is_active'].label = "Active"
+        self.fields['thumbnail'].label = "Thumbnail (Optional)"
+        self.fields['thumbnail'].help_text = "Default icon will be shown if not provided"
     
     def clean_title(self):
         """Validate title"""
@@ -294,41 +328,16 @@ class AdminDemoForm(forms.ModelForm):
             raise ValidationError("Title cannot be empty.")
         return title.strip()
     
-    def clean_duration(self):
-        """Validate and convert duration string to timedelta"""
-        duration_str = self.cleaned_data.get('duration')
-        
-        if not duration_str:
-            return None
-            
-        # Remove any extra spaces
-        duration_str = str(duration_str).strip()
-        
-        # If it's already a timedelta, return it
-        if isinstance(duration_str, timedelta):
-            return duration_str
-            
-        # Parse HH:MM:SS or MM:SS format
-        try:
-            parts = duration_str.split(':')
-            if len(parts) == 3:
-                hours, minutes, seconds = map(int, parts)
-                return timedelta(hours=hours, minutes=minutes, seconds=seconds)
-            elif len(parts) == 2:
-                minutes, seconds = map(int, parts)
-                return timedelta(minutes=minutes, seconds=seconds)
-            else:
-                raise ValueError("Invalid format")
-        except (ValueError, AttributeError):
-            raise ValidationError("Duration must be in HH:MM:SS or MM:SS format")
-    
     def clean_video_file(self):
         """Validate video file"""
         video = self.cleaned_data.get('video_file')
-        if video:
-            # Check file size (max 100MB)
-            if video.size > 100 * 1024 * 1024:
-                raise ValidationError("Video file size cannot exceed 100MB.")
+        file_type = self.cleaned_data.get('file_type')
+        
+        # Only validate if file_type is video
+        if file_type == 'video' and video:
+            # Check file size (max 200MB)
+            if video.size > 200 * 1024 * 1024:
+                raise ValidationError("Video file size cannot exceed 200MB.")
             
             # Check file extension
             ext = video.name.split('.')[-1].lower()
@@ -337,13 +346,49 @@ class AdminDemoForm(forms.ModelForm):
         
         return video
     
+    def clean_webgl_file(self):
+        """Validate WebGL file"""
+        webgl = self.cleaned_data.get('webgl_file')
+        file_type = self.cleaned_data.get('file_type')
+        
+        # Only validate if file_type is webgl
+        if file_type == 'webgl' and webgl:
+            # Check file size (max 3GB)
+            if webgl.size > 3 * 1024 * 1024 * 1024:
+                raise ValidationError("WebGL file size cannot exceed 3GB.")
+            
+            # Check file extension
+            ext = webgl.name.split('.')[-1].lower()
+            if ext not in ['html', 'zip', 'gltf', 'glb']:
+                raise ValidationError("Invalid WebGL format. Allowed: HTML, ZIP, GLTF, GLB")
+        
+        return webgl
+    
+    def clean_lms_file(self):
+        """Validate LMS file"""
+        lms = self.cleaned_data.get('lms_file')
+        file_type = self.cleaned_data.get('file_type')
+        
+        # Only validate if file_type is lms
+        if file_type == 'lms' and lms:
+            # Check file size (max 4GB)
+            if lms.size > 4 * 1024 * 1024 * 1024:
+                raise ValidationError("LMS file size cannot exceed 4GB.")
+            
+            # Check file extension
+            ext = lms.name.split('.')[-1].lower()
+            if ext not in ['zip', 'scorm']:
+                raise ValidationError("Invalid LMS format. Allowed: ZIP, SCORM")
+        
+        return lms
+    
     def clean_thumbnail(self):
         """Validate thumbnail image"""
         thumbnail = self.cleaned_data.get('thumbnail')
         if thumbnail:
-            # Check file size (max 5MB)
-            if thumbnail.size > 5 * 1024 * 1024:
-                raise ValidationError("Thumbnail size cannot exceed 5MB.")
+            # Check file size (max 10MB)
+            if thumbnail.size > 10 * 1024 * 1024:
+                raise ValidationError("Thumbnail size cannot exceed 10MB.")
             
             # Check file extension
             ext = thumbnail.name.split('.')[-1].lower()
@@ -359,7 +404,6 @@ class AdminDemoForm(forms.ModelForm):
         
         if subcategories and not categories:
             # If subcategories selected but no categories, it's okay
-            # The subcategories themselves define the targeting
             return subcategories
             
         if subcategories and categories:
@@ -384,24 +428,32 @@ class AdminDemoForm(forms.ModelForm):
         """Overall form validation"""
         cleaned_data = super().clean()
         
+        file_type = cleaned_data.get('file_type')
+        video_file = cleaned_data.get('video_file')
+        webgl_file = cleaned_data.get('webgl_file')
+        lms_file = cleaned_data.get('lms_file')
+        
+        # Validate that appropriate file is uploaded based on file_type
+        if file_type == 'video' and not video_file and not self.instance.pk:
+            raise ValidationError({'video_file': 'Video file is required when file type is Video'})
+        
+        if file_type == 'webgl' and not webgl_file and not self.instance.pk:
+            raise ValidationError({'webgl_file': 'WebGL file is required when file type is WebGL'})
+        
+        if file_type == 'lms' and not lms_file and not self.instance.pk:
+            raise ValidationError({'lms_file': 'LMS file is required when file type is LMS'})
+        
         # Handle "all customers" logic
         all_customers = cleaned_data.get('all_customers')
         target_customers = cleaned_data.get('target_customers')
         
         if all_customers:
-            # Clear target customers if "all" is selected
             cleaned_data['target_customers'] = []
-        elif not target_customers:
-            # If not "all" and no specific customers, that's fine
-            # It means available to all customers
-            pass
         
         # Handle "all business categories" logic
         all_categories = cleaned_data.get('all_business_categories')
-        target_categories = cleaned_data.get('target_business_categories')
         
         if all_categories:
-            # Clear target categories if "all" is selected
             cleaned_data['target_business_categories'] = []
             cleaned_data['target_business_subcategories'] = []
         

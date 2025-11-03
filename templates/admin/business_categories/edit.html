@@ -6,10 +6,9 @@
 
 {% block admin_content %}
 <div class="admin-card">
-    <div class="admin-card-header">
-        <h2 class="admin-card-title">
-            <i class="fas fa-edit"></i>
-            Edit Category: {{ category.name }}
+    <div class="admin-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h2 class="admin-card-title mb-0">
+            <i class="fas fa-edit me-2"></i>Edit Category: {{ category.name }}
         </h2>
         <a href="{% url 'core:admin_business_categories' %}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-2"></i>Back to List
@@ -18,12 +17,12 @@
     <div class="admin-card-body">
         <!-- Category Stats -->
         <div class="alert alert-info mb-4">
-            <div class="row text-center">
-                <div class="col-md-6">
+            <div class="row text-center g-3">
+                <div class="col-6">
                     <i class="fas fa-layer-group me-2"></i>
                     <strong>{{ subcategory_count }}</strong> Subcategories
                 </div>
-                <div class="col-md-6">
+                <div class="col-6">
                     <i class="fas fa-users me-2"></i>
                     <strong>{{ customer_count }}</strong> Customers
                 </div>
@@ -51,31 +50,36 @@
 
                 <div class="col-md-4">
                     <div class="mb-3">
+                        <label class="form-label">Status</label>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="is_active" 
                                    name="is_active" {% if category.is_active %}checked{% endif %}>
                             <label class="form-check-label" for="is_active">
-                                <strong>Active Status</strong>
+                                Active Status
                             </label>
                         </div>
                         <div class="form-text">Enable/disable this category</div>
                     </div>
 
-                    <div class="alert alert-warning mt-4">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Warning:</strong> 
-                        {% if customer_count > 0 %}
-                            This category is assigned to {{ customer_count }} customer(s). Deactivating it may affect customer records.
-                        {% else %}
-                            This category has no customers assigned yet.
-                        {% endif %}
+                    <div class="alert alert-warning">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                            <div>
+                                <strong>Warning:</strong> 
+                                {% if customer_count > 0 %}
+                                    This category is assigned to {{ customer_count }} customer(s). Deactivating it may affect customer records.
+                                {% else %}
+                                    This category has no customers assigned yet.
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <hr class="my-4">
 
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <a href="{% url 'core:admin_business_categories' %}" class="btn btn-secondary">
                     <i class="fas fa-times me-2"></i>Cancel
                 </a>
@@ -86,6 +90,68 @@
         </form>
     </div>
 </div>
+
+<style>
+    /* Form styling improvements */
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    
+    .form-check-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .alert-info {
+        background-color: #e7f3ff;
+        border: 1px solid #b3d9ff;
+        color: #004085;
+        border-radius: 8px;
+    }
+    
+    .alert-info i {
+        color: #17a2b8;
+    }
+    
+    .alert-warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffc107;
+        color: #856404;
+        border-radius: 8px;
+    }
+    
+    .alert-warning i {
+        color: #ffc107;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 767.98px) {
+        .admin-card-header h2 {
+            font-size: 1.125rem;
+        }
+        
+        .btn {
+            padding: 0.4rem 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .alert {
+            font-size: 0.875rem;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block admin_extra_js %}

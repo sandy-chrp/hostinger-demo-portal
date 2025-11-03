@@ -2,7 +2,7 @@
 {% extends 'customers/base.html' %}
 {% load static %}
 
-{% block customer_title %}My Demo Requests - Customer Portal{% endblock %}
+{% block customer_title %}My Demo Requests- Customer Portal{% endblock %}
 {% block page_title %}My Demo Requests{% endblock %}
 
 {% block customer_extra_css %}
@@ -18,7 +18,7 @@
     }
 
     .dropdown-toggle {
-        font-weight: 600;
+        font-weight: 500;
         padding: 0.65rem 1.25rem;
         border-radius: var(--radius-md);
         border: 2px solid var(--primary-color);
@@ -26,6 +26,7 @@
         color: var(--primary-color);
         transition: all 0.3s ease;
         min-width: 200px;
+        font-size: var(--font-sm);
     }
 
     .dropdown-toggle:hover {
@@ -48,12 +49,13 @@
         margin-top: 0.5rem;
         box-shadow: var(--shadow-lg);
         min-width: 280px;
+        font-size: var(--font-sm);
     }
 
     .dropdown-item {
         padding: 0.75rem 1rem;
         border-radius: var(--radius-md);
-        font-size: 0.95rem;
+        font-size: var(--font-sm);
         font-weight: 500;
         margin-bottom: 0.25rem;
         transition: all 0.2s ease;
@@ -153,21 +155,21 @@
     }
 
     .request-title-mini {
-        font-size: 0.95rem;
-        font-weight: 700;
+        font-weight: 400;
         color: var(--dark-color);
-        margin: 0 0 4px 0;
+        margin: 0 0 var(--spacing-xs) 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
     .request-meta-mini {
-        font-size: 0.75rem;
+        font-size: var(--font-sm);
         color: var(--gray-500);
         display: flex;
         gap: var(--spacing-sm);
         align-items: center;
+        font-weight: 400;
     }
 
     /* Thumbnail in Header */
@@ -181,9 +183,9 @@
 
     /* Status Badge */
     .status-badge-mini {
-        padding: 4px 10px;
+        padding: 0.35rem 0.65rem;
         border-radius: 12px;
-        font-size: 0.7rem;
+        font-size: var(--font-xs);
         font-weight: 700;
         text-transform: uppercase;
         white-space: nowrap;
@@ -222,8 +224,8 @@
     .info-item-compact {
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 8px;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-sm);
         background: var(--gray-50);
         border-radius: var(--radius-md);
     }
@@ -237,7 +239,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.85rem;
+        font-size: var(--font-sm);
         flex-shrink: 0;
     }
 
@@ -251,7 +253,7 @@
     }
 
     .info-label-small {
-        font-size: 0.65rem;
+        font-size: var(--font-xs);
         color: var(--gray-600);
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -259,9 +261,9 @@
     }
 
     .info-value-small {
-        font-size: 0.85rem;
+        font-size: var(--font-sm);
         color: var(--dark-color);
-        font-weight: 600;
+        font-weight: 500;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -273,7 +275,7 @@
         padding: var(--spacing-sm);
         border-radius: var(--radius-sm);
         margin-bottom: var(--spacing-sm);
-        font-size: 0.85rem;
+        font-size: var(--font-sm);
         border-left: 3px solid var(--info-color);
     }
 
@@ -283,12 +285,12 @@
     }
 
     .notes-header-small {
-        font-weight: 700;
-        font-size: 0.75rem;
-        margin-bottom: 4px;
+        font-weight: 600;
+        font-size: var(--font-sm);
+        margin-bottom: var(--spacing-xs);
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: var(--spacing-xs);
         color: var(--gray-700);
     }
 
@@ -304,19 +306,20 @@
     .cancellation-badge {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: var(--spacing-xs);
         background: #dc2626;
         color: white;
-        padding: 4px 10px;
+        padding: 0.35rem 0.65rem;
         border-radius: 12px;
-        font-size: 0.75rem;
+        font-size: var(--font-xs);
         font-weight: 600;
     }
 
     .cancellation-detail {
-        padding: 6px 0;
+        padding: var(--spacing-xs) 0;
         border-bottom: 1px solid rgba(220, 38, 38, 0.1);
-        font-size: 0.85rem;
+        font-size: var(--font-sm);
+        font-weight: 400;
     }
 
     .cancellation-detail:last-child {
@@ -326,6 +329,7 @@
 
     .cancellation-detail strong {
         color: #991b1b;
+        font-weight: 600;
     }
 
     /* Actions */
@@ -337,14 +341,14 @@
     }
 
     .action-btn-compact {
-        padding: 6px 14px;
+        padding: 0.5rem 1rem;
         border-radius: var(--radius-md);
         font-weight: 600;
-        font-size: 0.8rem;
+        font-size: var(--font-sm);
         border: 2px solid;
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: var(--spacing-xs);
         cursor: pointer;
         text-decoration: none;
         transition: all 0.2s ease;
@@ -376,9 +380,9 @@
     }
 
     .bulk-btn {
-        padding: 4px 12px;
+        padding: 0.5rem 1rem;
         border-radius: var(--radius-md);
-        font-size: 0.8rem;
+        font-size: var(--font-sm);
         font-weight: 600;
         border: 2px solid var(--gray-300);
         background: white;
@@ -394,14 +398,26 @@
     /* Empty State */
     .empty-state {
         text-align: center;
-        padding: 40px 20px;
+        padding: var(--spacing-xl) var(--spacing-lg);
         color: var(--gray-500);
     }
 
     .empty-icon {
-        font-size: 3rem;
+        font-size: var(--font-5xl);
         margin-bottom: var(--spacing-md);
         opacity: 0.3;
+    }
+
+    .empty-state h4 {
+        font-size: var(--font-xl);
+        font-weight: 700;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .empty-state p {
+        font-size: var(--font-sm);
+        font-weight: 400;
+        margin-bottom: var(--spacing-md);
     }
 
     /* Modal */
@@ -413,10 +429,38 @@
         background: var(--gradient-primary);
         color: white;
         border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        padding: var(--spacing-lg);
+    }
+
+    .modal-title {
+        font-size: var(--font-xl);
+        font-weight: 700;
     }
 
     .modal-header .btn-close {
         filter: brightness(0) invert(1);
+    }
+
+    .modal-body {
+        padding: var(--spacing-lg);
+    }
+
+    .modal-body p {
+        font-size: var(--font-sm);
+        font-weight: 400;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .modal-body p strong {
+        font-weight: 700;
+    }
+
+    .modal-body .text-muted {
+        font-size: var(--font-sm);
+    }
+
+    .modal-footer {
+        padding: var(--spacing-md) var(--spacing-lg);
     }
 
     /* Responsive */
@@ -445,7 +489,7 @@
         }
 
         .request-title-mini {
-            font-size: 0.85rem;
+            font-size: var(--font-sm);
         }
 
         .info-grid-compact {

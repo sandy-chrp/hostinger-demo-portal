@@ -4,35 +4,66 @@
 {% block page_title %}Business Categories{% endblock %}
 
 {% block admin_content %}
-<!-- Stats Cards (Smaller Size) -->
-<div class="stats-grid small-stats">
-    <div class="stat-card primary">
-        <div class="stat-icon">
-            <i class="fas fa-folder"></i>
+<!-- Stats Cards (4 per row, Responsive, Compact) -->
+<div class="row g-2 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-card-body">
+                <div class="stat-icon">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ total_categories }}</div>
+                    <div class="stat-label">Total Categories</div>
+                </div>
+            </div>
         </div>
-        <div class="stat-number">{{ total_categories }}</div>
-        <div class="stat-label">Total Categories</div>
     </div>
-    <div class="stat-card success">
-        <div class="stat-icon">
-            <i class="fas fa-check-circle"></i>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-card-body">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ active_categories }}</div>
+                    <div class="stat-label">Active Categories</div>
+                </div>
+            </div>
         </div>
-        <div class="stat-number">{{ active_categories }}</div>
-        <div class="stat-label">Active Categories</div>
     </div>
-    <div class="stat-card info">
-        <div class="stat-icon">
-            <i class="fas fa-layer-group"></i>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-card-body">
+                <div class="stat-icon">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ total_subcategories }}</div>
+                    <div class="stat-label">Total Subcategories</div>
+                </div>
+            </div>
         </div>
-        <div class="stat-number">{{ total_subcategories }}</div>
-        <div class="stat-label">Total Subcategories</div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-card-body">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ categories.paginator.count }}</div>
+                    <div class="stat-label">Displayed</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Main Card -->
 <div class="admin-card">
-    <div class="admin-card-header">
-        <h2 class="admin-card-title">
+    <div class="admin-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h2 class="admin-card-title mb-0">
             Business Categories Management
         </h2>
         <a href="{% url 'core:admin_business_category_create' %}" class="btn btn-primary">
@@ -42,9 +73,9 @@
     <div class="admin-card-body">
         <!-- Search and Filter Bar -->
         <div class="row mb-4">
-            <div class="col-md-6">
+            <div class="col-md-6 mb-3 mb-md-0">
                 <form method="get" class="d-flex">
-                    <input type="text" name="search" class="form-control" placeholder="Search categories..." value="{{ search_query }}">
+                    <input type="text" name="search" class="form-control form-control-filter" placeholder="Search categories..." value="{{ search_query }}">
                     <button type="submit" class="btn btn-outline-primary ms-2">
                         <i class="fas fa-search"></i>
                     </button>
@@ -55,11 +86,11 @@
                     {% endif %}
                 </form>
             </div>
-            <div class="col-md-6 text-end">
+            <div class="col-md-6 text-md-end">
                 <!-- Status Filter Dropdown -->
-                <div class="d-inline-block me-2">
+                <div class="d-inline-block me-2 mb-2 mb-md-0">
                     <form method="get" class="d-inline">
-                        <select name="status" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+                        <select name="status" class="form-select form-select-filter d-inline-block w-auto" onchange="this.form.submit()">
                             <option value="">All Status</option>
                             <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Only</option>
                             <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive Only</option>
@@ -70,7 +101,7 @@
                     </form>
                 </div>
                 <a href="{% url 'core:admin_business_subcategories' %}" class="btn btn-outline-primary">
-                    Manage Subcategories
+                    <i class="fas fa-sitemap me-1"></i>Manage Subcategories
                 </a>
             </div>
         </div>
@@ -78,7 +109,7 @@
         <!-- Categories Table -->
         {% if categories %}
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover align-middle">
                     <thead>
                         <tr>
                             <th width="50">#</th>
@@ -94,7 +125,7 @@
                             <tr>
                                 <td>{{ category.sort_order }}</td>
                                 <td>
-                                    <strong>{{ category.name }}</strong>
+                                    {{ category.name }}
                                     {% if category.description %}
                                         <br><small class="text-muted">{{ category.description|truncatewords:15 }}</small>
                                     {% endif %}
@@ -126,7 +157,8 @@
                                             </button>
                                         </form> {% endcomment %}
                                         <a href="{% url 'core:admin_business_category_delete' category.id %}" 
-                                           class="btn btn-outline-danger" title="Delete">
+                                           class="btn btn-outline-danger" title="Delete"
+                                           onclick="return confirm('Are you sure you want to delete this category?')">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </div>
@@ -136,6 +168,70 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination -->
+            {% if categories.has_other_pages %}
+                <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-3">
+                    <div class="text-muted">
+                        Showing {{ categories.start_index }} to {{ categories.end_index }} of {{ categories.paginator.count }} entries
+                    </div>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-sm mb-0">
+                            {% if categories.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="First">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ categories.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Previous">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+                                </li>
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                                </li>
+                            {% endif %}
+
+                            {% for num in categories.paginator.page_range %}
+                                {% if categories.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > categories.number|add:'-3' and num < categories.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if categories.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ categories.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Next">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ categories.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Last">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="fas fa-angle-right"></i></span>
+                                </li>
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            {% endif %}
         {% else %}
             <div class="alert alert-info text-center">
                 <i class="fas fa-info-circle me-2"></i>
@@ -151,29 +247,229 @@
     </div>
 </div>
 
-<!-- Additional CSS for smaller stats cards -->
+<!-- Custom CSS for Stats Cards -->
 <style>
-    .small-stats {
-        margin-bottom: 1.5rem;
+    /* Stats Card Styling - Compact Version */
+    .stat-card {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+        border: 1px solid #e9ecef;
+        overflow: hidden;
     }
     
-    .small-stats .stat-card {
-        padding: 0.75rem;
-        min-height: auto;
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
     }
     
-    .small-stats .stat-icon {
-        font-size: 1.25rem;
-        margin-bottom: 0.25rem;
+    .stat-card-body {
+        padding: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
     }
     
-    .small-stats .stat-number {
+    .stat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.125rem;
+        flex-shrink: 0;
+    }
+    
+    .stat-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .stat-number {
         font-size: 1.5rem;
-        margin-bottom: 0.25rem;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 0.125rem;
+        color: #2c3e50;
     }
     
-    .small-stats .stat-label {
-        font-size: 0.85rem;
+    .stat-label {
+        font-size: 0.813rem;
+        font-weight: 500;
+        color: #6c757d;
+        text-transform: capitalize;
+        line-height: 1.2;
+    }
+    
+    /* Primary Card */
+    .stat-card-primary .stat-icon {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+    }
+    
+    .stat-card-primary:hover {
+        border-color: #667eea;
+    }
+    
+    /* Success Card */
+    .stat-card-success .stat-icon {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: #fff;
+    }
+    
+    .stat-card-success:hover {
+        border-color: #28a745;
+    }
+    
+    /* Info Card */
+    .stat-card-info .stat-icon {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: #fff;
+    }
+    
+    .stat-card-info:hover {
+        border-color: #17a2b8;
+    }
+    
+    /* Warning Card */
+    .stat-card-warning .stat-icon {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        color: #fff;
+    }
+    
+    .stat-card-warning:hover {
+        border-color: #ffc107;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 991.98px) {
+        .stat-card-body {
+            padding: 0.75rem;
+        }
+        
+        .stat-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 1rem;
+        }
+        
+        .stat-number {
+            font-size: 1.375rem;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+        }
+    }
+    
+    @media (max-width: 575.98px) {
+        .stat-card-body {
+            padding: 0.625rem;
+            gap: 0.625rem;
+        }
+        
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 0.938rem;
+        }
+        
+        .stat-number {
+            font-size: 1.25rem;
+        }
+        
+        .stat-label {
+            font-size: 0.688rem;
+        }
+    }
+    
+    /* Table Responsive Improvements */
+    @media (max-width: 767.98px) {
+        .table-responsive {
+            font-size: 0.875rem;
+        }
+        
+        .btn-group-sm > .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+    
+    /* Filter Input and Select Styling */
+    .form-control-filter,
+    .form-select-filter {
+        font-size: 0.938rem;
+        padding: 0.5rem 0.75rem;
+        height: auto;
+    }
+    
+    .form-control-filter::placeholder {
+        font-size: 0.938rem;
+        color: #6c757d;
+    }
+    
+    .form-select-filter option {
+        font-size: 0.938rem;
+    }
+    
+    /* Ensure consistent height for all filter inputs */
+    .form-control-filter,
+    .form-select-filter {
+        min-height: 38px;
+    }
+    
+    @media (max-width: 767.98px) {
+        .form-control-filter,
+        .form-select-filter {
+            font-size: 0.875rem;
+        }
+        
+        .form-control-filter::placeholder {
+            font-size: 0.875rem;
+        }
+    }
+    
+    /* Pagination Styling */
+    .pagination {
+        gap: 0.25rem;
+    }
+    
+    .page-link {
+        border-radius: 6px;
+        padding: 0.375rem 0.75rem;
+        color: #667eea;
+        border: 1px solid #dee2e6;
+    }
+    
+    .page-link:hover {
+        background-color: #f8f9fa;
+        color: #667eea;
+        border-color: #dee2e6;
+    }
+    
+    .page-item.active .page-link {
+        background-color: #667eea;
+        border-color: #667eea;
+        color: #fff;
+    }
+    
+    .page-item.disabled .page-link {
+        background-color: #fff;
+        border-color: #dee2e6;
+        color: #6c757d;
+    }
+    
+    @media (max-width: 575.98px) {
+        .pagination {
+            font-size: 0.875rem;
+        }
+        
+        .page-link {
+            padding: 0.25rem 0.5rem;
+        }
     }
 </style>
 {% endblock %}

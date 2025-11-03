@@ -1,4 +1,4 @@
-<!-- templates/accounts/signup.html - COLOR MATCHED WITH BASE -->
+<!-- templates/accounts/signup.html - OPTIMIZED WITH REAL CLIENT LOGOS -->
 {% extends 'base.html' %}
 {% load static %}
 
@@ -6,9 +6,14 @@
 
 {% block extra_css %}
 <style>
+    /* Font family applied globally */
+    * {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
     .signup-container {
         min-height: calc(100vh - 160px);
-        padding: 2rem 0;
+        padding: 0.75rem 0;
         background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
     }
     
@@ -19,13 +24,240 @@
         background: white;
     }
     
-    /* Sales Contact Banner - UPDATED COLORS */
+    /* Left Content Section Styles */
+    .left-content-section {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
+        color: white;
+        border-radius: 15px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    .left-content-section h1 {
+        font-size: var(--font-2xl);
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        line-height: 1.2;
+    }
+
+    .left-content-section h2 {
+        font-size: var(--font-xl);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        margin-top: 1rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .left-content-section h3 {
+        font-size: var(--font-lg);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        margin-top: 1rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .left-content-section p {
+        font-size: var(--font-sm);
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+        opacity: 0.95;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0.75rem 0;
+    }
+
+    .feature-list li {
+        padding: 0.4rem 0;
+        font-size: var(--font-sm);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .feature-list li i {
+        width: 20px;
+        height: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--font-xs);
+        flex-shrink: 0;
+    }
+
+    /* Client Logos Section - REAL IMAGES SLIDER */
+    .clients-section {
+        margin: 1rem 0 0.5rem;
+        padding: 1rem;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .clients-section h3 {
+        font-size: var(--font-md);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        margin-top: 0;
+        text-align: center;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        color: #087fc2;
+    }
+
+    /* Slider Container */
+    .client-logos-slider {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        height: 80px;
+        background: white;
+    }
+
+    .client-logos-track {
+        display: flex;
+        gap: 1.5rem;
+        animation: slide 25s linear infinite;
+        width: max-content;
+        will-change: transform;
+    }
+
+    .client-logos-track:hover {
+        animation-play-state: paused;
+    }
+
+    @keyframes slide {
+        0% {
+            transform: translateX(0);
+        }
+        100% {
+            transform: translateX(-50%);
+        }
+    }
+
+    .client-logo-item {
+        background: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 140px;
+        height: 70px;
+        transition: transform 0.3s, box-shadow 0.3s;
+        flex-shrink: 0;
+        border: 1px solid #e5e7eb;
+    }
+
+    .client-logo-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* ✅ REAL CLIENT LOGO IMAGES */
+    .client-logo-item img {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        display: block;
+    }
+
+    /* Looking For Section */
+    .looking-for-section {
+        margin: 0.75rem 0 0;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+    }
+
+    .looking-for-section h3 {
+        font-size: var(--font-md);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        margin-top: 0;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .looking-for-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.625rem;
+    }
+
+    .looking-for-card {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 0.75rem;
+        border-radius: 8px;
+        text-align: center;
+        transition: all 0.3s;
+        cursor: pointer;
+        text-decoration: none;
+        color: #2c3e50;
+    }
+
+    .looking-for-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        color: #087fc2;
+    }
+
+    .looking-for-card .icon-box {
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 0.5rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--font-lg);
+    }
+
+    .looking-for-card .icon-box.red {
+        background: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+    }
+
+    .looking-for-card .icon-box.green {
+        background: rgba(40, 167, 69, 0.15);
+        color: #28a745;
+    }
+
+    .looking-for-card .icon-box.pink {
+        background: rgba(232, 62, 140, 0.15);
+        color: #e83e8c;
+    }
+
+    .looking-for-card .icon-box.blue {
+        background: rgba(8, 127, 194, 0.15);
+        color: #087fc2;
+    }
+
+    .looking-for-card h4 {
+        font-size: var(--font-xs);
+        font-weight: 600;
+        margin: 0;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        line-height: 1.3;
+    }
+
+    /* Sales Contact Banner */
     .sales-banner {
         background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
         color: white;
-        padding: 1.5rem;
+        padding: 1rem;
         border-radius: 12px;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
         position: relative;
         overflow: hidden;
         box-shadow: 0 5px 20px rgba(8, 127, 194, 0.3);
@@ -58,33 +290,36 @@
     }
     
     .sales-banner h5 {
-        font-size: 1.1rem;
+        font-size: var(--font-md);
         font-weight: 700;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.4rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .sales-banner p {
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
+        font-size: var(--font-xs);
+        margin-bottom: 0.75rem;
         opacity: 0.95;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .sales-contact-info {
         display: flex;
-        gap: 1.5rem;
+        gap: 1rem;
         flex-wrap: wrap;
-        margin-top: 0.75rem;
+        margin-top: 0.5rem;
     }
     
     .sales-contact-item {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        font-size: 0.9rem;
+        gap: 0.4rem;
+        font-size: var(--font-xs);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .sales-contact-item i {
-        font-size: 1.1rem;
+        font-size: var(--font-sm);
         opacity: 0.9;
     }
     
@@ -92,14 +327,15 @@
         background: white;
         color: #087fc2;
         border: none;
-        padding: 0.5rem 1.25rem;
+        padding: 0.375rem 1rem;
         border-radius: 6px;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: var(--font-xs);
         transition: all 0.3s;
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.4rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .btn-contact-sales:hover {
@@ -111,12 +347,12 @@
     /* Close button for sales banner */
     .btn-close-banner {
         position: absolute;
-        top: 10px;
-        right: 10px;
+        top: 8px;
+        right: 8px;
         background: rgba(255, 255, 255, 0.2);
         border: none;
-        width: 30px;
-        height: 30px;
+        width: 26px;
+        height: 26px;
         border-radius: 50%;
         color: white;
         cursor: pointer;
@@ -133,22 +369,20 @@
     }
     
     .btn-close-banner i {
-        font-size: 0.9rem;
+        font-size: var(--font-xs);
     }
     
     /* Form Styles */
     .form-label {
-        font-weight: 600;
+        font-weight:500;
         color: #333;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.4rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .form-control, .form-select {
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 0.75rem;
-        transition: all 0.3s;
-        font-size: 0.95rem;
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .form-control:focus, .form-select:focus {
@@ -161,7 +395,8 @@
     .invalid-feedback, .valid-feedback {
         display: none;
         margin-top: 0.25rem;
-        font-size: 0.875rem;
+        font-size: var(--font-xs);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .form-control.is-invalid ~ .invalid-feedback,
@@ -200,7 +435,7 @@
         height: 4px;
         border-radius: 2px;
         background: #e0e0e0;
-        margin-top: 0.5rem;
+        margin-top: 0.4rem;
         overflow: hidden;
     }
     
@@ -217,27 +452,8 @@
     #strengthText {
         display: block;
         margin-top: 0.25rem;
-        font-size: 0.875rem;
-    }
-    
-    /* Buttons - UPDATED COLORS */
-    .btn-primary {
-        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
-        border: none;
-        padding: 0.75rem;
-        border-radius: 8px;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-    
-    .btn-primary:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(8, 127, 194, 0.3);
-    }
-    
-    .btn-primary:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
+        font-size: var(--font-xs);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .loading-spinner {
@@ -254,15 +470,29 @@
         to { transform: rotate(360deg); }
     }
     
-    /* Modal Styles - UPDATED COLORS */
+    /* Modal Styles */
     .modal-header {
         background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
         color: white;
         border-bottom: none;
     }
+
+    .modal-title {
+        font-size: var(--font-lg);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
     
     .modal-header .btn-close {
         filter: brightness(0) invert(1);
+    }
+
+    .modal-body {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .modal-body p, .modal-body li {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .contact-method {
@@ -277,256 +507,494 @@
         color: #087fc2;
         font-weight: 600;
         margin-bottom: 0.5rem;
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .contact-method p {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .contact-method a {
         color: #0669a0;
         text-decoration: none;
         font-weight: 500;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
     
     .contact-method a:hover {
         text-decoration: underline;
     }
-    
+
+    .contact-method small {
+        font-size: var(--font-xs);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .card-body h2 {
+        font-size: var(--font-xl);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .card-body p {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .form-text {
+        font-size: var(--font-xs);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    small.form-text {
+        font-size: var(--font-xs);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .alert {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .alert li {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .form-check-label {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .form-check-label a {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .btn {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .btn-primary {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .btn-secondary {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    #subcategoryLoader {
+        font-size: var(--font-xs);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .text-muted {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .mb-3 {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .mb-4 {
+        margin-bottom: 1rem !important;
+    }
+
     /* Responsive */
+    @media (max-width: 991.98px) {
+        .left-content-section {
+            min-height: auto;
+            margin-bottom: 1rem;
+            padding: 1.25rem;
+        }
+
+        .left-content-section h1 {
+            font-size: var(--font-xl);
+        }
+
+        .left-content-section h2 {
+            font-size: var(--font-lg);
+            margin-top: 0.75rem;
+        }
+
+        .client-logo-item {
+            min-width: 130px;
+            height: 65px;
+        }
+
+        .looking-for-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .client-logos-slider {
+            height: 70px;
+        }
+    }
+
     @media (max-width: 768px) {
         .sales-contact-info {
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 0.5rem;
         }
         
         .sales-banner {
-            padding: 1rem;
+            padding: 0.875rem;
         }
         
         .sales-banner h5 {
-            font-size: 1rem;
+            font-size: var(--font-sm);
         }
         
         .btn-close-banner {
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
+        }
+
+        .signup-container {
+            padding: 0.5rem 0;
+        }
+
+        .card-body {
+            padding: 1rem !important;
+        }
+
+        .card-body h2 {
+            font-size: var(--font-lg);
+        }
+
+        .client-logos-slider {
+            height: 65px;
+        }
+
+        .client-logo-item {
+            min-width: 120px;
+            height: 60px;
+        }
+
+        .looking-for-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .left-content-section {
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .client-logo-item {
+            min-width: 110px;
+            height: 55px;
+        }
+
+        .client-logos-slider {
+            height: 60px;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container signup-container">
-    <div class="row justify-content-center">
-        <div class="col-lg-6 col-md-8">
-            <!-- Sales Contact Banner with Close Button -->
-            <div class="sales-banner" id="salesBanner">
-                <button type="button" class="btn-close-banner" id="closeSalesBanner" aria-label="Close banner">
-                    <i class="fas fa-times"></i>
-                </button>
-                
-                <div class="sales-banner-content">
-                    <h5>
-                        <i class="fas fa-bolt me-2"></i>
-                        Need Quick Access? Contact Our Sales Team
-                    </h5>
-                    <p class="mb-2">
-                        For enterprise solutions, bulk licenses, or immediate account activation, 
-                        our sales team is here to help you get started faster.
+<div class="container-fluid signup-container">
+    <div class="container">
+        <div class="row g-3">
+            <!-- Left Side - Content Section -->
+            <div class="col-lg-6">
+                <div class="left-content-section">
+                    <h1 class="text-white" style="font-size:29px">
+                        Unlock the Future of employee training with CHRP‑INDIA
+                    </h1>
+                    <p>
+                        Explore immersive XR training, interactive demos, and next-gen eLearning solutions - tailored for your business.
                     </p>
-                    
-                    <div class="sales-contact-info">
-                        <div class="sales-contact-item">
-                            <i class="fas fa-phone-alt"></i>
-                            <span>+91 8008987948</span>
-                        </div>
-                        <div class="sales-contact-item">
-                            <i class="fas fa-envelope"></i>
-                            <span>reach@chrp-india.com</span>
+
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Personalized eLearning + XR demo access</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Built for enterprises, educators & L&D leaders</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Schedule a 1‑on‑1 live session with our experts</span>
+                        </li>
+                    </ul>
+
+                    <!-- ✅ Trusted Clients Section - REAL LOGO IMAGES -->
+                    <div class="clients-section">
+                        <h3>Trusted by Leading Companies</h3>
+                        <div class="client-logos-slider">
+                            <div class="client-logos-track">
+                                <!-- First set of logos -->
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/epiroc.png' %}" alt="Epiroc">
+                                </div>
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/hero.png' %}" alt="Hero">
+                                </div>
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/jcb.png' %}" alt="JCB">
+                                </div>
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/lennox.png' %}" alt="Lennox">
+                                </div>
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/mcl.png' %}" alt="MCL">
+                                </div>
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/schneider.png' %}" alt="Schneider">
+                                </div>
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/tata.png' %}" alt="Tata">
+                                </div>
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/vedanta.png' %}" alt="Vedanta">
+                                </div>
+                                
+                                <!-- Duplicate set for seamless loop -->
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/epiroc.png' %}" alt="Epiroc">
+                                </div>
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/hero.png' %}" alt="Hero">
+                                </div>
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/jcb.png' %}" alt="JCB">
+                                </div>
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/lennox.png' %}" alt="Lennox">
+                                </div>
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/mcl.png' %}" alt="MCL">
+                                </div>
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/schneider.png' %}" alt="Schneider">
+                                </div>
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/tata.png' %}" alt="Tata">
+                                </div>
+                                <div class="client-logo-item">
+                                    <img src="{% static 'images/client_logos/vedanta.png' %}" alt="Vedanta">
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <button type="button" class="btn btn-contact-sales mt-2" data-bs-toggle="modal" data-bs-target="#salesModal">
-                        <i class="fas fa-comments"></i>
-                        Contact Sales Team
-                    </button>
-                </div>
-            </div>
 
-            <!-- Signup Card -->
-            <div class="card signup-card">
-                <div class="card-body p-4 p-md-5">
-                    <div class="text-center mb-4">
-                        <h2 class="fw-bold text-primary">Create Account</h2>
-                        <p class="text-muted">Join Demo Portal for exclusive business solutions</p>
-                    </div>
+                    <div class="looking-for-section">
+                        <h3 class="text-white">Need Quick Access? Contact Our Sales Team</h3>
+                        <p>
+                            For enterprise solutions, bulk licenses, or immediate account activation, our sales team is here to help you get started faster.
+                        </p>  
 
-                    <form method="post" id="signupForm" novalidate>
-                        {% csrf_token %}
+                        <div class="sales-contact-info">
+                            <div class="sales-contact-item">
+                                <i class="fas fa-phone-alt"></i>
+                                <a href="tel:+918008987948" class="text-white text-decoration-none">
+                                    +91 8008987948
+                                </a>
+                            </div>
+                            <div class="sales-contact-item">
+                                <i class="fas fa-envelope"></i>
+                                <a href="mailto:reach@chrp-india.com" class="text-white text-decoration-none">
+                                    reach@chrp-india.com
+                                </a>
+                            </div>
+                        </div>
                         
-                        {% if form.errors %}
-                            <div class="alert alert-danger alert-dismissible fade show">
-                                <strong>Please correct the following errors:</strong>
-                                <ul class="mb-0 mt-2">
-                                    {% for field, errors in form.errors.items %}
-                                        {% for error in errors %}
-                                            <li>{{ error }}</li>
+                        <button type="button" class="btn btn-contact-sales mt-2" data-bs-toggle="modal" data-bs-target="#salesModal">
+                            <i class="fas fa-comments"></i>
+                            Contact Sales Team
+                        </button> 
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right Side - Signup Form -->
+            <div class="col-lg-6">
+               
+                <!-- Signup Card -->
+                <div class="card signup-card">
+                    <div class="card-body p-3">
+                        <div class="text-center mb-3">
+                            <h2 class="fw-bold text-primary">Sign Up</h2>
+                            <p class="text-muted">Discover all-in-one eLearning solutions to help your business grow</p>
+                        </div>
+
+                        <form method="post" id="signupForm" novalidate>
+                            {% csrf_token %}
+                            
+                            {% if form.errors %}
+                                <div class="alert alert-danger alert-dismissible fade show">
+                                    <strong>Please correct the following errors:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        {% for field, errors in form.errors.items %}
+                                            {% for error in errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
                                         {% endfor %}
-                                    {% endfor %}
-                                </ul>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endif %}
+                                    </ul>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endif %}
 
-                        <!-- Name Fields -->
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">First Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="first_name" id="firstName" 
-                                       required value="{{ form.first_name.value|default:'' }}">
-                                <div class="invalid-feedback">Please enter your first name</div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="last_name" id="lastName" 
-                                       required value="{{ form.last_name.value|default:'' }}">
-                                <div class="invalid-feedback">Please enter your last name</div>
-                            </div>
-                        </div>
-
-                        <!-- Email -->
-                        <div class="mb-3">
-                            <label class="form-label">Business Email <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" name="email" id="emailField" 
-                                   required value="{{ form.email.value|default:'' }}">
-                            <div class="invalid-feedback" id="emailError">Please enter a valid business email</div>
-                            <small class="form-text text-muted">
-                                <i class="fas fa-info-circle me-1"></i>
-                                Use your business email address (personal emails not allowed)
-                            </small>
-                        </div>
-
-                        <!-- Mobile -->
-                        <div class="mb-3">
-                            <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <select class="form-select" name="country_code" id="countryCode" style="max-width: 150px;">
-                                    {% for code, label in form.fields.country_code.choices %}
-                                        <option value="{{ code }}" {% if code == '+91' %}selected{% endif %}>
-                                            {{ label }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                <input type="tel" class="form-control" name="mobile" id="mobileField" 
-                                       required pattern="[0-9]{10}" maxlength="10" 
-                                       value="{{ form.mobile.value|default:'' }}">
-                            </div>
-                            <div class="invalid-feedback">Please enter a valid 10-digit mobile number</div>
-                        </div>
-
-                        <!-- Job & Organization -->
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Job Title <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="job_title" id="jobTitle" 
-                                       required value="{{ form.job_title.value|default:'' }}">
-                                <div class="invalid-feedback">Please enter your job title</div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Organization <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="organization" id="organization" 
-                                       required value="{{ form.organization.value|default:'' }}">
-                                <div class="invalid-feedback">Please enter your organization name</div>
-                            </div>
-                        </div>
-
-                        <!-- Business Category -->
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Business Category <span class="text-danger">*</span></label>
-                                <select class="form-select" name="business_category" id="categorySelect" required>
-                                    <option value="">Select category...</option>
-                                    {% for category in form.fields.business_category.queryset %}
-                                        <option value="{{ category.id }}"
-                                                {% if form.business_category.value|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>
-                                            {% if category.icon %}{{ category.icon }} {% endif %}{{ category.name }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                <div class="invalid-feedback">Please select a business category</div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Subcategory <small class="text-muted">(Optional)</small></label>
-                                <select class="form-select" name="business_subcategory" id="subcategorySelect" disabled>
-                                    <option value="">Select category first...</option>
-                                </select>
-                                <div id="subcategoryLoader" class="text-muted small mt-1" style="display:none;">
-                                    <span class="loading-spinner"></span> Loading...
+                            <!-- Name Fields -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">First Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="first_name" id="firstName" 
+                                           required value="{{ form.first_name.value|default:'' }}">
+                                    <div class="invalid-feedback">Please enter your first name</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="last_name" id="lastName" 
+                                           required value="{{ form.last_name.value|default:'' }}">
+                                    <div class="invalid-feedback">Please enter your last name</div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Password -->
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Password <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control" name="password1" id="password1" 
-                                       required minlength="8">
-                                <div class="password-strength">
-                                    <div class="password-strength-bar" id="strengthBar"></div>
+                            <!-- Email -->
+                            <div class="mb-3">
+                                <label class="form-label">Business Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" name="email" id="emailField" 
+                                       required value="{{ form.email.value|default:'' }}">
+                                <div class="invalid-feedback" id="emailError">Please enter a valid business email</div>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Use your business email address (personal emails not allowed)
+                                </small>
+                            </div>
+
+                            <!-- Mobile -->
+                            <div class="mb-3">
+                                <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <select class="form-select" name="country_code" id="countryCode" style="max-width: 150px;">
+                                        {% for code, label in form.fields.country_code.choices %}
+                                            <option value="{{ code }}" {% if code == '+91' %}selected{% endif %}>
+                                                {{ label }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="tel" class="form-control" name="mobile" id="mobileField" 
+                                           required pattern="[0-9]{10}" maxlength="10" 
+                                           value="{{ form.mobile.value|default:'' }}">
                                 </div>
-                                <small class="text-muted" id="strengthText">Min 8 characters</small>
-                                <div class="invalid-feedback">Password must be at least 8 characters</div>
+                                <div class="invalid-feedback">Please enter a valid 10-digit mobile number</div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control" name="password2" id="password2" 
-                                       required>
-                                <div class="invalid-feedback" id="password2Error">Passwords must match</div>
-                                <div class="valid-feedback">
-                                    <i class="fas fa-check-circle me-1"></i>Passwords match
+
+                            <!-- Job & Organization -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Job Title <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="job_title" id="jobTitle" 
+                                           required value="{{ form.job_title.value|default:'' }}">
+                                    <div class="invalid-feedback">Please enter your job title</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Organization <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="organization" id="organization" 
+                                           required value="{{ form.organization.value|default:'' }}">
+                                    <div class="invalid-feedback">Please enter your organization name</div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Referral -->
-                        <div class="mb-3">
-                            <label class="form-label">How did you find us? <small class="text-muted">(Optional)</small></label>
-                            <select class="form-select" name="referral_source" id="referralSource">
-                                <option value="">Select source...</option>
-                                {% for value, label in form.fields.referral_source.choices %}
-                                    {% if value %}
-                                        <option value="{{ value }}"
-                                                {% if form.referral_source.value == value %}selected{% endif %}>
-                                            {{ label }}
-                                        </option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <!-- Terms -->
-                        <div class="mb-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" required id="terms">
-                                <label class="form-check-label" for="terms">
-                                    I agree to the <a href="#" target="_blank">Terms of Service</a> and 
-                                    <a href="#" target="_blank">Privacy Policy</a> <span class="text-danger">*</span>
-                                </label>
-                                <div class="invalid-feedback">You must agree to the terms and conditions</div>
+                            <!-- Business Category -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Business Category <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="business_category" id="categorySelect" required>
+                                        <option value="">Select category...</option>
+                                        {% for category in form.fields.business_category.queryset %}
+                                            <option value="{{ category.id }}"
+                                                    {% if form.business_category.value|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>
+                                                {% if category.icon %}{{ category.icon }} {% endif %}{{ category.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback">Please select a business category</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Subcategory <small class="text-muted">(Optional)</small></label>
+                                    <select class="form-select" name="business_subcategory" id="subcategorySelect" disabled>
+                                        <option value="">Select category first...</option>
+                                    </select>
+                                    <div id="subcategoryLoader" class="text-muted small mt-1" style="display:none;">
+                                        <span class="loading-spinner"></span> Loading...
+                                    </div>
+                                </div>
                             </div>
+
+                            <!-- Password -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Password <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" name="password1" id="password1" 
+                                           required minlength="8">
+                                    <div class="password-strength">
+                                        <div class="password-strength-bar" id="strengthBar"></div>
+                                    </div>
+                                    <small class="text-muted" id="strengthText">Min 8 characters</small>
+                                    <div class="invalid-feedback">Password must be at least 8 characters</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" name="password2" id="password2" 
+                                           required>
+                                    <div class="invalid-feedback" id="password2Error">Passwords must match</div>
+                                    <div class="valid-feedback">
+                                        <i class="fas fa-check-circle me-1"></i>Passwords match
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Referral -->
+                            <div class="mb-3">
+                                <label class="form-label">How did you find us? <small class="text-muted">(Optional)</small></label>
+                                <select class="form-select" name="referral_source" id="referralSource">
+                                    <option value="">Select source...</option>
+                                    {% for value, label in form.fields.referral_source.choices %}
+                                        {% if value %}
+                                            <option value="{{ value }}"
+                                                    {% if form.referral_source.value == value %}selected{% endif %}>
+                                                {{ label }}
+                                            </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Terms -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" required id="terms">
+                                    <label class="form-check-label" for="terms">
+                                        I agree to the <a href="#" target="_blank">Terms of Service</a> and 
+                                        <a href="#" target="_blank">Privacy Policy</a> <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="invalid-feedback">You must agree to the terms and conditions</div>
+                                </div>
+                            </div>
+
+                            <!-- Submit -->
+                            <button type="submit" class="btn btn-primary w-100 py-2 mb-3" id="submitBtn">
+                                <i class="fas fa-user-plus me-2"></i>Sign Up
+                            </button>
+                        </form>
+
+                        <hr class="my-3">
+                        
+                        <div class="text-center">
+                            <p class="text-muted mb-0">
+                                Already have an account? 
+                                <a href="{% url 'accounts:signin' %}" class="text-decoration-none fw-bold">Sign In</a>
+                            </p>
                         </div>
-
-                        <!-- Submit -->
-                        <button type="submit" class="btn btn-primary w-100 py-2 mb-3" id="submitBtn">
-                            <i class="fas fa-user-plus me-2"></i>Create Account
-                        </button>
-                    </form>
-
-                    <hr class="my-4">
-                    
-                    <div class="text-center">
-                        <p class="text-muted mb-0">
-                            Already have an account? 
-                            <a href="{% url 'accounts:signin' %}" class="text-decoration-none fw-bold">Sign In</a>
-                        </p>
                     </div>
                 </div>
             </div>
@@ -534,65 +1002,6 @@
     </div>
 </div>
 
-<!-- Sales Contact Modal -->
-<div class="modal fade" id="salesModal" tabindex="-1" aria-labelledby="salesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="salesModalLabel">
-                    <i class="fas fa-headset me-2"></i>Contact Sales Team
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="mb-3">Our sales team is available to assist you with:</p>
-                <ul class="mb-4">
-                    <li>Enterprise account setup and onboarding</li>
-                    <li>Bulk user licenses and team management</li>
-                    <li>Custom demo requests and presentations</li>
-                    <li>Priority account activation (within 24 hours)</li>
-                    <li>Pricing packages and volume discounts</li>
-                    <li>Integration and technical support</li>
-                </ul>
-                
-                <div class="contact-method">
-                    <h6><i class="fas fa-phone-alt me-2"></i>Phone Support</h6>
-                    <p class="mb-1">
-                        Call us: <a href="tel:+918008987948">+91-8008987948</a>
-                    </p>
-                    <small class="text-muted">Monday - Saturday: 9:00 AM - 7:00 PM IST</small>
-                </div>
-                
-                <div class="contact-method">
-                    <h6><i class="fas fa-envelope me-2"></i>Email Support</h6>
-                    <p class="mb-1">
-                        Email us: <a href="mailto:reach@chrp-india.com">reach@chrp-india.com</a>
-                    </p>
-                    <small class="text-muted">Response within 24 hours</small>
-                </div>
-                
-                <div class="contact-method">
-                    <h6><i class="fas fa-whatsapp me-2"></i>WhatsApp Business</h6>
-                    <p class="mb-1">
-                        Message us: <a href="https://wa.me/918008987948?text=Hi%2C%20I%20need%20help%20with%20account%20registration" target="_blank">+91-8008987948</a>
-                    </p>
-                    <small class="text-muted">Quick responses during business hours</small>
-                </div>
-                
-                <div class="alert alert-info mt-3 mb-0">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>Priority Support:</strong> Mention "Quick Registration" for expedited account activation.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <a href="mailto:reach@chrp-india.com?subject=Enterprise Account Registration" class="btn btn-primary">
-                    <i class="fas fa-envelope me-2"></i>Send Email
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -612,7 +1021,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const blockedDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'ymail.com', 'aol.com', 'icloud.com', 'live.com', 'rediffmail.com', 'protonmail.com'];
     
-    // Close sales banner functionality
     const closeSalesBannerBtn = document.getElementById('closeSalesBanner');
     const salesBanner = document.getElementById('salesBanner');
     
@@ -808,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`/auth/ajax/get-subcategories/?category_id=${categoryId}`)
             .then(res => res.json())
             .then(data => {
-                subcategorySelect.innerHTML = '<option value="">Select subcategory (optional)...</option>';
+                subcategorySelect.innerHTML = '<option value="">Select subcategory</option>';
                 
                 if (data.success && data.subcategories && data.subcategories.length > 0) {
                     data.subcategories.forEach(sub => {

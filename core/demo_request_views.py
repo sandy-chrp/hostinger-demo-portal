@@ -619,12 +619,15 @@ def admin_get_filtered_demos(request):
 # ================================================================================
 # EMAIL UTILITY FUNCTIONS
 # ================================================================================
-
 def send_demo_request_created_email(demo_request):
-    """Send demo request creation email to customer"""
+    """
+    Send demo request creation email to customer
+    ✅ FIXED: Sends ONLY HTML email (no duplicate)
+    """
     try:
         from django.template.loader import render_to_string
-        from django.utils.html import strip_tags
+        from django.core.mail import send_mail
+        from django.conf import settings
         
         subject = f'Demo Request Received: {demo_request.demo.title}'
         
@@ -635,54 +638,91 @@ def send_demo_request_created_email(demo_request):
                 'demo': demo_request.demo,
                 'requested_date': demo_request.requested_date,
                 'time_slot': demo_request.requested_time_slot,
+                'year': 2025,
             })
-            message = strip_tags(html_message)
-        except:
+            
+            send_mail(
+                subject=subject,
+                message='',  # ✅ Empty
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[demo_request.user.email],
+                html_message=html_message,
+                fail_silently=True,
+            )
+            
+            print(f"✅ Demo request creation email (HTML) sent to {demo_request.user.email}")
+            
+        except Exception as template_error:
+            print(f"⚠️ Template error: {template_error}")
+            
             message = f"""
 Dear {demo_request.user.first_name},
 
 Thank you for requesting a demo!
 
-We have received your demo request with the following details:
-
 Demo Details:
 - Product: {demo_request.demo.title}
 - Requested Date: {demo_request.requested_date.strftime('%B %d, %Y')}
 - Requested Time: {demo_request.requested_time_slot}
-- Business Category: {demo_request.business_category.name if demo_request.business_category else 'Not specified'}
-- Business Subcategory: {demo_request.business_subcategory.name if demo_request.business_subcategory else 'Not specified'}
-- Location: {demo_request.city}, {demo_request.country_region if demo_request.country_region else 'India'}
 
-Your request is currently pending. We will review and confirm your appointment within 24 hours.
-
-If you have any questions or need to make changes, please don't hesitate to contact us.
+Your request is pending. We will confirm within 24 hours.
 
 Best regards,
 Demo Portal Team
 CHRP India
             """
-            html_message = None
-        
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[demo_request.user.email],
-            html_message=html_message,
-            fail_silently=True,
-        )
-        
-        print(f"✅ Demo request creation email sent to {demo_request.user.email}")
+            
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[demo_request.user.email],
+                fail_silently=True,
+            )
+            
+            print(f"✅ Demo request email (plain text fallback) sent to {demo_request.user.email}")
         
     except Exception as e:
         print(f"❌ Error sending demo request creation email: {e}")
 
 
 def send_demo_confirmation_email(demo_request):
-    """Send demo confirmation email to customer"""
+    """
+    Send demo confirmation email to customer
+    ✅ FIXED: Sends ONLY HTML email (no duplicate plain text)
+    """
     try:
+        from django.template.loader import render_to_string
+        from django.core.mail import send_mail
+        from django.conf import settings
+        
         subject = f'Demo Confirmed: {demo_request.demo.title}'
-        message = f"""
+        
+        # ✅ Render HTML template
+        try:
+            html_message = render_to_string('emails/demo_confirmed.html', {
+                'demo_request': demo_request,
+                'year': 2025,  # For footer
+            })
+            
+            # ✅ CRITICAL: Send ONLY html_message
+            # Django automatically creates plain text version if needed
+            send_mail(
+                subject=subject,
+                message='',  # ✅ Empty - HTML will be used
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[demo_request.user.email],
+                html_message=html_message,  # ✅ ONLY HTML
+                fail_silently=True,
+            )
+            
+            print(f"✅ Demo confirmation email (HTML) sent to {demo_request.user.email}")
+            
+        except Exception as template_error:
+            print(f"⚠️ Template error, using plain text fallback: {template_error}")
+            
+            # ✅ Fallback plain text ONLY if template fails
+            message = f"""
 Dear {demo_request.user.first_name},
 
 Your demo request has been confirmed!
@@ -697,26 +737,31 @@ We look forward to showcasing our solution to you.
 Best regards,
 Demo Portal Team
 CHRP India
-        """
-        
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[demo_request.user.email],
-            fail_silently=True,
-        )
-        
-        print(f"✅ Demo confirmation email sent to {demo_request.user.email}")
+            """
+            
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[demo_request.user.email],
+                fail_silently=True,
+            )
+            
+            print(f"✅ Demo confirmation email (plain text fallback) sent to {demo_request.user.email}")
         
     except Exception as e:
         print(f"❌ Error sending confirmation email: {e}")
-
+        import traceback
+        traceback.print_exc()
 
 def send_demo_reschedule_email(demo_request, reason):
     """Send demo reschedule email to customer"""
     try:
+        from django.core.mail import send_mail
+        from django.conf import settings
+        
         subject = f'Demo Rescheduled: {demo_request.demo.title}'
+        
         message = f"""
 Dear {demo_request.user.first_name},
 
@@ -749,11 +794,14 @@ CHRP India
     except Exception as e:
         print(f"❌ Error sending reschedule email: {e}")
 
-
 def send_demo_cancellation_email(demo_request, reason):
     """Send demo cancellation email to customer"""
     try:
+        from django.core.mail import send_mail
+        from django.conf import settings
+        
         subject = f'Demo Cancelled: {demo_request.demo.title}'
+        
         message = f"""
 Dear {demo_request.user.first_name},
 
@@ -787,17 +835,21 @@ CHRP India
         print(f"❌ Error sending cancellation email: {e}")
 
 def create_demo_confirmation_notification(demo_request):
-    """Create confirmation notification for demo request - ✅ FIXED"""
+    """
+    Create confirmation notification for demo request
+    ✅ FIXED: Only creates notification, email already sent separately
+    """
     try:
-        # ✅ Use NotificationService instead of manual creation
         from notifications.services import NotificationService
         
+        # ✅ CRITICAL FIX: send_email=False to prevent duplicate
+        # Email is already sent by send_demo_confirmation_email() function
         notification = NotificationService.notify_demo_request_confirmed(
             demo_request=demo_request,
-            send_email=True  # ✅ CHANGED: Email bhi jayega ab
+            send_email=False  # ✅ CHANGED: Notification only, no email
         )
         
-        print(f"✅ Demo confirmation notification created for {demo_request.user.email}")
+        print(f"✅ Confirmation notification created (no email - already sent)")
         return notification
         
     except Exception as e:

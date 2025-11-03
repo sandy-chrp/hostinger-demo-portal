@@ -1,10 +1,11 @@
 version: '3.8'
+
 services:
   web:
     build: .
     container_name: django_app
-    # FIXED: Added --no-sendfile and --worker-class sync
-    command: gunicorn demo_portal.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120 --worker-class sync --no-sendfile
+    # ✅ INCREASED to 600 seconds (10 minutes)
+    command: gunicorn demo_portal.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 600 --worker-class sync --no-sendfile --max-requests 1000 --max-requests-jitter 50
     volumes:
       - .:/app
       - static_volume:/app/staticfiles

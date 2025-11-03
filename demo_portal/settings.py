@@ -1,5 +1,5 @@
 """
-Django settings for demo_portal project - UPDATED WITH WEBGL + S3 SUPPORT
+Django settings for demo_portal project - UPDATED WITH TAWK.TO FIX
 """
 
 from pathlib import Path
@@ -54,9 +54,10 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
-    'django.middleware.gzip.GZipMiddleware',  # ✅ Gzip compression for performance
+    'django.middleware.gzip.GZipMiddleware', 
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    # 'csp.middleware.CSPMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -69,7 +70,7 @@ MIDDLEWARE = [
     'customers.middleware.ContentProtectionMiddleware',
     'customers.middleware.WebGLFileMiddleware',
     'customers.middleware.CheckUserStatusMiddleware',
-    'customers.middleware.BrotliContentEncodingMiddleware'
+    'customers.middleware.BrotliContentEncodingMiddleware',
 ]
 
 # ============================================
@@ -408,15 +409,10 @@ if USE_S3:
         '.css': 'text/css',
     }
 
-    # Updated S3 Object Parameters
-    AWS_S3_OBJECT_PARAMETERS = {
-        'CacheControl': 'max-age=86400',
-    }
-
     # IMPORTANT: Update STORAGES configuration
     STORAGES = {
         "default": {
-            "BACKEND": "custom_storages.MediaStorage",  # CHANGE THIS
+            "BACKEND": "custom_storages.MediaStorage",
         },
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
@@ -471,3 +467,54 @@ WEBGL_SETTINGS = {
 
 # Backward compatibility
 WEBGL_EXTRACT_DIR = WEBGL_EXTRACT_ROOT
+
+
+# ============================================
+# CSP SETTINGS - COMMENTED OUT (Tawk.to fix)
+# ============================================
+# Content Security Policy Settings
+# CSP_DEFAULT_SRC = ("'self'",)
+# CSP_SCRIPT_SRC = (
+#     "'self'", 
+#     "'unsafe-inline'", 
+#     "'unsafe-eval'",
+#     "https://cdn.jsdelivr.net",
+#     "https://cdnjs.cloudflare.com",
+#     "https://ajax.googleapis.com",
+#     "https://embed.tawk.to",  # ✅ For Tawk chat
+# )
+# CSP_STYLE_SRC = (
+#     "'self'", 
+#     "'unsafe-inline'",
+#     "https://cdn.jsdelivr.net",
+#     "https://cdnjs.cloudflare.com",
+# )
+# CSP_IMG_SRC = (
+#     "'self'", 
+#     "data:", 
+#     "blob:",
+#     "https://*.s3.amazonaws.com",
+#     "https://*.s3.*.amazonaws.com",
+# )
+# CSP_MEDIA_SRC = (
+#     "'self'", 
+#     "blob:",
+#     "https://*.s3.amazonaws.com",  # ✅ All S3 buckets
+#     "https://*.s3.*.amazonaws.com",  # ✅ Regional S3
+# )
+# CSP_CONNECT_SRC = (
+#     "'self'",
+#     "https://*.s3.amazonaws.com",
+#     "https://*.s3.*.amazonaws.com",
+#     "https://cdn.jsdelivr.net",
+#     "https://embed.tawk.to",
+# )
+# CSP_FONT_SRC = (
+#     "'self'",
+#     "https://cdn.jsdelivr.net",
+#     "https://cdnjs.cloudflare.com",
+# )
+# CSP_FRAME_SRC = (
+#     "'self'",
+#     "https://embed.tawk.to",  # ✅ For Tawk chat widget
+# )

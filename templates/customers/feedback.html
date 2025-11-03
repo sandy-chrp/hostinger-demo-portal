@@ -1,0 +1,110 @@
+{% extends 'customers/base.html' %}
+{% load static %}
+
+{% block customer_title %}Feedback Submitted{% endblock %}
+{% block page_title %}Feedback Submitted{% endblock %}
+
+{% block customer_content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <!-- Success Card -->
+            <div class="customer-card fade-in">
+                <div class="customer-card-body text-center py-5">
+                    <!-- Success Icon -->
+                    <div class="mb-4">
+                        <div class="stat-card-icon bg-success bg-opacity-10 mx-auto">
+                            <i class="fas fa-check-circle text-success"></i>
+                        </div>
+                    </div>
+
+                    <!-- Success Message -->
+                    <h2 class="customer-card-title justify-content-center mb-3">
+                        Thank You for Your Feedback!
+                    </h2>
+                    
+                    <p class="text-muted mb-4">
+                        Your feedback has been submitted successfully. We appreciate your input and will use it to improve our demos.
+                    </p>
+
+                    <!-- Demo Info -->
+                    {% if demo %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Feedback submitted for: <strong>{{ demo.title }}</strong>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-3 justify-content-center flex-wrap mt-4">
+                        {% if demo %}
+                        <a href="{% url 'customers:demo_detail' demo.slug %}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Demo
+                        </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'customers:browse_demos' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-video me-2"></i>Browse More Demos
+                        </a>
+                        
+                        <a href="{% url 'customers:dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Info Card -->
+            <div class="customer-card fade-in mt-4">
+                <div class="customer-card-header">
+                    <h3 class="customer-card-title">
+                        <i class="fas fa-lightbulb"></i>
+                        What Happens Next?
+                    </h3>
+                </div>
+                <div class="customer-card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>Review:</strong> Our team will review your feedback
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>Improve:</strong> We'll use your input to enhance our demos
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>Follow-up:</strong> We may contact you if we need more details
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fade-in {
+        animation: fadeInUp 0.6s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .customer-card {
+        animation-delay: 0.1s;
+    }
+
+    .customer-card:nth-child(2) {
+        animation-delay: 0.3s;
+    }
+</style>
+{% endblock %}

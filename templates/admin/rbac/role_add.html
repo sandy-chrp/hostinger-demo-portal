@@ -1,188 +1,273 @@
 {% extends 'admin/base.html' %}
-{% load static %}
 
 {% block admin_title %}Add Role{% endblock %}
 {% block page_title %}Add New Role{% endblock %}
 
-{% block admin_extra_css %}
+{% block admin_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="mb-1" style="font-weight: 500; color: #2c3e50; font-family: Verdana, Geneva, Tahoma, sans-serif; font-size: var(--font-xl);">Add New Role</h4>
+        <p class="text-muted mb-0" style="font-size: var(--font-sm); font-family: Verdana, Geneva, Tahoma, sans-serif;">Create a new role with permissions</p>
+    </div>
+    <a href="{% url 'accounts:role_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <div class="row g-4">
+        <!-- Left Column - Basic Info -->
+        <div class="col-12 col-lg-4">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h5 class="mb-0" style="font-weight: 500; font-size: var(--font-lg); font-family: Verdana, Geneva, Tahoma, sans-serif;">Basic Information</h5>
+                </div>
+                <div class="admin-card-body">
+                    <!-- Role Name -->
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size: var(--font-sm); font-weight: 500; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                            Role Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               name="name" 
+                               class="form-control" 
+                               style="font-size: var(--font-sm); height: 38px; font-family: Verdana, Geneva, Tahoma, sans-serif;"
+                               
+                               required>
+                        <small class="text-muted" style="font-size: var(--font-xs); font-family: Verdana, Geneva, Tahoma, sans-serif;">Enter a descriptive role name</small>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size: var(--font-sm); font-weight: 500; font-family: Verdana, Geneva, Tahoma, sans-serif;">Description</label>
+                        <textarea name="description" 
+                                  class="form-control" 
+                                  rows="4" 
+                                  style="font-size: var(--font-sm); font-family: Verdana, Geneva, Tahoma, sans-serif;"
+                                 ></textarea>
+                        <small class="text-muted" style="font-size: var(--font-xs); font-family: Verdana, Geneva, Tahoma, sans-serif;">Optional role description</small>
+                    </div>
+
+                    <!-- Active Status -->
+                    <div class="form-check">
+                        <input class="form-check-input" 
+                               type="checkbox" 
+                               name="is_active" 
+                               id="is_active" 
+                               checked>
+                        <label class="form-check-label" for="is_active" style="font-size: var(--font-sm); font-weight: 500; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                            Active Role
+                        </label>
+                        <div>
+                            <small class="text-muted" style="font-size: var(--font-xs); font-family: Verdana, Geneva, Tahoma, sans-serif;">Uncheck to create inactive role</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Permissions -->
+        <div class="col-12 col-lg-8">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h5 class="mb-0" style="font-weight: 500; font-size: var(--font-lg); font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                Permissions 
+                                <span class="badge bg-primary ms-2" id="permCount" style="font-size: var(--font-xs); font-family: Verdana, Geneva, Tahoma, sans-serif;">0</span>
+                            </h5>
+                        </div>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" 
+                                    class="btn btn-outline-primary" 
+                                    onclick="selectAll()"
+                                    style="font-size: var(--font-sm);">
+                                <i class="fas fa-check-double me-1"></i>Select All
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-outline-secondary" 
+                                    onclick="deselectAll()"
+                                    style="font-size: var(--font-sm);">
+                                <i class="fas fa-times me-1"></i>Clear All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-card-body">
+                    {% if permissions_by_module %}
+                        {% for module, perms in permissions_by_module.items %}
+                        <div class="permission-module mb-3">
+                            <!-- Module Header -->
+                            <div class="module-header" 
+                                 data-bs-toggle="collapse" 
+                                 data-bs-target="#module{{ forloop.counter }}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span style="font-size: var(--font-sm); font-weight: 500; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                        <i class="fas fa-folder me-2" style="color: #087fc2;"></i>
+                                        {{ module }}
+                                        <span class="badge bg-light text-dark ms-2" style="font-size: var(--font-xs); font-family: Verdana, Geneva, Tahoma, sans-serif;">{{ perms|length }}</span>
+                                    </span>
+                                    <div>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-link text-primary" 
+                                                onclick="selectModule({{ forloop.counter }}, event)"
+                                                style="font-size: var(--font-xs); text-decoration: none;">
+                                            Select Module
+                                        </button>
+                                        <i class="fas fa-chevron-down ms-2" style="font-size: var(--font-xs); color: #6c757d;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Module Permissions -->
+                            <div class="collapse show module-body" id="module{{ forloop.counter }}">
+                                <div class="permissions-list">
+                                    {% for perm in perms %}
+                                    <div class="permission-item">
+                                        <div class="form-check">
+                                            <input class="form-check-input perm-check" 
+                                                   type="checkbox" 
+                                                   name="permissions" 
+                                                   value="{{ perm.id }}"
+                                                   id="perm{{ perm.id }}">
+                                            <label class="form-check-label" for="perm{{ perm.id }}">
+                                                <div style="font-size: var(--font-sm); color: #2c3e50; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                                    {{ perm.name }}
+                                                </div>
+                                                <small class="text-muted" style="font-size: var(--font-xs); font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                                    {{ perm.codename }}
+                                                </small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-shield-alt fa-3x mb-3" style="opacity: 0.3;"></i>
+                            <p class="mb-0" style="font-size: var(--font-sm); font-family: Verdana, Geneva, Tahoma, sans-serif;">No permissions available</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="admin-card mt-4">
+        <div class="admin-card-body">
+            <div class="d-flex justify-content-end gap-2 flex-wrap">
+                <a href="{% url 'accounts:role_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>Create Role
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
 <style>
-    .permission-section {
-        border: 1px solid #dee2e6;
-        border-radius: 0.375rem;
-        margin-bottom: 1rem;
+    /* Font family applied globally */
+    * {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
-    .permission-header {
+
+    /* Button styles */
+    .btn {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .btn-sm {
+        font-size: var(--font-xs);
+        padding: 0.375rem 0.75rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    /* Form controls */
+    .form-control, .form-select, textarea {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    /* Badge styles */
+    .badge {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    /* Permission Module */
+    .permission-module {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+    }
+    
+    .module-header {
         background: #f8f9fa;
         padding: 0.75rem 1rem;
-        border-bottom: 1px solid #dee2e6;
+        border-bottom: 1px solid #e9ecef;
         cursor: pointer;
-        font-weight: 600;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        transition: background 0.2s;
     }
-    .permission-header:hover {
+    
+    .module-header:hover {
         background: #e9ecef;
     }
-    .permission-body {
-        padding: 1rem;
+    
+    .module-body {
+        background: white;
     }
+    
+    .permissions-list {
+        padding: 0.5rem 0;
+    }
+    
     .permission-item {
-        padding: 0.5rem;
-        border-bottom: 1px solid #f1f3f5;
+        padding: 0.625rem 1rem;
+        border-bottom: 1px solid #f8f9fa;
+        transition: background 0.2s;
     }
+    
     .permission-item:last-child {
         border-bottom: none;
     }
     
-    @media (max-width: 768px) {
-        .permission-header {
-            font-size: 0.9rem;
-            padding: 0.5rem 0.75rem;
+    .permission-item:hover {
+        background: #f8f9fa;
+    }
+    
+    .form-check-input {
+        width: 1.125rem;
+        height: 1.125rem;
+        margin-top: 0.125rem;
+    }
+    
+    .form-check-label {
+        cursor: pointer;
+        width: 100%;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    
+    /* Responsive */
+    @media (max-width: 991.98px) {
+        .module-header {
+            padding: 0.625rem 0.875rem;
+            font-size: var(--font-sm);
         }
-        .permission-body {
-            padding: 0.75rem;
+        
+        .permission-item {
+            padding: 0.5rem 0.75rem;
         }
     }
 </style>
-{% endblock %}
-
-{% block admin_content %}
-<div class="container-fluid">
-    
-    <!-- Header -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
-        <div>
-            <h2 class="mb-1">Add New Role</h2>
-            <p class="text-muted mb-0">Create a new role with permissions</p>
-        </div>
-        <a href="{% url 'accounts:role_list' %}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-
-    <form method="post">
-        {% csrf_token %}
-        
-        <div class="row">
-            
-            <!-- Left - Basic Info -->
-            <div class="col-12 col-lg-4 mb-4 mb-lg-0">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Basic Information</h5>
-                    </div>
-                    <div class="card-body">
-                        
-                        <!-- Name -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Role Name *</label>
-                            <input type="text" name="name" class="form-control" 
-                                   placeholder="e.g., Content Manager" required>
-                        </div>
-
-                        <!-- Description -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Description</label>
-                            <textarea name="description" class="form-control" rows="3" 
-                                      placeholder="Describe role purpose and responsibilities"></textarea>
-                        </div>
-
-                        <!-- Active -->
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" 
-                                   name="is_active" id="is_active" checked>
-                            <label class="form-check-label fw-bold" for="is_active">
-                                Active Role
-                            </label>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right - Permissions -->
-            <div class="col-12 col-lg-8">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                            <h5 class="mb-0">Permissions <span class="badge bg-primary" id="permCount">0</span></h5>
-                            <div class="btn-group btn-group-sm" role="group">
-                                <button type="button" class="btn btn-outline-primary" 
-                                        onclick="selectAll()">
-                                    Select All
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary" 
-                                        onclick="deselectAll()">
-                                    Clear All
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        
-                        {% for module, perms in permissions_by_module.items %}
-                        <div class="permission-section">
-                            <div class="permission-header" 
-                                 data-bs-toggle="collapse" 
-                                 data-bs-target="#module{{ forloop.counter }}">
-                                <span>{{ module }} ({{ perms|length }})</span>
-                                <button type="button" 
-                                        class="btn btn-sm btn-link text-decoration-none" 
-                                        onclick="selectModule({{ forloop.counter }}, event)">
-                                    Select
-                                </button>
-                            </div>
-                            <div class="collapse show permission-body" 
-                                 id="module{{ forloop.counter }}">
-                                {% for perm in perms %}
-                                <div class="permission-item">
-                                    <div class="form-check">
-                                        <input class="form-check-input perm-check" 
-                                               type="checkbox" 
-                                               name="permissions" 
-                                               value="{{ perm.id }}"
-                                               id="perm{{ perm.id }}">
-                                        <label class="form-check-label w-100" for="perm{{ perm.id }}">
-                                            <div>{{ perm.name }}</div>
-                                            <small class="text-muted">{{ perm.codename }}</small>
-                                        </label>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endfor %}
-
-                        {% if not permissions_by_module %}
-                        <div class="text-center text-muted py-4">
-                            No permissions available
-                        </div>
-                        {% endif %}
-
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Actions -->
-        <div class="card mt-4">
-            <div class="card-body">
-                <div class="d-flex flex-column flex-md-row justify-content-end align-items-stretch align-items-md-center gap-2">
-                    <a href="{% url 'accounts:role_list' %}" class="btn btn-secondary">
-                        Cancel
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Create Role
-                    </button>
-                </div>
-            </div>
-        </div>
-
-    </form>
-
-</div>
 {% endblock %}
 
 {% block admin_extra_js %}
@@ -193,28 +278,54 @@ function updateCount() {
 }
 
 function selectAll() {
-    document.querySelectorAll('.perm-check').forEach(cb => cb.checked = true);
+    document.querySelectorAll('.perm-check').forEach(cb => {
+        cb.checked = true;
+    });
     updateCount();
 }
 
 function deselectAll() {
-    document.querySelectorAll('.perm-check').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.perm-check').forEach(cb => {
+        cb.checked = false;
+    });
     updateCount();
 }
 
 function selectModule(num, e) {
     e.stopPropagation();
+    e.preventDefault();
+    
     const module = document.getElementById('module' + num);
     const checkboxes = module.querySelectorAll('.perm-check');
     const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-    checkboxes.forEach(cb => cb.checked = !allChecked);
+    
+    checkboxes.forEach(cb => {
+        cb.checked = !allChecked;
+    });
+    
     updateCount();
 }
 
+// Update count on checkbox change
 document.addEventListener('change', function(e) {
     if (e.target.classList.contains('perm-check')) {
         updateCount();
     }
+});
+
+// Update chevron icon on collapse
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function(element) {
+        element.addEventListener('click', function() {
+            const icon = this.querySelector('.fa-chevron-down');
+            if (icon) {
+                icon.classList.toggle('fa-rotate-180');
+            }
+        });
+    });
+    
+    // Initialize count
+    updateCount();
 });
 </script>
 {% endblock %}

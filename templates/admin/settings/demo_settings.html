@@ -1,57 +1,160 @@
-<!-- templates/admin/settings/demo_settings.html -->
 {% extends 'admin/base.html' %}
 
 {% block admin_title %}Demo Settings{% endblock %}
 {% block page_title %}Demo Portal Settings{% endblock %}
 
 {% block admin_content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-lg-6 mx-auto">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-video me-2"></i>Demo Configuration
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Max Demo Requests Per Day (Per User)</label>
-                            <input type="number" name="max_demo_requests_per_day" class="form-control" 
-                                   value="{{ site_settings.max_demo_requests_per_day }}" min="1" max="10" required>
-                            <small class="text-muted">Maximum number of demo requests a user can make per day</small>
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="mb-1" style="font-weight: 500; color: #2c3e50;">Demo Portal Settings</h4>
+        <p class="text-muted mb-0" style="font-size: 0.875rem;">Configure demo booking and request settings</p>
+    </div>
+    <a href="{% url 'core:admin_settings' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 col-xl-6 mx-auto">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5 class="mb-0" style="font-weight: 500; font-size: 1rem;">
+                    <i class="fas fa-video me-2"></i>Demo Configuration
+                </h5>
+            </div>
+            <div class="admin-card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Max Requests Per Day -->
+                    <div class="mb-4">
+                        <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">
+                            Max Demo Requests Per Day (Per User) <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" 
+                               name="max_demo_requests_per_day" 
+                               class="form-control" 
+                               style="font-size: 0.938rem; height: 38px;"
+                               value="{{ site_settings.max_demo_requests_per_day }}" 
+                               min="1" 
+                               max="10" 
+                               required>
+                        <small class="text-muted" style="font-size: 0.813rem;">
+                            <i class="fas fa-info-circle me-1"></i>Maximum number of demo requests a user can make per day
+                        </small>
+                    </div>
+                    
+                    <!-- Booking Advance Days -->
+                    <div class="mb-4">
+                        <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">
+                            Demo Booking Advance Days <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" 
+                               name="demo_booking_advance_days" 
+                               class="form-control" 
+                               style="font-size: 0.938rem; height: 38px;"
+                               value="{{ site_settings.demo_booking_advance_days }}" 
+                               min="7" 
+                               max="90" 
+                               required>
+                        <small class="text-muted" style="font-size: 0.813rem;">
+                            <i class="fas fa-calendar me-1"></i>How many days in advance can users book demos (7-90 days)
+                        </small>
+                    </div>
+                    
+                    <!-- Auto-Approve Setting -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   name="auto_approve_demo_requests" 
+                                   id="autoApprove" 
+                                   style="width: 3rem; height: 1.5rem; cursor: pointer;"
+                                   {% if site_settings.auto_approve_demo_requests %}checked{% endif %}>
+                            <label class="form-check-label ms-2" 
+                                   for="autoApprove" 
+                                   style="font-size: 0.875rem; font-weight: 500; cursor: pointer;">
+                                Auto-Approve Demo Requests
+                            </label>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Demo Booking Advance Days</label>
-                            <input type="number" name="demo_booking_advance_days" class="form-control" 
-                                   value="{{ site_settings.demo_booking_advance_days }}" min="7" max="90" required>
-                            <small class="text-muted">How many days in advance can users book demos</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" name="auto_approve_demo_requests" 
-                                       id="autoApprove" {% if site_settings.auto_approve_demo_requests %}checked{% endif %}>
-                                <label class="form-check-label" for="autoApprove">
-                                    <strong>Auto-Approve Demo Requests</strong>
-                                </label>
+                        <small class="text-muted d-block ms-5" style="font-size: 0.813rem;">
+                            <i class="fas fa-bolt me-1"></i>Automatically approve demo requests without admin review
+                        </small>
+                    </div>
+                    
+                    <!-- Info Alert -->
+                    <div class="alert alert-info" style="border-left: 4px solid #17a2b8; background: #e7f7fb; border-radius: 8px;">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fas fa-lightbulb" style="font-size: 1.25rem; color: #17a2b8; margin-top: 0.125rem;"></i>
+                            <div>
+                                <h6 class="mb-2" style="font-size: 0.938rem; font-weight: 500; color: #0c5460;">
+                                    Demo Settings Tips
+                                </h6>
+                                <ul class="mb-0 ps-3" style="font-size: 0.875rem; color: #0c5460; line-height: 1.6;">
+                                    <li>Set appropriate daily limits to prevent spam requests</li>
+                                    <li>Allow sufficient advance booking time for preparation</li>
+                                    <li>Enable auto-approve only if you trust your user base</li>
+                                    <li>Review settings periodically based on usage patterns</li>
+                                </ul>
                             </div>
-                            <small class="text-muted">Automatically approve demo requests without admin review</small>
                         </div>
-                        
-                        <hr>
-                        
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save me-2"></i>Save Demo Settings
-                        </button>
-                        <a href="{% url 'core:admin_settings' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Back
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2 justify-content-end pt-3 border-top">
+                        <a href="{% url 'core:admin_settings' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
                         </a>
-                    </form>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i>Save Demo Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Current Settings Summary -->
+        <div class="admin-card mt-3">
+            <div class="admin-card-header">
+                <h5 class="mb-0" style="font-weight: 500; font-size: 1rem;">
+                    <i class="fas fa-clipboard-list me-2"></i>Current Settings Summary
+                </h5>
+            </div>
+            <div class="admin-card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded">
+                            <div class="text-muted mb-1" style="font-size: 0.813rem;">Daily Request Limit</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #087fc2;">
+                                {{ site_settings.max_demo_requests_per_day }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded">
+                            <div class="text-muted mb-1" style="font-size: 0.813rem;">Advance Booking Days</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #087fc2;">
+                                {{ site_settings.demo_booking_advance_days }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="p-3 bg-light rounded">
+                            <div class="text-muted mb-1" style="font-size: 0.813rem;">Auto-Approval Status</div>
+                            <div style="font-size: 1rem; font-weight: 500;">
+                                {% if site_settings.auto_approve_demo_requests %}
+                                    <span class="badge bg-success" style="font-size: 0.875rem;">
+                                        <i class="fas fa-check-circle me-1"></i>Enabled
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary" style="font-size: 0.875rem;">
+                                        <i class="fas fa-times-circle me-1"></i>Disabled
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

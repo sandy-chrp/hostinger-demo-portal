@@ -2,17 +2,26 @@
 {% load permission_tags %}
 
 {% block admin_title %}Demo Management{% endblock %}
-{% block page_title %}Demo Content Management{% endblock %}
+
+{% block page_title %}
+<i class="fas fa-video"></i> Demo Content Management
+{% endblock %}
+
+{% block page_subtitle %}
+<p style="font-size: 0.8125rem; color: #6b7280; margin: 0;">Manage and organize your demo content library.</p>
+{% endblock %}
 
 {% block breadcrumb %}
-<div class="admin-breadcrumb">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+<div style="margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
+            <ol class="breadcrumb mb-0" style="background: transparent; padding: 0; margin: 0; font-size: 0.75rem;">
                 <li class="breadcrumb-item">
-                    <a href="{% url 'core:admin_dashboard' %}"><i class="fas fa-home me-1"></i>Dashboard</a>
+                    <a href="{% url 'core:admin_dashboard' %}" style="color: #087fc2; text-decoration: none;">
+                        <i class="fas fa-home me-1"></i>Dashboard
+                    </a>
                 </li>
-                <li class="breadcrumb-item active">Demo Content</li>
+                <li class="breadcrumb-item active" style="color: #1f2937;">Demo Content</li>
             </ol>
         </nav>
         {% if user|has_permission:'add_demo' %}
@@ -26,454 +35,261 @@
 
 {% block admin_extra_css %}
 <style>
-    .demo-thumbnail {
-        width: 60px;
-        height: 40px;
-        object-fit: cover;
-        border-radius: 6px;
-        border: 1px solid #e2e8f0;
+    /* ==========================================
+       RESPONSIVE VISIBILITY CONTROLS
+       ========================================== */
+    .demo-table-desktop {
+        display: block;
     }
-
-    .demo-placeholder {
-        width: 60px;
-        height: 40px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.25rem;
+    
+    .demo-cards-mobile {
+        display: none;
     }
-
-    .demo-placeholder.webgl {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    
+    @media (max-width: 991px) {
+        .demo-table-desktop {
+            display: none !important;
+        }
+        
+        .demo-cards-mobile {
+            display: block !important;
+        }
     }
-
-    .status-badge {
-        padding: 0.25rem 0.625rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
+    
+    /* ==========================================
+       TABLE CONTAINER - PROPER OVERFLOW
+       ========================================== */
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 0;
+        border-radius: 0.75rem;
     }
-
-    .status-active {
-        background: #dcfce7;
-        color: #166534;
+    
+    /* Scrollbar styling */
+    .table-wrapper::-webkit-scrollbar {
+        height: 8px;
     }
-
-    .status-inactive {
+    
+    .table-wrapper::-webkit-scrollbar-track {
         background: #f1f5f9;
-        color: #64748b;
-    }
-
-    .featured-badge {
-        background: #fef3c7;
-        color: #92400e;
-        padding: 0.125rem 0.5rem;
         border-radius: 4px;
-        font-size: 0.75rem;
-        font-weight: 500;
     }
-
-    .filter-card {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
+    
+    .table-wrapper::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
     }
-
-    .stats-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.5rem;
+    
+    .table-wrapper::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
     }
-
-    .stat-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        border-left: 4px solid;
-        text-align: center;
+    
+    /* ==========================================
+       TABLE RESPONSIVE WIDTHS
+       ========================================== */
+    .admin-table {
+        width: 100%;
+        min-width: 1000px;
+        margin-bottom: 0;
+        table-layout: fixed;
     }
-
-    .stat-card.primary { border-left-color: #087fc2; }
-    .stat-card.success { border-left-color: #16a34a; }
-    .stat-card.info { border-left-color: #0ea5e9; }
-    .stat-card.warning { border-left-color: #f59e0b; }
-
-    .stat-number {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 0.25rem;
-    }
-
-    .stat-label {
-        color: #64748b;
-        font-size: 0.875rem;
-    }
-
-    .table-actions {
-        display: flex;
-        gap: 0.25rem;
-        flex-wrap: wrap;
-    }
-
-    .table-actions .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        color: #64748b;
-    }
-
-    .empty-state i {
-        font-size: 4rem;
-        color: #cbd5e1;
-        margin-bottom: 1.5rem;
-    }
-
-    .category-tags {
+    
+    /* Column Widths - Optimized */
+    .admin-table th:nth-child(1),
+    .admin-table td:nth-child(1) { width: 20%; min-width: 180px; } /* Title */
+    
+    .admin-table th:nth-child(2),
+    .admin-table td:nth-child(2) { width: 15%; min-width: 140px; } /* Category */
+    
+    .admin-table th:nth-child(3),
+    .admin-table td:nth-child(3) { width: 10%; min-width: 90px; } /* Type */
+    
+    .admin-table th:nth-child(4),
+    .admin-table td:nth-child(4) { width: 8%; min-width: 70px; } /* Views */
+    
+    .admin-table th:nth-child(5),
+    .admin-table td:nth-child(5) { width: 8%; min-width: 70px; } /* Likes */
+    
+    .admin-table th:nth-child(6),
+    .admin-table td:nth-child(6) { width: 10%; min-width: 85px; } /* Status */
+    
+    .admin-table th:nth-child(7),
+    .admin-table td:nth-child(7) { width: 12%; min-width: 110px; } /* Created - Increased for date + time */
+    
+    .admin-table th:nth-child(8),
+    .admin-table td:nth-child(8) { width: 17%; min-width: 140px; } /* Actions */
+    
+    /* ==========================================
+       DATE TIME DISPLAY
+       ========================================== */
+    .datetime-cell {
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
+        gap: 0.15rem;
     }
-
-    .category-badge {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
+    
+    .date-line {
+        font-size: 0.65rem;
+        color: #1f2937;
         font-weight: 500;
-        background: #dbeafe;
-        color: #1e40af;
         white-space: nowrap;
     }
-
-    .subcategory-badge {
-        display: inline-block;
-        padding: 0.2rem 0.4rem;
-        border-radius: 3px;
-        font-size: 0.7rem;
-        background: #e0f2fe;
-        color: #0369a1;
+    
+    .time-line {
+        font-size: 0.6rem;
+        color: #9ca3af;
         white-space: nowrap;
     }
-
-    .category-count {
-        font-size: 0.7rem;
-        color: #64748b;
-        font-weight: 500;
+    
+    /* ==========================================
+       RESPONSIVE BREAKPOINTS FOR TABLE
+       ========================================== */
+    @media (min-width: 1200px) and (max-width: 1399px) {
+        .admin-table {
+            min-width: 950px;
+            font-size: 0.7rem;
+        }
+        .admin-table th,
+        .admin-table td {
+            padding: 0.5rem 0.4rem;
+        }
     }
-
-    .file-type-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
+    
+    @media (min-width: 992px) and (max-width: 1199px) {
+        .admin-table {
+            min-width: 900px;
+            font-size: 0.7rem;
+        }
+        .admin-table th,
+        .admin-table td {
+            padding: 0.45rem 0.35rem;
+        }
     }
-
-    .file-type-badge.video {
-        background: #ddd6fe;
-        color: #5b21b6;
-    }
-
-    .file-type-badge.webgl {
-        background: #cffafe;
-        color: #155e75;
-    }
-
-    /* ============================================
-       RESPONSIVE STYLES - Mobile First Approach
-       ============================================ */
-
-    /* Mobile: Hide table, show cards */
-    @media (max-width: 991px) {
-        .table-responsive {
-            display: none;
+    
+    /* ==========================================
+       MOBILE CARD RESPONSIVE
+       ========================================== */
+    @media (max-width: 767px) {
+        .mobile-card-stats {
+            grid-template-columns: repeat(2, 1fr) !important;
         }
         
-        .demo-cards-mobile {
-            display: block;
+        .filter-responsive .col-md-3,
+        .filter-responsive .col-md-4,
+        .filter-responsive .col-md-2 {
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+            margin-bottom: 0.75rem;
         }
     }
-
-    /* Desktop: Show table, hide cards */
-    @media (min-width: 992px) {
-        .demo-cards-mobile {
-            display: none;
+    
+    @media (max-width: 575px) {
+        .mobile-card-header {
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
         }
         
-        .table-responsive {
-            display: block;
+        .mobile-card-stats {
+            grid-template-columns: 1fr !important;
+        }
+        
+        .mobile-card-actions {
+            flex-direction: column !important;
+        }
+        
+        .mobile-card-actions > * {
+            width: 100% !important;
+            flex: none !important;
         }
     }
-
-    /* Mobile Demo Card Styles */
-    .demo-card-mobile {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        margin-bottom: 1rem;
-        padding: 1rem;
-        border-left: 4px solid #087fc2;
+    
+    /* ==========================================
+       PAGINATION RESPONSIVE
+       ========================================== */
+    @media (max-width: 767px) {
+        .pagination .page-link {
+            padding: 0.375rem 0.5rem !important;
+            font-size: 0.7rem !important;
+        }
+        .pagination .page-item {
+            margin: 0 1px;
+        }
+    }
+    
+    /* ==========================================
+       HOVER EFFECTS
+       ========================================== */
+    .btn-hover {
+        transition: all 0.2s ease;
+    }
+    
+    .btn-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    
+    .card-hover {
         transition: all 0.3s ease;
     }
-
-    .demo-card-mobile:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        transform: translateY(-2px);
+    
+    .card-hover:hover {
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important;
+        transform: translateY(-2px) !important;
     }
-
-    .demo-card-header {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .demo-card-thumbnail {
-        flex-shrink: 0;
-    }
-
-    .demo-card-thumbnail img,
-    .demo-card-thumbnail .demo-placeholder {
-        width: 80px;
-        height: 60px;
-    }
-
-    .demo-card-info {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .demo-card-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #1f2937;
-        margin-bottom: 0.25rem;
+    
+    /* ==========================================
+       TEXT OVERFLOW HANDLING
+       ========================================== */
+    .text-ellipsis {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-
-    .demo-card-description {
-        font-size: 0.875rem;
-        color: #6b7280;
-        margin-bottom: 0.5rem;
+    
+    .text-ellipsis-2 {
         overflow: hidden;
         text-overflow: ellipsis;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
     }
-
-    .demo-card-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-        font-size: 0.75rem;
-    }
-
-    .demo-card-stats {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-        padding: 0.75rem;
-        background: #f9fafb;
-        border-radius: 6px;
-    }
-
-    .demo-card-stat {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .demo-card-stat-icon {
-        color: #6b7280;
-    }
-
-    .demo-card-stat-value {
-        font-weight: 600;
-        color: #1f2937;
-    }
-
-    .demo-card-stat-label {
-        font-size: 0.75rem;
-        color: #6b7280;
-    }
-
-    .demo-card-actions {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-
-    .demo-card-actions .btn {
-        flex: 1;
-        min-width: 100px;
-    }
-
-    /* Filter responsive */
-    @media (max-width: 767px) {
-        .stats-row {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-        }
-
-        .stat-card {
-            padding: 1rem;
-        }
-
-        .stat-number {
-            font-size: 1.5rem;
-        }
-
-        .stat-label {
-            font-size: 0.75rem;
-        }
-
-        .filter-card {
-            padding: 1rem;
-        }
-
-        .filter-card .row {
-            gap: 0.75rem;
-        }
-
-        .filter-card .col-md-3,
-        .filter-card .col-md-4 {
-            flex: 0 0 100%;
-            max-width: 100%;
-        }
-
-        .btn-sm {
-            font-size: 0.75rem;
-            padding: 0.375rem 0.75rem;
-        }
-    }
-
-    /* Extra small devices */
-    @media (max-width: 575px) {
-        .stats-row {
-            grid-template-columns: 1fr;
-        }
-
-        .demo-card-header {
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .demo-card-thumbnail {
-            margin-bottom: 0.5rem;
-        }
-
-        .demo-card-stats {
-            grid-template-columns: 1fr;
-        }
-
-        .demo-card-actions {
-            flex-direction: column;
-        }
-
-        .demo-card-actions .btn {
-            width: 100%;
-        }
-    }
-
-    /* Table responsive improvements */
-    @media (min-width: 992px) {
-        .table-responsive {
-            overflow-x: auto;
-        }
-
-        .admin-table {
-            min-width: 1200px;
-        }
-    }
-
-    @media (min-width: 992px) and (max-width: 1399px) {
-        .admin-table {
-            font-size: 0.875rem;
-        }
-
-        .admin-table th,
-        .admin-table td {
-            padding: 0.5rem;
-        }
-
-        .demo-thumbnail,
-        .demo-placeholder {
-            width: 50px;
-            height: 35px;
-        }
-    }
 </style>
 {% endblock %}
 
 {% block admin_content %}
-<!-- Statistics -->
-{% comment %} <div class="stats-row">
-    <div class="stat-card primary">
-        <div class="stat-number primary" style="color: #087fc2;">{{ demos_count }}</div>
-        <div class="stat-label">Total Demos</div>
-    </div>
-    <div class="stat-card success">
-        <div class="stat-number success" style="color: #16a34a;">{{ active_demos_count }}</div>
-        <div class="stat-label">Active Demos</div>
-    </div>
-    <div class="stat-card info">
-        <div class="stat-number info" style="color: #0ea5e9;">{{ featured_demos_count }}</div>
-        <div class="stat-label">Featured</div>
-    </div>
-    <div class="stat-card warning">
-        <div class="stat-number warning" style="color: #f59e0b;">{{ total_views }}</div>
-        <div class="stat-label">Total Views</div>
-    </div>
-</div> {% endcomment %}
 
-<!-- Filters -->
-<div class="filter-card">
+<!-- Filters Section -->
+<div style="background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.25rem; margin-bottom: 1.5rem;">
     <form method="GET" action="{% url 'core:admin_demos' %}" id="filterForm">
-        <div class="row g-3 align-items-end">
+        <div class="row g-3 align-items-end filter-responsive">
             <div class="col-12 col-sm-6 col-md-4">
-                <label class="form-label small">Search Demos</label>
+                <label style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; display: block;">Search Demos</label>
                 <div class="input-group">
                     <input type="text" 
                            class="form-control" 
                            name="search" 
-                           value="{{ search }}"
-                           placeholder="Search by title or description...">
-                    <button class="btn btn-primary" type="submit">
+                           value="{{ search|default:'' }}"
+                           placeholder="Search by title or description..."
+                           style="font-size: 0.75rem; height: 38px;">
+                    <button class="btn btn-primary" type="submit" style="font-size: 0.75rem;">
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
             </div>
             <div class="col-6 col-md-3">
-                <label class="form-label small">File Type</label>
-                <select class="form-select" name="file_type" onchange="document.getElementById('filterForm').submit()">
+                <label style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; display: block;">File Type</label>
+                <select class="form-select" name="file_type" onchange="this.form.submit()" style="font-size: 0.75rem; height: 38px;">
                     <option value="">All Types</option>
                     <option value="video" {% if file_type_filter == 'video' %}selected{% endif %}>Video</option>
                     <option value="webgl" {% if file_type_filter == 'webgl' %}selected{% endif %}>WebGL</option>
                 </select>
             </div>
             <div class="col-6 col-md-3">
-                <label class="form-label small">Business Category</label>
-                <select class="form-select" name="business_category" onchange="document.getElementById('filterForm').submit()">
+                <label style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; display: block;">Business Category</label>
+                <select class="form-select" name="business_category" onchange="this.form.submit()" style="font-size: 0.75rem; height: 38px;">
                     <option value="">All Categories</option>
                     {% for category in business_categories %}
                         <option value="{{ category.id }}" {% if business_category_filter == category.id|stringformat:"s" %}selected{% endif %}>
@@ -483,17 +299,17 @@
                 </select>
             </div>
             <div class="col-6 col-md-2">
-                <label class="form-label small">Status</label>
-                <select class="form-select" name="status" onchange="document.getElementById('filterForm').submit()">
+                <label style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; display: block;">Status</label>
+                <select class="form-select" name="status" onchange="this.form.submit()" style="font-size: 0.75rem; height: 38px;">
                     <option value="">All Status</option>
                     <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
                     <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
                 </select>
             </div>
             {% if search or business_category_filter or status_filter or file_type_filter %}
-            <div class="col-6 col-md-12 col-lg-2 text-end">
-                <a href="{% url 'core:admin_demos' %}" class="btn btn-outline-secondary w-100">
-                    <i class="fas fa-times me-1"></i>Clear
+            <div class="col-12">
+                <a href="{% url 'core:admin_demos' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-times me-1"></i>Clear All Filters
                 </a>
             </div>
             {% endif %}
@@ -505,127 +321,123 @@
 
 {% if demos %}
     <!-- Desktop Table View -->
-    <div class="admin-card">
+    <div class="admin-card demo-table-desktop">
         <div class="admin-card-body p-0">
-            <div class="table-responsive">
+            <div class="table-wrapper">
                 <table class="table admin-table mb-0">
                     <thead>
-                        <tr>
-                            {% comment %} <th style="width: 80px;">Thumbnail</th> {% endcomment %}
-                            <th>Title</th>
-                            <th>Business Category</th>
-                            <th style="width: 100px;">Type</th>
-                            <th class="text-center" style="width: 80px;">Views</th>
-                            <th class="text-center" style="width: 80px;">Likes</th>
-                            <th style="width: 100px;">Status</th>
-                            <th style="width: 110px;">Created</th>
-                            <th class="text-center" style="width: 150px;">Actions</th>
+                        <tr style="background: #f9fafb;">
+                            <th style="font-size: 0.7rem; font-weight: 600; color: #374151; padding: 0.75rem 0.5rem;">Title</th>
+                            <th style="font-size: 0.7rem; font-weight: 600; color: #374151; padding: 0.75rem 0.5rem;">Category</th>
+                            <th style="font-size: 0.7rem; font-weight: 600; color: #374151; padding: 0.75rem 0.5rem;">Type</th>
+                            <th class="text-center" style="font-size: 0.7rem; font-weight: 600; color: #374151; padding: 0.75rem 0.5rem;">Views</th>
+                            <th class="text-center" style="font-size: 0.7rem; font-weight: 600; color: #374151; padding: 0.75rem 0.5rem;">Likes</th>
+                            <th style="font-size: 0.7rem; font-weight: 600; color: #374151; padding: 0.75rem 0.5rem;">Status</th>
+                            <th style="font-size: 0.7rem; font-weight: 600; color: #374151; padding: 0.75rem 0.5rem;">Created</th>
+                            <th class="text-center" style="font-size: 0.7rem; font-weight: 600; color: #374151; padding: 0.75rem 0.5rem;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for demo in demos %}
-                            <tr>
-                                {% comment %} <td>
-                                    {% if demo.thumbnail %}
-                                        <img src="{{ demo.thumbnail.url }}" alt="{{ demo.title }}" class="demo-thumbnail">
-                                    {% else %}
-                                        <div class="demo-placeholder {% if demo.file_type == 'webgl' %}webgl{% endif %}">
-                                            <i class="fas {% if demo.file_type == 'video' %}fa-video{% else %}fa-cube{% endif %}"></i>
-                                        </div>
-                                    {% endif %}
-                                </td> {% endcomment %}
-                                <td>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 0.65rem 0.5rem;">
                                     <div>
-                                        <strong class="d-block">{{ demo.title }}</strong>
+                                        <strong class="text-ellipsis" style="font-weight: 600; color: #1f2937; font-size: 0.75rem; display: block; margin-bottom: 0.25rem;" title="{{ demo.title }}">
+                                            {{ demo.title|truncatechars:30 }}
+                                        </strong>
                                         {% if demo.is_featured %}
-                                            <span class="featured-badge ms-2">
-                                                <i class="fas fa-star me-1"></i>Featured
+                                            <span style="background: #fef3c7; color: #92400e; padding: 0.15rem 0.35rem; border-radius: 3px; font-size: 0.6rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.15rem;">
+                                                <i class="fas fa-star" style="font-size: 0.55rem;"></i>Featured
                                             </span>
                                         {% endif %}
                                     </div>
                                 </td>
-                                <td>
-                                    <div class="category-tags">
-                                        {% with categories=demo.target_business_categories.all subcategories=demo.target_business_subcategories.all %}
-                                            {% if categories %}
-                                                {% for category in categories|slice:":2" %}
-                                                    <span class="category-badge">{{ category.name }}</span>
-                                                {% endfor %}
-                                                {% if categories|length > 2 %}
-                                                    <span class="category-count">+{{ categories|length|add:"-2" }} more</span>
-                                                {% endif %}
-                                            {% elif subcategories %}
-                                                {% for subcat in subcategories|slice:":2" %}
-                                                    <span class="subcategory-badge">{{ subcat.name }}</span>
-                                                {% endfor %}
-                                                {% if subcategories|length > 2 %}
-                                                    <span class="category-count">+{{ subcategories|length|add:"-2" }} more</span>
-                                                {% endif %}
-                                            {% else %}
-                                                <span class="text-muted" style="font-size: 0.75rem;">All Categories</span>
+                                <td style="padding: 0.65rem 0.5rem;">
+                                    {% with categories=demo.target_business_categories.all %}
+                                        {% if categories %}
+                                            <span class="text-ellipsis" style="display: block; font-size: 0.65rem; padding: 0.2rem 0.4rem; border-radius: 3px; font-weight: 500; background: #dbeafe; color: #1e40af;" title="{{ categories.0.name }}">
+                                                {{ categories.0.name|truncatechars:15 }}
+                                            </span>
+                                            {% if categories|length > 1 %}
+                                                <span style="font-size: 0.6rem; color: #6b7280; margin-top: 0.2rem; display: block;">+{{ categories|length|add:"-1" }}</span>
                                             {% endif %}
-                                        {% endwith %}
+                                        {% else %}
+                                            <span style="font-size: 0.65rem; color: #9ca3af;">All</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td style="padding: 0.65rem 0.5rem;">
+                                    {% if demo.file_type == 'video' %}
+                                        <span style="display: inline-flex; align-items: center; gap: 0.2rem; padding: 0.2rem 0.35rem; border-radius: 3px; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; background: #ddd6fe; color: #5b21b6;">
+                                            <i class="fas fa-video" style="font-size: 0.6rem;"></i>Video
+                                        </span>
+                                    {% else %}
+                                        <span style="display: inline-flex; align-items: center; gap: 0.2rem; padding: 0.2rem 0.35rem; border-radius: 3px; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; background: #cffafe; color: #155e75;">
+                                            <i class="fas fa-cube" style="font-size: 0.6rem;"></i>WebGL
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center" style="padding: 0.65rem 0.5rem;">
+                                    <span style="font-weight: 600; color: #1f2937; font-size: 0.7rem;">{{ demo.views_count }}</span>
+                                </td>
+                                <td class="text-center" style="padding: 0.65rem 0.5rem;">
+                                    <span style="font-weight: 600; color: #1f2937; font-size: 0.7rem;">{{ demo.likes_count }}</span>
+                                </td>
+                                <td style="padding: 0.65rem 0.5rem;">
+                                    {% if demo.is_active %}
+                                        <span style="padding: 0.2rem 0.4rem; border-radius: 3px; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; background: #dcfce7; color: #166534; white-space: nowrap;">Active</span>
+                                    {% else %}
+                                        <span style="padding: 0.2rem 0.4rem; border-radius: 3px; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; background: #f1f5f9; color: #64748b; white-space: nowrap;">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.65rem 0.5rem;">
+                                    <div class="datetime-cell">
+                                        <div class="date-line">
+                                            <i class="fas fa-calendar" style="font-size: 0.6rem; color: #087fc2; margin-right: 0.2rem;"></i>
+                                            {{ demo.created_at|date:"M d, Y" }}
+                                        </div>
+                                        <div class="time-line">
+                                            <i class="fas fa-clock" style="font-size: 0.55rem; margin-right: 0.2rem;"></i>
+                                            {{ demo.created_at|date:"g:i A" }}
+                                        </div>
                                     </div>
                                 </td>
-                                <td>
-                                    {% if demo.file_type == 'video' %}
-                                        <span class="file-type-badge video">
-                                            <i class="fas fa-video"></i>Video
-                                        </span>
-                                    {% else %}
-                                        <span class="file-type-badge webgl">
-                                            <i class="fas fa-cube"></i>WebGL
-                                        </span>
-                                    {% endif %}
-                                </td>
-                                <td class="text-center">
-                                    <span class="fw-semibold">{{ demo.views_count }}</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="fw-semibold">{{ demo.likes_count }}</span>
-                                </td>
-                                <td>
-                                    {% if demo.is_active %}
-                                        <span class="status-badge status-active">Active</span>
-                                    {% else %}
-                                        <span class="status-badge status-inactive">Inactive</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <small>{{ demo.created_at|date:"M d, Y" }}</small>
-                                </td>
-                                <td>
-                                    <div class="table-actions justify-content-center">
+                                <td style="padding: 0.65rem 0.5rem;">
+                                    <div style="display: flex; gap: 0.25rem; justify-content: center; flex-wrap: nowrap;">
                                         {% if user|has_permission:'view_demos' %}
-                                        {% if demo.file_type == 'webgl' %}
-                                            <a href="{% url 'core:admin_webgl_preview' demo.id %}" 
-                                               class="btn btn-sm btn-outline-info" 
-                                               title="Preview Demo"
-                                               target="_blank">
-                                                <i class="fas fa-cube"></i>
-                                            </a>
-                                        {% else %}
-                                            <a href="{% url 'core:admin_demo_watch' demo.id %}" 
-                                               class="btn btn-sm btn-outline-info" 
-                                               title="Watch Video"
-                                               target="_blank">
-                                                <i class="fas fa-play"></i>
-                                            </a>
-                                        {% endif %}
+                                            {% if demo.file_type == 'webgl' %}
+                                                <a href="{% url 'core:admin_webgl_preview' demo.id %}" 
+                                                   class="btn btn-sm btn-outline-info btn-hover" 
+                                                   title="Preview"
+                                                   target="_blank"
+                                                   style="padding: 0.25rem 0.4rem; font-size: 0.65rem;">
+                                                    <i class="fas fa-cube"></i>
+                                                </a>
+                                            {% else %}
+                                                <a href="{% url 'core:admin_demo_watch' demo.id %}" 
+                                                   class="btn btn-sm btn-outline-info btn-hover" 
+                                                   title="Watch"
+                                                   target="_blank"
+                                                   style="padding: 0.25rem 0.4rem; font-size: 0.65rem;">
+                                                    <i class="fas fa-play"></i>
+                                                </a>
+                                            {% endif %}
                                         {% endif %}
                                         {% if user|has_permission:'edit_demo' %}    
-                                        <a href="{% url 'core:admin_demo_detail' demo.id %}" 
-                                           class="btn btn-sm btn-outline-primary" 
-                                           title="Edit Details">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
+                                            <a href="{% url 'core:admin_demo_detail' demo.id %}" 
+                                               class="btn btn-sm btn-outline-primary btn-hover" 
+                                               title="Edit"
+                                               style="padding: 0.25rem 0.4rem; font-size: 0.65rem;">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
                                         {% endif %}
                                         {% if user|has_permission:'delete_demo' %}
-                                        <button class="btn btn-sm btn-outline-danger" 
-                                                onclick="deleteDemo({{ demo.id }}, '{{ demo.title|escapejs }}')"
-                                                title="Delete Demo">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                            <button class="btn btn-sm btn-outline-danger btn-hover" 
+                                                    onclick="deleteDemo({{ demo.id }}, '{{ demo.title|escapejs }}')"
+                                                    title="Delete"
+                                                    style="padding: 0.25rem 0.4rem; font-size: 0.65rem;">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         {% endif %}
                                     </div>
                                 </td>
@@ -640,173 +452,209 @@
     <!-- Mobile Card View -->
     <div class="demo-cards-mobile">
         {% for demo in demos %}
-            <div class="demo-card-mobile">
-                <div class="demo-card-header">
-                    <div class="demo-card-thumbnail">
+            <div class="card-hover" style="background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1rem; padding: 1rem; border-left: 4px solid #087fc2;">
+                <div class="mobile-card-header" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                    <div style="flex-shrink: 0;">
                         {% if demo.thumbnail %}
-                            <img src="{{ demo.thumbnail.url }}" alt="{{ demo.title }}" class="demo-thumbnail">
+                            <img src="{{ demo.thumbnail.url }}" alt="{{ demo.title }}" style="width: 70px; height: 52px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb;">
                         {% else %}
-                            <div class="demo-placeholder {% if demo.file_type == 'webgl' %}webgl{% endif %}">
+                            <div style="width: 70px; height: 52px; background: {% if demo.file_type == 'webgl' %}linear-gradient(135deg, #06b6d4 0%, #0891b2 100%){% else %}linear-gradient(135deg, #087fc2 0%, #0669a0 100%){% endif %}; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1rem;">
                                 <i class="fas {% if demo.file_type == 'video' %}fa-video{% else %}fa-cube{% endif %}"></i>
                             </div>
                         {% endif %}
                     </div>
-                    <div class="demo-card-info">
-                        <h3 class="demo-card-title">{{ demo.title }}</h3>
-                        <p class="demo-card-description">{{ demo.description|truncatewords:15 }}</p>
+                    <div style="flex: 1; min-width: 0;">
+                        <h3 style="font-size: 0.875rem; font-weight: 600; color: #1f2937; margin: 0 0 0.25rem 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ demo.title }}</h3>
+                        <p style="font-size: 0.75rem; color: #6b7280; margin: 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{{ demo.description|truncatewords:12 }}</p>
                     </div>
                 </div>
 
-                <div class="demo-card-meta">
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
                     {% if demo.file_type == 'video' %}
-                        <span class="file-type-badge video">
+                        <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.4rem; border-radius: 3px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: #ddd6fe; color: #5b21b6;">
                             <i class="fas fa-video"></i>Video
                         </span>
                     {% else %}
-                        <span class="file-type-badge webgl">
+                        <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.4rem; border-radius: 3px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: #cffafe; color: #155e75;">
                             <i class="fas fa-cube"></i>WebGL
                         </span>
                     {% endif %}
                     
                     {% if demo.is_active %}
-                        <span class="status-badge status-active">Active</span>
+                        <span style="padding: 0.2rem 0.5rem; border-radius: 3px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: #dcfce7; color: #166534;">Active</span>
                     {% else %}
-                        <span class="status-badge status-inactive">Inactive</span>
+                        <span style="padding: 0.2rem 0.5rem; border-radius: 3px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; background: #f1f5f9; color: #64748b;">Inactive</span>
                     {% endif %}
 
                     {% if demo.is_featured %}
-                        <span class="featured-badge">
-                            <i class="fas fa-star me-1"></i>Featured
+                        <span style="background: #fef3c7; color: #92400e; padding: 0.2rem 0.4rem; border-radius: 3px; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;">
+                            <i class="fas fa-star" style="font-size: 0.6rem;"></i>Featured
                         </span>
                     {% endif %}
                 </div>
 
-                <div class="demo-card-stats">
-                    <div class="demo-card-stat">
-                        <i class="fas fa-eye demo-card-stat-icon"></i>
+                <div class="mobile-card-stats" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem; background: #f9fafb; border-radius: 6px;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-eye" style="color: #6b7280; font-size: 0.875rem;"></i>
                         <div>
-                            <div class="demo-card-stat-value">{{ demo.views_count }}</div>
-                            <div class="demo-card-stat-label">Views</div>
+                            <div style="font-weight: 600; color: #1f2937; font-size: 0.75rem;">{{ demo.views_count }}</div>
+                            <div style="font-size: 0.65rem; color: #6b7280;">Views</div>
                         </div>
                     </div>
-                    <div class="demo-card-stat">
-                        <i class="fas fa-heart demo-card-stat-icon"></i>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-heart" style="color: #6b7280; font-size: 0.875rem;"></i>
                         <div>
-                            <div class="demo-card-stat-value">{{ demo.likes_count }}</div>
-                            <div class="demo-card-stat-label">Likes</div>
+                            <div style="font-weight: 600; color: #1f2937; font-size: 0.75rem;">{{ demo.likes_count }}</div>
+                            <div style="font-size: 0.65rem; color: #6b7280;">Likes</div>
                         </div>
                     </div>
-                    <div class="demo-card-stat">
-                        <i class="fas fa-calendar demo-card-stat-icon"></i>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-calendar-alt" style="color: #6b7280; font-size: 0.875rem;"></i>
                         <div>
-                            <div class="demo-card-stat-value">{{ demo.created_at|date:"M d" }}</div>
-                            <div class="demo-card-stat-label">Created</div>
+                            <div style="font-weight: 600; color: #1f2937; font-size: 0.7rem;">{{ demo.created_at|date:"M d, Y" }}</div>
+                            <div style="font-size: 0.65rem; color: #6b7280;">{{ demo.created_at|date:"g:i A" }}</div>
                         </div>
                     </div>
-                    <div class="demo-card-stat">
-                        <i class="fas fa-tags demo-card-stat-icon"></i>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-tags" style="color: #6b7280; font-size: 0.875rem;"></i>
                         <div>
                             {% with categories=demo.target_business_categories.all %}
                                 {% if categories %}
-                                    <div class="demo-card-stat-value">{{ categories|length }}</div>
-                                    <div class="demo-card-stat-label">Categories</div>
+                                    <div style="font-weight: 600; color: #1f2937; font-size: 0.75rem;">{{ categories|length }}</div>
+                                    <div style="font-size: 0.65rem; color: #6b7280;">Categories</div>
                                 {% else %}
-                                    <div class="demo-card-stat-value">All</div>
-                                    <div class="demo-card-stat-label">Categories</div>
+                                    <div style="font-weight: 600; color: #1f2937; font-size: 0.75rem;">All</div>
+                                    <div style="font-size: 0.65rem; color: #6b7280;">Categories</div>
                                 {% endif %}
                             {% endwith %}
                         </div>
                     </div>
                 </div>
 
-                <div class="demo-card-actions">
+                <div class="mobile-card-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     {% if user|has_permission:'view_demos' %}
-                    {% if demo.file_type == 'webgl' %}
-                        <a href="{% url 'core:admin_webgl_preview' demo.id %}" 
-                           class="btn btn-sm btn-info" 
-                           target="_blank">
-                            <i class="fas fa-cube me-1"></i>Preview
-                        </a>
-                    {% else %}
-                        <a href="{% url 'core:admin_demo_watch' demo.id %}" 
-                           class="btn btn-sm btn-info" 
-                           target="_blank">
-                            <i class="fas fa-play me-1"></i>Watch
-                        </a>
-                    {% endif %}
+                        {% if demo.file_type == 'webgl' %}
+                            <a href="{% url 'core:admin_webgl_preview' demo.id %}" 
+                               class="btn btn-sm btn-info btn-hover" 
+                               target="_blank"
+                               style="flex: 1; min-width: 90px; font-size: 0.7rem;">
+                                <i class="fas fa-cube me-1"></i>Preview
+                            </a>
+                        {% else %}
+                            <a href="{% url 'core:admin_demo_watch' demo.id %}" 
+                               class="btn btn-sm btn-info btn-hover" 
+                               target="_blank"
+                               style="flex: 1; min-width: 90px; font-size: 0.7rem;">
+                                <i class="fas fa-play me-1"></i>Watch
+                            </a>
+                        {% endif %}
                     {% endif %}
                     {% if user|has_permission:'edit_demo' %}    
-                    <a href="{% url 'core:admin_demo_detail' demo.id %}" 
-                       class="btn btn-sm btn-primary">
-                        <i class="fas fa-edit me-1"></i>Edit
-                    </a>
+                        <a href="{% url 'core:admin_demo_detail' demo.id %}" 
+                           class="btn btn-sm btn-primary btn-hover"
+                           style="flex: 1; min-width: 90px; font-size: 0.7rem;">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </a>
                     {% endif %}
                     {% if user|has_permission:'delete_demo' %}
-                    <button class="btn btn-sm btn-danger" 
-                            onclick="deleteDemo({{ demo.id }}, '{{ demo.title|escapejs }}')">
-                        <i class="fas fa-trash me-1"></i>Delete
-                    </button>
+                        <button class="btn btn-sm btn-danger btn-hover" 
+                                onclick="deleteDemo({{ demo.id }}, '{{ demo.title|escapejs }}')"
+                                style="flex: 1; min-width: 90px; font-size: 0.7rem;">
+                            <i class="fas fa-trash me-1"></i>Delete
+                        </button>
                     {% endif %}
                 </div>
             </div>
         {% endfor %}
     </div>
 
-    <!-- Pagination -->
+    <!-- Pagination - Highly Visible -->
     {% if demos.has_other_pages %}
-        <nav aria-label="Demo pagination" class="mt-4">
-            <ul class="pagination justify-content-center flex-wrap">
-                {% if demos.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if file_type_filter %}&file_type={{ file_type_filter }}{% endif %}{% if demo_type_filter %}&demo_type={{ demo_type_filter }}{% endif %}{% if business_category_filter %}&business_category={{ business_category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">First</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ demos.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if file_type_filter %}&file_type={{ file_type_filter }}{% endif %}{% if demo_type_filter %}&demo_type={{ demo_type_filter }}{% endif %}{% if business_category_filter %}&business_category={{ business_category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
-                    </li>
-                {% endif %}
+        <div style="background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.25rem; margin-top: 1.5rem; margin-bottom: 1.5rem;">
+            <!-- Results Count -->
+            <div style="text-align: center; margin-bottom: 1rem; font-size: 0.75rem; color: #6b7280;">
+                Showing <strong style="color: #1f2937;">{{ demos.start_index }}</strong> to 
+                <strong style="color: #1f2937;">{{ demos.end_index }}</strong> of 
+                <strong style="color: #1f2937;">{{ demos.paginator.count }}</strong> demos
+            </div>
+            
+            <nav aria-label="Demo pagination">
+                <ul class="pagination justify-content-center flex-wrap mb-0" style="gap: 0.25rem;">
+                    {% if demos.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page=1{% if search %}&search={{ search }}{% endif %}{% if file_type_filter %}&file_type={{ file_type_filter }}{% endif %}{% if business_category_filter %}&business_category={{ business_category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+                               style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page={{ demos.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if file_type_filter %}&file_type={{ file_type_filter }}{% endif %}{% if business_category_filter %}&business_category={{ business_category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+                               style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">
+                                <i class="fas fa-angle-left me-1"></i><span class="d-none d-sm-inline">Previous</span>
+                            </a>
+                        </li>
+                    {% endif %}
 
-                <li class="page-item active">
-                    <span class="page-link">{{ demos.number }} of {{ demos.paginator.num_pages }}</span>
-                </li>
+                    <li class="page-item active">
+                        <span class="page-link" style="font-size: 0.75rem; font-weight: 600; padding: 0.5rem 1rem; background-color: #087fc2; border-color: #087fc2;">
+                            Page {{ demos.number }} of {{ demos.paginator.num_pages }}
+                        </span>
+                    </li>
 
-                {% if demos.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ demos.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if file_type_filter %}&file_type={{ file_type_filter }}{% endif %}{% if demo_type_filter %}&demo_type={{ demo_type_filter }}{% endif %}{% if business_category_filter %}&business_category={{ business_category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ demos.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if file_type_filter %}&file_type={{ file_type_filter }}{% endif %}{% if demo_type_filter %}&demo_type={{ demo_type_filter }}{% endif %}{% if business_category_filter %}&business_category={{ business_category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Last</a>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
+                    {% if demos.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page={{ demos.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if file_type_filter %}&file_type={{ file_type_filter }}{% endif %}{% if business_category_filter %}&business_category={{ business_category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+                               style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">
+                                <span class="d-none d-sm-inline">Next</span><i class="fas fa-angle-right ms-1"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page={{ demos.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if file_type_filter %}&file_type={{ file_type_filter }}{% endif %}{% if business_category_filter %}&business_category={{ business_category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+                               style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
     {% endif %}
+
 {% else %}
+    <!-- Empty State -->
     <div class="admin-card">
         <div class="admin-card-body">
-            <div class="empty-state">
-                <i class="fas fa-video"></i>
-                <h3>No Demo Content Found</h3>
+            <div style="text-align: center; padding: 3rem 1.5rem; color: #6b7280;">
+                <i class="fas fa-video" style="font-size: 3.5rem; color: #cbd5e1; margin-bottom: 1rem; display: block;"></i>
+                <h3 style="font-size: 1rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">No Demo Content Found</h3>
                 {% if search or business_category_filter or status_filter or file_type_filter %}
-                    <p>No demos match your current filters.</p>
-                    <a href="{% url 'core:admin_demos' %}" class="btn btn-primary mt-3">
-                        <i class="fas fa-times me-1"></i>Clear Filters
+                    <p style="font-size: 0.75rem; color: #6b7280; margin-bottom: 1rem;">No demos match your current filters.</p>
+                    <a href="{% url 'core:admin_demos' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-times me-1"></i>Clear All Filters
                     </a>
                 {% else %}
-                    <p>Get started by uploading your first demo.</p>
-                    <a href="{% url 'core:admin_add_demo' %}" class="btn btn-primary mt-3">
-                        <i class="fas fa-plus me-1"></i>Add First Demo
-                    </a>
+                    <p style="font-size: 0.75rem; color: #6b7280; margin-bottom: 1rem;">Get started by uploading your first demo.</p>
+                    {% if user|has_permission:'add_demo' %}
+                        <a href="{% url 'core:admin_add_demo' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>Add First Demo
+                        </a>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
     </div>
 {% endif %}
+
 {% endblock %}
 
 {% block admin_extra_js %}
 <script>
     function deleteDemo(demoId, title) {
-        if (confirm(`Are you sure you want to delete "${title}"?\n\n⚠️ This action cannot be undone and will delete:\n• Demo file\n• Thumbnail\n• All view/like statistics\n• All demo requests`)) {
+        if (confirm(`Are you sure you want to delete "${title}"?\n\n⚠️ This action cannot be undone and will delete:\n• Demo file\n• Thumbnail\n• All statistics\n• All requests`)) {
             const btn = event.target.closest('button');
             const originalHTML = btn.innerHTML;
             btn.disabled = true;
@@ -828,10 +676,30 @@
         }
     }
 
+    // Smooth scroll on pagination
     document.querySelectorAll('.pagination a').forEach(link => {
-        link.addEventListener('click', function() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        link.addEventListener('click', function(e) {
+            setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 100);
         });
     });
+
+    // Page load animations
+    document.addEventListener('DOMContentLoaded', function() {
+        const items = document.querySelectorAll('.demo-cards-mobile > div, .admin-table tbody tr');
+        items.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(10px)';
+            item.style.transition = 'all 0.3s ease';
+            
+            setTimeout(() => {
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0)';
+            }, index * 30);
+        });
+    });
+
+    console.log('✅ Demo List with Date & Time - Loaded');
 </script>
 {% endblock %}

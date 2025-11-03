@@ -3,536 +3,510 @@
 
 {% block page_title %}Create Customer{% endblock %}
 
-{% block admin_content %}
+{% block extra_css %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<!-- Custom Select2 Styling -->
 <style>
-/* ===== CRITICAL: Skip validation ALWAYS visible ===== */
-.skip-verification-box {
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 999 !important;
-    background: #fff3cd !important;
-    border: 2px solid #ffc107 !important;
-    border-radius: 8px !important;
-    padding: 12px 16px !important;
-    margin-bottom: 20px !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+/* Select2 container to match form-select */
+.select2-container--default .select2-selection--single {
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 0.5rem !important;
+    height: 38px !important;
+    padding: 0.6rem 0.8rem !important;
+    font-size: 0.75rem !important;
+    font-family: 'Poppins', 'Inter', sans-serif !important;
+    transition: all 0.3s ease !important;
 }
 
-.skip-verification-box .form-check {
-    margin: 0 !important;
+.select2-container--default .select2-selection--single:focus,
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: #087fc2 !important;
+    box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1) !important;
+    outline: none !important;
 }
 
-.skip-verification-box .form-check-input {
-    width: 3.5rem !important;
-    height: 1.75rem !important;
-    cursor: pointer !important;
-    flex-shrink: 0 !important;
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 24px !important;
+    padding-left: 0 !important;
+    color: #495057 !important;
+    font-size: 0.75rem !important;
 }
 
-.skip-verification-box .form-check-label {
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-    color: #664d03 !important;
-    cursor: pointer !important;
-    margin: 0 !important;
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+    right: 8px !important;
 }
 
-.skip-verification-icon {
-    font-size: 1.5rem !important;
-    color: #ffc107 !important;
-    flex-shrink: 0 !important;
+.select2-dropdown {
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 0.5rem !important;
+    font-size: 0.75rem !important;
+    font-family: 'Poppins', 'Inter', sans-serif !important;
 }
 
-.password-wrapper {
-    position: relative;
-}
-.password-wrapper .form-control {
-    padding-right: 45px;
-}
-.password-toggle-icon {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: #6c757d;
-    z-index: 10;
-    transition: color 0.3s ease;
-}
-.password-toggle-icon:hover {
-    color: #087fc2;
-}
-.validation-msg {
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-    display: none;
-    font-weight: 500;
-}
-.validation-msg.show {
-    display: block;
-}
-.validation-msg.success {
-    color: #198754;
-}
-.validation-msg.error {
-    color: #dc3545;
-}
-.password-strength {
-    margin-top: 0.5rem;
-}
-.password-strength .progress {
-    height: 4px;
-    border-radius: 2px;
-}
-.password-strength .progress-bar {
-    transition: width 0.3s ease, background-color 0.3s ease;
-}
-.strength-weak { background-color: #dc3545 !important; }
-.strength-medium { background-color: #ffc107 !important; }
-.strength-strong { background-color: #198754 !important; }
-#otpInput {
-    font-size: 1.2rem;
-    letter-spacing: 0.3rem;
-    text-align: center;
-    font-weight: 600;
+.select2-results__option {
+    padding: 0.5rem 0.8rem !important;
+    font-size: 0.75rem !important;
 }
 
-.section-header {
-    padding: 0.75rem 0;
-    margin: 1rem 0 0.75rem 0;
-    border-bottom: 2px solid #e9ecef;
-}
-
-.section-header h5 {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #087fc2;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.section-header h5 i {
-    font-size: 1.1rem;
-}
-
-.form-label {
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.form-control, .form-select {
-    border: 2px solid #dee2e6;
-    border-radius: 6px;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus, .form-select:focus {
-    border-color: #087fc2;
-    box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
-}
-
-.form-control.is-valid {
-    border-color: #198754;
-    background-image: none;
-}
-
-.form-control.is-invalid {
-    border-color: #dc3545;
-    background-image: none;
-}
-
-.btn {
-    padding: 0.5rem 1rem;
-    font-weight: 600;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
-}
-
-.btn:hover {
-    transform: translateY(-1px);
-}
-
-.btn:active {
-    transform: translateY(0);
-}
-
-.btn-outline-primary {
-    border-width: 2px;
-    color: #087fc2;
-    border-color: #087fc2;
-}
-
-.btn-outline-primary:hover {
-    background-color: #087fc2;
-    border-color: #087fc2;
-    color: white;
-}
-
-.btn-primary {
-    background-color: #087fc2;
-    border-color: #087fc2;
-}
-
-.btn-primary:hover,
-.btn-primary:focus,
-.btn-primary:active {
-    background-color: #0669a0;
-    border-color: #0669a0;
-}
-
-#otpSection {
-    background: #f0f9ff;
-    padding: 1rem;
-    border-radius: 8px;
-    border: 2px solid #087fc2;
-    margin-bottom: 1rem;
-}
-
-.form-check-label {
-    font-weight: 500;
-    color: #495057;
-}
-
-.admin-card-header {
-    background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
-    color: white;
-    padding: 1rem 1.5rem;
-    border-radius: 8px 8px 0 0;
-    position: relative;
-}
-
-.admin-card-header .d-flex {
-    width: 100%;
-}
-
-.admin-card-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin: 0;
+.select2-results__option--highlighted {
+    background-color: #087fc2 !important;
     color: white !important;
-    flex: 1;
 }
 
-.admin-card-header .btn-light {
-    margin-left: auto;
-    white-space: nowrap;
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
+.select2-search--dropdown .select2-search__field {
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 0.5rem !important;
+    padding: 0.5rem 0.8rem !important;
+    font-size: 0.75rem !important;
+    font-family: 'Poppins', 'Inter', sans-serif !important;
 }
 
-.admin-card-body {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 0 0 8px 8px;
-    max-height: calc(100vh - 150px);
-    overflow-y: auto;
+.select2-search--dropdown .select2-search__field:focus {
+    border-color: #087fc2 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1) !important;
 }
 
-.text-danger {
-    color: #dc3545 !important;
-    font-weight: 700;
+/* Validation states */
+.select2-container--default.is-invalid .select2-selection--single {
+    border-color: #dc3545 !important;
 }
 
-.input-group .btn {
-    border-radius: 0 8px 8px 0;
+.select2-container--default.is-valid .select2-selection--single {
+    border-color: #198754 !important;
 }
 
-.spinner-border-sm {
-    width: 1rem;
-    height: 1rem;
-    border-width: 0.15em;
-}
-
-.btn-link {
-    color: #087fc2;
-    text-decoration: none;
-}
-
-.btn-link:hover {
-    color: #0669a0;
-    text-decoration: underline;
-}
-
-.btn-success {
-    background-color: #10b981;
-    border-color: #10b981;
-}
-
-.btn-success:hover,
-.btn-success:focus {
-    background-color: #059669;
-    border-color: #059669;
-}
-
-@media (max-width: 768px) {
-    .admin-card-body {
-        padding: 1rem;
-        max-height: none;
-    }
-    
-    #otpSection {
-        padding: 0.75rem;
-    }
-    
-    .skip-verification-box {
-        flex-direction: column;
-        align-items: flex-start !important;
-    }
+/* Make Select2 full width */
+.select2-container {
+    width: 100% !important;
 }
 </style>
+{% endblock %}
 
+{% block extra_js %}
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+{% endblock %}
+
+{% block admin_content %}
 <div class="admin-card">
-    <div class="admin-card-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h2 class="admin-card-title">
-                <i class="fas fa-user-plus me-2"></i>Create New Customer
-            </h2>
-            <a href="{% url 'core:admin_users' %}" class="btn btn-light">
-                <i class="fas fa-arrow-left me-2"></i>Back to List
+    <div class="admin-card-header" style="background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%); color: white; padding: 0.75rem 1rem; border-radius: 8px 8px 0 0;">
+        <div class="d-flex justify-content-between align-items-center" style="width: 100%;">
+            <h5 style="font-size: 0.875rem; font-weight: 600; margin: 0; color: white; flex: 1; font-family: 'Poppins', 'Inter', sans-serif;">
+                <i class="fas fa-user-plus me-2" style="font-size: 0.875rem;"></i>Create New Customer
+            </h5>
+            <a href="{% url 'core:admin_users' %}" class="btn btn-light btn-sm" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 6px; font-weight: 500;">
+                <i class="fas fa-arrow-left me-1" style="font-size: 0.75rem;"></i>Back to List
             </a>
         </div>
     </div>
     
-    <div class="admin-card-body">
+    <div class="admin-card-body" style="background: white; padding: 0.875rem; border-radius: 0 0 8px 8px; max-height: calc(100vh - 150px); overflow-y: auto;">
         <form method="post" id="customerForm" novalidate>
             {% csrf_token %}
             
             {% if form.errors %}
-                <div class="alert alert-danger alert-dismissible fade show">
+                <div class="alert alert-danger alert-dismissible fade show" style="font-size: 0.75rem; padding: 0.5rem 0.75rem; margin-bottom: 0.75rem;">
                     <strong><i class="fas fa-exclamation-triangle me-2"></i>Please correct the following errors:</strong>
-                    <ul class="mb-0 mt-2">
+                    <ul class="mb-0 mt-1" style="font-size: 0.75rem;">
                         {% for field, errors in form.errors.items %}
                             {% for error in errors %}
                                 <li>{{ error }}</li>
                             {% endfor %}
                         {% endfor %}
                     </ul>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size: 0.75rem;"></button>
                 </div>
             {% endif %}
 
-            <!-- ✅ ALWAYS VISIBLE: Skip Email Verification Box -->
-            <div class="skip-verification-box">
-                <i class="fas fa-shield-alt skip-verification-icon"></i>
-                <div class="form-check form-switch">
-                    {{ form.skip_email_validation }}
-                    <label class="form-check-label" for="id_skip_email_validation">
-                        Skip Email Verification (Admin Override)
-                    </label>
-                </div>
-                <small class="text-muted ms-auto">
-                    <strong>ON</strong> = Bypass OTP | <strong>OFF</strong> = Require OTP
-                </small>
-            </div>
-
             <!-- Personal Information -->
-            <div class="section-header">
-                <h5><i class="fas fa-user"></i>Personal Information</h5>
+            <div style="padding: 0.25rem 0; margin: 0.5rem 0 0.25rem 0; border-bottom: 1.5px solid #e9ecef;">
+                <h6 style="font-size: 0.75rem; font-weight: 600; color: #087fc2; margin: 0; display: flex; align-items: center; gap: 0.375rem; font-family: 'Poppins', 'Inter', sans-serif;">
+                    <i class="fas fa-user" style="font-size: 0.75rem;"></i>Personal Information
+                </h6>
             </div>
             <div class="row">
                 <div class="col-md-6 mb-2">
-                    <label class="form-label">First Name <span class="text-danger">*</span></label>
+                    <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">First Name <span style="color: #dc3545; font-weight: 600;">*</span></label>
                     {{ form.first_name }}
-                    <div class="validation-msg" id="firstNameMsg"></div>
+                    <div id="firstNameMsg" style="font-size: 0.675rem; margin-top: 0.25rem; display: none; font-weight: 500;"></div>
                 </div>
                 <div class="col-md-6 mb-2">
-                    <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                    <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">Last Name <span style="color: #dc3545; font-weight: 600;">*</span></label>
                     {{ form.last_name }}
-                    <div class="validation-msg" id="lastNameMsg"></div>
+                    <div id="lastNameMsg" style="font-size: 0.675rem; margin-top: 0.25rem; display: none; font-weight: 500;"></div>
                 </div>
             </div>
 
             <!-- Email Verification -->
-            <div class="section-header">
-                <h5><i class="fas fa-envelope"></i>Email Verification</h5>
+            <div style="padding: 0.25rem 0; margin: 0.5rem 0 0.25rem 0; border-bottom: 1.5px solid #e9ecef;">
+                <h6 style="font-size: 0.75rem; font-weight: 600; color: #087fc2; margin: 0; display: flex; align-items: center; gap: 0.375rem; font-family: 'Poppins', 'Inter', sans-serif;">
+                    <i class="fas fa-envelope" style="font-size: 0.75rem;"></i>Email Verification
+                </h6>
             </div>
             
             <div class="row">
-                <div class="col-md-12 mb-2">
-                    <label class="form-label">Business Email <span class="text-danger">*</span></label>
+                <div class="col-md-8 mb-2">
+                    <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">Business Email <span style="color: #dc3545; font-weight: 600;">*</span></label>
                     <div class="input-group">
                         {{ form.email }}
-                        <button type="button" class="btn btn-outline-primary" id="sendOtpBtn" disabled>
-                            <i class="fas fa-paper-plane me-1"></i>Send OTP
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="sendOtpBtn" disabled style="padding: 0.35rem 0.75rem; font-weight: 500; border-radius: 0 6px 6px 0; font-size: 0.75rem; border-width: 1.5px; color: #087fc2; border-color: #087fc2;">
+                            <i class="fas fa-paper-plane me-1" style="font-size: 0.675rem;"></i>Send OTP
                         </button>
                     </div>
-                    <small class="text-muted d-block mt-1" style="font-size: 0.8rem;">
+                    <small class="text-muted d-block mt-1" style="font-size: 0.675rem; font-weight: 400;">
                         <i class="fas fa-info-circle"></i> Business email required
                     </small>
-                    <div class="validation-msg" id="emailMsg"></div>
+                    <div id="emailMsg" style="font-size: 0.675rem; margin-top: 0.25rem; display: none; font-weight: 500;"></div>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">Admin Override</label>
+                    <div style="background: #fff3cd; border: 1.5px solid #ffc107; border-radius: 6px; padding: 0.5rem 0.75rem; height: 38px; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-shield-alt" style="font-size: 0.75rem; color: #ffc107;"></i>
+                        <div class="form-check form-switch" style="margin: 0;">
+                            {{ form.skip_email_validation }}
+                            <label class="form-check-label" for="id_skip_email_validation" style="font-size: 0.675rem; font-weight: 500; color: #664d03; cursor: pointer; margin: 0; font-family: 'Poppins', 'Inter', sans-serif; white-space: nowrap;">
+                                Skip OTP
+                            </label>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mt-1" style="font-size: 0.625rem; font-weight: 400;">
+                        <strong>ON</strong>=Bypass | <strong>OFF</strong>=Require
+                    </small>
                 </div>
             </div>
 
-            <!-- OTP Verification Section -->
-            <div id="otpSection" style="display:none;">
+            <!-- OTP Section -->
+            <div id="otpSection" style="display:none; background: #f0f9ff; padding: 0.625rem; border-radius: 6px; border: 1.5px solid #087fc2; margin-bottom: 0.5rem;">
                 <div class="row">
                     <div class="col-md-8 mb-2">
-                        <label class="form-label" style="font-size: 0.9rem;">Enter OTP <span class="text-danger">*</span></label>
+                        <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">Enter OTP <span style="color: #dc3545; font-weight: 600;">*</span></label>
                         <div class="input-group">
-                            <input type="text" class="form-control" id="otpInput" maxlength="6" placeholder="000000" inputmode="numeric">
-                            <button type="button" class="btn btn-success" id="verifyOtpBtn">
-                                <i class="fas fa-check me-1"></i>Verify OTP
+                            <input type="text" class="form-control" id="otpInput" maxlength="6" placeholder="000000" inputmode="numeric" style="font-size: 0.875rem; letter-spacing: 0.25rem; text-align: center; font-weight: 600;">
+                            <button type="button" class="btn btn-success btn-sm" id="verifyOtpBtn" style="padding: 0.35rem 0.75rem; font-weight: 500; border-radius: 0 6px 6px 0; font-size: 0.75rem; background-color: #10b981; border-color: #10b981;">
+                                <i class="fas fa-check me-1" style="font-size: 0.675rem;"></i>Verify
                             </button>
                         </div>
-                        <div class="validation-msg" id="otpMsg"></div>
-                        <small class="text-muted" style="font-size: 0.75rem;">Check <strong id="otpEmailDisplay"></strong></small>
+                        <div id="otpMsg" style="font-size: 0.675rem; margin-top: 0.25rem; display: none; font-weight: 500;"></div>
+                        <small class="text-muted" style="font-size: 0.675rem;">Check <strong id="otpEmailDisplay"></strong></small>
                     </div>
                     <div class="col-md-4 mb-2">
-                        <label class="form-label" style="font-size: 0.9rem;">Actions</label>
+                        <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">Actions</label>
                         <div class="d-flex flex-column gap-1">
-                            <button type="button" class="btn btn-link p-0 text-start" id="resendOtpBtn" style="font-size: 0.85rem;">
+                            <button type="button" class="btn btn-link p-0 text-start" id="resendOtpBtn" style="color: #087fc2; text-decoration: none; font-size: 0.75rem; font-weight: 500;">
                                 <i class="fas fa-redo me-1"></i>Resend OTP
                             </button>
-                            <small class="text-muted" id="otpTimerDisplay" style="font-size: 0.75rem;"></small>
+                            <small class="text-muted" id="otpTimerDisplay" style="font-size: 0.675rem;"></small>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Contact Information -->
-            <div class="section-header">
-                <h5><i class="fas fa-phone"></i>Contact Information</h5>
-            </div>
-            <div class="row">
-                <div class="col-md-12 mb-2">
-                    <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
-                    {{ form.mobile }}
-                    <small class="text-muted d-block mt-1" style="font-size: 0.8rem;">
-                        <i class="fas fa-info-circle"></i> 10-digit mobile number
-                    </small>
-                    <div class="validation-msg" id="mobileMsg"></div>
-                </div>
-            </div>
-
+<!-- Contact Information -->
+<div style="padding: 0.25rem 0; margin: 0.5rem 0 0.25rem 0; border-bottom: 1.5px solid #e9ecef;">
+    <h6 style="font-size: 0.75rem; font-weight: 600; color: #087fc2; margin: 0; display: flex; align-items: center; gap: 0.375rem; font-family: 'Poppins', 'Inter', sans-serif;">
+        <i class="fas fa-phone" style="font-size: 0.75rem;"></i>Contact Information
+    </h6>
+</div>
+<div class="row">
+<div class="col-md-3 mb-2">
+    <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">
+        Country Code <span style="color: #dc3545; font-weight: 600;">*</span>
+    </label>
+    {{ form.country_code }}
+    <small class="text-muted d-block mt-1" style="font-size: 0.675rem; font-weight: 400;">
+        <i class="fas fa-globe"></i> Search or select country code
+    </small>
+    <div id="countryCodeMsg" style="font-size: 0.675rem; margin-top: 0.25rem; display: none; font-weight: 500;"></div>
+</div>
+    <div class="col-md-9 mb-2">
+        <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">
+            Mobile Number <span style="color: #dc3545; font-weight: 600;">*</span>
+        </label>
+        {{ form.mobile }}
+        <small class="text-muted d-block mt-1" style="font-size: 0.675rem; font-weight: 400;">
+            <i class="fas fa-info-circle"></i> 10-digit mobile number (without country code)
+        </small>
+        <div id="mobileMsg" style="font-size: 0.675rem; margin-top: 0.25rem; display: none; font-weight: 500;"></div>
+    </div>
+</div>
             <!-- Password -->
-            <div class="section-header">
-                <h5><i class="fas fa-lock"></i>Set Password</h5>
+            <div style="padding: 0.25rem 0; margin: 0.5rem 0 0.25rem 0; border-bottom: 1.5px solid #e9ecef;">
+                <h6 style="font-size: 0.75rem; font-weight: 600; color: #087fc2; margin: 0; display: flex; align-items: center; gap: 0.375rem; font-family: 'Poppins', 'Inter', sans-serif;">
+                    <i class="fas fa-lock" style="font-size: 0.75rem;"></i>Set Password
+                </h6>
             </div>
             <div class="row">
                 <div class="col-md-6 mb-2">
-                    <label class="form-label">Password <span class="text-danger">*</span></label>
-                    <div class="password-wrapper">
-                        {{ form.password1 }}
-                        <i class="fas fa-eye password-toggle-icon" id="togglePass1"></i>
+                    <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">Password <span style="color: #dc3545; font-weight: 600;">*</span></label>
+                    <div style="position: relative;">
+                        {{ form.password }}
+                        <i class="fas fa-eye password-toggle-icon" id="togglePassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6c757d; z-index: 10; font-size: 0.75rem;"></i>
                     </div>
-                    <div id="passwordStrength" class="password-strength" style="display:none;">
-                        <div class="progress">
-                            <div class="progress-bar" id="strengthBar" style="width:0%"></div>
+                    <div id="passwordStrength" style="display:none; margin-top: 0.375rem;">
+                        <div class="progress" style="height: 2.5px; border-radius: 2px;">
+                            <div class="progress-bar" id="strengthBar" style="width:0%; transition: width 0.3s ease, background-color 0.3s ease;"></div>
                         </div>
-                        <small id="strengthText" style="font-size: 0.75rem;"></small>
+                        <small id="strengthText" style="font-size: 0.675rem;"></small>
                     </div>
-                    <div class="validation-msg" id="pass1Msg"></div>
+                    <div id="passwordMsg" style="font-size: 0.675rem; margin-top: 0.25rem; display: none; font-weight: 500;"></div>
                 </div>
                 <div class="col-md-6 mb-2">
-                    <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                    <div class="password-wrapper">
-                        {{ form.password2 }}
-                        <i class="fas fa-eye password-toggle-icon" id="togglePass2"></i>
+                    <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">Confirm Password <span style="color: #dc3545; font-weight: 600;">*</span></label>
+                    <div style="position: relative;">
+                        {{ form.confirm_password }}
+                        <i class="fas fa-eye password-toggle-icon" id="toggleConfirmPassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6c757d; z-index: 10; font-size: 0.75rem;"></i>
                     </div>
-                    <div class="validation-msg" id="pass2Msg"></div>
+                    <div id="confirmPasswordMsg" style="font-size: 0.675rem; margin-top: 0.25rem; display: none; font-weight: 500;"></div>
                 </div>
             </div>
 
             <!-- Business Information -->
-            <div class="section-header">
-                <h5><i class="fas fa-briefcase"></i>Business Information</h5>
+            <div style="padding: 0.25rem 0; margin: 0.5rem 0 0.25rem 0; border-bottom: 1.5px solid #e9ecef;">
+                <h6 style="font-size: 0.75rem; font-weight: 600; color: #087fc2; margin: 0; display: flex; align-items: center; gap: 0.375rem; font-family: 'Poppins', 'Inter', sans-serif;">
+                    <i class="fas fa-briefcase" style="font-size: 0.75rem;"></i>Business Information
+                </h6>
             </div>
             <div class="row">
-                <div class="col-md-6 mb-2">
-                    <label class="form-label">Organization</label>
+                <div class="col-md-4 mb-2">
+                    <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">Organization</label>
                     {{ form.organization }}
                 </div>
-                <div class="col-md-6 mb-2">
-                    <label class="form-label">Job Title</label>
+                <div class="col-md-4 mb-2">
+                    <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">Job Title</label>
                     {{ form.job_title }}
                 </div>
-                <div class="col-md-6 mb-2">
-                    <label class="form-label">Business Category</label>
+                <div class="col-md-4 mb-2">
+                    <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">Business Category</label>
                     {{ form.business_category }}
                 </div>
-                <div class="col-md-6 mb-2">
-                    <label class="form-label">Business Subcategory</label>
-                    {{ form.business_subcategory }}
-                    <div class="spinner-border spinner-border-sm ms-2" id="subcategoryLoader" style="display:none;"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 mb-2">
+                    <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">Business Subcategory</label>
+                    <div class="d-flex align-items-center gap-2">
+                        {{ form.business_subcategory }}
+                        <div class="spinner-border spinner-border-sm" id="subcategoryLoader" style="display:none; width: 0.75rem; height: 0.75rem; border-width: 0.125em;"></div>
+                    </div>
                 </div>
             </div>
 
             <!-- Submit -->
-            <div class="mt-3">
-                <button type="submit" class="btn btn-primary" id="submitBtn">
-                    <i class="fas fa-save me-2"></i>Create Customer
+            <div class="mt-2">
+                <button type="submit" class="btn btn-primary btn-sm" id="submitBtn" style="padding: 0.35rem 0.75rem; font-weight: 500; border-radius: 6px; font-size: 0.75rem; background-color: #087fc2; border-color: #087fc2;">
+                    <i class="fas fa-save me-1" style="font-size: 0.75rem;"></i>Create Customer
                 </button>
             </div>
         </form>
     </div>
 </div>
+<style>
+/* Minimal CSS - only for dynamic states */
+.validation-msg.show { display: block !important; }
+.validation-msg.success { color: #198754; }
+.validation-msg.error { color: #dc3545; }
+.form-control.is-valid { border-color: #198754; background-image: none; }
+.form-control.is-invalid { border-color: #dc3545; background-image: none; }
+.strength-weak { background-color: #dc3545 !important; }
+.strength-medium { background-color: #ffc107 !important; }
+.strength-strong { background-color: #198754 !important; }
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn-outline-primary:hover { background-color: #087fc2; color: white; }
+.btn-primary:hover { background-color: #0669a0; border-color: #0669a0; }
+.btn-success:hover { background-color: #059669; border-color: #059669; }
+.password-toggle-icon:hover { color: #087fc2 !important; }
+.btn-link:hover { color: #0669a0; text-decoration: underline; }
+
+/* Form controls matching base.html */
+.form-control {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.75rem;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', 'Inter', sans-serif;
+}
+
+.form-control:focus {
+    border-color: #087fc2;
+    box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
+}
+
+/* Dropdown/Select specific styling */
+.form-control select,
+.form-select,
+select.form-control {
+    font-size: 0.75rem !important;
+    font-family: 'Poppins', 'Inter', sans-serif !important;
+}
+
+/* Dropdown options */
+.form-control option,
+.form-select option,
+select.form-control option {
+    font-size: 0.75rem !important;
+    font-family: 'Poppins', 'Inter', sans-serif !important;
+    padding: 0.5rem !important;
+}
+
+/* Input fields */
+.form-control input,
+input.form-control {
+    font-size: 0.75rem !important;
+    font-family: 'Poppins', 'Inter', sans-serif !important;
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // ✅ NULL-SAFE: Get all elements with safety checks
     const form = document.getElementById('customerForm');
     const firstName = document.getElementById('id_first_name');
     const lastName = document.getElementById('id_last_name');
     const email = document.getElementById('id_email');
     const mobile = document.getElementById('id_mobile');
-    const password1 = document.getElementById('id_password1');
-    const password2 = document.getElementById('id_password2');
+    const countryCode = document.getElementById('id_country_code');
+    const password = document.getElementById('id_password');
+    const confirmPassword = document.getElementById('id_confirm_password');
     const skipValidation = document.getElementById('id_skip_email_validation');
-    const sendOtpBtn = document.getElementById('sendOtpBtn');
-    const otpSection = document.getElementById('otpSection');
-    const otpInput = document.getElementById('otpInput');
-    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
-    const resendOtpBtn = document.getElementById('resendOtpBtn');
-    const otpTimerDisplay = document.getElementById('otpTimerDisplay');
-    const otpEmailDisplay = document.getElementById('otpEmailDisplay');
     const submitBtn = document.getElementById('submitBtn');
     const category = document.getElementById('id_business_category');
     const subcategory = document.getElementById('id_business_subcategory');
     
-    // ✅ Safety check - if critical elements missing, stop
     if (!form || !email || !skipValidation) {
-        console.error('Critical form elements missing!');
+        console.error('❌ Critical form elements missing!');
         return;
     }
     
+    // ✅ SET DEFAULT COUNTRY CODE
+    if (countryCode && !countryCode.value) {
+        countryCode.value = '+91';
+        console.log('✅ Default country code set to +91');
+    }
+    
+    // ========================================
+    // ✅ INITIALIZE SELECT2 FOR COUNTRY CODE (SEARCHABLE DROPDOWN)
+    // ========================================
+    if (countryCode && typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {
+        $(countryCode).select2({
+            placeholder: 'Search country code...',
+            allowClear: false,
+            width: '100%',
+            dropdownParent: $(countryCode).parent(),
+            templateResult: formatCountryCode,
+            templateSelection: formatCountryCodeSelection,
+            matcher: customMatcher
+        });
+        
+        // Set initial value
+        $(countryCode).val('+91').trigger('change');
+        
+        console.log('✅ Select2 initialized for country code dropdown');
+        
+        // ✅ Custom formatting for dropdown options
+        function formatCountryCode(country) {
+            if (!country.id) return country.text;
+            var $country = $('<span><strong>' + country.text + '</strong></span>');
+            return $country;
+        }
+        
+        // ✅ Custom formatting for selected option
+        function formatCountryCodeSelection(country) {
+            return country.text || country.id;
+        }
+        
+        // ✅ Custom search matcher
+        function customMatcher(params, data) {
+            if ($.trim(params.term) === '') {
+                return data;
+            }
+            
+            if (typeof data.text === 'undefined') {
+                return null;
+            }
+            
+            var term = params.term.toLowerCase();
+            var text = data.text.toLowerCase();
+            
+            if (text.indexOf(term) > -1) {
+                return data;
+            }
+            
+            return null;
+        }
+        
+        // ✅ Validation on select
+        $(countryCode).on('select2:select', function(e) {
+            var selectedValue = e.params.data.id;
+            console.log('✅ Country code selected:', selectedValue);
+            
+            if (selectedValue) {
+                $(this).removeClass('is-invalid').addClass('is-valid');
+                $(this).next('.select2-container').removeClass('is-invalid').addClass('is-valid');
+                $('#countryCodeMsg').hide();
+            }
+        });
+        
+        // ✅ Sync Select2 validation with Bootstrap
+        $(countryCode).on('change', function() {
+            var $select2 = $(this).next('.select2-container');
+            if ($(this).hasClass('is-invalid')) {
+                $select2.addClass('is-invalid').removeClass('is-valid');
+            } else if ($(this).hasClass('is-valid')) {
+                $select2.addClass('is-valid').removeClass('is-invalid');
+            } else {
+                $select2.removeClass('is-invalid is-valid');
+            }
+        });
+    } else {
+        console.warn('⚠️ Select2 not loaded, using default dropdown');
+    }
+    
     let emailVerified = false;
-    let otpTimer = null;
+    const commonPasswords = ['password', '12345678', 'qwerty', 'abc123', 'password123'];
     
-    const blockedDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com'];
-    const commonPasswords = ['password', '12345678', 'qwerty', 'abc123'];
+    // ✅ COMPREHENSIVE BLOCKED DOMAINS LIST
+    const blockedDomains = [
+        'gmail.com', 'googlemail.com',
+        'yahoo.com', 'yahoo.co.in', 'yahoo.co.uk', 'ymail.com', 'rocketmail.com',
+        'hotmail.com', 'hotmail.co.uk', 'outlook.com', 'live.com', 'msn.com',
+        'aol.com', 'aim.com',
+        'icloud.com', 'me.com', 'mac.com',
+        'rediffmail.com', 'rediff.com',
+        'protonmail.com', 'mail.com', 'gmx.com', 'zoho.com',
+        'inbox.com', 'fastmail.com', 'hushmail.com'
+    ];
     
-    // Password toggle
-    const togglePass1 = document.getElementById('togglePass1');
-    const togglePass2 = document.getElementById('togglePass2');
+    // ========================================
+    // PASSWORD TOGGLE VISIBILITY
+    // ========================================
+    const togglePassword = document.getElementById('togglePassword');
+    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
     
-    if (togglePass1 && password1) {
-        togglePass1.addEventListener('click', () => {
-            const type = password1.type === 'password' ? 'text' : 'password';
-            password1.type = type;
-            togglePass1.classList.toggle('fa-eye');
-            togglePass1.classList.toggle('fa-eye-slash');
+    if (togglePassword && password) {
+        togglePassword.addEventListener('click', () => {
+            const type = password.type === 'password' ? 'text' : 'password';
+            password.type = type;
+            togglePassword.classList.toggle('fa-eye');
+            togglePassword.classList.toggle('fa-eye-slash');
         });
     }
     
-    if (togglePass2 && password2) {
-        togglePass2.addEventListener('click', () => {
-            const type = password2.type === 'password' ? 'text' : 'password';
-            password2.type = type;
-            togglePass2.classList.toggle('fa-eye');
-            togglePass2.classList.toggle('fa-eye-slash');
+    if (toggleConfirmPassword && confirmPassword) {
+        toggleConfirmPassword.addEventListener('click', () => {
+            const type = confirmPassword.type === 'password' ? 'text' : 'password';
+            confirmPassword.type = type;
+            toggleConfirmPassword.classList.toggle('fa-eye');
+            toggleConfirmPassword.classList.toggle('fa-eye-slash');
         });
     }
     
+    // ========================================
+    // VALIDATION HELPER FUNCTIONS
+    // ========================================
     function showValidation(field, msgId, isValid, message = '') {
         if (!field) return;
         const msg = document.getElementById(msgId);
@@ -562,229 +536,385 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Name validation
+    // ========================================
+    // NAME VALIDATION
+    // ========================================
     [firstName, lastName].forEach(field => {
         if (!field) return;
         const msgId = field.id.replace('id_', '') + 'Msg';
+        
         field.addEventListener('blur', () => {
             if (!field.value.trim()) {
                 showValidation(field, msgId, false, 'This field is required');
             } else {
-                showValidation(field, msgId, true);
+                showValidation(field, msgId, true, '✓ Valid');
             }
         });
+        
         field.addEventListener('input', () => {
             if (field.classList.contains('is-invalid') && field.value.trim()) {
-                showValidation(field, msgId, true);
+                showValidation(field, msgId, true, '✓ Valid');
             }
         });
     });
     
-    // Email validation
-    if (email) {
-        email.addEventListener('blur', validateEmail);
-        email.addEventListener('input', () => {
-            if (email.classList.contains('is-invalid')) validateEmail();
-            updateSendOtpButton();
-        });
-    }
-    
-    function validateEmail() {
-        if (!email) return false;
-        const value = email.value.trim();
-        
-        if (!value) {
-            showValidation(email, 'emailMsg', false, 'Email is required');
-            return false;
-        }
-        
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-            showValidation(email, 'emailMsg', false, 'Invalid email format');
-            return false;
-        }
-        
-        // ✅ NULL-SAFE: Check skipValidation exists
-        if (skipValidation && !skipValidation.checked) {
-            const domain = value.split('@')[1]?.toLowerCase();
-            if (blockedDomains.includes(domain)) {
-                showValidation(email, 'emailMsg', false, `Personal email (${domain}) not allowed. Turn ON "Skip Verification" to override.`);
+    // ========================================
+    // COUNTRY CODE VALIDATION
+    // ========================================
+    if (countryCode) {
+        const validateCountryCode = function() {
+            // Handle both Select2 and regular select
+            const value = (typeof $ !== 'undefined' && $(countryCode).data('select2')) 
+                ? $(countryCode).val() 
+                : countryCode.value;
+            
+            if (value) {
+                if (typeof $ !== 'undefined') {
+                    $(countryCode).removeClass('is-invalid').addClass('is-valid');
+                    $(countryCode).next('.select2-container').removeClass('is-invalid').addClass('is-valid');
+                } else {
+                    countryCode.classList.remove('is-invalid');
+                    countryCode.classList.add('is-valid');
+                }
+                
+                const msg = document.getElementById('countryCodeMsg');
+                if (msg) msg.style.display = 'none';
+                
+                console.log('✅ Country code selected:', value);
+                return true;
+            } else {
+                if (typeof $ !== 'undefined') {
+                    $(countryCode).removeClass('is-valid').addClass('is-invalid');
+                    $(countryCode).next('.select2-container').removeClass('is-valid').addClass('is-invalid');
+                } else {
+                    countryCode.classList.remove('is-valid');
+                    countryCode.classList.add('is-invalid');
+                }
+                
+                const msg = document.getElementById('countryCodeMsg');
+                if (msg) {
+                    msg.style.display = 'block';
+                    msg.className = 'show error';
+                    msg.textContent = 'Country code is required';
+                }
+                
+                console.log('❌ Country code validation failed');
                 return false;
             }
-        }
+        };
         
-        showValidation(email, 'emailMsg', true, '✓ Valid email format');
-        return true;
+        // Validate on change
+        if (typeof $ !== 'undefined') {
+            $(countryCode).on('change', validateCountryCode);
+        }
+        countryCode.addEventListener('change', validateCountryCode);
     }
     
-    function updateSendOtpButton() {
-        if (!sendOtpBtn || !email || !skipValidation) return;
-        
-        if (skipValidation.checked) {
-            sendOtpBtn.disabled = true;
-            sendOtpBtn.innerHTML = '<i class="fas fa-ban me-1"></i>Verification Skipped';
-        } else {
-            const isEmailValid = email.value.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim());
-            sendOtpBtn.disabled = !isEmailValid;
-            if (isEmailValid) {
-                sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send OTP';
-            }
-        }
-    }
+    // ========================================
+    // SKIP EMAIL VALIDATION TOGGLE
+    // ========================================
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const otpSection = document.getElementById('otpSection');
     
-    // ✅ Skip Validation Toggle
     if (skipValidation) {
         skipValidation.addEventListener('change', function() {
-            console.log('Skip validation changed:', this.checked);
+            console.log('🔄 Skip Validation:', this.checked ? 'ON' : 'OFF');
             
             if (this.checked) {
-                if (otpSection) otpSection.style.display = 'none';
+                // ✅ Skip is ON - Auto-verify email
                 emailVerified = true;
-                clearValidation(email, 'emailMsg');
-                if (otpInput) clearValidation(otpInput, 'otpMsg');
-                showValidation(email, 'emailMsg', true, '✓ Email verification skipped by admin');
+                showValidation(email, 'emailMsg', true, '✅ Email domain validation skipped by admin');
+                
+                // Hide OTP section
+                if (otpSection) otpSection.style.display = 'none';
+                
+                // Disable and update Send OTP button
                 if (sendOtpBtn) {
                     sendOtpBtn.disabled = true;
-                    sendOtpBtn.innerHTML = '<i class="fas fa-ban me-1"></i>Verification Skipped';
+                    sendOtpBtn.innerHTML = '<i class="fas fa-shield-alt me-1"></i>Validation Skipped';
                 }
+                
+                // Remove any invalid state from email
+                email.classList.remove('is-invalid');
+                email.classList.add('is-valid');
+                
             } else {
+                // ✅ Skip is OFF - Re-enable validation
                 emailVerified = false;
                 clearValidation(email, 'emailMsg');
-                updateSendOtpButton();
+                
+                // Re-check email validity
+                const emailValue = email.value.trim().toLowerCase();
+                if (emailValue) {
+                    const validation = validateBusinessEmail(emailValue);
+                    
+                    if (sendOtpBtn) {
+                        sendOtpBtn.disabled = !validation.valid;
+                        sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send OTP';
+                    }
+                    
+                    if (validation.valid) {
+                        showValidation(email, 'emailMsg', true, '✓ Valid business email');
+                    } else {
+                        showValidation(email, 'emailMsg', false, validation.message);
+                    }
+                } else {
+                    if (sendOtpBtn) {
+                        sendOtpBtn.disabled = true;
+                        sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send OTP';
+                    }
+                }
             }
         });
     }
     
-    // Send OTP
-    if (sendOtpBtn) {
-        sendOtpBtn.addEventListener('click', function() {
-            if (!validateEmail() || !email) return;
+    // ========================================
+    // EMAIL VALIDATION & OTP
+    // ========================================
+    const otpInput = document.getElementById('otpInput');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    const resendOtpBtn = document.getElementById('resendOtpBtn');
+    const otpEmailDisplay = document.getElementById('otpEmailDisplay');
+    const otpTimerDisplay = document.getElementById('otpTimerDisplay');
+    
+    let otpTimer = null;
+    let resendCooldown = 60; // seconds
+    
+    // ✅ BUSINESS EMAIL VALIDATION (Client-side)
+    function validateBusinessEmail(emailValue) {
+        if (!emailValue) return { valid: false, message: 'Email is required' };
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailValue)) {
+            return { valid: false, message: 'Invalid email format' };
+        }
+        
+        // Extract domain
+        const domain = emailValue.split('@')[1].toLowerCase();
+        
+        // Check if domain is in blocked list
+        if (blockedDomains.includes(domain)) {
+            return { 
+                valid: false, 
+                message: `Personal email domain (${domain}) not allowed. Use business email or enable "Admin Override".` 
+            };
+        }
+        
+        return { valid: true, message: '✓ Valid business email' };
+    }
+    
+    // Email input validation
+    if (email && sendOtpBtn) {
+        email.addEventListener('input', function() {
+            // ✅ If skip is ON, don't validate
+            if (skipValidation && skipValidation.checked) {
+                showValidation(email, 'emailMsg', true, '✅ Email domain validation skipped by admin');
+                sendOtpBtn.disabled = true;
+                return;
+            }
             
-            const emailValue = email.value.trim();
-            if (otpEmailDisplay) otpEmailDisplay.textContent = emailValue;
+            const emailValue = this.value.trim().toLowerCase();
+            const validation = validateBusinessEmail(emailValue);
+            
+            if (validation.valid) {
+                sendOtpBtn.disabled = false;
+                clearValidation(email, 'emailMsg');
+            } else {
+                sendOtpBtn.disabled = true;
+                if (emailValue.length > 5) {
+                    showValidation(email, 'emailMsg', false, validation.message);
+                }
+            }
+        });
+        
+        // Email blur validation
+        email.addEventListener('blur', function() {
+            if (skipValidation && skipValidation.checked) {
+                return;
+            }
+            
+            const emailValue = this.value.trim().toLowerCase();
+            if (!emailValue) return;
+            
+            const validation = validateBusinessEmail(emailValue);
+            if (!validation.valid) {
+                showValidation(email, 'emailMsg', false, validation.message);
+            } else {
+                showValidation(email, 'emailMsg', true, validation.message);
+            }
+        });
+        
+        // ✅ SEND OTP AJAX
+        sendOtpBtn.addEventListener('click', function() {
+            const emailValue = email.value.trim().toLowerCase();
+            
+            const validation = validateBusinessEmail(emailValue);
+            if (!validation.valid) {
+                showValidation(email, 'emailMsg', false, validation.message);
+                return;
+            }
             
             sendOtpBtn.disabled = true;
-            sendOtpBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending OTP...';
+            sendOtpBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
             
-            fetch('{% url "core:admin_send_otp" %}', {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch('/admin/customers/send-otp/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
+                    'X-CSRFToken': csrfToken
                 },
                 body: JSON.stringify({ email: emailValue })
             })
-            .then(res => res.json())
+            .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showValidation(email, 'emailMsg', true, '✓ ' + data.message);
-                    if (otpSection) otpSection.style.display = 'block';
-                    if (otpInput) {
-                        otpInput.value = '';
-                        otpInput.disabled = false;
-                        otpInput.focus();
+                    showValidation(email, 'emailMsg', true, '✓ OTP sent to ' + emailValue);
+                    
+                    if (otpSection) {
+                        otpSection.style.display = 'block';
+                        if (otpInput) otpInput.focus();
                     }
-                    if (verifyOtpBtn) verifyOtpBtn.disabled = false;
-                    startOtpTimer(data.expires_in || 600);
+                    if (otpEmailDisplay) {
+                        otpEmailDisplay.textContent = emailValue;
+                    }
+                    
+                    startResendTimer();
+                    sendOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>OTP Sent';
+                    
                 } else {
-                    showValidation(email, 'emailMsg', false, '❌ ' + data.message);
+                    showValidation(email, 'emailMsg', false, data.message || 'Failed to send OTP. Please check email.');
                     sendOtpBtn.disabled = false;
                     sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send OTP';
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                showValidation(email, 'emailMsg', false, '❌ Failed to send OTP. Please try again.');
+                console.error('❌ Network error:', error);
+                showValidation(email, 'emailMsg', false, 'Network error. Please check your connection.');
                 sendOtpBtn.disabled = false;
                 sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send OTP';
             });
         });
     }
     
-    // Verify OTP
-    if (verifyOtpBtn) {
+    // ✅ VERIFY OTP
+    if (verifyOtpBtn && otpInput) {
         verifyOtpBtn.addEventListener('click', function() {
-            if (!otpInput || !email) return;
-            
             const otpValue = otpInput.value.trim();
-            const emailValue = email.value.trim();
+            const emailValue = email.value.trim().toLowerCase();
+            const otpMsg = document.getElementById('otpMsg');
             
             if (!otpValue || otpValue.length !== 6) {
-                showValidation(otpInput, 'otpMsg', false, 'Please enter 6-digit OTP');
+                if (otpMsg) {
+                    otpMsg.style.display = 'block';
+                    otpMsg.className = 'show error';
+                    otpMsg.textContent = 'Please enter 6-digit OTP';
+                }
                 return;
             }
             
             verifyOtpBtn.disabled = true;
             verifyOtpBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Verifying...';
             
-            fetch('{% url "core:admin_verify_otp" %}', {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch('/admin/customers/verify-otp/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
+                    'X-CSRFToken': csrfToken
                 },
-                body: JSON.stringify({ email: emailValue, otp: otpValue })
+                body: JSON.stringify({ 
+                    email: emailValue,
+                    otp: otpValue 
+                })
             })
-            .then(res => res.json())
+            .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showValidation(otpInput, 'otpMsg', true, '✓ ' + data.message);
                     emailVerified = true;
-                    verifyOtpBtn.innerHTML = '<i class="fas fa-check-circle me-1"></i>Verified ✓';
-                    verifyOtpBtn.classList.remove('btn-success');
-                    verifyOtpBtn.classList.add('btn-outline-success');
-                    if (otpInput) otpInput.disabled = true;
-                    if (resendOtpBtn) resendOtpBtn.style.display = 'none';
-                    clearInterval(otpTimer);
-                    if (otpTimerDisplay) {
-                        otpTimerDisplay.textContent = '✓ Email verified successfully!';
-                        otpTimerDisplay.style.color = '#198754';
+                    
+                    if (otpMsg) {
+                        otpMsg.style.display = 'block';
+                        otpMsg.className = 'show success';
+                        otpMsg.textContent = '✅ Email verified successfully!';
                     }
+                    
+                    showValidation(email, 'emailMsg', true, '✓ Email verified');
+                    
+                    setTimeout(() => {
+                        if (otpSection) otpSection.style.display = 'none';
+                    }, 2000);
+                    
+                    verifyOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verified!';
+                    
                 } else {
-                    showValidation(otpInput, 'otpMsg', false, '❌ ' + data.message);
+                    if (otpMsg) {
+                        otpMsg.style.display = 'block';
+                        otpMsg.className = 'show error';
+                        otpMsg.textContent = data.message || 'Invalid OTP. Please try again.';
+                    }
+                    
                     verifyOtpBtn.disabled = false;
-                    verifyOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify OTP';
+                    verifyOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify';
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                showValidation(otpInput, 'otpMsg', false, '❌ Verification failed. Please try again.');
+                console.error('❌ Verification error:', error);
+                if (otpMsg) {
+                    otpMsg.style.display = 'block';
+                    otpMsg.className = 'show error';
+                    otpMsg.textContent = 'Network error. Please try again.';
+                }
+                
                 verifyOtpBtn.disabled = false;
-                verifyOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify OTP';
+                verifyOtpBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify';
             });
+        });
+        
+        otpInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                verifyOtpBtn.click();
+            }
         });
     }
     
-    // Resend OTP
-    if (resendOtpBtn && sendOtpBtn) {
+    // ✅ RESEND OTP
+    if (resendOtpBtn) {
         resendOtpBtn.addEventListener('click', function() {
-            if (otpInput) clearValidation(otpInput, 'otpMsg');
+            if (this.disabled) return;
             sendOtpBtn.click();
         });
     }
     
-    // OTP Timer
-    function startOtpTimer(seconds) {
-        if (!otpTimerDisplay) return;
+    // ✅ RESEND TIMER
+    function startResendTimer() {
+        let timeLeft = resendCooldown;
         
-        let remaining = seconds;
-        clearInterval(otpTimer);
+        if (resendOtpBtn) resendOtpBtn.disabled = true;
+        
+        if (otpTimer) clearInterval(otpTimer);
         
         otpTimer = setInterval(() => {
-            const minutes = Math.floor(remaining / 60);
-            const secs = remaining % 60;
-            otpTimerDisplay.textContent = `⏱ OTP expires in ${minutes}:${secs.toString().padStart(2, '0')}`;
-            otpTimerDisplay.style.color = remaining <= 60 ? '#dc3545' : '#6c757d';
+            timeLeft--;
             
-            if (remaining <= 0) {
-                clearInterval(otpTimer);
-                otpTimerDisplay.textContent = '⚠ OTP expired. Please resend.';
-                otpTimerDisplay.style.color = '#dc3545';
+            if (otpTimerDisplay) {
+                otpTimerDisplay.textContent = `Resend available in ${timeLeft}s`;
             }
-            remaining--;
+            
+            if (timeLeft <= 0) {
+                clearInterval(otpTimer);
+                if (resendOtpBtn) resendOtpBtn.disabled = false;
+                if (otpTimerDisplay) otpTimerDisplay.textContent = 'You can resend OTP now';
+            }
         }, 1000);
     }
     
-    // Mobile validation
+    // ========================================
+    // MOBILE VALIDATION
+    // ========================================
     if (mobile) {
         mobile.addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '').slice(0, 10);
@@ -801,9 +931,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Password strength
-    if (password1) {
-        password1.addEventListener('input', function() {
+    // ========================================
+    // PASSWORD STRENGTH
+    // ========================================
+    if (password) {
+        password.addEventListener('input', function() {
             const value = this.value;
             const strengthDiv = document.getElementById('passwordStrength');
             const strengthBar = document.getElementById('strengthBar');
@@ -813,7 +945,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!value) {
                 strengthDiv.style.display = 'none';
-                clearValidation(this, 'pass1Msg');
+                clearValidation(this, 'passwordMsg');
                 return;
             }
             
@@ -831,43 +963,51 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (strength < 50) {
                 strengthBar.className = 'progress-bar strength-weak';
-                strengthText.textContent = 'Weak password';
+                strengthText.textContent = '⚠ Weak password';
+                strengthText.style.color = '#dc3545';
             } else if (strength < 75) {
                 strengthBar.className = 'progress-bar strength-medium';
-                strengthText.textContent = 'Medium strength';
+                strengthText.textContent = '⚡ Medium strength';
+                strengthText.style.color = '#ffc107';
             } else {
                 strengthBar.className = 'progress-bar strength-strong';
-                strengthText.textContent = 'Strong password';
+                strengthText.textContent = '✓ Strong password';
+                strengthText.style.color = '#198754';
             }
             
-            if (this.classList.contains('is-invalid') || value.length >= 8) validatePass1();
-            if (password2 && password2.value) validatePass2();
+            if (this.classList.contains('is-invalid') || value.length >= 8) {
+                validatePassword();
+            }
+            
+            if (confirmPassword && confirmPassword.value) {
+                validateConfirmPassword();
+            }
         });
         
-        password1.addEventListener('blur', validatePass1);
+        password.addEventListener('blur', validatePassword);
     }
     
-    function validatePass1() {
-        if (!password1) return false;
-        const value = password1.value;
+    function validatePassword() {
+        if (!password) return false;
+        const value = password.value;
         
         if (!value) {
-            showValidation(password1, 'pass1Msg', false, 'Password is required');
+            showValidation(password, 'passwordMsg', false, 'Password is required');
             return false;
         }
         
         if (value.length < 8) {
-            showValidation(password1, 'pass1Msg', false, 'Password must be at least 8 characters');
+            showValidation(password, 'passwordMsg', false, 'Minimum 8 characters required');
             return false;
         }
         
         if (/^\d+$/.test(value)) {
-            showValidation(password1, 'pass1Msg', false, 'Password cannot be entirely numeric');
+            showValidation(password, 'passwordMsg', false, 'Cannot be entirely numeric');
             return false;
         }
         
         if (commonPasswords.includes(value.toLowerCase())) {
-            showValidation(password1, 'pass1Msg', false, 'This password is too common');
+            showValidation(password, 'passwordMsg', false, 'This password is too common');
             return false;
         }
         
@@ -875,46 +1015,53 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasNumbers = /\d/.test(value);
         
         if (!hasLetters || !hasNumbers) {
-            showValidation(password1, 'pass1Msg', false, 'Password should contain both letters and numbers');
+            showValidation(password, 'passwordMsg', false, 'Must contain letters and numbers');
             return false;
         }
         
-        showValidation(password1, 'pass1Msg', true, '✓ Strong password');
+        showValidation(password, 'passwordMsg', true, '✓ Strong password');
         return true;
     }
     
-    // Password confirmation
-    if (password2) {
-        password2.addEventListener('input', validatePass2);
-        password2.addEventListener('blur', validatePass2);
+    // ========================================
+    // PASSWORD CONFIRMATION
+    // ========================================
+    if (confirmPassword) {
+        confirmPassword.addEventListener('input', validateConfirmPassword);
+        confirmPassword.addEventListener('blur', validateConfirmPassword);
     }
     
-    function validatePass2() {
-        if (!password2) return false;
+    function validateConfirmPassword() {
+        if (!confirmPassword) return false;
         
-        if (!password2.value) {
-            clearValidation(password2, 'pass2Msg');
+        if (!confirmPassword.value) {
+            clearValidation(confirmPassword, 'confirmPasswordMsg');
             return false;
         }
         
-        if (password1 && password1.value.length < 8) {
-            showValidation(password2, 'pass2Msg', false, 'First password must be 8+ characters');
+        if (password && password.value.length < 8) {
+            showValidation(confirmPassword, 'confirmPasswordMsg', false, 'First enter valid password above');
             return false;
         }
         
-        if (password1 && password2.value !== password1.value) {
-            showValidation(password2, 'pass2Msg', false, 'Passwords do not match');
+        if (password && confirmPassword.value !== password.value) {
+            showValidation(confirmPassword, 'confirmPasswordMsg', false, 'Passwords do not match');
             return false;
         }
         
-        showValidation(password2, 'pass2Msg', true, '✓ Passwords match');
+        showValidation(confirmPassword, 'confirmPasswordMsg', true, '✓ Passwords match');
         return true;
     }
     
-    // Business Category/Subcategory
+    // ========================================
+    // CATEGORY/SUBCATEGORY
+    // ========================================
     if (category && subcategory) {
+        console.log('🔧 Category/Subcategory: Initializing');
+        
         category.addEventListener('change', function() {
             const categoryId = this.value;
+            console.log('📂 Category changed to:', categoryId);
             
             if (!categoryId) {
                 subcategory.innerHTML = '<option value="">Select category first...</option>';
@@ -925,87 +1072,184 @@ document.addEventListener('DOMContentLoaded', function() {
             subcategory.disabled = true;
             subcategory.innerHTML = '<option value="">Loading...</option>';
             const loader = document.getElementById('subcategoryLoader');
-            if (loader) loader.style.display = 'block';
+            if (loader) loader.style.display = 'inline-block';
             
-            fetch(`/auth/ajax/get-subcategories/?category_id=${categoryId}`)
-                .then(res => res.json())
-                .then(data => {
-                    subcategory.innerHTML = '<option value="">Select subcategory (optional)...</option>';
-                    if (data.success && data.subcategories) {
-                        data.subcategories.forEach(sub => {
-                            subcategory.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
-                        });
+            const url = '/auth/ajax/get-subcategories/?category_id=' + categoryId;
+            console.log('🌐 Fetching from:', url);
+            
+            fetch(url)
+                .then(response => {
+                    console.log('📡 Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('📥 Subcategories received:', data);
+                    
+                    subcategory.innerHTML = '<option value="">Select subcategory</option>';
+                    
+                    if (data.success && data.subcategories && data.subcategories.length > 0) {
+                        data.subcategories.forEach(sub => {
+                            const option = document.createElement('option');
+                            option.value = sub.id;
+                            option.textContent = sub.name;
+                            subcategory.appendChild(option);
+                        });
+                        console.log(`✅ Added ${data.subcategories.length} subcategories`);
+                    } else {
+                        console.warn('⚠️ No subcategories found for this category');
+                    }
+                    
                     subcategory.disabled = false;
                     if (loader) loader.style.display = 'none';
                 })
-                .catch(() => {
-                    subcategory.innerHTML = '<option value="">Error loading</option>';
+                .catch(error => {
+                    console.error('❌ Error loading subcategories:', error);
+                    subcategory.innerHTML = '<option value="">Error loading options</option>';
                     subcategory.disabled = false;
                     if (loader) loader.style.display = 'none';
                 });
         });
+        
+        if (category.value) {
+            setTimeout(() => category.dispatchEvent(new Event('change')), 100);
+        }
     }
     
-    // Form Submission
+    // ========================================
+    // FORM SUBMISSION
+    // ========================================
     if (form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            console.log('Form submission - Skip:', skipValidation ? skipValidation.checked : 'N/A', 'Email verified:', emailVerified);
+            console.log('📝 Form submission started...');
             
             let isValid = true;
             
+            // Validate first name
             if (firstName && !firstName.value.trim()) {
-                showValidation(firstName, 'firstNameMsg', false, 'Required');
+                showValidation(firstName, 'firstNameMsg', false, 'First name is required');
                 isValid = false;
             }
             
+            // Validate last name
             if (lastName && !lastName.value.trim()) {
-                showValidation(lastName, 'lastNameMsg', false, 'Required');
+                showValidation(lastName, 'lastNameMsg', false, 'Last name is required');
                 isValid = false;
             }
             
-            if (!validateEmail()) {
+            // ✅ VALIDATE COUNTRY CODE (Works with Select2)
+            if (countryCode) {
+                const countryValue = (typeof $ !== 'undefined' && $(countryCode).data('select2')) 
+                    ? $(countryCode).val() 
+                    : countryCode.value;
+                
+                if (!countryValue) {
+                    if (typeof $ !== 'undefined') {
+                        $(countryCode).removeClass('is-valid').addClass('is-invalid');
+                        $(countryCode).next('.select2-container').addClass('is-invalid');
+                    } else {
+                        countryCode.classList.remove('is-valid');
+                        countryCode.classList.add('is-invalid');
+                    }
+                    
+                    const msg = document.getElementById('countryCodeMsg');
+                    if (msg) {
+                        msg.style.display = 'block';
+                        msg.className = 'show error';
+                        msg.textContent = 'Country code is required';
+                    }
+                    
+                    isValid = false;
+                    console.log('❌ Country code validation failed');
+                } else {
+                    console.log('✅ Country code validated:', countryValue);
+                }
+            }
+            
+            // ✅ Email validation with proper skip logic
+            if (email && email.value.trim()) {
+                const skipIsOn = skipValidation && skipValidation.checked;
+                
+                console.log('📧 Email validation check:', {
+                    email: email.value,
+                    skipIsOn: skipIsOn,
+                    emailVerified: emailVerified
+                });
+                
+                if (skipIsOn) {
+                    console.log('✅ Email validation skipped by admin');
+                    emailVerified = true;
+                } else if (!emailVerified) {
+                    showValidation(email, 'emailMsg', false, '⚠ Please verify email with OTP or enable "Admin Override"');
+                    isValid = false;
+                    console.log('❌ Email not verified and skip is OFF');
+                }
+            } else {
+                showValidation(email, 'emailMsg', false, 'Email is required');
                 isValid = false;
             }
             
-            // ✅ NULL-SAFE: Email verification check
-            if (skipValidation && email && !skipValidation.checked && !emailVerified) {
-                showValidation(email, 'emailMsg', false, '⚠ Please verify email with OTP or turn ON "Skip Verification"');
-                isValid = false;
-                console.log('❌ Email not verified!');
-            }
-            
+            // Validate mobile
             if (mobile && mobile.value.length !== 10) {
-                showValidation(mobile, 'mobileMsg', false, 'Required 10 digits');
+                showValidation(mobile, 'mobileMsg', false, 'Mobile number must be 10 digits');
                 isValid = false;
             }
             
-            if (!validatePass1()) isValid = false;
-            if (!validatePass2()) isValid = false;
+            // Validate password
+            if (!validatePassword()) {
+                console.log('❌ Password validation failed');
+                isValid = false;
+            }
             
+            // Validate password confirmation
+            if (!validateConfirmPassword()) {
+                console.log('❌ Confirm password validation failed');
+                isValid = false;
+            }
+            
+            // If validation failed, scroll to first error
             if (!isValid) {
-                console.log('❌ Form validation failed');
+                console.log('❌ Form validation failed - not submitting');
                 const firstInvalid = form.querySelector('.is-invalid');
                 if (firstInvalid) {
                     firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // If it's a Select2 field, open it
+                    if (typeof $ !== 'undefined' && $(firstInvalid).hasClass('select2-hidden-accessible')) {
+                        $(firstInvalid).select2('open');
+                    } else {
+                        firstInvalid.focus();
+                    }
                 }
-                return;
+                return false;
             }
             
-            console.log('✅ Form validation passed - submitting');
+            console.log('✅ All validations passed - submitting form');
+            console.log('📊 Form data summary:', {
+                firstName: firstName.value,
+                lastName: lastName.value,
+                email: email.value,
+                countryCode: (typeof $ !== 'undefined' && $(countryCode).data('select2')) ? $(countryCode).val() : countryCode.value,
+                mobile: mobile.value,
+                emailVerified: emailVerified
+            });
             
+            // Disable submit button
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Customer...';
             }
+            
+            // Submit form
             form.submit();
         });
     }
     
-    // Initialize
-    updateSendOtpButton();
+    console.log('✅ Customer create form JavaScript initialized successfully');
 });
 </script>
 {% endblock %}

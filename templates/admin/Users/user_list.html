@@ -3,296 +3,562 @@
 {% load permission_tags %}
 
 {% block admin_title %}User Management{% endblock %}
-{% block page_title %}User Management{% endblock %}
+
+{% block page_title %}
+<i class="fas fa-users"></i> Employee Management
+{% endblock %}
+
+{% block page_subtitle %}
+<p style="font-size: var(--font-sm); color: #6b7280; margin: 0; font-family: Verdana, Geneva, Tahoma, sans-serif;">Manage employee accounts and access permissions.</p>
+{% endblock %}
 
 {% block breadcrumb %}
-<div class="admin-breadcrumb">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item">
-                <a href="{% url 'core:admin_dashboard' %}"><i class="fas fa-home me-1"></i>Dashboard</a>
-            </li>
-            <li class="breadcrumb-item active">Employees</li>
-        </ol>
-    </nav>
+<div style="margin-bottom: 1.25rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.625rem;">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0" style="background: transparent; padding: 0; margin: 0; font-size: var(--font-xs); font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'core:admin_dashboard' %}" style="color: #087fc2; text-decoration: none; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                        <i class="fas fa-home me-1"></i>Dashboard
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" style="color: #1f2937; font-family: Verdana, Geneva, Tahoma, sans-serif;">Employees</li>
+            </ol>
+        </nav>
+        {% if user|has_permission:'add_customer' %}
+        <a href="{% url 'accounts:user_add' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-user-plus me-1"></i><span class="d-none d-sm-inline">Add Employee</span><span class="d-inline d-sm-none">Add</span>
+        </a>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
 
 {% block admin_extra_css %}
 <style>
-    .action-toolbar {
-        display: flex;
-        gap: 0.75rem;
-        align-items: center;
-        flex-wrap: wrap;
-        margin-bottom: 1.5rem;
+    /* Font family applied globally */
+    * {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
 
-    .action-toolbar .btn {
-        white-space: nowrap;
-    }
-
-    .filter-input-group label {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: #374151;
-        margin-bottom: 0.25rem;
+    /* ==========================================
+       RESPONSIVE VISIBILITY CONTROLS
+       ========================================== */
+    .user-table-desktop {
         display: block;
+    }
+    
+    .user-cards-mobile {
+        display: none;
+    }
+    
+    @media (max-width: 991px) {
+        .user-table-desktop {
+            display: none !important;
+        }
+        
+        .user-cards-mobile {
+            display: block !important;
+        }
+    }
+    
+    /* ==========================================
+       TABLE CONTAINER - PROPER OVERFLOW
+       ========================================== */
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 0;
+        border-radius: 0.75rem;
+    }
+    
+    .table-wrapper::-webkit-scrollbar {
+        height: 8px;
+    }
+    
+    .table-wrapper::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+    
+    .table-wrapper::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+    
+    /* ==========================================
+       TABLE STYLES
+       ========================================== */
+    .user-table {
+        width: 100%;
+        min-width: 900px;
+        margin-bottom: 0;
+        table-layout: fixed;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    
+    /* Column Widths */
+    .user-table th:nth-child(1),
+    .user-table td:nth-child(1) { width: 22%; min-width: 180px; }
+    
+    .user-table th:nth-child(2),
+    .user-table td:nth-child(2) { width: 22%; min-width: 180px; }
+    
+    .user-table th:nth-child(3),
+    .user-table td:nth-child(3) { width: 14%; min-width: 110px; }
+    
+    .user-table th:nth-child(4),
+    .user-table td:nth-child(4) { width: 13%; min-width: 100px; }
+    
+    .user-table th:nth-child(5),
+    .user-table td:nth-child(5) { width: 11%; min-width: 90px; }
+    
+    .user-table th:nth-child(6),
+    .user-table td:nth-child(6) { width: 18%; min-width: 140px; }
+    
+    /* ==========================================
+       RESPONSIVE BREAKPOINTS
+       ========================================== */
+    @media (min-width: 1200px) and (max-width: 1399px) {
+        .user-table {
+            min-width: 850px;
+            font-size: var(--font-xs);
+        }
+        .user-table th,
+        .user-table td {
+            padding: 0.5rem 0.375rem;
+        }
+    }
+    
+    @media (min-width: 992px) and (max-width: 1199px) {
+        .user-table {
+            min-width: 800px;
+            font-size: var(--font-xs);
+        }
+        .user-table th,
+        .user-table td {
+            padding: 0.4375rem 0.3125rem;
+        }
+    }
+    
+    /* ==========================================
+       MOBILE CARD STYLES
+       ========================================== */
+    @media (max-width: 767px) {
+        .mobile-card-stats {
+            grid-template-columns: 1fr !important;
+        }
+        
+        .filter-responsive .col-md-5,
+        .filter-responsive .col-md-3,
+        .filter-responsive .col-md-2 {
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+            margin-bottom: 0.625rem;
+        }
+    }
+    
+    @media (max-width: 575px) {
+        .mobile-card-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+        }
+        
+        .mobile-card-actions {
+            flex-direction: column !important;
+        }
+        
+        .mobile-card-actions > * {
+            width: 100% !important;
+        }
+    }
+    
+    /* ==========================================
+       PAGINATION RESPONSIVE
+       ========================================== */
+    @media (max-width: 767px) {
+        .pagination .page-link {
+            padding: 0.3125rem 0.4375rem !important;
+            font-size: var(--font-xs) !important;
+        }
+        .pagination .page-item {
+            margin: 0 1px;
+        }
+    }
+    
+    /* ==========================================
+       HOVER EFFECTS
+       ========================================== */
+    .btn-hover {
+        transition: all 0.2s ease;
+    }
+    
+    .btn-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    
+    .card-hover {
+        transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important;
+        transform: translateY(-2px) !important;
+    }
+
+    /* ==========================================
+       BUTTON & FORM STYLES
+       ========================================== */
+    .btn {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .btn-sm {
+        font-size: var(--font-xs);
+        padding: 0.375rem 0.75rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .form-control, .form-select {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .pagination .page-link {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
 </style>
 {% endblock %}
 
 {% block admin_content %}
-<div class="container-fluid">
-    <!-- Page Header with Button -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-2 text-gray-800">Employee Management</h1>
-            <p class="text-muted mb-0">Manage employee accounts and access</p>
-        </div>
-        <!-- Add Employee Button - Right Side -->
-        <div>
-            {% if user|has_permission:'add_customer' %}
-            <a href="{% url 'accounts:user_add' %}" class="btn btn-primary">
-                <i class="fas fa-user-plus me-1"></i>Add Employee
-            </a>
-            {% endif %}
-        </div>
-    </div>
 
-
-
-    <!-- Filters -->
-    <div class="filter-toolbar" style="background: white; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem; border: 1px solid #e5e7eb;">
-        <form method="get">
-            <div class="row g-3 align-items-end">
-                <!-- Search -->
-                <div class="col-md-5">
-                    <div class="filter-input-group">
-                        <label for="search">Search</label>
-                        <div class="position-relative">
-                            <i class="fas fa-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
-                            <input type="text" 
-                                   id="search" 
-                                   name="q" 
-                                   class="form-control form-control-sm" 
-                                   style="padding-left: 2.5rem;" 
-                                   value="{{ query }}" 
-                                   placeholder="Search by name, email, employee ID...">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Role Filter -->
-                <div class="col-md-3">
-                    <div class="filter-input-group">
-                        <label for="role">Role</label>
-                        <select name="role" id="role" class="form-select form-select-sm">
-                            <option value="">All Roles</option>
-                            {% for role in roles %}
-                            <option value="{{ role.id }}" {% if role_filter == role.id|stringformat:"s" %}selected{% endif %}>
-                                {{ role.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Status Filter -->
-                <div class="col-md-2">
-                    <div class="filter-input-group">
-                        <label for="status">Status</label>
-                        <select name="status" id="status" class="form-select form-select-sm">
-                            <option value="">All Status</option>
-                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
-                            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Filter Button -->
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary btn-sm w-100">
-                        <i class="fas fa-filter me-1"></i>Apply Filters
+<!-- Filters Section -->
+<div style="background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.25rem; margin-bottom: 1.25rem;">
+    <form method="GET" action="{% url 'accounts:user_list' %}">
+        <div class="row g-3 align-items-end filter-responsive">
+            <!-- Search -->
+            <div class="col-12 col-md-5">
+                <label style="font-size: var(--font-xs); font-weight: 600; color: #374151; margin-bottom: 0.375rem; display: block; font-family: Verdana, Geneva, Tahoma, sans-serif;">Search Employees</label>
+                <div class="input-group">
+                    <input type="text" 
+                           class="form-control" 
+                           name="q" 
+                           value="{{ query|default:'' }}"
+                           placeholder="Search by name, email, employee ID..."
+                           style="font-size: var(--font-xs); height: 38px; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                    <button class="btn btn-primary" type="submit" style="font-size: var(--font-xs);">
+                        <i class="fas fa-search"></i>
                     </button>
                 </div>
             </div>
-        </form>
-    </div>
-
-    <!-- Employee Table -->
-    <div style="background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; overflow: hidden;">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0" style="min-width: 800px;">
-                <thead style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 2px solid #e5e7eb;">
-                    <tr>
-                        <th style="padding: 1rem; font-size: 0.875rem; font-weight: 600; color: #374151;">
-                            Employee Name
-                        </th>
-                        <th class="d-none d-md-table-cell" style="padding: 1rem; font-size: 0.875rem; font-weight: 600; color: #374151;">
-                            Contact Information
-                        </th>
-                        <th class="d-none d-lg-table-cell" style="padding: 1rem; font-size: 0.875rem; font-weight: 600; color: #374151;">
-                            Employee ID
-                        </th>
-                        <th class="text-center d-none d-md-table-cell" style="padding: 1rem; font-size: 0.875rem; font-weight: 600; color: #374151;">
-                            Role
-                        </th>
-                        <th class="text-center" style="padding: 1rem; font-size: 0.875rem; font-weight: 600; color: #374151;">
-                            Status
-                        </th>
-                        <th class="text-center" style="padding: 1rem; font-size: 0.875rem; font-weight: 600; color: #374151;">
-                            Actions
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user_obj in users %}
-                    <tr style="border-bottom: 1px solid #e5e7eb;">
-                        <!-- Employee Details -->
-                        <td style="padding: 1rem; font-size: 0.875rem; color: #374151; vertical-align: middle;">
-                            <div>
-                                <div style="font-weight: 600; color: #111827;">{{ user_obj.full_name }}</div>
-                                <small class="text-muted d-block d-md-none">{{ user_obj.email }}</small>
-                                <small class="text-muted d-block d-md-none">{{ user_obj.full_mobile }}</small>
-                                {% if user_obj.role %}
-                                <small class="d-block d-md-none mt-1">
-                                    <span class="badge bg-primary" style="font-size: 0.7rem;">{{ user_obj.role.name }}</span>
-                                </small>
-                                {% endif %}
-                            </div>
-                        </td>
-                        
-                        <!-- Contact (Desktop) -->
-                        <td class="d-none d-md-table-cell" style="padding: 1rem; font-size: 0.875rem; color: #374151; vertical-align: middle;">
-                            <div>
-                                <div>{{ user_obj.email }}</div>
-                                <small class="text-muted">{{ user_obj.full_mobile }}</small>
-                            </div>
-                        </td>
-                        
-                        <!-- Employee ID -->
-                        <td class="d-none d-lg-table-cell" style="padding: 1rem; font-size: 0.875rem; color: #374151; vertical-align: middle;">
-                            {% if user_obj.employee_id %}
-                                <code style="background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">
-                                    {{ user_obj.employee_id }}
-                                </code>
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                        
-                        <!-- Role -->
-                        <td class="text-center d-none d-md-table-cell" style="padding: 1rem; font-size: 0.875rem; color: #374151; vertical-align: middle;">
-                            {% if user_obj.role %}
-                                <span class="badge bg-primary" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
-                                    {{ user_obj.role.name }}
-                                </span>
-                            {% else %}
-                                <span class="text-muted">No Role</span>
-                            {% endif %}
-                        </td>
-                        
-                        <!-- Status -->
-                        <td class="text-center" style="padding: 1rem; font-size: 0.875rem; color: #374151; vertical-align: middle;">
-                            {% if user_obj.is_active %}
-                                <span class="badge bg-success" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
-                                    <i class="fas fa-check-circle me-1"></i>Active
-                                </span>
-                            {% else %}
-                                <span class="badge bg-danger" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
-                                    <i class="fas fa-times-circle me-1"></i>Inactive
-                                </span>
-                            {% endif %}
-                        </td>
-                        
-                        <!-- Actions -->
-                        <td class="text-center" style="padding: 1rem; font-size: 0.875rem; color: #374151; vertical-align: middle;">
-                            <div class="btn-group" role="group">
-                                <a href="{% url 'accounts:user_detail' user_obj.id %}" 
-                                   class="btn btn-sm btn-outline-primary" 
-                                   title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                
-                                <a href="{% url 'accounts:user_edit' user_obj.id %}" 
-                                   class="btn btn-sm btn-outline-info" 
-                                   title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                
-                                <a href="{% url 'accounts:user_delete' user_obj.id %}" 
-                                   class="btn btn-sm btn-outline-danger" 
-                                   onclick="return confirm('Are you sure you want to delete this employee?')"
-                                   title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
-                            <p class="text-muted mb-0">No employees found</p>
-                        </td>
-                    </tr>
+            
+            <!-- Role Filter -->
+            <div class="col-6 col-md-3">
+                <label style="font-size: var(--font-xs); font-weight: 600; color: #374151; margin-bottom: 0.375rem; display: block; font-family: Verdana, Geneva, Tahoma, sans-serif;">Role</label>
+                <select class="form-select" name="role" style="font-size: var(--font-xs); height: 38px; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                    <option value="">All Roles</option>
+                    {% for role in roles %}
+                        <option value="{{ role.id }}" {% if role_filter == role.id|stringformat:"s" %}selected{% endif %}>
+                            {{ role.name }}
+                        </option>
                     {% endfor %}
-                </tbody>
-            </table>
+                </select>
+            </div>
+            
+            <!-- Status Filter -->
+            <div class="col-6 col-md-2">
+                <label style="font-size: var(--font-xs); font-weight: 600; color: #374151; margin-bottom: 0.375rem; display: block; font-family: Verdana, Geneva, Tahoma, sans-serif;">Status</label>
+                <select class="form-select" name="status" style="font-size: var(--font-xs); height: 38px; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                    <option value="">All Status</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+            
+            <!-- Apply Button -->
+            <div class="col-12 col-md-2">
+                <button type="submit" class="btn btn-primary w-100" style="font-size: var(--font-xs); height: 38px;">
+                    <i class="fas fa-filter me-1"></i>Apply
+                </button>
+            </div>
+            
+            {% if query or role_filter or status_filter %}
+            <div class="col-12">
+                <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-times me-1"></i>Clear Filters
+                </a>
+            </div>
+            {% endif %}
         </div>
-    </div>
-
-    <!-- Pagination -->
-    {% if users.has_other_pages %}
-    <div class="d-flex justify-content-between align-items-center mt-4">
-        <div class="text-muted">
-            Showing {{ users.start_index }} to {{ users.end_index }} of {{ users.paginator.count }} employees
-        </div>
-        <nav>
-            <ul class="pagination mb-0">
-                {% if users.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
-                        First
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ users.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
-                        Previous
-                    </a>
-                </li>
-                {% endif %}
-
-                {% for num in users.paginator.page_range %}
-                    {% if users.number == num %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ num }}</span>
-                    </li>
-                    {% elif num > users.number|add:'-3' and num < users.number|add:'3' %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
-                            {{ num }}
-                        </a>
-                    </li>
-                    {% endif %}
-                {% endfor %}
-
-                {% if users.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ users.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
-                        Next
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ users.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
-                        Last
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-    </div>
-    {% endif %}
+    </form>
 </div>
+
+{% if users %}
+    <!-- Desktop Table View -->
+    <div class="admin-card user-table-desktop">
+        <div class="admin-card-body p-0">
+            <div class="table-wrapper">
+                <table class="table user-table mb-0">
+                    <thead>
+                        <tr style="background: #f9fafb;">
+                            <th style="font-size: var(--font-xs); font-weight: 600; color: #374151; padding: 0.625rem 0.5rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">Employee Name</th>
+                            <th style="font-size: var(--font-xs); font-weight: 600; color: #374151; padding: 0.625rem 0.5rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">Contact Info</th>
+                            <th style="font-size: var(--font-xs); font-weight: 600; color: #374151; padding: 0.625rem 0.5rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">Employee ID</th>
+                            <th class="text-center" style="font-size: var(--font-xs); font-weight: 600; color: #374151; padding: 0.625rem 0.5rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">Role</th>
+                            <th class="text-center" style="font-size: var(--font-xs); font-weight: 600; color: #374151; padding: 0.625rem 0.5rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">Status</th>
+                            <th class="text-center" style="font-size: var(--font-xs); font-weight: 600; color: #374151; padding: 0.625rem 0.5rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user_obj in users %}
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 0.625rem 0.5rem;">
+                                    <div style="font-weight: 400; color: #1f2937; font-size: var(--font-xs); font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                        {{ user_obj.full_name }}
+                                    </div>
+                                </td>
+                                <td style="padding: 0.625rem 0.5rem;">
+                                    <div style="font-size: var(--font-xs); color: #374151; font-weight: 400; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                        <div style="margin-bottom: 0.125rem;">{{ user_obj.email }}</div>
+                                        <div style="color: #6b7280;">{{ user_obj.full_mobile }}</div>
+                                    </div>
+                                </td>
+                                <td style="padding: 0.625rem 0.5rem;">
+                                    {% if user_obj.employee_id %}
+                                        <code style="background: #f3f4f6; padding: 0.1875rem 0.375rem; border-radius: 3px; font-size: 0.625rem; font-weight: 400; font-family: monospace;">
+                                            {{ user_obj.employee_id }}
+                                        </code>
+                                    {% else %}
+                                        <span style="color: #9ca3af; font-size: var(--font-xs); font-family: Verdana, Geneva, Tahoma, sans-serif;">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center" style="padding: 0.625rem 0.5rem;">
+                                    {% if user_obj.role %}
+                                        <span style="display: inline-block; padding: 0.1875rem 0.4375rem; border-radius: 3px; font-size: 0.625rem; font-weight: 500; background: #dbeafe; color: #1e40af; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                            {{ user_obj.role.name }}
+                                        </span>
+                                    {% else %}
+                                        <span style="color: #9ca3af; font-size: 0.625rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">No Role</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center" style="padding: 0.625rem 0.5rem;">
+                                    {% if user_obj.is_active %}
+                                        <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.1875rem 0.4375rem; border-radius: 3px; font-size: 0.625rem; font-weight: 600; background: #dcfce7; color: #166534; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                            <i class="fas fa-check-circle" style="font-size: 0.5625rem;"></i>Active
+                                        </span>
+                                    {% else %}
+                                        <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.1875rem 0.4375rem; border-radius: 3px; font-size: 0.625rem; font-weight: 600; background: #fee2e2; color: #991b1b; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                            <i class="fas fa-times-circle" style="font-size: 0.5625rem;"></i>Inactive
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.625rem 0.5rem;">
+                                    <div style="display: flex; gap: 0.25rem; justify-content: center; flex-wrap: nowrap;">
+                                        <a href="{% url 'accounts:user_detail' user_obj.id %}" 
+                                           class="btn btn-sm btn-outline-primary btn-hover" 
+                                           title="View"
+                                           style="padding: 0.25rem 0.375rem; font-size: 0.625rem;">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'accounts:user_edit' user_obj.id %}" 
+                                           class="btn btn-sm btn-outline-info btn-hover" 
+                                           title="Edit"
+                                           style="padding: 0.25rem 0.375rem; font-size: 0.625rem;">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'accounts:user_delete' user_obj.id %}" 
+                                           class="btn btn-sm btn-outline-danger btn-hover" 
+                                           onclick="return confirm('Are you sure you want to delete this employee?')"
+                                           title="Delete"
+                                           style="padding: 0.25rem 0.375rem; font-size: 0.625rem;">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Card View -->
+    <div class="user-cards-mobile">
+        {% for user_obj in users %}
+            <div class="card-hover" style="background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1rem; padding: 1rem; border-left: 4px solid #087fc2;">
+                <div class="mobile-card-header" style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div style="flex: 1;">
+                        <h3 style="font-size: var(--font-md); font-weight: 600; color: #1f2937; margin: 0 0 0.5rem 0; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                            {{ user_obj.full_name }}
+                        </h3>
+                        <div style="font-size: var(--font-xs); color: #6b7280; margin-bottom: 0.25rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                            <i class="fas fa-envelope" style="width: 16px;"></i> {{ user_obj.email }}
+                        </div>
+                        <div style="font-size: var(--font-xs); color: #6b7280; margin-bottom: 0.25rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                            <i class="fas fa-phone" style="width: 16px;"></i> {{ user_obj.full_mobile }}
+                        </div>
+                        {% if user_obj.employee_id %}
+                        <div style="font-size: var(--font-xs); color: #6b7280; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                            <i class="fas fa-id-card" style="width: 16px;"></i> 
+                            <code style="background: #f3f4f6; padding: 0.125rem 0.3125rem; border-radius: 3px; font-size: 0.625rem; font-family: monospace;">
+                                {{ user_obj.employee_id }}
+                            </code>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if user_obj.is_active %}
+                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.625rem; font-weight: 600; background: #dcfce7; color: #166534; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                <i class="fas fa-check-circle"></i>Active
+                            </span>
+                        {% else %}
+                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.625rem; font-weight: 600; background: #fee2e2; color: #991b1b; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                <i class="fas fa-times-circle"></i>Inactive
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if user_obj.role %}
+                <div style="margin-bottom: 1rem;">
+                    <span style="display: inline-block; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: var(--font-xs); font-weight: 500; background: #dbeafe; color: #1e40af; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                        <i class="fas fa-user-tag me-1"></i>{{ user_obj.role.name }}
+                    </span>
+                </div>
+                {% endif %}
+
+                <div class="mobile-card-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <a href="{% url 'accounts:user_detail' user_obj.id %}" 
+                       class="btn btn-sm btn-outline-primary btn-hover" 
+                       style="flex: 1; min-width: 90px; font-size: var(--font-xs);">
+                        <i class="fas fa-eye me-1"></i>View
+                    </a>
+                    <a href="{% url 'accounts:user_edit' user_obj.id %}" 
+                       class="btn btn-sm btn-outline-info btn-hover"
+                       style="flex: 1; min-width: 90px; font-size: var(--font-xs);">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                    <a href="{% url 'accounts:user_delete' user_obj.id %}" 
+                       class="btn btn-sm btn-outline-danger btn-hover" 
+                       onclick="return confirm('Are you sure?')"
+                       style="flex: 1; min-width: 90px; font-size: var(--font-xs);">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination - Highly Visible -->
+    {% if users.has_other_pages %}
+        <div style="background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.25rem; margin-top: 1.25rem; margin-bottom: 1.25rem;">
+            <!-- Results Count -->
+            <div style="text-align: center; margin-bottom: 1rem; font-size: var(--font-xs); color: #6b7280; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                Showing <strong style="color: #1f2937;">{{ users.start_index }}</strong> to 
+                <strong style="color: #1f2937;">{{ users.end_index }}</strong> of 
+                <strong style="color: #1f2937;">{{ users.paginator.count }}</strong> employees
+            </div>
+            
+            <nav aria-label="User pagination">
+                <ul class="pagination justify-content-center flex-wrap mb-0" style="gap: 0.25rem;">
+                    {% if users.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page=1{% if query %}&q={{ query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+                               style="font-size: var(--font-xs); padding: 0.4375rem 0.625rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page={{ users.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+                               style="font-size: var(--font-xs); padding: 0.4375rem 0.625rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                <i class="fas fa-angle-left me-1"></i><span class="d-none d-sm-inline">Previous</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link" style="font-size: var(--font-xs); font-weight: 600; padding: 0.4375rem 0.875rem; background-color: #087fc2; border-color: #087fc2; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                            Page {{ users.number }} of {{ users.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if users.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page={{ users.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+                               style="font-size: var(--font-xs); padding: 0.4375rem 0.625rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                <span class="d-none d-sm-inline">Next</span><i class="fas fa-angle-right ms-1"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page={{ users.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+                               style="font-size: var(--font-xs); padding: 0.4375rem 0.625rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+
+{% else %}
+    <!-- Empty State -->
+    <div class="admin-card">
+        <div class="admin-card-body">
+            <div style="text-align: center; padding: 2.5rem 1.25rem; color: #6b7280;">
+                <i class="fas fa-users" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem; display: block;"></i>
+                <h3 style="font-size: var(--font-lg); font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">No Employees Found</h3>
+                {% if query or role_filter or status_filter %}
+                    <p style="font-size: var(--font-xs); color: #6b7280; margin-bottom: 1rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">No employees match your filters.</p>
+                    <a href="{% url 'accounts:user_list' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-times me-1"></i>Clear Filters
+                    </a>
+                {% else %}
+                    <p style="font-size: var(--font-xs); color: #6b7280; margin-bottom: 1rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">Start by adding your first employee.</p>
+                    {% if user|has_permission:'add_customer' %}
+                        <a href="{% url 'accounts:user_add' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-user-plus me-1"></i>Add Employee
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+    // Smooth scroll on pagination
+    document.querySelectorAll('.pagination a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 100);
+        });
+    });
+
+    // Page load animations
+    document.addEventListener('DOMContentLoaded', function() {
+        const items = document.querySelectorAll('.user-cards-mobile > div, .user-table tbody tr');
+        items.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(10px)';
+            item.style.transition = 'all 0.3s ease';
+            
+            setTimeout(() => {
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0)';
+            }, index * 30);
+        });
+    });
+</script>
 {% endblock %}

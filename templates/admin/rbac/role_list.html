@@ -1,220 +1,150 @@
 {% extends 'admin/base.html' %}
-{% load static %}
-{% load permission_tags %}
 
 {% block admin_title %}Role Management{% endblock %}
 {% block page_title %}Role Management{% endblock %}
 
-{% block breadcrumb %}
-<div class="admin-breadcrumb">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item">
-                <a href="{% url 'core:admin_dashboard' %}"><i class="fas fa-home me-1"></i>Dashboard</a>
-            </li>
-            <li class="breadcrumb-item active">Roles</li>
-        </ol>
-    </nav>
-</div>
-{% endblock %}
-
-{% block admin_extra_css %}
-<style>
-    .action-toolbar {
-        display: flex;
-        gap: 0.75rem;
-        align-items: center;
-        flex-wrap: wrap;
-        margin-bottom: 1.5rem;
-    }
-
-    .action-toolbar .btn {
-        white-space: nowrap;
-    }
-
-    .filter-input-group label {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: #374151;
-        margin-bottom: 0.25rem;
-        display: block;
-    }
-</style>
-{% endblock %}
-
 {% block admin_content %}
-<div class="container-fluid">
-    <!-- Page Header with Button -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-2 text-gray-800">Role Management</h1>
-            <p class="text-muted mb-0">Manage system roles and permissions</p>
-        </div>
-        <!-- Add Role Button - Right Side -->
-        <div>
-            {% if user|has_permission:'add_role' %}
-            <a href="{% url 'accounts:role_add' %}" class="btn btn-primary">
-                <i class="fas fa-plus me-1"></i>Add Role
-            </a>
-            {% endif %}
-        </div>
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="mb-1" style="font-weight: 500; color: #2c3e50; font-family: Verdana, Geneva, Tahoma, sans-serif; font-size: var(--font-xl);">Role Management</h4>
+        <p class="text-muted mb-0" style="font-size: var(--font-sm); font-family: Verdana, Geneva, Tahoma, sans-serif;">Manage system roles and permissions</p>
     </div>
+    <div>
+        {% if user.is_superuser or user.is_staff %}
+        <a href="{% url 'accounts:role_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Add Role
+        </a>
+        {% endif %}
+    </div>
+</div>
 
-    <!-- Filters -->
-    <div class="filter-toolbar" style="background: white; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem; border: 1px solid #e5e7eb;">
-        <form method="get">
-            <div class="row g-3 align-items-end">
-                <!-- Search -->
-                <div class="col-md-5">
-                    <div class="filter-input-group">
-                        <label for="search">Search</label>
-                        <div class="position-relative">
-                            <i class="fas fa-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
-                            <input type="text" 
-                                   id="search" 
-                                   name="q" 
-                                   class="form-control form-control-sm" 
-                                   style="padding-left: 2.5rem;" 
-                                   value="{{ query }}" 
-                                   placeholder="Search by role name...">
-                        </div>
-                    </div>
+<!-- Filters Card -->
+<div class="admin-card mb-4">
+    <div class="admin-card-body">
+        <form method="get" class="row g-3">
+            <!-- Search -->
+            <div class="col-lg-5 col-md-12">
+                <label class="form-label" style="font-size: var(--font-sm); font-weight: 500; font-family: Verdana, Geneva, Tahoma, sans-serif;">Search</label>
+                <div class="position-relative">
+                    <i class="fas fa-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
+                    <input type="text" 
+                           name="q" 
+                           class="form-control" 
+                           style="padding-left: 2.5rem; font-size: var(--font-sm); height: 38px; font-family: Verdana, Geneva, Tahoma, sans-serif;" 
+                           value="{{ query }}" 
+                           placeholder="Search by role name...">
                 </div>
+            </div>
 
-                <!-- Status Filter -->
-                <div class="col-md-3">
-                    <div class="filter-input-group">
-                        <label for="status">Status</label>
-                        <select name="status" id="status" class="form-select form-select-sm">
-                            <option value="">All Status</option>
-                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
-                            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
-                        </select>
-                    </div>
-                </div>
+            <!-- Status Filter -->
+            <div class="col-lg-3 col-md-4">
+                <label class="form-label" style="font-size: var(--font-sm); font-weight: 500; font-family: Verdana, Geneva, Tahoma, sans-serif;">Status</label>
+                <select name="status" class="form-select" style="font-size: var(--font-sm); height: 38px; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                    <option value="">All Status</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
 
-                <!-- Type Filter -->
-                <div class="col-md-2">
-                    <div class="filter-input-group">
-                        <label for="type">Type</label>
-                        <select name="type" id="type" class="form-select form-select-sm">
-                            <option value="">All Types</option>
-                            <option value="system" {% if type_filter == 'system' %}selected{% endif %}>System</option>
-                            <option value="custom" {% if type_filter == 'custom' %}selected{% endif %}>Custom</option>
-                        </select>
-                    </div>
-                </div>
+            <!-- Type Filter -->
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label" style="font-size: var(--font-sm); font-weight: 500; font-family: Verdana, Geneva, Tahoma, sans-serif;">Type</label>
+                <select name="type" class="form-select" style="font-size: var(--font-sm); height: 38px; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                    <option value="">All Types</option>
+                    <option value="system" {% if type_filter == 'system' %}selected{% endif %}>System</option>
+                    <option value="custom" {% if type_filter == 'custom' %}selected{% endif %}>Custom</option>
+                </select>
+            </div>
 
-                <!-- Filter Button -->
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary btn-sm w-100">
-                        <i class="fas fa-filter me-1"></i>Apply Filters
-                    </button>
-                </div>
+            <!-- Filter Button -->
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label d-none d-md-block" style="font-size: var(--font-sm); font-family: Verdana, Geneva, Tahoma, sans-serif;">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100" style="height: 38px;">
+                    <i class="fas fa-filter me-1"></i>Apply
+                </button>
             </div>
         </form>
     </div>
+</div>
 
-    <!-- Role Table -->
-    <div style="background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; overflow: hidden;">
+<!-- Roles Table Card -->
+<div class="admin-card">
+    <div class="admin-card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0" style="min-width: 800px;">
-                <thead style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 2px solid #e5e7eb;">
+            <table class="table table-hover mb-0 align-middle">
+                <thead style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
                     <tr>
-                        <th style="padding: 1rem; font-size: 0.875rem; font-weight: 600; color: #374151;">
+                        <th style="padding: 0.75rem; font-size: var(--font-sm); font-weight: 500; color: #2c3e50; font-family: Verdana, Geneva, Tahoma, sans-serif;">
                             Role Name
                         </th>
-                        <th class="d-none d-md-table-cell" style="padding: 1rem; font-size: 0.875rem; font-weight: 600; color: #374151;">
+                        <th class="d-none d-md-table-cell" style="padding: 0.75rem; font-size: var(--font-sm); font-weight: 500; color: #2c3e50; font-family: Verdana, Geneva, Tahoma, sans-serif;">
                             Description
                         </th>
-                        {% comment %} <th class="text-center d-none d-lg-table-cell" style="padding: 1rem; font-size: 0.875rem; font-weight: 600; color: #374151;">
-                            Priority
-                        </th>
-                        <th class="text-center d-none d-md-table-cell" style="padding: 1rem; font-size: 0.875rem; font-weight: 600; color: #374151;">
-                            Permissions
-                        </th> {% endcomment %}
-                        <th class="text-center d-none d-md-table-cell" style="padding: 1rem; font-size: 0.875rem; font-weight: 600; color: #374151;">
+                        <th class="text-center d-none d-md-table-cell" style="padding: 0.75rem; font-size: var(--font-sm); font-weight: 500; color: #2c3e50; font-family: Verdana, Geneva, Tahoma, sans-serif;">
                             Users
                         </th>
-                        <th class="text-center" style="padding: 1rem; font-size: 0.875rem; font-weight: 600; color: #374151;">
+                        <th class="text-center" style="padding: 0.75rem; font-size: var(--font-sm); font-weight: 500; color: #2c3e50; font-family: Verdana, Geneva, Tahoma, sans-serif;">
                             Status
                         </th>
-                        <th class="text-center" style="padding: 1rem; font-size: 0.875rem; font-weight: 600; color: #374151;">
+                        <th class="text-center" style="padding: 0.75rem; font-size: var(--font-sm); font-weight: 500; color: #2c3e50; font-family: Verdana, Geneva, Tahoma, sans-serif;">
                             Actions
                         </th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for role in roles %}
-                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <tr style="border-bottom: 1px solid #e9ecef;">
                         <!-- Role Name -->
-                        <td style="padding: 1rem; font-size: 0.875rem; color: #374151; vertical-align: middle;">
+                        <td style="padding: 0.75rem; font-size: var(--font-sm);">
                             <div>
-                                <div style="font-weight: 600; color: #111827;">
+                                <div style="font-weight: 500; color: #2c3e50; margin-bottom: 0.25rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">
                                     {{ role.name }}
                                     {% if role.is_system_role %}
-                                    <span class="badge bg-secondary ms-1" style="font-size: 0.65rem;">
-                                        <i class="fas fa-lock"></i> System
-                                    </span>
+                                        <span class="badge bg-secondary ms-1" style="font-size: var(--font-xs); font-family: Verdana, Geneva, Tahoma, sans-serif;">System</span>
                                     {% endif %}
                                 </div>
-                                <small class="text-muted d-block d-md-none">
-                                    {{ role.description|default:"No description"|truncatewords:5 }}
+                                <!-- Mobile: Show Description & Counts -->
+                                <small class="text-muted d-block d-md-none" style="font-size: var(--font-xs); font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                    {{ role.description|default:"No description"|truncatewords:8 }}
                                 </small>
-                                <small class="d-block d-md-none mt-1">
-                                    <span class="badge bg-info" style="font-size: 0.7rem;">
-                                        {{ role.permissions.count }} Permissions
+                                <div class="d-block d-md-none mt-1">
+                                    <span class="badge bg-success" style="font-size: var(--font-xs); font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                                        <i class="fas fa-users me-1"></i>{{ role.users.count }}
                                     </span>
-                                    <span class="badge bg-success ms-1" style="font-size: 0.7rem;">
-                                        {{ role.users.count }} Users
-                                    </span>
-                                </small>
+                                </div>
                             </div>
                         </td>
                         
                         <!-- Description (Desktop) -->
-                        <td class="d-none d-md-table-cell" style="padding: 1rem; font-size: 0.875rem; color: #374151; vertical-align: middle;">
-                            <div style="max-width: 300px;">
-                                {{ role.description|default:"No description provided"|truncatewords:10 }}
+                        <td class="d-none d-md-table-cell" style="padding: 0.75rem; font-size: var(--font-sm); color: #6c757d; font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                            <div style="max-width: 350px;">
+                                {{ role.description|default:"No description provided"|truncatewords:12 }}
                             </div>
                         </td>
                         
-                        <!-- Priority -->
-                        {% comment %} <td class="text-center d-none d-lg-table-cell" style="padding: 1rem; font-size: 0.875rem; color: #374151; vertical-align: middle;">
-                            <span class="badge bg-primary" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
-                                {{ role.priority }}
-                            </span>
-                        </td>
-                        
-                        <!-- Permissions Count -->
-                        <td class="text-center d-none d-md-table-cell" style="padding: 1rem; font-size: 0.875rem; color: #374151; vertical-align: middle;">
-                            <span class="badge bg-info" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
-                                <i class="fas fa-key me-1"></i>{{ role.permissions.count }}
-                            </span>
-                        </td> {% endcomment %}
-                        
-                        <!-- Users Count -->
-                        <td class="text-center d-none d-md-table-cell" style="padding: 1rem; font-size: 0.875rem; color: #374151; vertical-align: middle;">
-                            <span class="badge bg-success" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
+                        <!-- Users Count (Desktop) -->
+                        <td class="text-center d-none d-md-table-cell" style="padding: 0.75rem;">
+                            <span class="badge bg-success" style="font-size: var(--font-xs); padding: 0.3125rem 0.625rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">
                                 <i class="fas fa-users me-1"></i>{{ role.users.count }}
                             </span>
                         </td>
                         
                         <!-- Status -->
-                        <td class="text-center" style="padding: 1rem; font-size: 0.875rem; color: #374151; vertical-align: middle;">
+                        <td class="text-center" style="padding: 0.75rem;">
                             {% if role.is_active %}
-                                <span class="badge bg-success" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
+                                <span class="badge bg-success" style="font-size: var(--font-xs); padding: 0.3125rem 0.625rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">
                                     <i class="fas fa-check-circle me-1"></i>Active
                                 </span>
                             {% else %}
-                                <span class="badge bg-danger" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
+                                <span class="badge bg-danger" style="font-size: var(--font-xs); padding: 0.3125rem 0.625rem; font-family: Verdana, Geneva, Tahoma, sans-serif;">
                                     <i class="fas fa-times-circle me-1"></i>Inactive
                                 </span>
                             {% endif %}
                         </td>
                         
                         <!-- Actions -->
-                        <td class="text-center" style="padding: 1rem; font-size: 0.875rem; color: #374151; vertical-align: middle;">
+                        <td class="text-center" style="padding: 0.75rem;">
                             <div class="btn-group" role="group">
                                 <a href="{% url 'accounts:role_detail' role.id %}" 
                                    class="btn btn-sm btn-outline-primary" 
@@ -222,92 +152,190 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 
+                                {% if user.is_superuser or user.is_staff %}
                                 <a href="{% url 'accounts:role_edit' role.id %}" 
                                    class="btn btn-sm btn-outline-info" 
                                    title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
+                                {% endif %}
                                 
-                                {% if not role.is_system_role %}
-                                <a href="{% url 'accounts:role_delete' role.id %}" 
-                                   class="btn btn-sm btn-outline-danger" 
-                                   onclick="return confirm('Are you sure you want to delete this role?{% if role.users.count > 0 %} This role is assigned to {{ role.users.count }} user(s).{% endif %}')"
-                                   title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                                {% else %}
-                                <button class="btn btn-sm btn-outline-secondary" 
-                                        disabled
-                                        title="System roles cannot be deleted">
-                                    <i class="fas fa-lock"></i>
-                                </button>
+                                {% if user.is_superuser %}
+                                    {% if not role.is_system_role %}
+                                    <a href="{% url 'accounts:role_delete' role.id %}" 
+                                       class="btn btn-sm btn-outline-danger" 
+                                       onclick="return confirm('Are you sure you want to delete this role?{% if role.users.count > 0 %} This role is assigned to {{ role.users.count }} user(s).{% endif %}')"
+                                       title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-outline-secondary" 
+                                            disabled
+                                            title="System roles cannot be deleted">
+                                        <i class="fas fa-lock"></i>
+                                    </button>
+                                    {% endif %}
                                 {% endif %}
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center py-5">
+                        <td colspan="5" class="text-center py-5">
                             <i class="fas fa-user-shield fa-3x text-muted mb-3"></i>
-                            <p class="text-muted mb-0">No roles found</p>
+                            <p class="text-muted mb-0" style="font-size: var(--font-sm); font-family: Verdana, Geneva, Tahoma, sans-serif;">No roles found</p>
+                            {% if query or status_filter or type_filter %}
+                            <a href="{% url 'accounts:role_list' %}" class="btn btn-sm btn-outline-primary mt-2">
+                                <i class="fas fa-times me-1"></i>Clear Filters
+                            </a>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </div>
 
-    <!-- Pagination -->
-    {% if roles.has_other_pages %}
-    <div class="d-flex justify-content-between align-items-center mt-4">
-        <div class="text-muted">
-            Showing {{ roles.start_index }} to {{ roles.end_index }} of {{ roles.paginator.count }} roles
+        <!-- Pagination -->
+        {% if roles.has_other_pages %}
+        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 px-3 pb-3 border-top flex-wrap gap-3">
+            <div class="text-muted" style="font-size: var(--font-sm); font-family: Verdana, Geneva, Tahoma, sans-serif;">
+                Showing {{ roles.start_index }} to {{ roles.end_index }} of {{ roles.paginator.count }} roles
+            </div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm mb-0">
+                    <!-- First Page -->
+                    <li class="page-item {% if not roles.has_previous %}disabled{% endif %}">
+                        {% if roles.has_previous %}
+                            <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        {% else %}
+                            <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+                        {% endif %}
+                    </li>
+                    
+                    <!-- Previous Page -->
+                    <li class="page-item {% if not roles.has_previous %}disabled{% endif %}">
+                        {% if roles.has_previous %}
+                            <a class="page-link" href="?page={{ roles.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        {% else %}
+                            <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                        {% endif %}
+                    </li>
+
+                    <!-- Page Numbers -->
+                    {% for num in roles.paginator.page_range %}
+                        {% if roles.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > roles.number|add:'-3' and num < roles.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Next Page -->
+                    <li class="page-item {% if not roles.has_next %}disabled{% endif %}">
+                        {% if roles.has_next %}
+                            <a class="page-link" href="?page={{ roles.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        {% else %}
+                            <span class="page-link"><i class="fas fa-angle-right"></i></span>
+                        {% endif %}
+                    </li>
+                    
+                    <!-- Last Page -->
+                    <li class="page-item {% if not roles.has_next %}disabled{% endif %}">
+                        {% if roles.has_next %}
+                            <a class="page-link" href="?page={{ roles.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        {% else %}
+                            <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+                        {% endif %}
+                    </li>
+                </ul>
+            </nav>
         </div>
-        <nav>
-            <ul class="pagination mb-0">
-                {% if roles.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
-                        First
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ roles.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
-                        Previous
-                    </a>
-                </li>
-                {% endif %}
-
-                {% for num in roles.paginator.page_range %}
-                    {% if roles.number == num %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ num }}</span>
-                    </li>
-                    {% elif num > roles.number|add:'-3' and num < roles.number|add:'3' %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
-                            {{ num }}
-                        </a>
-                    </li>
-                    {% endif %}
-                {% endfor %}
-
-                {% if roles.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ roles.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
-                        Next
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ roles.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
-                        Last
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
+
+<style>
+    /* Font family applied globally */
+    * {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    /* Button styles */
+    .btn {
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    .btn-sm {
+        font-size: var(--font-xs);
+        padding: 0.375rem 0.75rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    /* Form controls */
+    .form-control, .form-select {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    /* Badge styles */
+    .badge {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    /* Pagination Styling */
+    .pagination {
+        gap: 0.25rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    
+    .page-link {
+        border-radius: 6px;
+        padding: 0.3125rem 0.625rem;
+        color: #087fc2;
+        border: 1px solid #dee2e6;
+        font-size: var(--font-sm);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    
+    .page-link:hover {
+        background-color: #f8f9fa;
+        color: #087fc2;
+        border-color: #dee2e6;
+    }
+    
+    .page-item.active .page-link {
+        background-color: #087fc2;
+        border-color: #087fc2;
+        color: #fff;
+    }
+    
+    .page-item.disabled .page-link {
+        background-color: #fff;
+        border-color: #dee2e6;
+        color: #6c757d;
+    }
+    
+    /* Responsive */
+    @media (max-width: 767.98px) {
+        .pagination {
+            font-size: var(--font-xs);
+        }
+        
+        .page-link {
+            padding: 0.25rem 0.4375rem;
+            font-size: var(--font-xs);
+        }
+    }
+</style>
 {% endblock %}

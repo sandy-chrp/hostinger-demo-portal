@@ -1,453 +1,566 @@
 {% extends 'admin/base.html' %}
-{% load static %}
-{% load permission_tags %}
 
 {% block admin_title %}Notifications{% endblock %}
 {% block page_title %}Notifications{% endblock %}
 
-{% block breadcrumb %}
-<div class="admin-breadcrumb">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item">
-                <a href="{% url 'core:admin_dashboard' %}">
-                    <i class="fas fa-home me-1"></i>Dashboard
-                </a>
-            </li>
-            <li class="breadcrumb-item active">Notifications</li>
-        </ol>
-    </nav>
-</div>
-{% endblock %}
-
 {% block admin_content %}
-<style>
-    /* Compact stat cards */
-    .notification-stat-card {
-        background: white;
-        border-radius: 0.75rem;
-        padding: 1.25rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-        border-left: 4px solid;
-        transition: all 0.3s ease;
-        height: 100%;
-    }
-    
-    .notification-stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
-    }
-    
-    .notification-stat-card.info { border-left-color: #06b6d4; }
-    .notification-stat-card.danger { border-left-color: #ef4444; }
-    .notification-stat-card.success { border-left-color: #10b981; }
-    .notification-stat-card.primary { border-left-color: #3b82f6; }
-    
-    .notification-stat-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .notification-stat-number {
-        font-size: 2rem;
-        font-weight: 700;
-        line-height: 1;
-        margin-bottom: 0.25rem;
-    }
-    
-    .notification-stat-label {
-        font-size: 0.875rem;
-        color: #6b7280;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.025em;
-    }
-    
-    .notification-stat-icon {
-        font-size: 2.5rem;
-        opacity: 0.15;
-    }
-    
-    .notification-stat-card.info .notification-stat-icon { color: #06b6d4; }
-    .notification-stat-card.danger .notification-stat-icon { color: #ef4444; }
-    .notification-stat-card.success .notification-stat-icon { color: #10b981; }
-    .notification-stat-card.primary .notification-stat-icon { color: #3b82f6; }
-    
-    .notification-stat-card.danger .notification-stat-number { color: #ef4444; }
-    .notification-stat-card.success .notification-stat-number { color: #10b981; }
-    
-    /* Custom date range styles */
-    .custom-date-fields {
-        padding-top: 1rem;
-        border-top: 1px solid #e5e7eb;
-        margin-top: 1rem;
-    }
-    
-    /* Filter tags */
-    .applied-filters {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 1rem;
-        align-items: center;
-    }
-    
-    .filter-tag {
-        display: inline-flex;
-        align-items: center;
-        background-color: #f0f7ff;
-        border: 1px solid #d0e3ff;
-        border-radius: 16px;
-        padding: 0.25rem 0.75rem;
-        font-size: 0.8rem;
-        color: #3b82f6;
-    }
-    
-    .filter-tag .filter-remove {
-        margin-left: 0.5rem;
-        color: #3b82f6;
-        font-weight: bold;
-        font-size: 1rem;
-        text-decoration: none;
-        line-height: 1;
-    }
-    
-    .clear-all-filters {
-        color: #ef4444;
-        font-size: 0.8rem;
-        text-decoration: none;
-        margin-left: auto;
-    }
-    
-    @media (max-width: 768px) {
-        .notification-stat-card {
-            padding: 1rem;
-        }
-        
-        .notification-stat-number {
-            font-size: 1.75rem;
-        }
-        
-        .notification-stat-icon {
-            font-size: 2rem;
-        }
-    }
-</style>
-
+<!-- Stats Cards -->
 <div class="row g-3 mb-4">
-    <!-- Total Notifications -->
-    <div class="col-lg-3 col-md-6">
-        <div class="notification-stat-card info">
-            <div class="notification-stat-content">
-                <div>
-                    <div class="notification-stat-label">Total</div>
-                    <div class="notification-stat-number">{{ total_count|default:0 }}</div>
-                </div>
-                <div class="notification-stat-icon">
-                    <i class="fas fa-bell"></i>
-                </div>
+    <div class="col-6 col-lg-3">
+        <div class="notification-stat-card">
+            <div class="stat-icon blue">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-number">{{ total_count|default:0 }}</div>
+                <div class="stat-label">Total</div>
             </div>
         </div>
     </div>
-    
-    <!-- Unread -->
-    <div class="col-lg-3 col-md-6">
-        <div class="notification-stat-card danger">
-            <div class="notification-stat-content">
-                <div>
-                    <div class="notification-stat-label">Unread</div>
-                    <div class="notification-stat-number">{{ unread_count|default:0 }}</div>
-                </div>
-                <div class="notification-stat-icon">
-                    <i class="fas fa-envelope"></i>
-                </div>
+    <div class="col-6 col-lg-3">
+        <div class="notification-stat-card">
+            <div class="stat-icon yellow">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-number">{{ unread_count|default:0 }}</div>
+                <div class="stat-label">Unread</div>
             </div>
         </div>
     </div>
-    
-    <!-- Read -->
-    <div class="col-lg-3 col-md-6">
-        <div class="notification-stat-card success">
-            <div class="notification-stat-content">
-                <div>
-                    <div class="notification-stat-label">Read</div>
-                    <div class="notification-stat-number">{{ read_count|default:0 }}</div>
-                </div>
-                <div class="notification-stat-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
+    <div class="col-6 col-lg-3">
+        <div class="notification-stat-card">
+            <div class="stat-icon green">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-number">{{ read_count|default:0 }}</div>
+                <div class="stat-label">Read</div>
             </div>
         </div>
     </div>
-    
-    <!-- Categories -->
-    <div class="col-lg-3 col-md-6">
-        <div class="notification-stat-card primary">
-            <div class="notification-stat-content">
-                <div>
-                    <div class="notification-stat-label">Categories</div>
-                    <div class="notification-stat-number">{{ type_counts|length|default:0 }}</div>
-                </div>
-                <div class="notification-stat-icon">
-                    <i class="fas fa-tag"></i>
-                </div>
+    <div class="col-6 col-lg-3">
+        <div class="notification-stat-card">
+            <div class="stat-icon cyan">
+                <i class="fas fa-tags"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-number">{{ type_counts|length|default:0 }}</div>
+                <div class="stat-label">Categories</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Filters & Actions -->
-<div class="admin-card mb-4">
-    <div class="admin-card-header">
-        <h2 class="admin-card-title">
-            <i class="fas fa-filter"></i>
-            Filter Notifications
-        </h2>
-        <div class="d-flex gap-2">
-            <button class="btn btn-primary btn-sm" onclick="markAllAsRead()">
-                <i class="fas fa-check-double me-1"></i>Mark All Read
-            </button>
-            {% comment %} {% if user|has_permission:'send_notification' %}
-            <a href="{% url 'notifications:admin_bulk_send' %}" class="btn btn-success btn-sm">
-                <i class="fas fa-paper-plane me-1"></i>Send Bulk
-            </a>
-            {% endif %} {% endcomment %}
-        </div>
+<!-- Main Card -->
+<div class="admin-card">
+    <div class="admin-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0" style="font-weight: 500; color: #2c3e50; font-size: 1.125rem;">My Notifications</h5>
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="markAllAsRead()">
+            <i class="fas fa-check-double me-1"></i>Mark All Read
+        </button>
     </div>
     <div class="admin-card-body">
-        <form method="get" class="row g-3" id="filter-form">
-            <div class="col-md-3">
-                <label class="form-label">Type</label>
-                <select name="type" class="form-select" onchange="this.form.submit()">
-                    <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All Types</option>
-                    {% for type_code, type_label in notification_types %}
-                    <option value="{{ type_code }}" {% if filter_type == type_code %}selected{% endif %}>
-                        {{ type_label }}
-                    </option>
+        <!-- Search and Filter -->
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-lg-4 col-md-12">
+                <input type="text" name="search" class="form-control" 
+                       placeholder="Search notifications..." value="{{ search }}"
+                       style="font-size: 0.938rem; height: 38px;">
+            </div>
+            <div class="col-lg-3 col-md-4">
+                <select name="type" class="form-select" style="font-size: 0.938rem; height: 38px;">
+                    <option value="all">All Types</option>
+                    {% for type_code, type_name in notification_types %}
+                        <option value="{{ type_code }}" {% if filter_type == type_code %}selected{% endif %}>
+                            {{ type_name }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>
-            
-            <div class="col-md-3">
-                <label class="form-label">Status</label>
-                <select name="status" class="form-select" onchange="this.form.submit()">
+            <div class="col-lg-3 col-md-4">
+                <select name="status" class="form-select" style="font-size: 0.938rem; height: 38px;">
                     <option value="all" {% if filter_status == 'all' %}selected{% endif %}>All Status</option>
                     <option value="unread" {% if filter_status == 'unread' %}selected{% endif %}>Unread</option>
                     <option value="read" {% if filter_status == 'read' %}selected{% endif %}>Read</option>
                 </select>
             </div>
-            
-            <!-- New Date Filter -->
-            <div class="col-md-3">
-                <label class="form-label">Time Period</label>
-                <select name="date_filter" id="date_filter" class="form-select" onchange="toggleCustomDateFields()">
-                    <option value="all" {% if filter_date == 'all' %}selected{% endif %}>All Time</option>
-                    <option value="today" {% if filter_date == 'today' %}selected{% endif %}>Today</option>
-                    <option value="yesterday" {% if filter_date == 'yesterday' %}selected{% endif %}>Yesterday</option>
-                    <option value="week" {% if filter_date == 'week' %}selected{% endif %}>Last 7 Days</option>
-                    <option value="month" {% if filter_date == 'month' %}selected{% endif %}>Last 30 Days</option>
-                    <option value="custom" {% if filter_date == 'custom' %}selected{% endif %}>Custom Range</option>
-                </select>
-            </div>
-            
-            <div class="col-md-3">
-                <label class="form-label">Search</label>
-                <div class="input-group">
-                    <input type="text" name="search" class="form-control" 
-                           placeholder="Search notifications..." 
-                           value="{{ search }}">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Custom Date Fields (Hidden by default) -->
-            <div class="custom-date-fields col-12 row g-3 m-0" id="customDateFields" {% if filter_date != 'custom' %}style="display:none;"{% endif %}>
-                <div class="col-md-5">
-                    <label class="form-label">From</label>
-                    <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date }}">
-                </div>
-                <div class="col-md-5">
-                    <label class="form-label">To</label>
-                    <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date }}">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">&nbsp;</label>
-                    <button type="submit" class="btn btn-primary w-100">Apply</button>
-                </div>
+            <div class="col-lg-2 col-md-4">
+                <button type="submit" class="btn btn-primary w-100" style="height: 38px;">
+                    <i class="fas fa-search me-1"></i>Search
+                </button>
             </div>
         </form>
 
-        <!-- Active filters display -->
-        {% if filter_type != 'all' or filter_status != 'all' or filter_date != 'all' or search %}
-        <div class="applied-filters mt-3 pt-3 border-top">
-            <span class="text-muted me-2">Active Filters:</span>
-            {% if filter_type != 'all' %}
-            <span class="filter-tag">
-                Type: {% for type_code, type_label in notification_types %}{% if filter_type == type_code %}{{ type_label }}{% endif %}{% endfor %}
-                <a href="?{% if filter_status != 'all' %}status={{ filter_status }}{% endif %}{% if filter_date != 'all' %}&date_filter={{ filter_date }}{% if filter_date == 'custom' %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}{% endif %}{% if search %}&search={{ search }}{% endif %}" class="filter-remove">&times;</a>
-            </span>
-            {% endif %}
-            
-            {% if filter_status != 'all' %}
-            <span class="filter-tag">
-                Status: {{ filter_status|title }}
-                <a href="?{% if filter_type != 'all' %}type={{ filter_type }}{% endif %}{% if filter_date != 'all' %}&date_filter={{ filter_date }}{% if filter_date == 'custom' %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}{% endif %}{% if search %}&search={{ search }}{% endif %}" class="filter-remove">&times;</a>
-            </span>
-            {% endif %}
-            
-            {% if filter_date != 'all' %}
-            <span class="filter-tag">
-                Date: {% if filter_date == 'today' %}Today
-                      {% elif filter_date == 'yesterday' %}Yesterday
-                      {% elif filter_date == 'week' %}Last 7 Days
-                      {% elif filter_date == 'month' %}Last 30 Days
-                      {% elif filter_date == 'custom' %}Custom Range
-                      {% endif %}
-                <a href="?{% if filter_type != 'all' %}type={{ filter_type }}{% endif %}{% if filter_status != 'all' %}&status={{ filter_status }}{% endif %}{% if search %}&search={{ search }}{% endif %}" class="filter-remove">&times;</a>
-            </span>
-            {% endif %}
-            
-            {% if search %}
-            <span class="filter-tag">
-                Search: "{{ search }}"
-                <a href="?{% if filter_type != 'all' %}type={{ filter_type }}{% endif %}{% if filter_status != 'all' %}&status={{ filter_status }}{% endif %}{% if filter_date != 'all' %}&date_filter={{ filter_date }}{% if filter_date == 'custom' %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}{% endif %}" class="filter-remove">&times;</a>
-            </span>
-            {% endif %}
-            
-            <a href="{% url 'notifications:admin_notification_center' %}" class="clear-all-filters">Clear All Filters</a>
-        </div>
+        <!-- Notifications Table -->
+        {% if notifications %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle notifications-table">
+                    <thead>
+                        <tr>
+                            <th width="80" >Status</th>
+                            <th >Notification</th>
+                            <th width="180" >Type</th>
+                            <th width="150" >Date</th>
+                            <th width="120" class="text-center" >Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for notif in notifications %}
+                            <tr class="notification-row {% if not notif.is_read %}unread{% endif %}">
+                                <td class="text-center">
+                                    {% if notif.is_read %}
+                                        <i class="fas fa-check-circle status-icon read"></i>
+                                    {% else %}
+                                        <i class="fas fa-envelope status-icon unread"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="notification-content">
+                                        <div class="notification-title">{{ notif.title }}</div>
+                                        <div class="notification-message">{{ notif.message|truncatewords:15 }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="notification-type-badge">{{ notif.get_notification_type_display }}</span>
+                                </td>
+                                <td>
+                                    <div class="notification-date">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ notif.created_at|date:"M d, Y" }}<br>
+                                        <small>{{ notif.created_at|time:"h:i A" }}</small>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="notification-actions">
+                                        {% if not notif.is_read %}
+                                        <button class="action-btn check" 
+                                                onclick="markAsRead({{ notif.id }})"
+                                                title="Mark as read">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                        <button class="action-btn delete" 
+                                                onclick="deleteNotification({{ notif.id }})"
+                                                title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Section - ALWAYS VISIBLE -->
+            <div class="mt-4 pt-3 border-top">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <!-- Entry Count -->
+                    <div class="text-muted" style="font-size: 0.938rem;">
+                        Showing {{ notifications.start_index }} to {{ notifications.end_index }} of {{ notifications.paginator.count }} notifications
+                    </div>
+                    
+                    <!-- Pagination Navigation -->
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-sm mb-0">
+                            <!-- First Page -->
+                            <li class="page-item {% if not notifications.has_previous %}disabled{% endif %}">
+                                {% if notifications.has_previous %}
+                                    <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if filter_type != 'all' %}&type={{ filter_type }}{% endif %}{% if filter_status != 'all' %}&status={{ filter_status }}{% endif %}">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                {% else %}
+                                    <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+                                {% endif %}
+                            </li>
+                            
+                            <!-- Previous Page -->
+                            <li class="page-item {% if not notifications.has_previous %}disabled{% endif %}">
+                                {% if notifications.has_previous %}
+                                    <a class="page-link" href="?page={{ notifications.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if filter_type != 'all' %}&type={{ filter_type }}{% endif %}{% if filter_status != 'all' %}&status={{ filter_status }}{% endif %}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                {% else %}
+                                    <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                                {% endif %}
+                            </li>
+
+                            <!-- Page Numbers -->
+                            {% for num in notifications.paginator.page_range %}
+                                {% if notifications.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% elif num > notifications.number|add:'-3' and num < notifications.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if filter_type != 'all' %}&type={{ filter_type }}{% endif %}{% if filter_status != 'all' %}&status={{ filter_status }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            <!-- Next Page -->
+                            <li class="page-item {% if not notifications.has_next %}disabled{% endif %}">
+                                {% if notifications.has_next %}
+                                    <a class="page-link" href="?page={{ notifications.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if filter_type != 'all' %}&type={{ filter_type }}{% endif %}{% if filter_status != 'all' %}&status={{ filter_status }}{% endif %}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                {% else %}
+                                    <span class="page-link"><i class="fas fa-angle-right"></i></span>
+                                {% endif %}
+                            </li>
+                            
+                            <!-- Last Page -->
+                            <li class="page-item {% if not notifications.has_next %}disabled{% endif %}">
+                                {% if notifications.has_next %}
+                                    <a class="page-link" href="?page={{ notifications.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if filter_type != 'all' %}&type={{ filter_type }}{% endif %}{% if filter_status != 'all' %}&status={{ filter_status }}{% endif %}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                {% else %}
+                                    <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle me-2"></i>
+                {% if search or filter_type != 'all' or filter_status != 'all' %}
+                    No notifications found matching your filters.
+                {% else %}
+                    You don't have any notifications yet.
+                {% endif %}
+            </div>
         {% endif %}
     </div>
 </div>
 
-<!-- Notifications List -->
-<div class="admin-card">
-    <div class="admin-card-header">
-        <h2 class="admin-card-title">
-            <i class="fas fa-bell"></i>
-            Notifications
-        </h2>
-    </div>
-    <div class="admin-card-body p-0">
-        {% if notifications %}
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th width="50" class="text-center">#</th>
-                        <th>Notification</th>
-                        <th width="150">Type</th>
-                        <th width="150">Date</th>
-                        <th width="100" class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for notif in notifications %}
-                    <tr class="{% if not notif.is_read %}table-light{% endif %}">
-                        <td class="text-center">
-                            {% if not notif.is_read %}
-                            <span class="badge rounded-pill bg-danger">&nbsp;</span>
-                            {% else %}
-                            <span class="text-muted">{{ forloop.counter }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="align-middle">
-                            <div class="fw-bold text-dark mb-1">{{ notif.title }}</div>
-                            <small class="text-muted">{{ notif.message|truncatewords:20 }}</small>
-                        </td>
-                        <td class="align-middle">
-                            <span class="badge bg-primary">
-                                {{ notif.get_notification_type_display }}
-                            </span>
-                        </td>
-                        <td class="align-middle">
-                            <small class="text-muted">
-                                <i class="fas fa-clock me-1"></i>
-                                {{ notif.created_at|date:"M d, Y" }}<br>
-                                {{ notif.created_at|date:"h:i A" }}
-                            </small>
-                        </td>
-                        <td class="text-center align-middle">
-                            <div class="btn-group btn-group-sm">
-                                {% if not notif.is_read %}
-                                <button class="btn btn-outline-success" 
-                                        onclick="markAsRead({{ notif.id }})"
-                                        title="Mark as read">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                {% endif %}
-                                <button class="btn btn-outline-danger" 
-                                        onclick="deleteNotification({{ notif.id }})"
-                                        title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<style>
+    /* Stats Cards */
+    .notification-stat-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        transition: all 0.3s ease;
+        border: 1px solid var(--gray-200);
+    }
+
+    .notification-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--font-3xl);
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .stat-icon.blue { background: #087fc2; }
+    .stat-icon.yellow { background: #ffc107; }
+    .stat-icon.green { background: #28a745; }
+    .stat-icon.cyan { background: #17a2b8; }
+
+    .stat-info { flex: 1; }
+
+    .stat-number {
+        font-weight: 400;
+        color: var(--dark-color);
+        line-height: 1;
+        margin-bottom: var(--spacing-xs);
+        font-family: var(--primary-font);
+    }
+
+    .stat-label {
+        font-size: var(--font-sm);
+        color: var(--gray-500);
+        font-weight: 500;
+        font-family: var(--primary-font);
+    }
+
+    /* Table */
+    .notifications-table { 
+        margin-bottom: 0;
+        font-family: var(--primary-font);
+    }
+
+    .notifications-table thead th {
+        background: var(--gray-100);
+        font-weight: 600;
+        color: var(--dark-color);
+        border-bottom: 2px solid var(--gray-300);
+        padding: var(--spacing-md) var(--spacing-sm);
+        font-size: var(--font-sm);
+        font-family: var(--primary-font);
+    }
+
+    .notification-row { 
+        transition: all 0.2s ease;
+        font-family: var(--primary-font);
+    }
+    
+    .notification-row:hover { background: var(--gray-100); }
+    .notification-row.unread { background: #fff9e6; }
+    .notification-row.unread:hover { background: #fff3cd; }
+
+    .status-icon { 
+        font-size: var(--font-xl);
+    }
+    
+    .status-icon.read { color: var(--success-color); }
+    .status-icon.unread { color: var(--warning-color); }
+
+    .notification-content { 
+        padding: var(--spacing-sm) 0;
+        font-family: var(--primary-font);
+    }
+
+    .notification-title {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: var(--spacing-xs);
+        font-size: var(--font-sm);
+        font-family: var(--primary-font);
+    }
+
+    .notification-message {
+        color: var(--gray-500);
+        font-size: var(--font-sm);
+        line-height: 1.4;
+        font-weight: 400;
+        font-family: var(--primary-font);
+    }
+
+    .notification-type-badge {
+        display: inline-block;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        background: var(--primary-color);
+        color: white;
+        border-radius: var(--radius-sm);
+        font-size: var(--font-xs);
+        font-weight: 500;
+        font-family: var(--primary-font);
+    }
+
+    .notification-date {
+        font-size: var(--font-xs);
+        color: var(--gray-500);
+        line-height: 1.4;
+        font-weight: 400;
+        font-family: var(--primary-font);
+    }
+
+    .notification-date i { 
+        color: var(--primary-color);
+    }
+
+    .notification-date small {
+        font-size: var(--font-xs);
+        font-weight: 400;
+    }
+
+    .notification-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+        justify-content: center;
+    }
+
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-sm);
+        border: 1px solid;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: var(--font-sm);
+    }
+
+    .action-btn.check {
+        border-color: var(--success-color);
+        color: var(--success-color);
+    }
+
+    .action-btn.check:hover {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .action-btn.delete {
+        border-color: var(--danger-color);
+        color: var(--danger-color);
+    }
+
+    .action-btn.delete:hover {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    /* Pagination */
+    .pagination { 
+        gap: var(--spacing-xs);
+        font-family: var(--primary-font);
+    }
+
+    .page-link {
+        border-radius: var(--radius-sm);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        color: var(--primary-color);
+        border: 1px solid var(--gray-300);
+        font-size: var(--font-sm);
+        font-weight: 400;
+        font-family: var(--primary-font);
+    }
+
+    .page-link:hover {
+        background-color: var(--gray-100);
+        color: var(--primary-color);
+        border-color: var(--gray-300);
+    }
+
+    .page-item.active .page-link {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+        font-weight: 500;
+    }
+
+    .page-item.disabled .page-link {
+        background-color: white;
+        border-color: var(--gray-300);
+        color: var(--gray-500);
+    }
+
+    /* Alert */
+    .alert {
+        font-size: var(--font-sm);
+        font-weight: 400;
+        font-family: var(--primary-font);
+    }
+
+    /* Form Elements */
+    .form-control,
+    .form-select {
+        font-size: var(--font-sm);
+        font-weight: 400;
+        font-family: var(--primary-font);
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    /* Buttons */
+    .btn {
+        font-size: var(--font-sm);
+        font-weight: 500;
+        font-family: var(--primary-font);
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .btn-sm {
+        font-size: var(--font-xs);
+        font-weight: 600;
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    /* Card Header */
+    .admin-card-header h5 {
+        font-size: var(--font-xl);
+        font-weight: 600;
+        color: var(--dark-color);
+        font-family: var(--primary-font);
+    }
+
+    /* Text Muted */
+    .text-muted {
+        font-size: var(--font-sm);
+        font-weight: 400;
+        font-family: var(--primary-font);
+    }
+
+    /* Responsive */
+    @media (max-width: 991.98px) {
+        .notification-stat-card { 
+            padding: var(--spacing-md);
+        }
         
-        <!-- Pagination -->
-        {% if notifications.has_other_pages %}
-        <div class="p-3 border-top bg-light">
-            <nav aria-label="Notifications pagination">
-                <ul class="pagination mb-0 justify-content-center">
-                    {% if notifications.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ notifications.previous_page_number }}&type={{ filter_type }}&status={{ filter_status }}{% if filter_date != 'all' %}&date_filter={{ filter_date }}{% if filter_date == 'custom' %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}{% endif %}{% if search %}&search={{ search }}{% endif %}">
-                            <i class="fas fa-chevron-left me-1"></i>Previous
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    {% for num in notifications.paginator.page_range %}
-                        {% if notifications.number == num %}
-                            <li class="page-item active">
-                                <span class="page-link">{{ num }}</span>
-                            </li>
-                        {% elif num > notifications.number|add:'-3' and num < notifications.number|add:'3' %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ num }}&type={{ filter_type }}&status={{ filter_status }}{% if filter_date != 'all' %}&date_filter={{ filter_date }}{% if filter_date == 'custom' %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}{% endif %}{% if search %}&search={{ search }}{% endif %}">
-                                    {{ num }}
-                                </a>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
-                    
-                    {% if notifications.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ notifications.next_page_number }}&type={{ filter_type }}&status={{ filter_status }}{% if filter_date != 'all' %}&date_filter={{ filter_date }}{% if filter_date == 'custom' %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}{% endif %}{% if search %}&search={{ search }}{% endif %}">
-                            Next<i class="fas fa-chevron-right ms-1"></i>
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-        </div>
-        {% endif %}
+        .stat-icon { 
+            width: 40px; 
+            height: 40px; 
+            font-size: var(--font-2xl);
+        }
         
-        {% else %}
-        <div class="text-center py-5">
-            <div class="mb-3">
-                <i class="fas fa-inbox fa-4x text-muted" style="opacity: 0.3;"></i>
-            </div>
-            <h5 class="text-muted">No notifications found</h5>
-            <p class="text-muted mb-0">
-                {% if filter_type != 'all' or filter_status != 'all' or filter_date != 'all' or search %}
-                    Try adjusting your filters or search terms.
-                {% else %}
-                    You don't have any notifications yet.
-                {% endif %}
-            </p>
-        </div>
-        {% endif %}
-    </div>
-</div>
+        .stat-number { 
+            font-size: var(--font-4xl);
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .notification-stat-card { 
+            padding: var(--spacing-md);
+        }
+        
+        .stat-icon { 
+            width: 45px; 
+            height: 45px; 
+            font-size: var(--font-xl);
+        }
+        
+        .stat-number { 
+            font-size: var(--font-3xl);
+        }
+        
+        .stat-label { 
+            font-size: var(--font-xs);
+        }
+        
+        .notifications-table thead th { 
+            font-size: var(--font-xs);
+            padding: var(--spacing-sm) var(--spacing-xs);
+        }
+        
+        .notifications-table tbody td { 
+            font-size: var(--font-xs);
+            padding: var(--spacing-sm) var(--spacing-xs);
+        }
+        
+        .action-btn { 
+            width: 32px; 
+            height: 32px;
+        }
+
+        .notification-title {
+            font-size: var(--font-xs);
+        }
+
+        .notification-message {
+            font-size: var(--font-xs);
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .pagination { 
+            font-size: var(--font-xs);
+        }
+        
+        .page-link { 
+            padding: 0.25rem 0.4rem;
+            font-size: var(--font-xs);
+        }
+    }
+</style>
+
 {% endblock %}
 
 {% block admin_extra_js %}
@@ -506,7 +619,7 @@ function markAllAsRead() {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
     btn.disabled = true;
     
-    fetch("{% url 'notifications:api_admin_mark_all_read' %}", {
+    fetch('/notifications/api/admin/mark-all-read/', {
         method: 'POST',
         headers: {
             'X-CSRFToken': getCookie('csrftoken'),
@@ -562,20 +675,6 @@ function deleteNotification(notificationId) {
         btn.innerHTML = originalHtml;
         btn.disabled = false;
     });
-}
-
-// Toggle custom date fields based on selected date filter
-function toggleCustomDateFields() {
-    const dateFilter = document.getElementById('date_filter');
-    const customDateFields = document.getElementById('customDateFields');
-    
-    if (dateFilter.value === 'custom') {
-        customDateFields.style.display = 'flex';
-    } else {
-        customDateFields.style.display = 'none';
-        // If not on custom date range, submit the form to apply the new filter immediately
-        document.getElementById('filter-form').submit();
-    }
 }
 </script>
 {% endblock %}

@@ -13,23 +13,7 @@ import shutil
 
 User = get_user_model()
 
-def demo_video_path(instance, filename):
-    """Generate path for demo video uploads"""
-    ext = filename.split('.')[-1]
-    filename = f"{instance.slug}_{uuid.uuid4().hex[:8]}.{ext}"
-    return f'demos/videos/{filename}'
 
-def demo_thumbnail_path(instance, filename):
-    """Generate path for demo thumbnail uploads"""
-    ext = filename.split('.')[-1]
-    filename = f"thumb_{instance.slug}_{uuid.uuid4().hex[:8]}.{ext}"
-    return f'demos/thumbnails/{filename}'
-
-def demo_webgl_path(instance, filename):
-    """Generate path for WebGL file uploads"""
-    ext = filename.split('.')[-1]
-    filename = f"webgl_{instance.slug}_{uuid.uuid4().hex[:8]}.{ext}"
-    return f'demos/webgl/{filename}'
 
 class DemoCategory(models.Model):
     """Categories for organizing demos"""
@@ -61,8 +45,28 @@ class DemoCategory(models.Model):
     def __str__(self):
         return self.name
 
+
+def demo_video_path(instance, filename):
+    """Generate upload path for video files"""
+    return f'demos/videos/{instance.slug}/{filename}'
+
+
+def demo_webgl_path(instance, filename):
+    """Generate upload path for WebGL files"""
+    return f'demos/webgl/{instance.slug}/{filename}'
+
+
+def demo_lms_path(instance, filename):
+    """Generate upload path for LMS/SCORM files"""
+    return f'demos/lms/{instance.slug}/{filename}'
+
+
+def demo_thumbnail_path(instance, filename):
+    """Generate upload path for thumbnail images"""
+    return f'demos/thumbnails/{instance.slug}/{filename}'
+
 class Demo(models.Model):
-    """Demo videos/presentations/WebGL content with complete WebGL support"""
+    """Demo videos/presentations/WebGL/LMS content with complete support"""
     
     # Basic Information
     title = models.CharField(max_length=200, verbose_name="Demo Title")
@@ -73,16 +77,17 @@ class Demo(models.Model):
     FILE_TYPE_CHOICES = [
         ('video', 'Video'),
         ('webgl', 'WebGL'),
+        ('lms', 'LMS/SCORM'),
     ]
     file_type = models.CharField(
         max_length=10,
         choices=FILE_TYPE_CHOICES,
         default='video',
         verbose_name="File Type",
-        help_text="Select whether this is a video demo or WebGL interactive demo"
+        help_text="Select the type of demo content"
     )
     
-    # Business Category Targeting (MAIN CATEGORIZATION)
+    # Business Category Targeting
     target_business_categories = models.ManyToManyField(
         'accounts.BusinessCategory',
         blank=True,
@@ -99,7 +104,7 @@ class Demo(models.Model):
         help_text="Select specific subcategories this demo is relevant for. Leave empty for all subcategories."
     )
     
-    # Demo Type (Optional - for internal organization)
+    # Demo Type (Optional)
     DEMO_TYPE_CHOICES = [
         ('product', 'Product Demo'),
         ('feature', 'Feature Demo'),
@@ -112,10 +117,11 @@ class Demo(models.Model):
         max_length=20,
         choices=DEMO_TYPE_CHOICES,
         default='product',
-        verbose_name="Demo Type"
+        blank=True,
+        null=True,
     )
     
-    # Media Files - Video
+    # MEDIA FILES
     video_file = models.FileField(
         upload_to=demo_video_path,
         blank=True,
@@ -125,7 +131,6 @@ class Demo(models.Model):
         help_text="Upload video file (required if file type is Video)"
     )
     
-    # Media Files - WebGL
     webgl_file = models.FileField(
         upload_to=demo_webgl_path,
         blank=True,
@@ -135,22 +140,31 @@ class Demo(models.Model):
         help_text="Upload WebGL file - HTML, ZIP archive, or 3D model (required if file type is WebGL)"
     )
     
-    # ✅ NEW: Extracted path for ZIP files
+    lms_file = models.FileField(
+        upload_to=demo_lms_path,
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(allowed_extensions=['zip', 'scorm'])],
+        verbose_name="LMS/SCORM File",
+        help_text="Upload LMS/SCORM package (ZIP format)"
+    )
+    
     extracted_path = models.CharField(
         max_length=500,
         blank=True,
         verbose_name="Extracted Path",
-        help_text="Path to extracted WebGL files (auto-populated)"
+        help_text="Path to extracted WebGL/LMS files (auto-populated)"
     )
     
-    # Thumbnail (Common for both)
     thumbnail = models.ImageField(
         upload_to=demo_thumbnail_path,
+        blank=True,
+        null=True,
         validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'webp'])],
-        verbose_name="Thumbnail Image"
+        verbose_name="Thumbnail Image",
+        help_text="Upload custom thumbnail (optional - default icon will be shown if not provided)"
     )
     
-    # Video Properties
     duration = models.DurationField(
         null=True, 
         blank=True, 
@@ -158,7 +172,19 @@ class Demo(models.Model):
         verbose_name="Duration"
     )
     
-    # Customer Access Control
+    file_size = models.BigIntegerField(
+        default=0,
+        verbose_name="File Size (bytes)",
+        help_text="Auto-calculated file size"
+    )
+    
+    file_version = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name="File Version",
+        help_text="Version number (optional)"
+    )
+    
     target_customers = models.ManyToManyField(
         'accounts.CustomUser',
         blank=True,
@@ -167,24 +193,26 @@ class Demo(models.Model):
         help_text="Select specific customers who can access this demo. Leave empty for all customers."
     )
     
-    # Engagement Stats
     views_count = models.PositiveIntegerField(default=0, verbose_name="Views Count")
     likes_count = models.PositiveIntegerField(default=0, verbose_name="Likes Count")
+    download_count = models.PositiveIntegerField(default=0, verbose_name="Download Count")
     
-    # Status & Visibility
     is_active = models.BooleanField(default=True, verbose_name="Active")
     is_featured = models.BooleanField(
         default=False, 
         verbose_name="Featured/Suggested",
         help_text="Mark as suggested demo to highlight for customers"
     )
-    sort_order = models.PositiveIntegerField(default=0, verbose_name="Sort Order")
+    sort_order = models.PositiveIntegerField(
+        default=0, 
+        verbose_name="Sort Order", 
+        blank=True, 
+        null=True
+    )
     
-    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
     
-    # Creator (Admin who uploaded)
     created_by = models.ForeignKey(
         User, 
         on_delete=models.SET_NULL, 
@@ -206,53 +234,81 @@ class Demo(models.Model):
         
         if self.file_type == 'webgl' and not self.webgl_file:
             raise ValidationError({'webgl_file': 'WebGL file is required when file type is WebGL'})
-    
-    def save(self, *args, **kwargs):
-        # Check if this is an update and webgl_file changed
-        old_webgl_file = None
-        old_extracted_path = None
         
-        if self.pk:
-            try:
-                old_demo = Demo.objects.get(pk=self.pk)
-                old_webgl_file = old_demo.webgl_file
-                old_extracted_path = old_demo.extracted_path
-            except Demo.DoesNotExist:
-                pass
+        if self.file_type == 'lms' and not self.lms_file:
+            raise ValidationError({'lms_file': 'LMS/SCORM file is required when file type is LMS'})
+
+    def save(self, *args, **kwargs):
+        """Custom save to handle slug and file processing"""
+        
+        # Extract skip_extraction from kwargs before passing to super()
+        skip_extraction = kwargs.pop('skip_extraction', False)
         
         # Generate slug if not exists
         if not self.slug:
             base_slug = slugify(self.title)
-            if not base_slug:
-                base_slug = 'demo'
-            
-            unique_slug = base_slug
+            slug = base_slug
             counter = 1
-            while Demo.objects.filter(slug=unique_slug).exclude(pk=self.pk).exists():
-                unique_slug = f"{base_slug}-{counter}"
+            while Demo.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
                 counter += 1
-            
-            self.slug = unique_slug
+            self.slug = slug
         
-        # Save first to get file path
+        # Check if this is a new instance or file has changed
+        is_new = self.pk is None
+        old_instance = None
+        file_changed = False
+        
+        if not is_new:
+            try:
+                old_instance = Demo.objects.get(pk=self.pk)
+                if self.file_type == 'video':
+                    file_changed = old_instance.video_file != self.video_file
+                elif self.file_type == 'webgl':
+                    file_changed = old_instance.webgl_file != self.webgl_file
+                elif self.file_type == 'lms':
+                    file_changed = old_instance.lms_file != self.lms_file
+            except Demo.DoesNotExist:
+                pass
+        
+        # Save to database
         super().save(*args, **kwargs)
         
-        # Handle WebGL ZIP extraction after save
-        if self.file_type == 'webgl' and self.webgl_file:
-            # If file changed
-            if old_webgl_file != self.webgl_file:
-                # Clean old extracted files
-                if old_extracted_path:
-                    self._cleanup_extracted_files(old_extracted_path)
-                
-                # Extract new ZIP file
-                if self.webgl_file.name.endswith('.zip'):
-                    self._extract_webgl_zip()
-                    # Save again to update extracted_path
-                    super().save(update_fields=['extracted_path'])
+        # Handle file extraction after save
+        if not skip_extraction and (is_new or file_changed):
+            if self.file_type == 'webgl' and self.webgl_file:
+                if self.webgl_file.size < 10 * 1024 * 1024:
+                    try:
+                        self._extract_webgl_zip()
+                    except Exception as e:
+                        print(f"❌ Error extracting WebGL: {e}")
+                else:
+                    print(f"⏳ Large WebGL file, skipping extraction")
+            
+            elif self.file_type == 'lms' and self.lms_file:
+                if self.lms_file.size < 10 * 1024 * 1024:
+                    try:
+                        self._extract_lms_zip()
+                    except Exception as e:
+                        print(f"❌ Error extracting LMS: {e}")
+                else:
+                    print(f"⏳ Large LMS file, skipping extraction")
+
+    def _calculate_file_size(self):
+        """Auto-calculate file size based on file type"""
+        try:
+            if self.file_type == 'video' and self.video_file:
+                self.file_size = self.video_file.size
+            elif self.file_type == 'webgl' and self.webgl_file:
+                self.file_size = self.webgl_file.size
+            elif self.file_type == 'lms' and self.lms_file:
+                self.file_size = self.lms_file.size
+        except Exception as e:
+            print(f"Error calculating file size: {e}")
+            self.file_size = 0
     
     def _cleanup_extracted_files(self, path):
-        """Clean up extracted WebGL files"""
+        """Clean up extracted WebGL/LMS files"""
         if path:
             extract_dir = os.path.join(settings.MEDIA_ROOT, path)
             if os.path.exists(extract_dir):
@@ -263,39 +319,28 @@ class Demo(models.Model):
                     print(f"❌ Error cleaning up extracted files: {e}")
 
     def _extract_webgl_zip(self):
-        """
-        Extract WebGL ZIP to LOCAL server (even if ZIP is on S3)
-        
-        This method handles both S3 and local storage:
-        - If S3: Downloads ZIP temporarily, then extracts locally
-        - If Local: Extracts directly
-        """
+        """Extract WebGL ZIP to LOCAL server"""
         if not self.webgl_file or not self.webgl_file.name.endswith('.zip'):
             return
         
-        # Create local extraction directory
         extract_dir = os.path.join(
-            settings.WEBGL_EXTRACT_ROOT,  # Use new setting
+            settings.MEDIA_ROOT,
+            'webgl_extracted',
             f'demo_{self.slug}'
         )
         
-        # Remove old extracted files if they exist
         if os.path.exists(extract_dir):
             shutil.rmtree(extract_dir)
         
-        # Create fresh directory
         os.makedirs(extract_dir, exist_ok=True)
         
         try:
-            # ✅ CRITICAL: Check if using S3 storage
             if hasattr(settings, 'USE_S3') and settings.USE_S3:
-                # S3 Storage: Download to temp file first
                 import tempfile
                 
                 print(f"📥 Downloading ZIP from S3: {self.webgl_file.name}")
                 
                 with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp_file:
-                    # Read from S3 and write to temp file
                     self.webgl_file.open('rb')
                     tmp_file.write(self.webgl_file.read())
                     self.webgl_file.close()
@@ -303,31 +348,25 @@ class Demo(models.Model):
                 
                 print(f"✅ Downloaded to temp: {tmp_zip_path}")
                 
-                # Extract from temp file to local directory
                 with zipfile.ZipFile(tmp_zip_path, 'r') as zip_ref:
                     zip_ref.extractall(extract_dir)
                 
-                # Clean up temp file
                 os.remove(tmp_zip_path)
                 print(f"🗑️  Cleaned up temp file")
             
             else:
-                # Local Storage: Extract directly from file path
                 print(f"📂 Extracting ZIP from local: {self.webgl_file.path}")
                 
                 with zipfile.ZipFile(self.webgl_file.path, 'r') as zip_ref:
                     zip_ref.extractall(extract_dir)
             
-            # Store relative path (relative to MEDIA_ROOT)
             self.extracted_path = f'webgl_extracted/demo_{self.slug}'
             
-            # Count extracted files
             file_count = sum([len(files) for _, _, files in os.walk(extract_dir)])
             
             print(f"✅ WebGL ZIP extracted successfully!")
             print(f"   📁 Location: {extract_dir}")
             print(f"   📄 Files: {file_count}")
-            print(f"   💾 Stored path: {self.extracted_path}")
             
         except zipfile.BadZipFile:
             print(f"❌ Error: Invalid or corrupted ZIP file")
@@ -340,16 +379,65 @@ class Demo(models.Model):
             import traceback
             traceback.print_exc()
             self.extracted_path = ''
+    
+    def _extract_lms_zip(self):
+        """Extract LMS/SCORM ZIP package"""
+        if not self.lms_file or not self.lms_file.name.endswith('.zip'):
+            return
+        
+        extract_dir = os.path.join(
+            settings.MEDIA_ROOT,
+            'lms_extracted',
+            f'demo_{self.slug}'
+        )
+        
+        if os.path.exists(extract_dir):
+            shutil.rmtree(extract_dir)
+        
+        os.makedirs(extract_dir, exist_ok=True)
+        
+        try:
+            if hasattr(settings, 'USE_S3') and settings.USE_S3:
+                import tempfile
+                
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp_file:
+                    self.lms_file.open('rb')
+                    tmp_file.write(self.lms_file.read())
+                    self.lms_file.close()
+                    tmp_zip_path = tmp_file.name
+                
+                with zipfile.ZipFile(tmp_zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(extract_dir)
+                
+                os.remove(tmp_zip_path)
+            else:
+                with zipfile.ZipFile(self.lms_file.path, 'r') as zip_ref:
+                    zip_ref.extractall(extract_dir)
+            
+            self.extracted_path = f'lms_extracted/demo_{self.slug}'
+            
+            file_count = sum([len(files) for _, _, files in os.walk(extract_dir)])
+            print(f"✅ LMS ZIP extracted successfully! Files: {file_count}")
+            
+        except Exception as e:
+            print(f"❌ Error extracting LMS ZIP: {e}")
+            self.extracted_path = ''
+
+    def get_thumbnail_url(self):
+        """Return thumbnail URL or default icon based on file type"""
+        if self.thumbnail:
+            return self.thumbnail.url
+        
+        default_icons = {
+            'video': '/static/images/icons/video-icon.png',
+            'webgl': '/static/images/icons/webgl-icon.png',
+            'lms': '/static/images/icons/lms-icon.png',
+        }
+        
+        return default_icons.get(self.file_type, '/static/images/icons/default-icon.png')
 
     def get_webgl_index_url(self):
-        """
-        Get URL to WebGL index.html or file
-        
-        Returns the URL to serve the WebGL content based on file type:
-        - ZIP files: Returns URL to extracted index.html
-        - HTML files: Returns direct URL to file
-        - 3D models: Returns URL to file for model-viewer
-        """
+        """Get URL to WebGL index.html or file"""
         from django.urls import reverse
         
         if self.file_type != 'webgl' or not self.webgl_file:
@@ -357,9 +445,7 @@ class Demo(models.Model):
         
         file_ext = os.path.splitext(self.webgl_file.name)[1].lower()
         
-        # ✅ CASE 1: ZIP file (extracted)
         if file_ext == '.zip' and self.extracted_path:
-            # Look for index.html in common locations
             possible_index_files = [
                 'index.html',
                 'Index.html',
@@ -377,11 +463,9 @@ class Demo(models.Model):
                 )
                 
                 if os.path.exists(full_path):
-                    # ✅ CRITICAL: Generate URL using correct namespace
-                    url_path = rel_path.replace('\\', '/')  # Windows path fix
+                    url_path = rel_path.replace('\\', '/')
                     
                     try:
-                        # ✅ CHANGED: 'core:serve_webgl_file' instead of 'customers:serve_webgl_file'
                         return reverse('core:serve_webgl_file', kwargs={
                             'slug': self.slug,
                             'filepath': url_path
@@ -390,23 +474,19 @@ class Demo(models.Model):
                         print(f"❌ Error generating URL for {url_path}: {e}")
                         return None
             
-            # If no index.html found in common locations, search for ANY HTML file
             extracted_dir = os.path.join(settings.MEDIA_ROOT, self.extracted_path)
             
             if os.path.exists(extracted_dir):
                 for root, dirs, files in os.walk(extracted_dir):
                     for file in files:
                         if file.lower().endswith(('.html', '.htm')):
-                            # Get relative path from extracted directory
                             rel_path = os.path.relpath(
                                 os.path.join(root, file),
                                 extracted_dir
                             )
-                            # Convert Windows path to URL path
                             url_path = rel_path.replace('\\', '/')
                             
                             try:
-                                # ✅ CHANGED: 'core:serve_webgl_file'
                                 return reverse('core:serve_webgl_file', kwargs={
                                     'slug': self.slug,
                                     'filepath': url_path
@@ -415,15 +495,46 @@ class Demo(models.Model):
                                 print(f"❌ Error generating URL: {e}")
                                 return None
         
-        # ✅ CASE 2: Single HTML file (not zipped)
         elif file_ext == '.html':
-            # Direct S3 URL (since it's not extracted)
             return self.webgl_file.url
         
-        # ✅ CASE 3: 3D Model files (.glb, .gltf)
         elif file_ext in ['.glb', '.gltf']:
-            # Direct S3 URL
             return self.webgl_file.url
+        
+        return None
+    
+    def get_lms_index_url(self):
+        """Get URL to LMS/SCORM index.html"""
+        from django.urls import reverse
+        
+        if self.file_type != 'lms' or not self.lms_file:
+            return None
+        
+        if self.lms_file.name.endswith('.zip') and self.extracted_path:
+            possible_index_files = [
+                'index.html',
+                'index_lms.html',
+                'story.html',
+                'scormdriver/indexAPI.html',
+            ]
+            
+            for rel_path in possible_index_files:
+                full_path = os.path.join(
+                    settings.MEDIA_ROOT, 
+                    self.extracted_path, 
+                    rel_path
+                )
+                
+                if os.path.exists(full_path):
+                    url_path = rel_path.replace('\\', '/')
+                    
+                    try:
+                        return reverse('core:serve_lms_file', kwargs={
+                            'slug': self.slug,
+                            'filepath': url_path
+                        })
+                    except Exception:
+                        return None
         
         return None
 
@@ -439,37 +550,27 @@ class Demo(models.Model):
         elif file_ext in ['.glb', '.gltf']:
             return 'model-viewer'
         
-        return 'iframe'  # default
+        return 'iframe'
     
     def delete(self, *args, **kwargs):
-        """Override delete to clean up extracted files"""
-        # Clean up extracted files
+        """Override delete to clean up all files"""
         if self.extracted_path:
             self._cleanup_extracted_files(self.extracted_path)
         
-        # Delete video file
-        if self.video_file:
-            try:
-                if os.path.isfile(self.video_file.path):
-                    os.remove(self.video_file.path)
-            except Exception as e:
-                print(f"Error deleting video file: {e}")
+        files_to_delete = [
+            self.video_file,
+            self.webgl_file,
+            self.lms_file,
+            self.thumbnail,
+        ]
         
-        # Delete webgl file
-        if self.webgl_file:
-            try:
-                if os.path.isfile(self.webgl_file.path):
-                    os.remove(self.webgl_file.path)
-            except Exception as e:
-                print(f"Error deleting webgl file: {e}")
-        
-        # Delete thumbnail
-        if self.thumbnail:
-            try:
-                if os.path.isfile(self.thumbnail.path):
-                    os.remove(self.thumbnail.path)
-            except Exception as e:
-                print(f"Error deleting thumbnail: {e}")
+        for file_field in files_to_delete:
+            if file_field:
+                try:
+                    if hasattr(file_field, 'path') and os.path.isfile(file_field.path):
+                        os.remove(file_field.path)
+                except Exception as e:
+                    print(f"Error deleting file: {e}")
         
         super().delete(*args, **kwargs)
     
@@ -483,10 +584,13 @@ class Demo(models.Model):
             return self.video_file.url
         elif self.file_type == 'webgl':
             return self.get_webgl_index_url()
+        elif self.file_type == 'lms':
+            return self.get_lms_index_url()
         return None
     
     @property
     def formatted_duration(self):
+        """Get formatted duration for videos"""
         if self.duration:
             total_seconds = int(self.duration.total_seconds())
             hours = total_seconds // 3600
@@ -497,7 +601,19 @@ class Demo(models.Model):
             return f"{minutes}:{seconds:02d}"
         return "00:00"
     
-    # Business Category Access Methods
+    @property
+    def formatted_file_size(self):
+        """Get human-readable file size"""
+        if self.file_size == 0:
+            return "Unknown"
+        
+        size = self.file_size
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size < 1024.0:
+                return f"{size:.2f} {unit}"
+            size /= 1024.0
+        return f"{size:.2f} TB"
+    
     @property
     def is_for_all_business_categories(self):
         """Check if demo is available for all business categories"""
@@ -534,7 +650,6 @@ class Demo(models.Model):
         
         return category_match or subcategory_match
     
-    # Customer Access Control Methods
     @property
     def is_for_all_customers(self):
         return self.target_customers.count() == 0
@@ -556,7 +671,6 @@ class Demo(models.Model):
         if categories:
             return ", ".join([cat.name for cat in categories])
         return "All Categories"
-
 
 class DemoView(models.Model):
     """Track demo views by users"""

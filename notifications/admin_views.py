@@ -12,27 +12,24 @@ from .services import NotificationService
 from django.core.paginator import Paginator
 from django.utils import timezone
 
+
 @login_required
 @permission_required('view_notifications')
 def admin_notification_center(request):
     """
     Admin notification center page
-    Shows all notifications for the logged-in admin user with enhanced date filtering
+    Shows all notifications for the logged-in admin user
+    Latest first (DESC order), 10 items per page
     """
     # Get filter parameters
     filter_type = request.GET.get('type', 'all')
     filter_status = request.GET.get('status', 'all')
-    filter_date = request.GET.get('date_filter', 'all')
-    search = request.GET.get('search', '')
+    search = request.GET.get('search', '').strip()
     
-    # Custom date filter parameters
-    start_date = request.GET.get('start_date', '')
-    end_date = request.GET.get('end_date', '')
-    
-    # Base query
+    # Base query - Only user's notifications, ORDER BY LATEST FIRST (-created_at = DESC)
     notifications = Notification.objects.filter(
         user=request.user
-    ).select_related('user', 'content_type').order_by('-created_at')
+    ).select_related('user', 'content_type').order_by('-created_at')  # ✅ Latest first
     
     # Apply notification type filter
     if filter_type != 'all':
@@ -44,56 +41,15 @@ def admin_notification_center(request):
     elif filter_status == 'read':
         notifications = notifications.filter(is_read=True)
     
-    # Apply date filters
-    now = timezone.now()
-    if filter_date == 'today':
-        # Today's notifications (last 24 hours)
-        notifications = notifications.filter(
-            created_at__gte=now.replace(hour=0, minute=0, second=0, microsecond=0)
-        )
-    elif filter_date == 'yesterday':
-        # Yesterday's notifications
-        yesterday_start = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-        yesterday_end = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        notifications = notifications.filter(
-            created_at__gte=yesterday_start,
-            created_at__lt=yesterday_end
-        )
-    elif filter_date == 'week':
-        # Last 7 days
-        week_ago = now - timedelta(days=7)
-        notifications = notifications.filter(
-            created_at__gte=week_ago
-        )
-    elif filter_date == 'month':
-        # Last 30 days
-        month_ago = now - timedelta(days=30)
-        notifications = notifications.filter(
-            created_at__gte=month_ago
-        )
-    elif filter_date == 'custom' and start_date and end_date:
-        # Custom date range
-        try:
-            start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').replace(tzinfo=timezone.get_current_timezone())
-            # Add one day to end_date to make it inclusive
-            end_date_obj = (datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)).replace(tzinfo=timezone.get_current_timezone())
-            
-            notifications = notifications.filter(
-                created_at__gte=start_date_obj,
-                created_at__lt=end_date_obj
-            )
-        except ValueError:
-            # If date parsing fails, don't apply the filter
-            pass
-    
     # Apply search filter
     if search:
         notifications = notifications.filter(
-            Q(title__icontains=search) | Q(message__icontains=search)
+            Q(title__icontains=search) | 
+            Q(message__icontains=search)
         )
     
-    # Pagination
-    paginator = Paginator(notifications, 20)
+    # ✅ Pagination - 10 items per page (not 20)
+    paginator = Paginator(notifications, 10)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
@@ -112,16 +68,6 @@ def admin_notification_center(request):
         if count > 0:
             type_counts[ntype] = {'label': label, 'count': count}
     
-    # Date filter options
-    date_filters = [
-        ('all', 'All Time'),
-        ('today', 'Today'),
-        ('yesterday', 'Yesterday'),
-        ('week', 'Last 7 Days'),
-        ('month', 'Last 30 Days'),
-        ('custom', 'Custom Range')
-    ]
-    
     context = {
         'notifications': page_obj,
         'total_count': total_count,
@@ -130,10 +76,6 @@ def admin_notification_center(request):
         'type_counts': type_counts,
         'filter_type': filter_type,
         'filter_status': filter_status,
-        'filter_date': filter_date,
-        'date_filters': date_filters,
-        'start_date': start_date,
-        'end_date': end_date,
         'search': search,
         'notification_types': Notification.NOTIFICATION_TYPES,
     }

@@ -1,107 +1,275 @@
 {% extends "emails/base.html" %}
 
-{% block email_title %}Demo Assigned to You{% endblock %}
+{% block title %}Demo Assigned to You - Demo Portal{% endblock %}
 
-{% block email_content %}
-<div class="email-greeting">
-    Hi {{ employee_name }}! 👋
-</div>
+{% block preheader %}You have been assigned a new demo request{% endblock %}
 
-<div class="email-content">
-    <p>You have been assigned to handle a new demo request. Please review the details below and prepare accordingly.</p>
-</div>
-
-<!-- Demo Details Card -->
-<div class="notification-card info">
-    <h3>📋 Demo Request Details</h3>
-    <p style="margin-top: 10px;">A new demo has been assigned to you. Here are the complete details:</p>
-</div>
-
-<!-- Information Table -->
-<table class="info-table">
+{% block content %}
+<!-- Assignment Icon -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 25px 0;">
     <tr>
-        <td><strong>Demo Title:</strong></td>
-        <td>{{ demo_title }}</td>
-    </tr>
-    <tr>
-        <td><strong>Customer Name:</strong></td>
-        <td>{{ customer_name }}</td>
-    </tr>
-    <tr>
-        <td><strong>Customer Email:</strong></td>
-        <td>{{ customer_email }}</td>
-    </tr>
-    {% if customer_phone %}
-    <tr>
-        <td><strong>Customer Phone:</strong></td>
-        <td>{{ customer_phone }}</td>
-    </tr>
-    {% endif %}
-    <tr>
-        <td><strong>Scheduled Date:</strong></td>
-        <td><strong style="color: #1e3c72;">{{ requested_date }}</strong></td>
-    </tr>
-    <tr>
-        <td><strong>Scheduled Time:</strong></td>
-        <td><strong style="color: #1e3c72;">{{ requested_time }}</strong></td>
-    </tr>
-    <tr>
-        <td><strong>Assigned By:</strong></td>
-        <td>{{ assigned_by }}</td>
-    </tr>
-    <tr>
-        <td><strong>Request ID:</strong></td>
-        <td>#{{ request_id }}</td>
+        <td align="center">
+            <div style="width: 80px; height: 80px; background-color: #8b5cf6; background-image: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border-radius: 50%; display: inline-block; text-align: center; line-height: 80px; margin-bottom: 20px;">
+                <span style="font-size: 40px; line-height: 80px; vertical-align: middle;">📋</span>
+            </div>
+        </td>
     </tr>
 </table>
 
-<!-- Demo Description -->
+<!-- Main Heading -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+        <td align="center">
+            <h1 style="color: #1f2937 !important; font-size: 28px; font-weight: 700; margin: 0 0 10px 0; mso-line-height-rule: exactly; line-height: 36px;">
+                Demo Assigned to You
+            </h1>
+            <p style="color: #8b5cf6 !important; font-size: 16px; margin: 0 0 30px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                New demo request requires your attention
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- Greeting -->
+<p style="color: #374151 !important; font-size: 16px; line-height: 24px; margin: 0 0 10px 0; mso-line-height-rule: exactly;">
+    Hi <strong style="color: #1f2937 !important;">{{ employee_name }}</strong>! 👋
+</p>
+
+<p style="color: #374151 !important; font-size: 16px; line-height: 24px; margin: 0 0 25px 0; mso-line-height-rule: exactly;">
+    You have been assigned to handle a new demo request. Please review the details below and prepare accordingly.
+</p>
+
+<!-- Assignment Card -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ede9fe" style="background-color: #ede9fe; border-left: 5px solid #8b5cf6; border-radius: 6px; margin: 0 0 25px 0;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #5b21b6 !important; font-size: 16px; margin: 0 0 10px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                📋 Demo Request Details
+            </p>
+            <p style="color: #6b21a8 !important; font-size: 14px; margin: 0; mso-line-height-rule: exactly; line-height: 20px;">
+                A new demo has been assigned to you. Here are the complete details:
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- Demo Details Table -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; margin: 0 0 25px 0;">
+    <tr>
+        <td style="padding: 20px;">
+            <table width="100%" cellpadding="8" cellspacing="0" border="0" style="border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="color: #6b7280 !important; font-size: 14px; font-weight: 600; width: 40%; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">Demo Title:</td>
+                    <td style="color: #1f2937 !important; font-size: 14px; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ demo_title }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="color: #6b7280 !important; font-size: 14px; font-weight: 600; width: 40%; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">Customer Name:</td>
+                    <td style="color: #1f2937 !important; font-size: 14px; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ customer_name }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="color: #6b7280 !important; font-size: 14px; font-weight: 600; width: 40%; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">Customer Email:</td>
+                    <td style="color: #1f2937 !important; font-size: 14px; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ customer_email }}</td>
+                </tr>
+                {% if customer_phone %}
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="color: #6b7280 !important; font-size: 14px; font-weight: 600; width: 40%; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">Customer Phone:</td>
+                    <td style="color: #1f2937 !important; font-size: 14px; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ customer_phone }}</td>
+                </tr>
+                {% endif %}
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="color: #6b7280 !important; font-size: 14px; font-weight: 600; width: 40%; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">Scheduled Date:</td>
+                    <td style="color: #1e3c72 !important; font-size: 14px; font-weight: 600; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ requested_date }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="color: #6b7280 !important; font-size: 14px; font-weight: 600; width: 40%; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">Scheduled Time:</td>
+                    <td style="color: #1e3c72 !important; font-size: 14px; font-weight: 600; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ requested_time }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="color: #6b7280 !important; font-size: 14px; font-weight: 600; width: 40%; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">Assigned By:</td>
+                    <td style="color: #1f2937 !important; font-size: 14px; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ assigned_by }}</td>
+                </tr>
+                <tr>
+                    <td style="color: #6b7280 !important; font-size: 14px; font-weight: 600; width: 40%; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">Request ID:</td>
+                    <td style="color: #1f2937 !important; font-size: 14px; padding: 10px 0; mso-line-height-rule: exactly; line-height: 20px;">#{{ request_id }}</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- Demo Description (if provided) -->
 {% if demo_description %}
-<div class="info-box">
-    <p><strong>📝 Demo Description:</strong></p>
-    <p>{{ demo_description }}</p>
-</div>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f8fafc" style="background-color: #f8fafc; border-radius: 8px; margin: 0 0 25px 0; border: 1px solid #e2e8f0;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #475569 !important; font-size: 14px; margin: 0 0 10px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 20px;">
+                📝 Demo Description:
+            </p>
+            <p style="color: #64748b !important; font-size: 14px; margin: 0; mso-line-height-rule: exactly; line-height: 20px;">
+                {{ demo_description }}
+            </p>
+        </td>
+    </tr>
+</table>
 {% endif %}
 
-<!-- Action Button -->
-<div style="text-align: center; margin: 30px 0;">
-    <a href="{{ site_url }}/employee/demo-requests/{{ request_id }}/" class="email-button">
-        View Full Details →
-    </a>
-</div>
+<!-- CTA Button -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 30px 0;">
+    <tr>
+        <td align="center">
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ site_url }}/employee/demo-requests/{{ request_id }}/" style="height:50px;v-text-anchor:middle;width:220px;" arcsize="20%" strokecolor="#8b5cf6" fillcolor="#8b5cf6">
+            <w:anchorlock/>
+            <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:600;">📋 View Full Details →</center>
+            </v:roundrect>
+            <![endif]-->
+            <!--[if !mso]><!-->
+            <table cellpadding="0" cellspacing="0" border="0" bgcolor="#8b5cf6" style="background-color: #8b5cf6; background-image: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border-radius: 10px; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3);">
+                <tr>
+                    <td>
+                        <a href="{{ site_url }}/employee/demo-requests/{{ request_id }}/" style="display: inline-block; color: #ffffff !important; text-decoration: none; padding: 16px 40px; font-size: 16px; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                            📋 View Full Details →
+                        </a>
+                    </td>
+                </tr>
+            </table>
+            <!--<![endif]-->
+        </td>
+    </tr>
+</table>
 
-<div class="divider"></div>
+<!-- Divider -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 30px 0;">
+    <tr>
+        <td style="border-top: 2px solid #e5e7eb;"></td>
+    </tr>
+</table>
 
 <!-- Important Reminders -->
-<div class="alert alert-warning">
-    <strong>⚠️ Important Reminders</strong>
-    <ul style="margin: 10px 0 0 0; padding-left: 20px;">
-        <li>Review the demo request details carefully before the scheduled date</li>
-        <li>Prepare all necessary materials and presentation content in advance</li>
-        <li>Contact the customer if you need any clarification or additional information</li>
-        <li>Update the request status in the system after completing the demo</li>
-        <li>If you need to reschedule, inform the admin team as soon as possible</li>
-    </ul>
-</div>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#fef3c7" style="background-color: #fef3c7; border-left: 5px solid #f59e0b; border-radius: 6px; margin: 0 0 25px 0;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #92400e !important; font-size: 15px; margin: 0 0 12px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 22px;">
+                ⚠️ Important Reminders
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td style="padding: 5px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding-right: 10px; vertical-align: top;">
+                                    <span style="color: #f59e0b !important; font-size: 16px;">•</span>
+                                </td>
+                                <td>
+                                    <span style="color: #92400e !important; font-size: 13px; mso-line-height-rule: exactly; line-height: 20px;">Review the demo request details carefully before the scheduled date</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding-right: 10px; vertical-align: top;">
+                                    <span style="color: #f59e0b !important; font-size: 16px;">•</span>
+                                </td>
+                                <td>
+                                    <span style="color: #92400e !important; font-size: 13px; mso-line-height-rule: exactly; line-height: 20px;">Prepare all necessary materials and presentation content in advance</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding-right: 10px; vertical-align: top;">
+                                    <span style="color: #f59e0b !important; font-size: 16px;">•</span>
+                                </td>
+                                <td>
+                                    <span style="color: #92400e !important; font-size: 13px; mso-line-height-rule: exactly; line-height: 20px;">Contact the customer if you need any clarification or additional information</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding-right: 10px; vertical-align: top;">
+                                    <span style="color: #f59e0b !important; font-size: 16px;">•</span>
+                                </td>
+                                <td>
+                                    <span style="color: #92400e !important; font-size: 13px; mso-line-height-rule: exactly; line-height: 20px;">Update the request status in the system after completing the demo</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding-right: 10px; vertical-align: top;">
+                                    <span style="color: #f59e0b !important; font-size: 16px;">•</span>
+                                </td>
+                                <td>
+                                    <span style="color: #92400e !important; font-size: 13px; mso-line-height-rule: exactly; line-height: 20px;">If you need to reschedule, inform the admin team as soon as possible</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
 
 <!-- Closing Message -->
-<div class="email-content">
-    <p>If you have any questions or need support, please don't hesitate to contact the admin team.</p>
-    
-    <p style="margin-top: 25px;">
-        Best regards,<br>
-        <strong style="color: #1e3c72;">CHRP India Demo Portal Team</strong>
-    </p>
-</div>
+<p style="color: #374151 !important; font-size: 15px; line-height: 24px; margin: 0 0 20px 0; mso-line-height-rule: exactly;">
+    If you have any questions or need support, please don't hesitate to contact the admin team.
+</p>
 
-<!-- Additional Info Box -->
-<div class="notification-card success">
-    <h3>✅ Next Steps</h3>
-    <p>
-        1. Click the button above to view complete details<br>
-        2. Prepare your demo materials<br>
-        3. Contact the customer to confirm attendance<br>
-        4. Update status after demo completion
-    </p>
-</div>
+<p style="color: #374151 !important; font-size: 15px; line-height: 24px; margin: 0 0 30px 0; mso-line-height-rule: exactly;">
+    Best regards,<br>
+    <strong style="color: #1e3c72 !important;">CHRP India Demo Portal Team</strong>
+</p>
+
+<!-- Next Steps Card -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ecfdf5" style="background-color: #ecfdf5; border-left: 5px solid #10b981; border-radius: 6px; margin: 0 0 20px 0;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #065f46 !important; font-size: 16px; margin: 0 0 12px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                ✅ Next Steps
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td style="padding: 3px 0;">
+                        <span style="color: #065f46 !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 22px;">1. Click the button above to view complete details</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 3px 0;">
+                        <span style="color: #065f46 !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 22px;">2. Prepare your demo materials</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 3px 0;">
+                        <span style="color: #065f46 !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 22px;">3. Contact the customer to confirm attendance</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 3px 0;">
+                        <span style="color: #065f46 !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 22px;">4. Update status after demo completion</span>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
 {% endblock %}
+
+{% block footer_text %}This is an automated notification from CHRP India Demo Portal. Please do not reply to this message.{% endblock %}

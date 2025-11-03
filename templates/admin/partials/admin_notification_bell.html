@@ -1,7 +1,8 @@
-<!-- templates/admin/partials/admin_notification_bell.html - THEMED TO MATCH BASE -->
 <style>
+    /* ✅ Notification Dropdown System */
     .admin-notif-dropdown {
         position: relative;
+        display: inline-block;
     }
     
     .admin-notif-btn {
@@ -14,12 +15,22 @@
         cursor: pointer;
         transition: all 0.2s ease;
         font-size: 1.125rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
     }
     
     .admin-notif-btn:hover {
         background: rgba(8, 127, 194, 0.1);
         border-color: #087fc2;
         transform: translateY(-1px);
+    }
+    
+    .admin-notif-btn:active {
+        transform: translateY(0);
+        background: rgba(8, 127, 194, 0.15);
     }
     
     .admin-notif-badge {
@@ -37,6 +48,7 @@
         display: none;
         box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
         animation: pulse-badge 2s ease-in-out infinite;
+        pointer-events: none;
     }
     
     @keyframes pulse-badge {
@@ -45,40 +57,47 @@
     }
     
     .admin-notif-badge.show {
-        display: block;
+        display: block !important;
     }
     
+    /* ✅ CRITICAL FIX: Dropdown must be outside normal flow */
     .admin-notif-dropdown-menu {
         display: none;
-        position: absolute;
-        top: calc(100% + 8px);
-        right: 0;
+        position: fixed !important; /* Fixed to viewport */
+        top: 70px !important; /* Below header (adjust if needed) */
+        right: 20px !important; /* From right edge */
         background: white;
         border: 1px solid #e2e8f0;
         border-radius: 0.75rem;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 
+                    0 10px 10px -5px rgba(0, 0, 0, 0.15),
+                    0 0 0 1px rgba(0, 0, 0, 0.05);
         width: 400px;
-        max-height: 500px;
+        max-height: calc(100vh - 90px); /* Don't overflow viewport */
         overflow: hidden;
-        z-index: 1050;
+        z-index: 999999 !important; /* Above everything */
         animation: slideDown 0.2s ease-out;
+        transform-origin: top right;
     }
     
     @keyframes slideDown {
         from {
             opacity: 0;
-            transform: translateY(-10px);
+            transform: translateY(-20px) scale(0.95);
         }
         to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
     }
     
     .admin-notif-dropdown-menu.show {
-        display: block;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
+    /* Header styling */
     .admin-notif-header {
         padding: 1rem 1.25rem;
         border-bottom: 1px solid #e2e8f0;
@@ -86,6 +105,9 @@
         justify-content: space-between;
         align-items: center;
         background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
     
     .admin-notif-header h6 {
@@ -114,8 +136,9 @@
     }
     
     .admin-notif-list {
-        max-height: 360px;
+        max-height: calc(100vh - 250px);
         overflow-y: auto;
+        overflow-x: hidden;
     }
     
     .admin-notif-list::-webkit-scrollbar {
@@ -229,19 +252,13 @@
         gap: 0.25rem;
     }
     
-    .admin-notif-time::before {
-        content: "";
-        display: inline-block;
-        width: 12px;
-        height: 12px;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%239ca3af"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/></svg>') center/contain no-repeat;
-    }
-    
     .admin-notif-footer {
         padding: 0.875rem 1.25rem;
         text-align: center;
         border-top: 1px solid #e2e8f0;
         background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        position: sticky;
+        bottom: 0;
     }
     
     .admin-notif-view-all {
@@ -262,15 +279,6 @@
         transform: translateY(-1px);
     }
     
-    .admin-notif-view-all::after {
-        content: "→";
-        transition: transform 0.2s ease;
-    }
-    
-    .admin-notif-view-all:hover::after {
-        transform: translateX(3px);
-    }
-    
     .admin-notif-empty {
         padding: 3rem 1.5rem;
         text-align: center;
@@ -281,12 +289,6 @@
         font-size: 3rem;
         margin-bottom: 1rem;
         opacity: 0.5;
-        animation: float 3s ease-in-out infinite;
-    }
-    
-    @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
     }
     
     .admin-notif-empty-text {
@@ -294,31 +296,46 @@
         font-weight: 500;
     }
     
+    /* Backdrop overlay */
+    .admin-notif-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.1);
+        z-index: 999998;
+        backdrop-filter: blur(2px);
+    }
+    
+    .admin-notif-backdrop.show {
+        display: block;
+    }
+    
     /* Responsive */
     @media (max-width: 768px) {
         .admin-notif-dropdown-menu {
-            width: 340px;
-            right: -50px;
+            width: 90vw;
+            max-width: 400px;
+            right: 5vw !important;
+            left: 5vw !important;
+            margin: 0 auto;
         }
     }
     
     @media (max-width: 480px) {
         .admin-notif-dropdown-menu {
-            width: calc(100vw - 2rem);
-            right: -80px;
-        }
-        
-        .admin-notif-item {
-            padding: 0.875rem 1rem;
-        }
-        
-        .admin-notif-icon {
-            width: 36px;
-            height: 36px;
-            font-size: 1.125rem;
+            width: calc(100vw - 20px);
+            right: 10px !important;
+            left: 10px !important;
+            top: 60px !important;
         }
     }
 </style>
+
+<!-- Backdrop for visual separation -->
+<div class="admin-notif-backdrop" id="adminNotifBackdrop"></div>
 
 <div class="admin-notif-dropdown">
     <button class="admin-notif-btn" id="adminNotifBtn" type="button" aria-label="Notifications">
@@ -337,29 +354,41 @@
         <div class="admin-notif-list" id="adminNotifList">
             <div class="admin-notif-empty">
                 <div class="admin-notif-empty-icon">
-                    <i class="fas fa-bell-slash" style="font-size: 3rem; opacity: 0.5;"></i>
+                    <i class="fas fa-bell-slash"></i>
                 </div>
                 <div class="admin-notif-empty-text">Loading notifications...</div>
             </div>
         </div>
         
         <div class="admin-notif-footer">
-   <a href="{% url 'notifications:admin_notifications' %}" class="admin-notif-view-all">
-        <i class="fas fa-list-ul me-1"></i>View All Notifications
-    </a>
+            <a href="{% url 'notifications:admin_notifications' %}" class="admin-notif-view-all">
+                <i class="fas fa-list-ul me-1"></i>View All Notifications
+            </a>
         </div>
     </div>
 </div>
 
 <script>
 (function() {
+    console.log('🔔 Notification Bell Script Loading...');
+    
     const btn = document.getElementById('adminNotifBtn');
     const menu = document.getElementById('adminNotifMenu');
     const badge = document.getElementById('adminNotifBadge');
     const list = document.getElementById('adminNotifList');
     const markAllBtn = document.getElementById('adminMarkAllBtn');
+    const backdrop = document.getElementById('adminNotifBackdrop');
     
-    // ✅ Django URL endpoints
+    console.log('✅ Elements found:', {
+        btn: !!btn,
+        menu: !!menu,
+        badge: !!badge,
+        list: !!list,
+        markAllBtn: !!markAllBtn,
+        backdrop: !!backdrop
+    });
+    
+    // Django URL endpoints
     const API_URLS = {
         unreadCount: "{% url 'notifications:api_admin_unread_count' %}",
         list: "{% url 'notifications:api_admin_list' %}",
@@ -368,70 +397,137 @@
         fallback: "{% url 'notifications:admin_notifications' %}"
     };
     
+    console.log('📡 API URLs configured:', API_URLS);
+    
     // Toggle dropdown
-    btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        menu.classList.toggle('show');
-        if (menu.classList.contains('show')) {
-            loadNotifications();
-        }
-    });
+    if (btn) {
+        btn.addEventListener('click', function(e) {
+            console.log('🖱️ Bell icon clicked!');
+            e.stopPropagation();
+            e.preventDefault();
+            
+            const isOpen = menu.classList.contains('show');
+            console.log('📂 Current state:', isOpen ? 'OPEN' : 'CLOSED');
+            
+            if (isOpen) {
+                closeDropdown();
+            } else {
+                openDropdown();
+            }
+        });
+    }
+    
+    function openDropdown() {
+        menu.classList.add('show');
+        backdrop.classList.add('show');
+        console.log('📂 New state: OPEN');
+        console.log('📥 Loading notifications...');
+        loadNotifications();
+    }
+    
+    function closeDropdown() {
+        menu.classList.remove('show');
+        backdrop.classList.remove('show');
+        console.log('📂 New state: CLOSED');
+    }
+    
+    // Close on backdrop click
+    if (backdrop) {
+        backdrop.addEventListener('click', closeDropdown);
+    }
     
     // Close on outside click
     document.addEventListener('click', function(e) {
         if (!menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
-            menu.classList.remove('show');
+            if (menu.classList.contains('show')) {
+                console.log('🚪 Closing dropdown (outside click)');
+                closeDropdown();
+            }
         }
     });
     
     // Close on ESC key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && menu.classList.contains('show')) {
-            menu.classList.remove('show');
+            console.log('🚪 Closing dropdown (ESC key)');
+            closeDropdown();
         }
     });
     
     // Load unread count
     function loadUnreadCount() {
+        console.log('📊 Loading unread count...');
+        
         fetch(API_URLS.unreadCount, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.count > 0) {
-                badge.textContent = data.count > 99 ? '99+' : data.count;
-                badge.classList.add('show');
-                btn.setAttribute('aria-label', `${data.count} unread notifications`);
-            } else {
-                badge.classList.remove('show');
-                btn.setAttribute('aria-label', 'No unread notifications');
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
         })
-        .catch(err => console.error('Error loading count:', err));
+        .then(r => {
+            console.log('📡 Unread count response status:', r.status);
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
+        })
+        .then(data => {
+            console.log('✅ Unread count data:', data);
+            
+            if (data && typeof data.count !== 'undefined') {
+                const count = parseInt(data.count) || 0;
+                console.log(`🔢 Badge count: ${count}`);
+                
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.classList.add('show');
+                    badge.style.display = 'block';
+                    btn.setAttribute('aria-label', `${count} unread notifications`);
+                    console.log('✅ Badge updated and shown');
+                } else {
+                    badge.classList.remove('show');
+                    badge.style.display = 'none';
+                    btn.setAttribute('aria-label', 'No unread notifications');
+                    console.log('ℹ️ No unread notifications, badge hidden');
+                }
+            } else {
+                console.warn('⚠️ Invalid response format:', data);
+            }
+        })
+        .catch(err => {
+            console.error('❌ Error loading unread count:', err);
+            badge.classList.remove('show');
+            badge.style.display = 'none';
+        });
     }
     
     // Load recent notifications
     function loadNotifications() {
+        console.log('📋 Loading notification list...');
+        
         list.innerHTML = `
             <div class="admin-notif-empty">
                 <div class="admin-notif-empty-icon">
-                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
+                    <i class="fas fa-spinner fa-spin"></i>
                 </div>
                 <div class="admin-notif-empty-text">Loading notifications...</div>
             </div>
         `;
         
         fetch(API_URLS.list + '?limit=10', {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
         })
         .then(r => {
-            if (!r.ok) throw new Error('Network response was not ok');
+            console.log('📡 Notification list response status:', r.status);
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
             return r.json();
         })
         .then(data => {
-            console.log('API Response:', data);
+            console.log('✅ Notification list data:', data);
             
             const notifications = data.notifications || [];
+            console.log(`📬 Found ${notifications.length} notifications`);
             
             if (notifications.length > 0) {
                 renderNotifications(notifications);
@@ -439,7 +535,7 @@
                 list.innerHTML = `
                     <div class="admin-notif-empty">
                         <div class="admin-notif-empty-icon">
-                            <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.5;"></i>
+                            <i class="fas fa-inbox"></i>
                         </div>
                         <div class="admin-notif-empty-text">No notifications yet</div>
                     </div>
@@ -447,11 +543,11 @@
             }
         })
         .catch(err => {
-            console.error('Error loading notifications:', err);
+            console.error('❌ Error loading notifications:', err);
             list.innerHTML = `
                 <div class="admin-notif-empty">
                     <div class="admin-notif-empty-icon">
-                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; opacity: 0.5; color: #ef4444;"></i>
+                        <i class="fas fa-exclamation-triangle"></i>
                     </div>
                     <div class="admin-notif-empty-text">Error loading notifications</div>
                     <div style="font-size: 0.75rem; margin-top: 0.5rem; color: #6b7280;">${err.message}</div>
@@ -462,6 +558,8 @@
     
     // Render notifications
     function renderNotifications(notifications) {
+        console.log('🎨 Rendering notifications...');
+        
         list.innerHTML = notifications.map(n => {
             const iconClass = getIconClass(n.notification_type);
             const iconEmoji = getIconEmoji(n.notification_type);
@@ -487,14 +585,15 @@
             `;
         }).join('');
         
-        // Add click handlers to mark as read before redirect
+        console.log('✅ Notifications rendered');
+        
+        // Add click handlers
         list.querySelectorAll('.admin-notif-item').forEach(item => {
             item.addEventListener('click', function(e) {
                 e.preventDefault();
                 const id = this.dataset.id;
                 const url = this.dataset.url;
-                
-                // Mark as read first
+                console.log(`🖱️ Notification clicked: ID=${id}, URL=${url}`);
                 markAsReadAndRedirect(id, url);
             });
         });
@@ -502,60 +601,66 @@
     
     // Mark as read and redirect
     function markAsReadAndRedirect(id, url) {
+        console.log(`✔️ Marking notification ${id} as read...`);
         const markReadUrl = API_URLS.markRead.replace('{id}', id);
         
         fetch(markReadUrl, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken'),
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
         .then(r => r.json())
         .then(data => {
+            console.log('✅ Mark as read response:', data);
             if (data.success) {
                 loadUnreadCount();
             }
-            // Redirect regardless of success
+            console.log(`🔗 Redirecting to: ${url}`);
             window.location.href = url;
         })
         .catch(err => {
-            console.error('Error marking as read:', err);
+            console.error('❌ Error marking as read:', err);
             // Still redirect even if there's an error
             window.location.href = url;
         });
     }
     
     // Mark all as read
-    markAllBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        
-        // Show loading state
-        const originalText = this.innerHTML;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Marking...';
-        this.disabled = true;
-        
-        fetch(API_URLS.markAllRead, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                loadUnreadCount();
-                loadNotifications();
-            }
-        })
-        .catch(err => console.error('Error marking all as read:', err))
-        .finally(() => {
-            // Restore button
-            this.innerHTML = originalText;
-            this.disabled = false;
+    if (markAllBtn) {
+        markAllBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            console.log('✔️ Marking all as read...');
+            
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Marking...';
+            this.disabled = true;
+            
+            fetch(API_URLS.markAllRead, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                console.log('✅ Mark all as read response:', data);
+                if (data.success) {
+                    loadUnreadCount();
+                    loadNotifications();
+                }
+            })
+            .catch(err => console.error('❌ Error marking all as read:', err))
+            .finally(() => {
+                this.innerHTML = originalText;
+                this.disabled = false;
+            });
         });
-    });
+    }
     
     // Helper functions
     function getIconClass(type) {
@@ -603,8 +708,25 @@
         return div.innerHTML;
     }
     
-    // Initial load and polling
+    // Initial load
+    console.log('🚀 Initializing notification system...');
     loadUnreadCount();
-    setInterval(loadUnreadCount, 30000); // Poll every 30 seconds
+    
+    // Manual test on page load
+    setTimeout(() => {
+        console.log('🧪 Running manual badge test...');
+        console.log('Badge element:', badge);
+        console.log('Badge classes:', badge.className);
+        console.log('Badge display:', window.getComputedStyle(badge).display);
+        console.log('Badge text:', badge.textContent);
+    }, 1000);
+    
+    // Poll every 30 seconds
+    setInterval(() => {
+        console.log('🔄 Polling for new notifications...');
+        loadUnreadCount();
+    }, 30000);
+    
+    console.log('✅ Notification Bell Script Loaded Successfully!');
 })();
 </script>

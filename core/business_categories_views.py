@@ -7,7 +7,8 @@ from django.http import JsonResponse
 from django.db.models import Q, Count
 from django.views.decorators.http import require_http_methods
 from accounts.models import BusinessCategory, BusinessSubCategory
-
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+ 
 # Check if user is admin
 def is_admin(user):
     return user.is_staff or user.is_superuser
@@ -19,12 +20,12 @@ def is_admin(user):
 @login_required
 @user_passes_test(is_admin)
 def admin_business_categories(request):
-    """List all business categories with status filter"""
+    """List all business categories with search, status filter, and pagination"""
     
     # Search functionality
     search_query = request.GET.get('search', '')
     
-    # Status filter (new)
+    # Status filter
     status_filter = request.GET.get('status', '')
     
     # Filter categories
@@ -40,11 +41,24 @@ def admin_business_categories(request):
             Q(description__icontains=search_query)
         )
     
-    # Apply status filter if provided (new)
+    # Apply status filter if provided
     if status_filter == 'active':
         categories = categories.filter(is_active=True)
     elif status_filter == 'inactive':
         categories = categories.filter(is_active=False)
+    
+    # Pagination
+    paginator = Paginator(categories, 10)  # Show 10 categories per page
+    page = request.GET.get('page')
+    
+    try:
+        categories_page = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page
+        categories_page = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page of results
+        categories_page = paginator.page(paginator.num_pages)
     
     # Stats
     total_categories = BusinessCategory.objects.count()
@@ -52,9 +66,9 @@ def admin_business_categories(request):
     total_subcategories = BusinessSubCategory.objects.count()
     
     context = {
-        'categories': categories,
+        'categories': categories_page,
         'search_query': search_query,
-        'status_filter': status_filter,  # Pass status filter to template
+        'status_filter': status_filter,
         'total_categories': total_categories,
         'active_categories': active_categories,
         'total_subcategories': total_subcategories,
@@ -64,7 +78,6 @@ def admin_business_categories(request):
     }
     
     return render(request, 'admin/business_categories/list.html', context)
-
 
 @login_required
 @user_passes_test(is_admin)
@@ -223,10 +236,11 @@ def admin_business_category_toggle_status(request, category_id):
 # BUSINESS SUBCATEGORY VIEWS
 # =====================================
 
+
 @login_required
 @user_passes_test(is_admin)
 def admin_business_subcategories(request):
-    """List all business subcategories with category and status filter"""
+    """List all business subcategories with category, status filter, and pagination"""
     
     # Search functionality
     search_query = request.GET.get('search', '')
@@ -234,7 +248,7 @@ def admin_business_subcategories(request):
     # Category filter
     category_filter = request.GET.get('category', '')
     
-    # Status filter (new)
+    # Status filter
     status_filter = request.GET.get('status', '')
     
     # Get all categories for filter dropdown
@@ -257,22 +271,35 @@ def admin_business_subcategories(request):
     if category_filter:
         subcategories = subcategories.filter(category_id=category_filter)
     
-    # Apply status filter if provided (new)
+    # Apply status filter if provided
     if status_filter == 'active':
         subcategories = subcategories.filter(is_active=True)
     elif status_filter == 'inactive':
         subcategories = subcategories.filter(is_active=False)
+    
+    # Pagination
+    paginator = Paginator(subcategories, 10)  # Show 10 subcategories per page
+    page = request.GET.get('page')
+    
+    try:
+        subcategories_page = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page
+        subcategories_page = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page of results
+        subcategories_page = paginator.page(paginator.num_pages)
     
     # Stats
     total_subcategories = BusinessSubCategory.objects.count()
     active_subcategories = BusinessSubCategory.objects.filter(is_active=True).count()
     
     context = {
-        'subcategories': subcategories,
+        'subcategories': subcategories_page,
         'categories': categories,
         'search_query': search_query,
         'category_filter': category_filter,
-        'status_filter': status_filter,  # Pass status filter to template
+        'status_filter': status_filter,
         'total_subcategories': total_subcategories,
         'active_subcategories': active_subcategories,
         'breadcrumbs': [

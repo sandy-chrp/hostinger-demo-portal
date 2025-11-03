@@ -1,4 +1,4 @@
-<!-- templates/customers/demo_detail.html - COMPLETE WITH VIDEO CHECK -->
+<!-- templates/customers/demo_detail.html - FULLY FIXED WITH WEBGL & FEEDBACK -->
 {% extends 'customers/base.html' %}
 {% load static %}
 
@@ -7,6 +7,13 @@
 
 {% block customer_extra_css %}
 <style>
+    /* ==========================================
+       🎨 FONT SYSTEM - MATCHED WITH BASE.HTML
+       ========================================== */
+    * {
+        font-family: var(--primary-font);
+    }
+
     /* Security Protection */
     .video-content * {
         -webkit-user-select: none !important;
@@ -28,7 +35,9 @@
         pointer-events: auto !important;
     }
 
-    /* Professional Video Container - 16:9 Aspect Ratio */
+    /* ==========================================
+       📹 VIDEO CONTAINER - 16:9 RESPONSIVE
+       ========================================== */
     .video-container {
         position: relative;
         background: #000;
@@ -36,6 +45,7 @@
         overflow: hidden;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         height: fit-content;
+        margin-bottom: var(--spacing-lg);
     }
 
     .video-wrapper {
@@ -74,7 +84,7 @@
         color: white;
         padding: 6px 14px;
         border-radius: 20px;
-        font-size: 0.75rem;
+        font-size: var(--font-xs);
         font-weight: 600;
         z-index: 1000;
         pointer-events: none;
@@ -88,7 +98,7 @@
         color: white;
         padding: 6px 14px;
         border-radius: 20px;
-        font-size: 0.75rem;
+        font-size: var(--font-xs);
         z-index: 1000;
         pointer-events: none;
     }
@@ -101,13 +111,14 @@
         display: flex;
         align-items: center;
         gap: 12px;
+        flex-wrap: wrap;
     }
 
     .control-btn {
         background: none;
         border: none;
         color: white;
-        font-size: 1.1rem;
+        font-size: var(--font-md);
         cursor: pointer;
         padding: 6px;
         border-radius: 50%;
@@ -115,6 +126,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        min-width: 32px;
+        min-height: 32px;
     }
 
     .control-btn:hover {
@@ -126,6 +139,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
+        min-width: 200px;
     }
 
     .progress-track {
@@ -164,7 +178,7 @@
 
     .time-display {
         color: #ccc;
-        font-size: 0.8rem;
+        font-size: var(--font-xs);
         font-family: monospace;
         min-width: 42px;
     }
@@ -183,7 +197,9 @@
         cursor: pointer;
     }
 
-    /* Demo Header - Compact */
+    /* ==========================================
+       📄 DEMO HEADER - RESPONSIVE
+       ========================================== */
     .demo-header {
         background: white;
         padding: var(--spacing-lg);
@@ -194,11 +210,12 @@
     }
 
     .demo-title {
-        font-size: 1.5rem;
+        font-size: var(--font-3xl);
         font-weight: 700;
         color: var(--dark-color);
         margin-bottom: var(--spacing-sm);
         line-height: 1.3;
+        font-family: var(--heading-font);
     }
 
     .demo-meta-info {
@@ -215,7 +232,7 @@
         align-items: center;
         gap: 6px;
         color: var(--gray-600);
-        font-size: 0.875rem;
+        font-size: var(--font-sm);
     }
 
     .meta-item i {
@@ -226,7 +243,7 @@
     .demo-description {
         color: var(--gray-700);
         line-height: 1.6;
-        font-size: 0.95rem;
+        font-size: var(--font-base);
     }
 
     .demo-actions-section {
@@ -240,7 +257,7 @@
         padding: 10px 16px;
         border-radius: var(--radius-md);
         font-weight: 600;
-        font-size: 0.875rem;
+        font-size: var(--font-sm);
         transition: all 0.3s ease;
         border: none;
         cursor: pointer;
@@ -298,19 +315,22 @@
     }
 
     .consultation-card h3 {
-        font-size: 1.5rem;
+        font-size: var(--font-3xl);
         font-weight: 700;
         margin-bottom: var(--spacing-md);
         color: var(--dark-color);
+        font-family: var(--heading-font);
     }
 
     .consultation-card p {
         color: var(--gray-600);
         margin-bottom: var(--spacing-lg);
-        font-size: 1rem;
+        font-size: var(--font-base);
     }
 
-    /* Related Demos Sidebar - 30% */
+    /* ==========================================
+       📱 RELATED DEMOS SIDEBAR
+       ========================================== */
     .related-sidebar {
         background: white;
         border-radius: var(--radius-lg);
@@ -330,10 +350,11 @@
     }
 
     .sidebar-title {
-        font-size: 1rem;
+        font-size: var(--font-lg);
         font-weight: 700;
         color: var(--dark-color);
         margin: 0;
+        font-family: var(--heading-font);
     }
 
     .sidebar-content {
@@ -355,7 +376,7 @@
         border-radius: 2px;
     }
 
-    /* Related Demo Card - Compact */
+    /* Related Demo Card */
     .related-card {
         background: white;
         border: 1px solid var(--gray-200);
@@ -385,7 +406,7 @@
     }
 
     .related-title {
-        font-size: 0.9rem;
+        font-size: var(--font-sm);
         font-weight: 600;
         margin-bottom: var(--spacing-xs);
         color: var(--dark-color);
@@ -398,14 +419,14 @@
 
     .related-meta {
         color: var(--gray-500);
-        font-size: 0.75rem;
+        font-size: var(--font-xs);
         margin-bottom: var(--spacing-sm);
         display: flex;
         gap: 8px;
     }
 
     .related-card .btn {
-        font-size: 0.8rem;
+        font-size: var(--font-xs);
         padding: 6px 12px;
         width: 100%;
     }
@@ -419,7 +440,7 @@
         color: white;
         padding: 4px 10px;
         border-radius: 15px;
-        font-size: 0.75rem;
+        font-size: var(--font-xs);
         font-weight: 600;
         text-decoration: none;
         transition: all 0.3s ease;
@@ -430,16 +451,9 @@
         color: white;
     }
 
-    .subcategory-badge {
-        background: var(--gray-200);
-        color: var(--gray-700);
-    }
-
-    .subcategory-badge:hover {
-        background: var(--gray-300);
-    }
-
-    /* Feedback Section */
+    /* ==========================================
+       💬 FEEDBACK SECTION
+       ========================================== */
     .feedback-section {
         background: white;
         padding: var(--spacing-lg);
@@ -450,9 +464,10 @@
     }
 
     .feedback-section h3 {
-        font-size: 1.25rem;
+        font-size: var(--font-2xl);
         font-weight: 700;
         margin-bottom: var(--spacing-lg);
+        font-family: var(--heading-font);
     }
 
     .feedback-section * {
@@ -474,7 +489,7 @@
     }
 
     .star {
-        font-size: 1.5rem;
+        font-size: var(--font-3xl);
         color: var(--gray-300);
         cursor: pointer;
         transition: all 0.3s ease;
@@ -488,19 +503,191 @@
         transform: scale(1.1);
     }
 
+    .feedback-item {
+        background: white;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-md);
+        border-left: 3px solid var(--primary-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .feedback-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .feedback-author {
+        font-weight: 600;
+        color: var(--dark-color);
+        font-size: var(--font-sm);
+    }
+
+    .feedback-date {
+        color: var(--gray-500);
+        font-size: var(--font-xs);
+    }
+
+    /* Security Warning */
+    .security-warning {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: var(--danger-color);
+        color: white;
+        padding: 10px 16px;
+        border-radius: var(--radius-md);
+        font-size: var(--font-sm);
+        z-index: 10000;
+        display: none;
+        box-shadow: var(--shadow-lg);
+        animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
+    }
+
+    /* Loading & Toast */
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+        border-right-color: transparent;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* ==========================================
+       📱 RESPONSIVE BREAKPOINTS
+       ========================================== */
+    @media (max-width: 1024px) {
+        .related-sidebar {
+            position: static;
+            margin-top: var(--spacing-lg);
+        }
+
+        .sidebar-content {
+            max-height: 400px;
+        }
+        
+        .demo-title {
+            font-size: var(--font-2xl);
+        }
+        
+        .consultation-card h3 {
+            font-size: var(--font-2xl);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .demo-title {
+            font-size: var(--font-xl);
+        }
+
+        .video-wrapper {
+            padding-bottom: 75%;
+        }
+
+        .custom-controls {
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+        }
+
+        .volume-container {
+            display: none;
+        }
+        
+        .progress-container {
+            min-width: 150px;
+        }
+        
+        .demo-header {
+            padding: var(--spacing-md);
+        }
+        
+        .feedback-section h3 {
+            font-size: var(--font-xl);
+        }
+        
+        .consultation-card {
+            padding: var(--spacing-lg);
+        }
+        
+        .consultation-card h3 {
+            font-size: var(--font-xl);
+        }
+        
+        .consultation-icon {
+            font-size: 3rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .demo-title {
+            font-size: var(--font-lg);
+        }
+        
+        .meta-item {
+            font-size: var(--font-xs);
+        }
+        
+        .demo-description {
+            font-size: var(--font-sm);
+        }
+        
+        .action-btn {
+            font-size: var(--font-xs);
+            padding: 8px 12px;
+        }
+        
+        .custom-controls {
+            padding: 8px;
+        }
+        
+        .control-btn {
+            min-width: 28px;
+            min-height: 28px;
+            font-size: var(--font-sm);
+        }
+        
+        .time-display {
+            font-size: 0.625rem;
+        }
+        
+        .feedback-section {
+            padding: var(--spacing-md);
+        }
+        
+        .feedback-section h3 {
+            font-size: var(--font-lg);
+        }
+        
+        .star {
+            font-size: var(--font-2xl);
+        }
+    }
+
+    .demo-video::-webkit-media-controls {
+        display: none !important;
+    }
+
     /* Fullscreen Styles */
-    .video-container:fullscreen {
-        width: 100vw;
-        height: 100vh;
-        border-radius: 0;
-    }
-
-    .video-container:-webkit-full-screen {
-        width: 100vw;
-        height: 100vh;
-        border-radius: 0;
-    }
-
+    .video-container:fullscreen,
+    .video-container:-webkit-full-screen,
     .video-container:-moz-full-screen {
         width: 100vw;
         height: 100vh;
@@ -523,120 +710,6 @@
         right: 0;
         z-index: 10000;
     }
-
-    .feedback-item {
-        background: white;
-        padding: var(--spacing-md);
-        border-radius: var(--radius-md);
-        margin-bottom: var(--spacing-md);
-        border-left: 3px solid var(--primary-color);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .feedback-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: var(--spacing-xs);
-    }
-
-    .feedback-author {
-        font-weight: 600;
-        color: var(--dark-color);
-        font-size: 0.9rem;
-    }
-
-    .feedback-date {
-        color: var(--gray-500);
-        font-size: 0.8rem;
-    }
-
-    /* Security Warning */
-    .security-warning {
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        background: var(--danger-color);
-        color: white;
-        padding: 10px 16px;
-        border-radius: var(--radius-md);
-        font-size: 0.875rem;
-        z-index: 10000;
-        display: none;
-        box-shadow: var(--shadow-lg);
-        animation: slideIn 0.3s ease;
-    }
-
-    @keyframes slideIn {
-        from { transform: translateX(100%); }
-        to { transform: translateX(0); }
-    }
-
-    .loading {
-        opacity: 0.6;
-        pointer-events: none;
-    }
-
-    .spinner {
-        display: inline-block;
-        width: 16px;
-        height: 16px;
-        border: 2px solid currentColor;
-        border-radius: 50%;
-        border-right-color: transparent;
-        animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    .toast {
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        z-index: 10001;
-        max-width: 350px;
-        box-shadow: var(--shadow-lg);
-    }
-
-    @media (max-width: 992px) {
-        .related-sidebar {
-            position: static;
-            margin-top: var(--spacing-lg);
-        }
-
-        .sidebar-content {
-            max-height: 400px;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .demo-title {
-            font-size: 1.25rem;
-        }
-
-        .video-wrapper {
-            padding-bottom: 75%;
-        }
-
-        .custom-controls {
-            flex-wrap: wrap;
-        }
-
-        .volume-container {
-            display: none;
-        }
-    }
-
-    @media print {
-        .video-container {
-            display: none !important;
-        }
-    }
-
-    .demo-video::-webkit-media-controls {
-        display: none !important;
-    }
 </style>
 {% endblock %}
 
@@ -656,247 +729,254 @@
     </ol>
 </nav>
 
-<div class="row g-4">
-    <div class="col-lg-8">
-        {% if demo.video_file %}
-        <!-- Video Container - Only show if video exists -->
-        <div class="video-container video-content">
-            <div class="video-wrapper">
-                <video 
-                    class="demo-video" 
-                    id="demoVideo"
-                    controlslist="nodownload nofullscreen noremoteplayback"
-                    disablepictureinpicture
-                    disableremoteplayback
-                    oncontextmenu="return false;"
-                    preload="metadata">
-                    <source src="{{ demo.video_file.url }}" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-                
-                <div class="video-protection-overlay"></div>
-                
-                <div class="video-watermark">
-                    {{ user.email }} - CONFIDENTIAL
-                </div>
-                
-                <div class="video-timestamp" id="videoTimestamp">
-                    <span id="currentTime"></span>
-                </div>
-            </div>
-            
-            <div class="custom-controls">
-                <button id="playPauseBtn" class="control-btn" title="Play/Pause">
-                    <i class="fas fa-play"></i>
-                </button>
-                
-                <div class="progress-container">
-                    <span id="currentDuration" class="time-display">00:00</span>
-                    <div class="progress-track" id="progressTrack">
-                        <div id="progressBar" class="progress-bar">
-                            <div class="progress-handle"></div>
-                        </div>
+{# ✅ WebGL Auto-Redirect #}
+{% if demo.file_type == 'webgl' %}
+    <script>
+        console.log('🎮 WebGL demo detected, redirecting to viewer...');
+        window.location.href = "{% url 'customers:webgl_viewer' demo.slug %}";
+    </script>
+    
+    <div class="customer-card text-center py-5">
+        <div class="spinner-border text-primary mb-3" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h4><i class="fas fa-cube me-2"></i>Loading 3D Viewer...</h4>
+        <p class="text-muted">Redirecting to WebGL viewer...</p>
+    </div>
+{% else %}
+    {# Video/Regular Demo Content #}
+    <div class="row g-4">
+        <div class="col-lg-8">
+            {% if demo.video_file %}
+            <!-- Video Container -->
+            <div class="video-container video-content">
+                <div class="video-wrapper">
+                    <video 
+                        class="demo-video" 
+                        id="demoVideo"
+                        controlslist="nodownload nofullscreen noremoteplayback"
+                        disablepictureinpicture
+                        disableremoteplayback
+                        oncontextmenu="return false;"
+                        preload="metadata">
+                        <source src="{{ demo.video_file.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    
+                    <div class="video-protection-overlay"></div>
+                    
+                    <div class="video-timestamp" id="videoTimestamp">
+                        <span id="currentTime"></span>
                     </div>
-                    <span id="totalDuration" class="time-display">00:00</span>
                 </div>
                 
-                <div class="volume-container">
-                    <button id="volumeBtn" class="control-btn" title="Volume">
-                        <i class="fas fa-volume-up"></i>
+                <div class="custom-controls">
+                    <button id="playPauseBtn" class="control-btn" title="Play/Pause">
+                        <i class="fas fa-play"></i>
                     </button>
-                    <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.1" value="1">
-                </div>
-                
-                <button id="fullscreenBtn" class="control-btn" title="Fullscreen">
-                    <i class="fas fa-expand"></i>
-                </button>
-                
-                <div style="color: #888; font-size: 0.8rem;">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-            </div>
-        </div>
-        {% else %}
-        <!-- No Video - Show Consultation Card -->
-        <div class="consultation-card">
-            <i class="fas fa-calendar-check consultation-icon"></i>
-            <h3>Schedule Your Consultation</h3>
-            <p>This is a consultation service. Book a live session with our team to discuss your requirements.</p>
-            <a href="{% url 'customers:request_demo' %}?demo={{ demo.id }}" 
-               class="btn btn-primary btn-lg">
-                <i class="fas fa-calendar-plus me-2"></i>Request Consultation
-            </a>
-        </div>
-        {% endif %}
-
-        <!-- Demo Information -->
-        <div class="demo-header">
-            <div class="row align-items-start">
-                <div class="col-lg-8">
-                    <h1 class="demo-title">{{ demo.title }}</h1>
                     
-                    {% if demo.business_category %}
-                        <a href="{% url 'customers:browse_demos' %}?business_category={{ demo.business_category.id }}" 
-                           class="category-badge">
-                            {{ demo.business_category.name }}
-                        </a>
-                    {% endif %}
-                    
-                    <div class="demo-meta-info">
-                        <div class="meta-item">
-                            <i class="fas fa-eye"></i>
-                            <span>{{ demo.views_count }} views</span>
+                    <div class="progress-container">
+                        <span id="currentDuration" class="time-display">00:00</span>
+                        <div class="progress-track" id="progressTrack">
+                            <div id="progressBar" class="progress-bar">
+                                <div class="progress-handle"></div>
+                            </div>
                         </div>
-                        <div class="meta-item">
-                            <i class="fas fa-star text-warning"></i>
-                            <span id="likesCount">{{ demo.likes_count }}</span> likes
-                        </div>
-                        {% if demo.duration %}
-                        <div class="meta-item">
-                            <i class="fas fa-clock"></i>
-                            <span>{{ demo.duration }} min</span>
-                        </div>
-                        {% endif %}
-                        <div class="meta-item">
-                            <i class="fas fa-calendar"></i>
-                            <span>{{ demo.created_at|date:"M d, Y" }}</span>
-                        </div>
+                        <span id="totalDuration" class="time-display">00:00</span>
                     </div>
                     
-                    <div class="demo-description">
-                        {{ demo.description|linebreaks }}
-                    </div>
-                </div>
-                
-                <div class="col-lg-4">
-                    <div class="demo-actions-section">
-                        <button 
-                            class="action-btn btn-like {% if user_liked %}liked{% endif %}" 
-                            id="likeBtn"
-                            data-demo-id="{{ demo.id }}">
-                            <i class="fas fa-star"></i>
-                            <span id="likeText">{% if user_liked %}Liked{% else %}Like{% endif %}</span>
+                    <div class="volume-container">
+                        <button id="volumeBtn" class="control-btn" title="Volume">
+                            <i class="fas fa-volume-up"></i>
                         </button>
-                        
-                        <a href="{% url 'customers:request_demo' %}?demo={{ demo.id }}" 
-                           class="action-btn btn-request-demo">
-                            <i class="fas fa-calendar-plus"></i>
-                            Request Live Demo
-                        </a>
+                        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.1" value="1">
+                    </div>
+                    
+                    <button id="fullscreenBtn" class="control-btn" title="Fullscreen">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    
+                    <div style="color: #888; font-size: var(--font-xs);">
+                        <i class="fas fa-shield-alt"></i>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="col-lg-4">
-        {% if related_demos %}
-        <div class="related-sidebar">
-            <div class="sidebar-header">
-                <h3 class="sidebar-title">
-                    <i class="fas fa-play-circle me-2"></i>Related Demos
-                </h3>
+            {% else %}
+            <!-- No Video - Consultation Card -->
+            <div class="consultation-card">
+                <i class="fas fa-calendar-check consultation-icon"></i>
+                <h3>Schedule Your Consultation</h3>
+                <p>This is a consultation service. Book a live session with our team.</p>
+                <a href="{% url 'customers:request_demo' %}?demo={{ demo.id }}" 
+                   class="btn btn-primary btn-lg">
+                    <i class="fas fa-calendar-plus me-2"></i>Request Consultation
+                </a>
             </div>
-            <div class="sidebar-content">
-                {% for related_demo in related_demos %}
-                <div class="related-card">
-                    {% if related_demo.thumbnail %}
-                        <img src="{{ related_demo.thumbnail.url }}" 
-                             alt="{{ related_demo.title }}" 
-                             class="related-thumbnail">
-                    {% else %}
-                        <div class="related-thumbnail" style="background: var(--gray-100); display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-video" style="font-size: 2rem; color: var(--gray-400);"></i>
+            {% endif %}
+
+            <!-- Demo Information -->
+            <div class="demo-header">
+                <div class="row align-items-start">
+                    <div class="col-lg-8">
+                        <h1 class="demo-title">{{ demo.title }}</h1>
+                        
+                        <div class="demo-meta-info">
+                            <div class="meta-item">
+                                <i class="fas fa-eye"></i>
+                                <span>{{ demo.views_count }} views</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-star text-warning"></i>
+                                <span id="likesCount">{{ demo.likes_count }}</span> likes
+                            </div>
+                            {% if demo.duration %}
+                            <div class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span>{{ demo.duration }} min</span>
+                            </div>
+                            {% endif %}
+                            <div class="meta-item">
+                                <i class="fas fa-calendar"></i>
+                                <span>{{ demo.created_at|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="demo-description">
+                            {{ demo.description|linebreaks }}
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <div class="demo-actions-section">
+                            <button 
+                                class="action-btn btn-like {% if user_liked %}liked{% endif %}" 
+                                id="likeBtn"
+                                data-demo-id="{{ demo.id }}">
+                                <i class="fas fa-star"></i>
+                                <span id="likeText">{% if user_liked %}Liked{% else %}Like{% endif %}</span>
+                            </button>
+                            
+                            <a href="{% url 'customers:request_demo' %}?demo={{ demo.id }}" 
+                               class="action-btn btn-request-demo">
+                                <i class="fas fa-calendar-plus"></i>
+                                Request Live Demo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feedback Section -->
+            <div class="feedback-section" id="feedback">
+                <h3><i class="fas fa-comments me-2"></i>Share Your Feedback</h3>
+                
+                {% if not user_feedback %}
+                <div class="feedback-form">
+                    <form id="feedbackForm">
+                        <div class="mb-3">
+                            <label class="form-label">Rate this demo:</label>
+                            <div class="rating-stars" id="ratingStars">
+                                <i class="fas fa-star star" data-rating="1"></i>
+                                <i class="fas fa-star star" data-rating="2"></i>
+                                <i class="fas fa-star star" data-rating="3"></i>
+                                <i class="fas fa-star star" data-rating="4"></i>
+                                <i class="fas fa-star star" data-rating="5"></i>
+                            </div>
+                            <input type="hidden" id="selectedRating" value="0">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="feedbackText" class="form-label">Your feedback:</label>
+                            <textarea 
+                                class="form-control" 
+                                id="feedbackText" 
+                                rows="3" 
+                                placeholder="Share your thoughts..."
+                                required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Feedback
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Thank you for your feedback!
+                    {% if user_feedback.rating %}
+                        <div class="mt-2">
+                            Rating: 
+                            {% for i in "12345" %}
+                                <i class="fas fa-star {% if forloop.counter <= user_feedback.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                            {% endfor %}
                         </div>
                     {% endif %}
-                    
-                    <div class="related-content">
-                        <h4 class="related-title">{{ related_demo.title }}</h4>
-                        <div class="related-meta">
-                            <span><i class="fas fa-eye me-1"></i>{{ related_demo.views_count }}</span>
-                            <span><i class="fas fa-star text-warning me-1"></i>{{ related_demo.likes_count }}</span>
-                        </div>
-                        <a href="{% url 'customers:demo_detail' related_demo.slug %}" 
-                           class="btn btn-primary btn-sm">
-                            <i class="fas fa-play me-1"></i>Watch
-                        </a>
-                    </div>
                 </div>
+                {% endif %}
+                
+                {% if approved_feedbacks %}
+                <h4 class="mt-4 mb-3" style="font-size: var(--font-xl); font-weight: 600;">Customer Reviews</h4>
+                {% for feedback in approved_feedbacks %}
+                    <div class="feedback-item">
+                        <div class="feedback-header">
+                            <div class="feedback-author">{{ feedback.user.first_name }} {{ feedback.user.last_name.0 }}.</div>
+                            <div class="feedback-date">{{ feedback.created_at|date:"M d, Y" }}</div>
+                        </div>
+                        {% if feedback.rating %}
+                            <div class="mb-2">
+                                {% for i in "12345" %}
+                                    <i class="fas fa-star {% if forloop.counter <= feedback.rating %}text-warning{% else %}text-muted{% endif %} small"></i>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <p class="mb-0" style="font-size: var(--font-sm);">{{ feedback.feedback_text }}</p>
+                    </div>
                 {% endfor %}
+                {% endif %}
             </div>
         </div>
-        {% endif %}
-    </div>
-</div>
 
-<div class="feedback-section" id="feedback">
-    <h3><i class="fas fa-comments me-2"></i>Share Your Feedback</h3>
-    
-    {% if not user_feedback %}
-    <div class="feedback-form">
-        <form id="feedbackForm">
-            <div class="mb-3">
-                <label class="form-label">Rate this demo:</label>
-                <div class="rating-stars" id="ratingStars">
-                    <i class="fas fa-star star" data-rating="1"></i>
-                    <i class="fas fa-star star" data-rating="2"></i>
-                    <i class="fas fa-star star" data-rating="3"></i>
-                    <i class="fas fa-star star" data-rating="4"></i>
-                    <i class="fas fa-star star" data-rating="5"></i>
+        <div class="col-lg-4">
+            {% if related_demos %}
+            <div class="related-sidebar">
+                <div class="sidebar-header">
+                    <h3 class="sidebar-title">
+                        <i class="fas fa-play-circle me-2"></i>Related Demos
+                    </h3>
                 </div>
-                <input type="hidden" id="selectedRating" value="0">
-            </div>
-            
-            <div class="mb-3">
-                <label for="feedbackText" class="form-label">Your feedback:</label>
-                <textarea 
-                    class="form-control" 
-                    id="feedbackText" 
-                    rows="3" 
-                    placeholder="Share your thoughts..."
-                    required></textarea>
-            </div>
-            
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-paper-plane me-2"></i>Submit Feedback
-            </button>
-        </form>
-    </div>
-    {% else %}
-    <div class="alert alert-success">
-        <i class="fas fa-check-circle me-2"></i>
-        Thank you for your feedback!
-        {% if user_feedback.rating %}
-            <div class="mt-2">
-                Rating: 
-                {% for i in "12345" %}
-                    <i class="fas fa-star {% if forloop.counter <= user_feedback.rating %}text-warning{% else %}text-muted{% endif %}"></i>
-                {% endfor %}
-            </div>
-        {% endif %}
-    </div>
-    {% endif %}
-    
-    {% if approved_feedbacks %}
-    <h4 class="mt-4 mb-3">Customer Reviews</h4>
-    {% for feedback in approved_feedbacks %}
-        <div class="feedback-item">
-            <div class="feedback-header">
-                <div class="feedback-author">{{ feedback.user.first_name }} {{ feedback.user.last_name.0 }}.</div>
-                <div class="feedback-date">{{ feedback.created_at|date:"M d, Y" }}</div>
-            </div>
-            {% if feedback.rating %}
-                <div class="mb-2">
-                    {% for i in "12345" %}
-                        <i class="fas fa-star {% if forloop.counter <= feedback.rating %}text-warning{% else %}text-muted{% endif %} small"></i>
+                <div class="sidebar-content">
+                    {% for related_demo in related_demos %}
+                    <div class="related-card">
+                        {% if related_demo.thumbnail %}
+                            <img src="{{ related_demo.thumbnail.url }}" 
+                                 alt="{{ related_demo.title }}" 
+                                 class="related-thumbnail">
+                        {% else %}
+                            <div class="related-thumbnail" style="background: var(--gray-100); display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-video" style="font-size: 2rem; color: var(--gray-400);"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="related-content">
+                            <h4 class="related-title">{{ related_demo.title }}</h4>
+                            <div class="related-meta">
+                                <span><i class="fas fa-eye me-1"></i>{{ related_demo.views_count }}</span>
+                                <span><i class="fas fa-star text-warning me-1"></i>{{ related_demo.likes_count }}</span>
+                            </div>
+                            <a href="{% url 'customers:demo_detail' related_demo.slug %}" 
+                               class="btn btn-primary btn-sm">
+                                <i class="fas fa-play me-1"></i>Watch
+                            </a>
+                        </div>
+                    </div>
                     {% endfor %}
                 </div>
+            </div>
             {% endif %}
-            <p class="mb-0" style="font-size: 0.9rem;">{{ feedback.feedback_text }}</p>
         </div>
-    {% endfor %}
-    {% endif %}
-</div>
+    </div>
+{% endif %} {# End WebGL check #}
 
 <div id="toastContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 11000;"></div>
 {% endblock %}
@@ -904,10 +984,14 @@
 {% block customer_extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎬 Demo Detail Page Initializing...');
+    
     const video = document.getElementById('demoVideo');
     
-    // Only initialize video controls if video exists
+    // Video controls initialization
     if (video) {
+        console.log('✅ Video element found');
+        
         const playPauseBtn = document.getElementById('playPauseBtn');
         const progressBar = document.getElementById('progressBar');
         const progressTrack = document.getElementById('progressTrack');
@@ -945,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             window.addEventListener('blur', () => {
-                if (!video.paused) {
+                if (video && !video.paused && !video.ended && video.readyState >= 2) {
                     video.pause();
                     updatePlayPause();
                 }
@@ -964,10 +1048,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 totalDuration.textContent = formatTime(video.duration);
             });
             
+            video.addEventListener('error', (e) => {
+                console.error('❌ Video Error:', e);
+                showToast('Error loading video', 'error');
+            });
+            
             progressTrack.addEventListener('click', (e) => {
+                if (!video.duration || isNaN(video.duration) || video.duration === 0 || video.duration === Infinity) {
+                    return;
+                }
+                
                 const rect = progressTrack.getBoundingClientRect();
                 const pos = (e.clientX - rect.left) / rect.width;
-                video.currentTime = pos * video.duration;
+                const newTime = pos * video.duration;
+                
+                if (!isNaN(newTime) && isFinite(newTime) && newTime >= 0 && newTime <= video.duration) {
+                    video.currentTime = newTime;
+                }
             });
             
             volumeBtn.addEventListener('click', () => {
@@ -977,6 +1074,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             volumeSlider.addEventListener('input', () => {
                 video.volume = volumeSlider.value;
+                video.muted = false;
                 updateVolume();
             });
             
@@ -1041,16 +1139,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         function updateProgress() {
+            if (!video.duration || isNaN(video.duration) || video.duration === 0 || video.duration === Infinity) {
+                return;
+            }
+            
             const progress = (video.currentTime / video.duration) * 100;
-            progressBar.style.width = progress + '%';
-            currentDuration.textContent = formatTime(video.currentTime);
+            
+            if (!isNaN(progress) && isFinite(progress) && progress >= 0 && progress <= 100) {
+                progressBar.style.width = progress + '%';
+                currentDuration.textContent = formatTime(video.currentTime);
+            }
         }
         
         function updateVolume() {
             const icon = volumeBtn.querySelector('i');
             if (video.muted || video.volume === 0) {
                 icon.className = 'fas fa-volume-mute';
-                volumeSlider.value = 0;
             } else if (video.volume < 0.5) {
                 icon.className = 'fas fa-volume-down';
             } else {
@@ -1063,6 +1167,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         function formatTime(seconds) {
+            if (!seconds || isNaN(seconds) || !isFinite(seconds)) {
+                return '00:00';
+            }
+            
             const m = Math.floor(seconds / 60);
             const s = Math.floor(seconds % 60);
             return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
@@ -1075,17 +1183,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Always initialize these (work without video)
+    // ✅ FIXED: Like feature with correct URL
     initLikeFeature();
+    
+    // ✅ FIXED: Feedback feature with correct URL
     initFeedback();
     
     function initLikeFeature() {
         const likeBtn = document.getElementById('likeBtn');
         if (likeBtn) {
             likeBtn.addEventListener('click', function() {
-                const demoId = this.dataset.demoId;
+                const demoId = this.getAttribute('data-demo-id');
                 this.classList.add('loading');
                 
+                console.log('👍 Liking demo ID:', demoId);
+                
+                // ✅ FIXED URL: Use demo ID not slug
                 fetch(`/customer/ajax/demo/${demoId}/like/`, {
                     method: 'POST',
                     headers: {
@@ -1093,20 +1206,32 @@ document.addEventListener('DOMContentLoaded', function() {
                         'Content-Type': 'application/json'
                     }
                 })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.liked) {
-                        this.classList.add('liked');
-                        document.getElementById('likeText').textContent = 'Liked';
-                        showToast('Demo liked!', 'success');
-                    } else {
-                        this.classList.remove('liked');
-                        document.getElementById('likeText').textContent = 'Like';
-                        showToast('Like removed', 'info');
-                    }
-                    document.getElementById('likesCount').textContent = data.likes_count;
+                .then(r => {
+                    console.log('Response status:', r.status);
+                    if (!r.ok) throw new Error('Network error');
+                    return r.json();
                 })
-                .catch(() => showToast('Error', 'error'))
+                .then(data => {
+                    console.log('Like response:', data);
+                    if (data.liked !== undefined) {
+                        if (data.liked) {
+                            this.classList.add('liked');
+                            document.getElementById('likeText').textContent = 'Liked';
+                            showToast('Demo liked!', 'success');
+                        } else {
+                            this.classList.remove('liked');
+                            document.getElementById('likeText').textContent = 'Like';
+                            showToast('Like removed', 'info');
+                        }
+                        document.getElementById('likesCount').textContent = data.likes_count;
+                    } else {
+                        showToast(data.error || 'Error', 'error');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Like error:', error);
+                    showToast('Error liking demo', 'error');
+                })
                 .finally(() => this.classList.remove('loading'));
             });
         }
@@ -1123,7 +1248,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('selectedRating').value = rating;
                 updateStars();
             });
+            
+            star.addEventListener('mouseenter', function() {
+                const hoverRating = parseInt(this.dataset.rating);
+                stars.forEach((s, i) => {
+                    s.classList.toggle('active', i < hoverRating);
+                });
+            });
         });
+        
+        document.getElementById('ratingStars').addEventListener('mouseleave', updateStars);
         
         function updateStars() {
             stars.forEach((s, i) => {
@@ -1137,7 +1271,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const text = document.getElementById('feedbackText').value.trim();
                 if (!text || text.length < 5) {
-                    showToast('Feedback too short', 'warning');
+                    showToast('Feedback too short (minimum 5 characters)', 'warning');
+                    return;
+                }
+                
+                if (rating === 0) {
+                    showToast('Please select a rating', 'warning');
                     return;
                 }
                 
@@ -1146,29 +1285,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 btn.innerHTML = '<span class="spinner"></span> Submitting...';
                 btn.disabled = true;
                 
-                fetch(`/customer/ajax/demo/{{ demo.id }}/feedback/`, {
+                const demoId = '{{ demo.id }}';
+                console.log('📝 Submitting feedback:', { demoId, text, rating });
+                
+                // ✅ FIXED URL: Use correct AJAX endpoint with demo ID
+                fetch(`/customer/ajax/demo/${demoId}/feedback/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': getCsrfToken(),
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        feedback: text,
+                        feedback: text,  // ✅ Changed from feedback_text
                         rating: rating
                     })
                 })
-                .then(r => r.json())
+                .then(r => {
+                    console.log('Feedback response status:', r.status);
+                    if (!r.ok) throw new Error('Network error');
+                    return r.json();
+                })
                 .then(data => {
+                    console.log('Feedback response:', data);
                     if (data.success) {
-                        showToast('Feedback submitted!', 'success');
+                        showToast(data.message || 'Feedback submitted successfully!', 'success');
                         form.style.display = 'none';
                         const msg = document.createElement('div');
                         msg.className = 'alert alert-success';
-                        msg.innerHTML = '<i class="fas fa-check-circle me-2"></i>Thank you for your feedback!';
+                        msg.innerHTML = '<i class="fas fa-check-circle me-2"></i>Thank you for your feedback! It will be reviewed by our team.';
                         form.parentNode.insertBefore(msg, form);
+                    } else {
+                        showToast(data.error || 'Error submitting feedback', 'error');
                     }
                 })
-                .catch(() => showToast('Error submitting feedback', 'error'))
+                .catch((error) => {
+                    console.error('Feedback error:', error);
+                    showToast('Error submitting feedback', 'error');
+                })
                 .finally(() => {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
@@ -1180,6 +1333,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function getCsrfToken() {
         const input = document.querySelector('[name=csrfmiddlewaretoken]');
         if (input) return input.value;
+        
         const cookies = document.cookie.split(';');
         for (let cookie of cookies) {
             const [name, value] = cookie.trim().split('=');
@@ -1200,16 +1354,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const id = 'toast-' + Date.now();
         const alertClass = type === 'error' ? 'danger' : type;
         const icon = type === 'success' ? 'check-circle' : 
-                    type === 'error' ? 'exclamation-triangle' : 'info-circle';
+                    type === 'error' ? 'exclamation-triangle' : 
+                    type === 'warning' ? 'exclamation-circle' : 'info-circle';
         
         const html = `
-            <div class="toast show" id="${id}" role="alert">
-                <div class="toast-header bg-${alertClass} text-white">
-                    <i class="fas fa-${icon} me-2"></i>
-                    <strong class="me-auto">Demo Portal</strong>
-                    <button type="button" class="btn-close btn-close-white" onclick="document.getElementById('${id}').remove()"></button>
-                </div>
-                <div class="toast-body">${msg}</div>
+            <div class="alert alert-${alertClass} alert-dismissible fade show" role="alert" id="${id}">
+                <i class="fas fa-${icon} me-2"></i>
+                ${msg}
+                <button type="button" class="btn-close" onclick="document.getElementById('${id}').remove()"></button>
             </div>
         `;
         
@@ -1219,6 +1371,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (toast) toast.remove();
         }, 5000);
     }
+    
+    console.log('✅ Demo Detail Page Initialized');
 });
 </script>
 {% endblock %}

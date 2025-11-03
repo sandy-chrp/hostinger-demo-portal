@@ -66,4 +66,5 @@ urlpatterns = [
     path('admin/users/<int:user_id>/delete/', user_management_views.user_delete, name='user_delete'),
     path('ajax/check-employee-email/', user_management_views.check_employee_email, name='check_employee_email'),
     path('ajax/check-employee-id/', user_management_views.check_employee_id, name='check_employee_id'),
+
 ]

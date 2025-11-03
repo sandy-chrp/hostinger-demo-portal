@@ -1,31 +1,164 @@
 {% extends "emails/base.html" %}
 
-{% block email_title %}New Customer Registration{% endblock %}
+{% block title %}New Customer Registration - Admin Notification{% endblock %}
 
-{% block email_content %}
-<div class="email-greeting">
-    Hi {{ user.first_name }}!
-</div>
+{% block preheader %}{{ customer_name }} has registered and requires approval{% endblock %}
 
-<div class="email-content">
-    <p>A new customer has registered on Demo Portal and requires approval.</p>
-    
-    <div class="notification-card">
-        <h3>🆕 New Customer Registration</h3>
-        <p>Please review and approve or reject the customer's account.</p>
-    </div>
-    
-    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <p style="margin: 5px 0;"><strong>Customer Name:</strong> {{ customer_name }}</p>
-        <p style="margin: 5px 0;"><strong>Email:</strong> {{ customer_email }}</p>
-        <p style="margin: 5px 0;"><strong>Company:</strong> {{ customer_company }}</p>
-        <p style="margin: 5px 0;"><strong>Registration Date:</strong> {{ registration_date }}</p>
-    </div>
-    
-    <div style="text-align: center; margin: 30px 0;">
-        <a href="{{ site_url }}/admin/users/" class="email-button">
-            Review Customer →
-        </a>
-    </div>
-</div>
+{% block content %}
+<!-- Alert Icon -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 25px 0;">
+    <tr>
+        <td align="center">
+            <div style="width: 80px; height: 80px; background-color: #3b82f6; background-image: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 50%; display: inline-block; text-align: center; line-height: 80px; margin-bottom: 20px;">
+                <span style="font-size: 40px; line-height: 80px; vertical-align: middle;">🆕</span>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<!-- Main Heading -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+        <td align="center">
+            <h1 style="color: #1f2937 !important; font-size: 26px; font-weight: 700; margin: 0 0 10px 0; mso-line-height-rule: exactly; line-height: 34px;">
+                New Customer Registration
+            </h1>
+            <p style="color: #3b82f6 !important; font-size: 16px; margin: 0 0 30px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                Approval Required
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- Greeting -->
+<p style="color: #374151 !important; font-size: 16px; line-height: 24px; margin: 0 0 10px 0; mso-line-height-rule: exactly;">
+    Hi <strong style="color: #1f2937 !important;">{{ user.first_name }}</strong>!
+</p>
+
+<p style="color: #374151 !important; font-size: 16px; line-height: 24px; margin: 0 0 25px 0; mso-line-height-rule: exactly;">
+    A new customer has registered on <strong style="color: #3b82f6 !important;">Demo Portal</strong> and requires approval.
+</p>
+
+<!-- Notification Card -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#dbeafe" style="background-color: #dbeafe; border-left: 5px solid #3b82f6; border-radius: 6px; margin: 0 0 25px 0;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #1e40af !important; font-size: 16px; margin: 0 0 10px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                🆕 New Customer Registration
+            </p>
+            <p style="color: #1e40af !important; font-size: 14px; margin: 0; mso-line-height-rule: exactly; line-height: 20px;">
+                Please review and approve or reject the customer's account.
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- Customer Details Box -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f8fafc" style="background-color: #f8fafc; border-radius: 8px; margin: 0 0 25px 0; border: 1px solid #e2e8f0;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #475569 !important; font-size: 14px; margin: 0 0 15px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 20px;">
+                📋 Customer Information
+            </p>
+            
+            <!-- Info Rows Table -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td style="color: #64748b !important; font-size: 14px; font-weight: 600; width: 40%; mso-line-height-rule: exactly; line-height: 20px;">Customer Name:</td>
+                                <td style="color: #1e293b !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">{{ customer_name }}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td style="color: #64748b !important; font-size: 14px; font-weight: 600; width: 40%; mso-line-height-rule: exactly; line-height: 20px;">Email:</td>
+                                <td style="color: #1e293b !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">{{ customer_email }}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td style="color: #64748b !important; font-size: 14px; font-weight: 600; width: 40%; mso-line-height-rule: exactly; line-height: 20px;">Company:</td>
+                                <td style="color: #1e293b !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">{{ customer_company }}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td style="color: #64748b !important; font-size: 14px; font-weight: 600; width: 40%; mso-line-height-rule: exactly; line-height: 20px;">Registration Date:</td>
+                                <td style="color: #1e293b !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">{{ registration_date }}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- Action Required Note -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#fef3c7" style="background-color: #fef3c7; border-left: 5px solid #f59e0b; border-radius: 6px; margin: 0 0 25px 0;">
+    <tr>
+        <td style="padding: 15px 20px;">
+            <p style="color: #92400e !important; font-size: 14px; margin: 0; mso-line-height-rule: exactly; line-height: 20px;">
+                <strong style="color: #92400e !important;">⏰ Action Required:</strong> This customer is awaiting approval to access the Demo Portal. Please review their information and take action.
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- CTA Button -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 20px 0;">
+    <tr>
+        <td align="center">
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ site_url }}/admin/users/" style="height:50px;v-text-anchor:middle;width:220px;" arcsize="20%" strokecolor="#3b82f6" fillcolor="#3b82f6">
+            <w:anchorlock/>
+            <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:600;">✅ Review Customer →</center>
+            </v:roundrect>
+            <![endif]-->
+            <!--[if !mso]><!-->
+            <table cellpadding="0" cellspacing="0" border="0" bgcolor="#3b82f6" style="background-color: #3b82f6; background-image: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 10px; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);">
+                <tr>
+                    <td>
+                        <a href="{{ site_url }}/admin/users/" style="display: inline-block; color: #ffffff !important; text-decoration: none; padding: 16px 40px; font-size: 16px; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                            ✅ Review Customer →
+                        </a>
+                    </td>
+                </tr>
+            </table>
+            <!--<![endif]-->
+        </td>
+    </tr>
+</table>
+
+<!-- Additional Actions Info -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f0f9ff" style="background-color: #f0f9ff; border-radius: 6px; margin: 0 0 20px 0;">
+    <tr>
+        <td style="padding: 15px;">
+            <p style="color: #1e3a8a !important; font-size: 13px; margin: 0; text-align: center; mso-line-height-rule: exactly; line-height: 20px;">
+                <strong style="color: #1e3a8a !important;">📌 Tip:</strong> You can approve, reject, or request more information from the customer in the admin panel.
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- Footer Note -->
+<p style="color: #6b7280 !important; font-size: 13px; line-height: 20px; margin: 0; text-align: center; mso-line-height-rule: exactly;">
+    This is an automated notification from {{ site_name }}
+</p>
 {% endblock %}
+
+{% block footer_text %}This is an automated admin notification. Please do not reply to this message.{% endblock %}

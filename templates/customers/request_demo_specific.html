@@ -37,10 +37,11 @@
     }
 
     .demo-details h3 {
-        font-size: 1.25rem;
+        font-size: var(--font-xl);
         font-weight: 700;
         color: var(--dark-color);
         margin-bottom: var(--spacing-xs);
+        font-family: var(--heading-font);
     }
 
     .demo-tags {
@@ -54,8 +55,15 @@
         color: white;
         padding: 3px 10px;
         border-radius: 12px;
-        font-size: 0.75rem;
+        font-size: var(--font-xs);
         font-weight: 600;
+        font-family: var(--primary-font);
+    }
+
+    .demo-info-card p {
+        font-size: var(--font-sm);
+        color: var(--gray-600);
+        font-family: var(--primary-font);
     }
 
     .service-request-form {
@@ -68,6 +76,7 @@
 
     .form-section {
         margin-bottom: var(--spacing-lg);
+        position: relative;
     }
 
     .form-label {
@@ -77,7 +86,8 @@
         display: flex;
         align-items: center;
         gap: var(--spacing-xs);
-        font-size: 0.95rem;
+        font-size: var(--font-sm);
+        font-family: var(--primary-font);
     }
 
     .required {
@@ -89,8 +99,9 @@
         padding: 12px;
         border: 2px solid var(--gray-300);
         border-radius: var(--radius-lg);
-        font-size: 1rem;
+        font-size: var(--font-sm);
         transition: all 0.3s ease;
+        font-family: var(--primary-font);
     }
 
     .form-control:focus {
@@ -99,18 +110,65 @@
         outline: none;
     }
 
+    /* ✅ FIX: Make entire date input clickable */
+    .form-control[type="date"] {
+        position: relative;
+        cursor: pointer;
+        padding-right: 40px;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-color: white;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23087fc2'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 20px 20px;
+    }
+
+    /* Make calendar picker cover entire input - Chrome/Safari/Edge */
+    .form-control[type="date"]::-webkit-calendar-picker-indicator {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        cursor: pointer;
+        opacity: 0;
+    }
+
+    /* Firefox */
+    .form-control[type="date"]::-moz-calendar-picker-indicator {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        cursor: pointer;
+        opacity: 0;
+    }
+
+    /* Ensure input text is visible */
+    .form-control[type="date"]::-webkit-datetime-edit {
+        padding-left: 0;
+    }
+
     /* ✅ Date Status Banner */
     .date-info-banner {
         background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
         border: 2px solid #0ea5e9;
         border-radius: var(--radius-lg);
-        padding: 12px;
+        padding: var(--spacing-sm);
         margin-top: var(--spacing-sm);
         display: none;
         align-items: center;
         gap: var(--spacing-sm);
         animation: slideDown 0.3s ease;
-        font-size: 0.9rem;
+        font-size: var(--font-sm);
+        font-family: var(--primary-font);
     }
 
     .date-info-banner.show {
@@ -153,7 +211,7 @@
         background: white;
         border: 2px solid var(--gray-300);
         border-radius: var(--radius-lg);
-        padding: 12px;
+        padding: var(--spacing-sm);
         cursor: pointer;
         transition: all 0.3s ease;
         position: relative;
@@ -211,12 +269,13 @@
         position: absolute;
         top: 4px;
         right: 4px;
-        font-size: 0.65rem;
+        font-size: var(--font-xs);
         background: #f59e0b;
         color: white;
         padding: 2px 6px;
         border-radius: 8px;
         font-weight: 600;
+        font-family: var(--primary-font);
     }
 
     /* ✅ Remove hover effects for disabled slots */
@@ -250,23 +309,25 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 6px;
+        margin-bottom: var(--spacing-xs);
     }
 
     .slot-time {
-        font-size: 0.9rem;
+        font-size: var(--font-sm);
         font-weight: 700;
         color: var(--dark-color);
         line-height: 1.2;
+        font-family: var(--primary-font);
     }
 
     .slot-status-badge {
-        font-size: 0.6rem;
+        font-size: var(--font-xs);
         padding: 2px 6px;
         border-radius: 8px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.3px;
+        font-family: var(--primary-font);
     }
 
     .slot-status-badge.available {
@@ -297,10 +358,11 @@
     .slot-info {
         display: flex;
         align-items: center;
-        gap: 6px;
-        margin-top: 4px;
-        font-size: 0.75rem;
+        gap: var(--spacing-xs);
+        margin-top: var(--spacing-xs);
+        font-size: var(--font-xs);
         color: var(--gray-600);
+        font-family: var(--primary-font);
     }
 
     .capacity-bar {
@@ -323,9 +385,10 @@
     }
 
     .slot-type {
-        font-size: 0.7rem;
+        font-size: var(--font-xs);
         color: var(--gray-500);
-        margin-top: 2px;
+        margin-top: var(--spacing-xs);
+        font-family: var(--primary-font);
     }
 
     /* ✅ Loading States */
@@ -333,6 +396,13 @@
         text-align: center;
         padding: 2rem 1rem;
         color: var(--gray-500);
+        font-family: var(--primary-font);
+    }
+
+    .loading-state p {
+        font-size: var(--font-sm);
+        margin-top: var(--spacing-sm);
+        margin-bottom: 0;
     }
 
     .loading-spinner {
@@ -353,12 +423,18 @@
         text-align: center;
         padding: 2rem 1rem;
         color: var(--gray-500);
+        font-family: var(--primary-font);
     }
 
     .empty-state i {
         font-size: 2.5rem;
         opacity: 0.3;
         margin-bottom: var(--spacing-md);
+    }
+
+    .empty-state p {
+        font-size: var(--font-sm);
+        margin-bottom: 0;
     }
 
     /* Submit Button */
@@ -375,11 +451,12 @@
         border: none;
         padding: 14px 48px;
         border-radius: var(--radius-lg);
-        font-size: 1rem;
+        font-size: var(--font-sm);
         font-weight: 700;
         cursor: pointer;
         transition: all 0.3s ease;
         box-shadow: var(--shadow-md);
+        font-family: var(--primary-font);
     }
 
     .btn-submit:hover:not(:disabled) {
@@ -392,6 +469,12 @@
         cursor: not-allowed;
     }
 
+    .submit-section small {
+        font-size: var(--font-xs);
+        color: var(--gray-500);
+        font-family: var(--primary-font);
+    }
+
     /* Mobile Responsive */
     @media (max-width: 768px) {
         .demo-info-header {
@@ -399,17 +482,22 @@
             text-align: center;
         }
 
+        .demo-details h3 {
+            font-size: var(--font-lg);
+        }
+
         .time-slots {
             grid-template-columns: 1fr;
         }
 
         .slot-time {
-            font-size: 0.85rem;
+            font-size: var(--font-xs);
         }
 
         .btn-submit {
             width: 100%;
             padding: 12px;
+            font-size: var(--font-sm);
         }
 
         .service-request-form {
@@ -419,11 +507,29 @@
         .demo-info-card {
             padding: var(--spacing-md);
         }
+
+        .form-label {
+            font-size: var(--font-xs);
+        }
+
+        .form-control {
+            font-size: var(--font-xs);
+            padding: 10px;
+        }
+
+        .form-control[type="date"] {
+            background-size: 18px 18px;
+            background-position: right 10px center;
+        }
     }
 
     @media (min-width: 769px) and (max-width: 1024px) {
         .time-slots {
             grid-template-columns: repeat(2, 1fr);
+        }
+
+        .demo-details h3 {
+            font-size: var(--font-lg);
         }
     }
 
@@ -461,7 +567,7 @@
             </div>
         </div>
     </div>
-    <p class="mb-0" style="font-size: 0.9rem; color: var(--gray-600);">
+    <p class="mb-0">
         <i class="fas fa-info-circle me-1"></i>
         Request a live demo session with our team
     </p>
@@ -506,7 +612,7 @@
             <!-- ✅ Loading State -->
             <div id="slotsLoadingState" class="loading-state" style="display: none;">
                 <div class="loading-spinner"></div>
-                <p class="mt-2 mb-0">Checking availability...</p>
+                <p>Checking availability...</p>
             </div>
             
             <!-- ✅ Time Slots Container -->
@@ -538,7 +644,7 @@
             Request Demo Session
         </button>
         <div class="mt-2">
-            <small class="text-muted">
+            <small>
                 <i class="fas fa-check-circle me-1"></i>
                 We'll confirm within 24 hours
             </small>
@@ -562,6 +668,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const dateInfoText = document.getElementById('dateInfoText');
     
     let selectedSlotId = null;
+    
+    // ✅ FIX: Make entire date input clickable - JavaScript fallback
+    if (dateInput) {
+        // Wrap input in clickable container
+        dateInput.style.cursor = 'pointer';
+        
+        // Click handler for entire input area
+        dateInput.addEventListener('click', function(e) {
+            // Modern browsers - showPicker() method
+            if (this.showPicker) {
+                try {
+                    this.showPicker();
+                } catch (err) {
+                    console.log('showPicker not supported, using fallback');
+                }
+            }
+        });
+        
+        // Touch support for mobile
+        dateInput.addEventListener('touchstart', function(e) {
+            if (this.showPicker) {
+                try {
+                    this.showPicker();
+                } catch (err) {
+                    console.log('showPicker not supported on touch');
+                }
+            }
+        }, { passive: true });
+    }
     
     // ✅ Check slot availability when date changes
     dateInput.addEventListener('change', async function() {

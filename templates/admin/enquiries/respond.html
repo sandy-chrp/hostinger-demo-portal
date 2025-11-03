@@ -4,488 +4,43 @@
 {% block admin_title %}Respond to Enquiry - {{ enquiry.enquiry_id }}{% endblock %}
 {% block page_title %}Respond to Enquiry{% endblock %}
 
-{% block breadcrumb %}
-<div class="admin-breadcrumb">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item">
-                <a href="{% url 'core:admin_dashboard' %}">
-                    <i class="fas fa-home me-1"></i>Dashboard
-                </a>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="{% url 'core:admin_enquiries' %}">Enquiries</a>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="{% url 'core:admin_enquiry_detail' enquiry.id %}">{{ enquiry.enquiry_id }}</a>
-            </li>
-            <li class="breadcrumb-item active">Respond</li>
-        </ol>
-    </nav>
-</div>
-{% endblock %}
-
-{% block admin_extra_css %}
-<style>
-    body {
-        -webkit-user-select: none;
-        user-select: none;
-    }
-
-    /* Status Banner */
-    .status-banner {
-        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
-        color: white;
-        padding: 1.25rem 1.5rem;
-        border-radius: 12px;
-        margin-bottom: 1.5rem;
-        animation: slideDown 0.4s ease;
-    }
-
-    .status-banner-title {
-        font-size: 1.2rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-
-    .status-banner-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        font-size: 0.9rem;
-        opacity: 0.95;
-    }
-
-    .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Collapsible Cards */
-    .detail-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        margin-bottom: 1.5rem;
-        overflow: hidden;
-        border: 1px solid #e5e7eb;
-    }
-
-    .card-header-collapsible {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        padding: 1.25rem 1.5rem;
-        border-bottom: 1px solid #e5e7eb;
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: all 0.3s ease;
-        user-select: none;
-    }
-
-    .card-header-collapsible:hover {
-        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-    }
-
-    .card-header-collapsible.collapsed {
-        border-bottom: none;
-    }
-
-    .card-header-title {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #087fc2;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin: 0;
-    }
-
-    .collapse-icon {
-        color: #6b7280;
-        transition: transform 0.3s ease;
-        font-size: 1.1rem;
-    }
-
-    .card-header-collapsible:not(.collapsed) .collapse-icon {
-        transform: rotate(180deg);
-    }
-
-    .card-body-content {
-        padding: 1.5rem;
-    }
-
-    /* Original Message */
-    .original-message {
-        background: #f8fafc;
-        border-left: 4px solid #087fc2;
-        border-radius: 10px;
-        padding: 1.5rem;
-    }
-
-    .message-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .customer-info {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .customer-avatar {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #087fc2, #0669a0);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 1.2rem;
-    }
-
-    .customer-name {
-        font-weight: 600;
-        color: #1f2937;
-    }
-
-    .customer-email {
-        font-size: 0.875rem;
-        color: #6b7280;
-    }
-
-    .message-time {
-        font-size: 0.875rem;
-        color: #6b7280;
-    }
-
-    .message-content {
-        color: #1f2937;
-        line-height: 1.7;
-    }
-
-    /* Editor */
-    .response-editor {
-        margin-bottom: 1.5rem;
-    }
-
-    .editor-toolbar {
-        background: #f8fafc;
-        border: 2px solid #e5e7eb;
-        border-bottom: none;
-        border-radius: 10px 10px 0 0;
-        padding: 0.75rem;
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-
-    .editor-btn {
-        background: white;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        padding: 0.5rem 0.75rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-size: 0.875rem;
-        color: #6b7280;
-    }
-
-    .editor-btn:hover {
-        background: #087fc2;
-        color: white;
-        border-color: #087fc2;
-    }
-
-    .editor-textarea {
-        width: 100%;
-        min-height: 300px;
-        padding: 1rem;
-        border: 2px solid #e5e7eb;
-        border-radius: 0 0 10px 10px;
-        resize: vertical;
-        font-size: 1rem;
-        line-height: 1.6;
-        font-family: inherit;
-    }
-
-    .editor-textarea:focus {
-        outline: none;
-        border-color: #087fc2;
-        box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
-    }
-
-    .character-count {
-        text-align: right;
-        font-size: 0.875rem;
-        color: #6b7280;
-        margin-top: 0.5rem;
-    }
-
-    /* Options */
-    .response-options {
-        background: #f8fafc;
-        border-radius: 10px;
-        padding: 1rem;
-        margin-top: 1.5rem;
-    }
-
-    .option-item {
-        margin-bottom: 1rem;
-    }
-
-    .option-item:last-child {
-        margin-bottom: 0;
-    }
-
-    .form-check-label {
-        color: #1f2937;
-        font-weight: 500;
-    }
-
-    .form-check-input:checked {
-        background-color: #087fc2;
-        border-color: #087fc2;
-    }
-
-    /* Templates */
-    .template-item {
-        background: white;
-        border: 2px solid #e5e7eb;
-        border-radius: 10px;
-        padding: 1rem;
-        margin-bottom: 0.75rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .template-item:hover {
-        border-color: #087fc2;
-        box-shadow: 0 2px 8px rgba(8, 127, 194, 0.15);
-        transform: translateY(-2px);
-    }
-
-    .template-item.selected {
-        border-color: #087fc2;
-        background: rgba(8, 127, 194, 0.05);
-    }
-
-    .template-title {
-        font-weight: 600;
-        color: #1f2937;
-        margin-bottom: 0.25rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .template-title i {
-        color: #087fc2;
-    }
-
-    .template-preview {
-        font-size: 0.875rem;
-        color: #6b7280;
-        line-height: 1.4;
-    }
-
-    /* Previous Responses */
-    .response-item {
-        border-left: 3px solid #087fc2;
-        padding-left: 1rem;
-        margin-bottom: 1rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .response-item:last-child {
-        border-bottom: none;
-    }
-
-    .response-item.internal {
-        border-left-color: #f59e0b;
-        background: #fef3c7;
-        padding: 0.75rem;
-        border-radius: 8px;
-    }
-
-    .response-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.5rem;
-    }
-
-    .response-author {
-        font-weight: 600;
-        color: #087fc2;
-        font-size: 0.875rem;
-    }
-
-    .response-time {
-        font-size: 0.75rem;
-        color: #6b7280;
-    }
-
-    .response-text {
-        font-size: 0.875rem;
-        color: #1f2937;
-        line-height: 1.5;
-    }
-
-    /* Attachments */
-    .attachment-area {
-        border: 2px dashed #d1d5db;
-        border-radius: 10px;
-        padding: 1.5rem;
-        text-align: center;
-        margin-top: 1rem;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-
-    .attachment-area:hover {
-        border-color: #087fc2;
-        background: rgba(8, 127, 194, 0.05);
-    }
-
-    .attachment-area.dragover {
-        border-color: #087fc2;
-        background: rgba(8, 127, 194, 0.1);
-    }
-
-    .file-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem;
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        margin-top: 0.5rem;
-    }
-
-    .file-icon {
-        width: 35px;
-        height: 35px;
-        background: #087fc2;
-        color: white;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .file-name {
-        flex: 1;
-        font-size: 0.875rem;
-        color: #1f2937;
-        font-weight: 500;
-    }
-
-    .file-remove {
-        color: #dc2626;
-        cursor: pointer;
-        padding: 0.25rem;
-    }
-
-    .file-remove:hover {
-        color: #991b1b;
-    }
-
-    /* Action Buttons */
-    .action-buttons {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 0.75rem;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .status-banner-meta {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .editor-toolbar {
-            padding: 0.5rem;
-            gap: 0.25rem;
-        }
-
-        .editor-btn {
-            padding: 0.4rem 0.6rem;
-            font-size: 0.8rem;
-        }
-    }
-</style>
-{% endblock %}
-
 {% block admin_content %}
-
 <!-- Back Button -->
-{% comment %} <div class="mb-3">
-    <a href="{% url 'core:admin_enquiry_detail' enquiry.id %}" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-arrow-left me-1"></i>Back to Details
+<div class="mb-3">
+    <a href="{% url 'core:admin_enquiry_detail' enquiry.id %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Details
     </a>
-</div> {% endcomment %}
+</div>
 
-<!-- Enquiry Summary Banner -->
+<!-- Status Banner -->
 <div class="status-banner">
-    <div class="status-banner-title">
-        Responding to: {{ enquiry.subject|default:"Business Enquiry" }}
-    </div>
+    <div class="status-banner-title">Respond to: {{ enquiry.subject|default:"No Subject" }}</div>
     <div class="status-banner-meta">
-        <div class="meta-item">
-            <i class="fas fa-hashtag"></i>
-            {{ enquiry.enquiry_id }}
-        </div>
-        <div class="meta-item">
-            <i class="fas fa-user"></i>
-            {{ enquiry.full_name }}
-        </div>
-        <div class="meta-item">
-            <i class="fas fa-envelope"></i>
-            {{ enquiry.business_email }}
-        </div>
-        <div class="meta-item">
-            <i class="fas fa-calendar"></i>
-            {{ enquiry.created_at|date:"M d, Y g:i A" }}
-        </div>
+        <span class="meta-item">
+            <i class="fas fa-hashtag"></i>{{ enquiry.enquiry_id }}
+        </span>
+        <span class="meta-item">
+            <i class="fas fa-user"></i>{{ enquiry.first_name }} {{ enquiry.last_name }}
+        </span>
+        <span class="meta-item">
+            <i class="fas fa-calendar"></i>{{ enquiry.created_at|date:"M d, Y" }}
+        </span>
     </div>
 </div>
 
 <div class="row">
-    <!-- Left Column -->
+    <!-- Left Column - Response Form -->
     <div class="col-lg-8">
         <!-- Original Message -->
         <div class="detail-card">
-            <div class="card-header-collapsible collapsed" data-bs-toggle="collapse" data-bs-target="#originalMessage">
+            <div class="card-header-collapsible" data-bs-toggle="collapse" data-bs-target="#originalMessage">
                 <h3 class="card-header-title">
                     <i class="fas fa-envelope-open-text"></i>
                     Original Message
                 </h3>
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </div>
-            <div class="collapse" id="originalMessage">
+            <div class="collapse show" id="originalMessage">
                 <div class="card-body-content">
                     <div class="original-message">
                         <div class="message-header">
@@ -494,137 +49,140 @@
                                     {{ enquiry.first_name|first|upper }}{{ enquiry.last_name|first|upper }}
                                 </div>
                                 <div>
-                                    <div class="customer-name">{{ enquiry.full_name }}</div>
+                                    <div class="customer-name">{{ enquiry.first_name }} {{ enquiry.last_name }}</div>
                                     <div class="customer-email">{{ enquiry.business_email }}</div>
                                 </div>
                             </div>
                             <div class="message-time">
-                                {{ enquiry.created_at|timesince }} ago
+                                {{ enquiry.created_at|date:"M d, Y h:i A" }}
                             </div>
                         </div>
                         <div class="message-content">
-                            {{ enquiry.message|linebreaks }}
+                            {{ enquiry.message|default:"No message provided"|linebreaksbr }}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Response Composer -->
+        <!-- Response Form -->
         <div class="detail-card">
-            <div class="card-header-collapsible" data-bs-toggle="collapse" data-bs-target="#responseComposer">
+            <div class="card-header-collapsible" data-bs-toggle="collapse" data-bs-target="#responseForm">
                 <h3 class="card-header-title">
                     <i class="fas fa-reply"></i>
-                    Compose Response
+                    Your Response
                 </h3>
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </div>
-            <div class="collapse show" id="responseComposer">
+            <div class="collapse show" id="responseForm">
                 <div class="card-body-content">
-                    <form method="post" id="responseForm" enctype="multipart/form-data">
+                    <form method="post" id="enquiryResponseForm">
                         {% csrf_token %}
                         
-                        <!-- Editor -->
-                        <div class="response-editor">
-                            <div class="editor-toolbar">
-                                <button type="button" class="editor-btn" onclick="formatText('bold')" title="Bold">
-                                    <i class="fas fa-bold"></i>
-                                </button>
-                                <button type="button" class="editor-btn" onclick="formatText('italic')" title="Italic">
-                                    <i class="fas fa-italic"></i>
-                                </button>
-                                <button type="button" class="editor-btn" onclick="formatText('underline')" title="Underline">
-                                    <i class="fas fa-underline"></i>
-                                </button>
-                                <button type="button" class="editor-btn" onclick="insertBulletList()" title="Bullet List">
-                                    <i class="fas fa-list-ul"></i>
-                                </button>
-                                <button type="button" class="editor-btn" onclick="insertNumberedList()" title="Numbered List">
-                                    <i class="fas fa-list-ol"></i>
-                                </button>
-                                <button type="button" class="editor-btn" onclick="insertSignature()" title="Insert Signature">
-                                    <i class="fas fa-signature"></i>
-                                </button>
-                            </div>
-                            <textarea name="response_text" id="responseText" class="editor-textarea" required placeholder="Type your response here...">Dear {{ enquiry.first_name }},
+                        <!-- Editor Toolbar -->
+                        <div class="editor-toolbar">
+                            <button type="button" class="editor-btn" onclick="insertBulletList()" title="Bullet List">
+                                <i class="fas fa-list-ul"></i>
+                            </button>
+                            <button type="button" class="editor-btn" onclick="insertNumberedList()" title="Numbered List">
+                                <i class="fas fa-list-ol"></i>
+                            </button>
+                            <button type="button" class="editor-btn" onclick="insertSignature()" title="Insert Signature">
+                                <i class="fas fa-signature"></i>
+                            </button>
+                            <button type="button" class="editor-btn" onclick="saveDraft()" title="Save Draft">
+                                <i class="fas fa-save"></i> Save Draft
+                            </button>
+                        </div>
 
-Thank you for your enquiry regarding {{ enquiry.subject|default:"your business needs" }}.
-
-
-
-Best regards,
-{{ request.user.get_full_name|default:"Support Team" }}
-{{ request.user.email }}</textarea>
-                            <div class="character-count">
-                                <span id="charCount">0</span> characters
-                            </div>
+                        <!-- Response Textarea -->
+                        <textarea 
+                            class="editor-textarea" 
+                            id="responseText" 
+                            name="response_text" 
+                            placeholder="Type your response here..."
+                            required></textarea>
+                        
+                        <div class="character-count">
+                            <span id="charCount">0</span> characters
                         </div>
 
                         <!-- Options -->
                         <div class="response-options">
-                            <div class="option-item">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="send_email" id="sendEmail" checked>
-                                    <label class="form-check-label" for="sendEmail">
-                                        <i class="fas fa-envelope me-1"></i>
-                                        Send email to customer
-                                    </label>
-                                </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="sendEmail" name="send_email" checked>
+                                <label class="form-check-label" for="sendEmail">
+                                    <strong>Send Email Notification</strong>
+                                    <small class="d-block text-muted">Customer will receive this response via email</small>
+                                </label>
                             </div>
                             
-                            <div class="option-item">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="is_internal_note" id="internalNote">
-                                    <label class="form-check-label" for="internalNote">
-                                        <i class="fas fa-sticky-note me-1"></i>
-                                        Internal note only
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="option-item">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="mark_answered" id="markAnswered" checked>
-                                    <label class="form-check-label" for="markAnswered">
-                                        <i class="fas fa-check-circle me-1"></i>
-                                        Mark enquiry as answered
-                                    </label>
-                                </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="internalNote" name="is_internal_note">
+                                <label class="form-check-label" for="internalNote">
+                                    <strong>Internal Note</strong>
+                                    <small class="d-block text-muted">Only visible to team members</small>
+                                </label>
                             </div>
                         </div>
 
-                        <!-- Attachments -->
-                        <div>
-                            <label class="form-label fw-bold mt-3">
-                                <i class="fas fa-paperclip me-1"></i>Attachments (Optional)
-                            </label>
-                            <div class="attachment-area" onclick="document.getElementById('fileInput').click()">
-                                <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
-                                <p class="mb-1 fw-bold">Click or drag files here</p>
-                                <small class="text-muted">PDF, DOC, DOCX, XLS, XLSX (Max 10MB)</small>
-                                <input type="file" id="fileInput" name="attachments" multiple style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx">
-                            </div>
-                            <div id="attachedFiles"></div>
-                        </div>
-
-                        <!-- Submit Buttons -->
-                        <div class="action-buttons mt-4">
+                        <!-- Action Buttons -->
+                        <div class="form-actions">
+                            <a href="{% url 'core:admin_enquiry_detail' enquiry.id %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane me-1"></i>Send Response
-                            </button>
-                            <button type="button" class="btn btn-outline-warning" onclick="saveDraft()">
-                                <i class="fas fa-save me-1"></i>Save Draft
+                                <i class="fas fa-paper-plane me-2"></i>Send Response
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
+
+        <!-- Previous Responses -->
+        {% if previous_responses %}
+        <div class="detail-card">
+            <div class="card-header-collapsible" data-bs-toggle="collapse" data-bs-target="#previousResponses">
+                <h3 class="card-header-title">
+                    <i class="fas fa-history"></i>
+                    Previous Responses
+                    <span class="badge bg-secondary ms-2">{{ previous_responses|length }}</span>
+                </h3>
+                <i class="fas fa-chevron-down collapse-icon"></i>
+            </div>
+            <div class="collapse show" id="previousResponses">
+                <div class="card-body-content">
+                    {% for response in previous_responses %}
+                    <div class="response-item {% if response.is_internal_note %}internal-note{% endif %}">
+                        <div class="response-header">
+                            <div class="response-author">
+                                <i class="fas fa-user-circle me-1"></i>
+                                {{ response.responded_by.get_full_name }}
+                                {% if response.is_internal_note %}
+                                    <span class="badge bg-warning ms-2">Internal</span>
+                                {% endif %}
+                            </div>
+                            <div class="response-time">
+                                {{ response.created_at|date:"M d, Y h:i A" }}
+                            </div>
+                        </div>
+                        <div class="response-text">
+                            {{ response.response_text|linebreaksbr }}
+                        </div>
+                    </div>
+                    {% if not forloop.last %}
+                    <hr class="response-divider">
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
-    <!-- Right Column -->
+    <!-- Right Column - Quick Templates -->
     <div class="col-lg-4">
-        <!-- Templates -->
         <div class="detail-card">
             <div class="card-header-collapsible" data-bs-toggle="collapse" data-bs-target="#templates">
                 <h3 class="card-header-title">
@@ -635,92 +193,623 @@ Best regards,
             </div>
             <div class="collapse show" id="templates">
                 <div class="card-body-content">
-                    <div class="template-item" onclick="useTemplate('acknowledgment')">
-                        <div class="template-title">
-                            <i class="fas fa-check-circle"></i>
-                            Acknowledgment
+                    <div class="template-list">
+                        <div class="template-item" onclick="useTemplate('acknowledgment')">
+                            <div class="template-title">
+                                <i class="fas fa-check-circle"></i>
+                                Acknowledgment
+                            </div>
+                            <div class="template-preview">
+                                Thank you for reaching out...
+                            </div>
                         </div>
-                        <div class="template-preview">
-                            Thank you for your enquiry. We have received your message...
+                        
+                        <div class="template-item" onclick="useTemplate('information')">
+                            <div class="template-title">
+                                <i class="fas fa-question-circle"></i>
+                                Information Request
+                            </div>
+                            <div class="template-preview">
+                                To better assist you...
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="template-item" onclick="useTemplate('information')">
-                        <div class="template-title">
-                            <i class="fas fa-question-circle"></i>
-                            Information Request
+                        
+                        <div class="template-item" onclick="useTemplate('schedule')">
+                            <div class="template-title">
+                                <i class="fas fa-calendar-check"></i>
+                                Schedule Meeting
+                            </div>
+                            <div class="template-preview">
+                                I would be happy to discuss...
+                            </div>
                         </div>
-                        <div class="template-preview">
-                            To better assist you, could you please provide...
-                        </div>
-                    </div>
-                    
-                    <div class="template-item" onclick="useTemplate('schedule')">
-                        <div class="template-title">
-                            <i class="fas fa-calendar-check"></i>
-                            Schedule Meeting
-                        </div>
-                        <div class="template-preview">
-                            I would be happy to discuss this with you...
-                        </div>
-                    </div>
-                    
-                    <div class="template-item" onclick="useTemplate('closing')">
-                        <div class="template-title">
-                            <i class="fas fa-handshake"></i>
-                            Closing Response
-                        </div>
-                        <div class="template-preview">
-                            Thank you for your interest. If you have any further questions...
+                        
+                        <div class="template-item" onclick="useTemplate('closing')">
+                            <div class="template-title">
+                                <i class="fas fa-handshake"></i>
+                                Closing Response
+                            </div>
+                            <div class="template-preview">
+                                Thank you for your interest...
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Previous Responses -->
-        {% if previous_responses %}
+        <!-- Quick Info -->
         <div class="detail-card">
-            <div class="card-header-collapsible collapsed" data-bs-toggle="collapse" data-bs-target="#previousResponses">
+            <div class="card-header-collapsible" data-bs-toggle="collapse" data-bs-target="#quickInfo">
                 <h3 class="card-header-title">
-                    <i class="fas fa-history"></i>
-                    Previous Responses
-                    <span class="badge bg-primary ms-2">{{ previous_responses|length }}</span>
+                    <i class="fas fa-info-circle"></i>
+                    Enquiry Info
                 </h3>
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </div>
-            <div class="collapse" id="previousResponses">
-                <div class="card-body-content" style="max-height: 400px; overflow-y: auto;">
-                    {% for response in previous_responses %}
-                    <div class="response-item {% if response.is_internal_note %}internal{% endif %}">
-                        <div class="response-header">
-                            <div class="response-author">
-                                {{ response.responded_by.get_full_name }}
-                                {% if response.is_internal_note %}
-                                    <span class="badge bg-warning ms-1">Internal</span>
-                                {% endif %}
-                            </div>
-                            <div class="response-time">
-                                {{ response.created_at|timesince }} ago
+            <div class="collapse show" id="quickInfo">
+                <div class="card-body-content">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Status</div>
+                            <div class="info-value">
+                                <span class="badge bg-warning">{{ enquiry.get_status_display }}</span>
                             </div>
                         </div>
-                        <div class="response-text">
-                            {{ response.response_text|truncatechars:150 }}
+                        <div class="info-item">
+                            <div class="info-label">Priority</div>
+                            <div class="info-value">
+                                <span class="badge bg-info">{{ enquiry.get_priority_display }}</span>
+                            </div>
                         </div>
+                        {% if enquiry.category %}
+                        <div class="info-item">
+                            <div class="info-label">Category</div>
+                            <div class="info-value">{{ enquiry.category.name }}</div>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endfor %}
                 </div>
             </div>
         </div>
-        {% endif %}
     </div>
 </div>
+
+<style>
+    /* ========== FONT FAMILY - ALIGNED WITH BASE.HTML ========== */
+    * {
+        font-family: var(--primary-font);
+    }
+    
+    /* ========== STATUS BANNER ========== */
+    .status-banner {
+        background: var(--primary-color);
+        color: white;
+        padding: 1.25rem var(--spacing-lg);
+        border-radius: var(--radius-xl);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .status-banner-title {
+        font-size: var(--font-2xl);
+        font-weight: 600;
+        margin-bottom: var(--spacing-sm);
+        font-family: var(--heading-font);
+    }
+
+    .status-banner-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+        font-size: var(--font-md);
+        opacity: 0.95;
+        font-family: var(--primary-font);
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    /* ========== DETAIL CARDS ========== */
+    .detail-card {
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        margin-bottom: var(--spacing-lg);
+        overflow: hidden;
+        border: 1px solid var(--gray-200);
+    }
+
+    .card-header-collapsible {
+        background: var(--light-color);
+        padding: var(--spacing-md) 1.25rem;
+        border-bottom: 1px solid var(--gray-200);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all var(--transition-normal) ease;
+        user-select: none;
+    }
+
+    .card-header-collapsible:hover {
+        background: var(--gray-200);
+    }
+
+    .card-header-collapsible.collapsed {
+        border-bottom: none;
+    }
+
+    .card-header-title {
+        font-size: var(--font-2xl);
+        font-weight: 600;
+        color: var(--dark-color);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0;
+        font-family: var(--heading-font);
+    }
+
+    .card-header-title i {
+        color: var(--primary-color);
+    }
+
+    .collapse-icon {
+        color: var(--gray-600);
+        transition: transform var(--transition-normal) ease;
+        font-size: var(--font-xl);
+    }
+
+    .card-header-collapsible:not(.collapsed) .collapse-icon {
+        transform: rotate(180deg);
+    }
+
+    .card-body-content {
+        padding: 1.25rem;
+    }
+
+    /* ========== ORIGINAL MESSAGE ========== */
+    .original-message {
+        background: var(--light-color);
+        border-left: 4px solid var(--primary-color);
+        border-radius: var(--radius-md);
+        padding: 1.25rem;
+    }
+
+    .message-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-md);
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--gray-200);
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+    }
+
+    .customer-info {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .customer-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: var(--font-3xl);
+        flex-shrink: 0;
+        font-family: var(--primary-font);
+    }
+
+    .customer-name {
+        font-weight: 600;
+        color: var(--dark-color);
+        font-size: var(--font-xl);
+        font-family: var(--heading-font);
+    }
+
+    .customer-email {
+        font-size: var(--font-sm);
+        color: var(--gray-600);
+        font-family: var(--primary-font);
+    }
+
+    .message-time {
+        font-size: var(--font-sm);
+        color: var(--gray-600);
+        font-family: var(--primary-font);
+    }
+
+    .message-content {
+        color: var(--gray-700);
+        line-height: 1.7;
+        font-size: var(--font-md);
+        font-family: var(--primary-font);
+    }
+
+    /* ========== EDITOR ========== */
+    .editor-toolbar {
+        background: var(--light-color);
+        border: 2px solid var(--gray-200);
+        border-bottom: none;
+        border-radius: var(--radius-md) var(--radius-md) 0 0;
+        padding: 0.75rem;
+        display: flex;
+        gap: var(--spacing-sm);
+        flex-wrap: wrap;
+    }
+
+    .editor-btn {
+        background: white;
+        border: 1px solid var(--gray-300);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-sm) 0.75rem;
+        cursor: pointer;
+        transition: all var(--transition-fast) ease;
+        font-size: var(--font-sm);
+        color: var(--gray-600);
+        font-family: var(--primary-font);
+    }
+
+    .editor-btn:hover {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+
+    .editor-textarea {
+        width: 100%;
+        min-height: 300px;
+        padding: var(--spacing-md);
+        border: 2px solid var(--gray-200);
+        border-radius: 0 0 var(--radius-md) var(--radius-md);
+        resize: vertical;
+        font-size: var(--font-base);
+        line-height: 1.6;
+        font-family: var(--primary-font);
+    }
+
+    .editor-textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
+    }
+
+    .character-count {
+        text-align: right;
+        font-size: var(--font-sm);
+        color: var(--gray-600);
+        margin-top: var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
+        font-family: var(--primary-font);
+    }
+
+    /* ========== RESPONSE OPTIONS ========== */
+    .response-options {
+        background: var(--light-color);
+        padding: 1.25rem;
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .response-options .form-check {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .response-options .form-check:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .form-check-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(8, 127, 194, 0.25);
+    }
+
+    .form-check-label {
+        font-size: var(--font-md);
+        font-family: var(--primary-font);
+    }
+
+    .form-check-label strong {
+        font-weight: 600;
+    }
+
+    .form-check-label small {
+        font-size: var(--font-sm);
+    }
+
+    /* ========== FORM ACTIONS ========== */
+    .form-actions {
+        display: flex;
+        gap: var(--spacing-md);
+        justify-content: flex-end;
+    }
+
+    /* ========== RESPONSE ITEMS ========== */
+    .response-item {
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        background: var(--light-color);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .response-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .response-item.internal-note {
+        background: #fff3cd;
+        border-left: 4px solid var(--warning-color);
+    }
+
+    .response-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+    }
+
+    .response-author {
+        font-weight: 600;
+        color: var(--dark-color);
+        font-size: var(--font-md);
+        font-family: var(--primary-font);
+    }
+
+    .response-time {
+        font-size: var(--font-sm);
+        color: var(--gray-600);
+        font-family: var(--primary-font);
+    }
+
+    .response-text {
+        font-size: var(--font-md);
+        line-height: 1.6;
+        color: var(--gray-700);
+        font-family: var(--primary-font);
+    }
+
+    .response-divider {
+        margin: var(--spacing-md) 0;
+        border-color: var(--gray-200);
+    }
+
+    /* ========== TEMPLATES ========== */
+    .template-list {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .template-item {
+        background: var(--light-color);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all var(--transition-normal) ease;
+        border: 2px solid var(--gray-200);
+    }
+
+    .template-item:hover {
+        background: var(--gray-200);
+        border-color: var(--primary-color);
+        transform: translateX(5px);
+    }
+
+    .template-item.selected {
+        background: #e7f3ff;
+        border-color: var(--primary-color);
+    }
+
+    .template-title {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: var(--spacing-sm);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-size: var(--font-md);
+        font-family: var(--heading-font);
+    }
+
+    .template-title i {
+        color: var(--primary-color);
+    }
+
+    .template-preview {
+        font-size: var(--font-sm);
+        color: var(--gray-600);
+        font-family: var(--primary-font);
+    }
+
+    /* ========== INFO GRID ========== */
+    .info-grid {
+        display: grid;
+        gap: var(--spacing-md);
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: var(--light-color);
+        border-radius: var(--radius-md);
+    }
+
+    .info-label {
+        font-size: var(--font-sm);
+        font-weight: 500;
+        color: var(--gray-600);
+        font-family: var(--primary-font);
+    }
+
+    .info-value {
+        font-size: var(--font-md);
+        color: var(--dark-color);
+        font-weight: 500;
+        font-family: var(--primary-font);
+    }
+
+    /* ========== BADGE STYLING ========== */
+    .badge {
+        font-family: var(--primary-font);
+    }
+
+    /* ========== RESPONSIVE DESIGN ========== */
+    
+    /* Tablet & Below (max 1024px) */
+    @media (max-width: 1024px) {
+        .status-banner-title {
+            font-size: var(--font-xl);
+        }
+        
+        .card-header-title {
+            font-size: var(--font-xl);
+        }
+    }
+    
+    /* Tablet (max 991.98px) */
+    @media (max-width: 991.98px) {
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .form-actions .btn {
+            width: 100%;
+        }
+    }
+
+    /* Mobile (max 768px) */
+    @media (max-width: 768px) {
+        .status-banner {
+            padding: var(--spacing-md);
+        }
+        
+        .status-banner-title {
+            font-size: var(--font-lg);
+        }
+
+        .status-banner-meta {
+            font-size: var(--font-sm);
+        }
+
+        .message-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .editor-toolbar {
+            gap: var(--spacing-xs);
+        }
+
+        .editor-btn {
+            padding: 0.375rem var(--spacing-sm);
+            font-size: var(--font-sm);
+        }
+        
+        .card-body-content {
+            padding: var(--spacing-md);
+        }
+        
+        .card-header-collapsible {
+            padding: 0.875rem var(--spacing-md);
+        }
+        
+        .card-header-title {
+            font-size: var(--font-lg);
+        }
+        
+        .customer-name {
+            font-size: var(--font-lg);
+        }
+        
+        .customer-avatar {
+            width: 45px;
+            height: 45px;
+            font-size: var(--font-2xl);
+        }
+    }
+    
+    /* Mobile Small (max 575px) */
+    @media (max-width: 575px) {
+        .status-banner {
+            padding: 0.875rem;
+        }
+        
+        .status-banner-title {
+            font-size: var(--font-md);
+        }
+        
+        .status-banner-meta {
+            font-size: var(--font-xs);
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+        
+        .card-body-content {
+            padding: 0.875rem;
+        }
+        
+        .card-header-collapsible {
+            padding: 0.75rem 0.875rem;
+        }
+        
+        .card-header-title {
+            font-size: var(--font-md);
+        }
+        
+        .customer-avatar {
+            width: 40px;
+            height: 40px;
+            font-size: var(--font-xl);
+        }
+        
+        .editor-btn {
+            padding: 0.25rem 0.375rem;
+            font-size: var(--font-xs);
+        }
+        
+        .template-item {
+            padding: 0.875rem;
+        }
+    }
+    
+    /* Mobile Extra Small (max 479px) */
+    @media (max-width: 479px) {
+        .status-banner {
+            padding: 0.75rem;
+        }
+        
+        .card-body-content {
+            padding: 0.75rem;
+        }
+        
+        .card-header-collapsible {
+            padding: 0.625rem 0.75rem;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block admin_extra_js %}
 <script>
-document.addEventListener('contextmenu', e => e.preventDefault());
-
 // Character counter
 const responseText = document.getElementById('responseText');
 const charCount = document.getElementById('charCount');
@@ -734,24 +823,17 @@ charCount.textContent = responseText.value.length;
 // Internal note toggle
 document.getElementById('internalNote').addEventListener('change', function() {
     const sendEmail = document.getElementById('sendEmail');
-    const markAnswered = document.getElementById('markAnswered');
     
     if (this.checked) {
         sendEmail.checked = false;
         sendEmail.disabled = true;
-        markAnswered.checked = false;
     } else {
         sendEmail.disabled = false;
         sendEmail.checked = true;
-        markAnswered.checked = true;
     }
 });
 
 // Text formatting
-function formatText(command) {
-    alert('Rich text formatting would be implemented with TinyMCE or Quill');
-}
-
 function insertBulletList() {
     insertAtCursor(responseText, '\n• Point 1\n• Point 2\n• Point 3\n');
 }
@@ -761,7 +843,7 @@ function insertNumberedList() {
 }
 
 function insertSignature() {
-    const signature = `\n\nBest regards,\n{{ request.user.get_full_name|default:"" }}\n{{ request.user.email }}`;
+    const signature = `\n\nBest regards,\n{{ request.user.get_full_name|default:"Support Team" }}\n{{ request.user.email }}`;
     insertAtCursor(responseText, signature);
 }
 
@@ -780,9 +862,9 @@ function insertAtCursor(textarea, text) {
 const templates = {
     acknowledgment: `Dear {{ enquiry.first_name }},\n\nThank you for reaching out to us regarding {{ enquiry.subject|default:"your enquiry" }}.\n\nWe have received your message and appreciate your interest in our services. Our team is currently reviewing your enquiry and will provide you with a comprehensive response shortly.\n\nWe typically respond within 24-48 business hours.\n\nThank you for your patience.\n\nBest regards,\n{{ request.user.get_full_name|default:"Support Team" }}`,
     
-    information: `Dear {{ enquiry.first_name }},\n\nThank you for your enquiry about {{ enquiry.subject|default:"our services" }}.\n\nTo better assist you, could you please provide:\n\n1. [Specific information needed]\n2. [Timeline or deadline]\n3. [Budget range]\n4. [Any specific requirements]\n\nOnce we have this information, we'll provide you with a tailored solution.\n\nBest regards,\n{{ request.user.get_full_name|default:"Support Team" }}`,
+    information: `Dear {{ enquiry.first_name }},\n\nThank you for your enquiry about {{ enquiry.subject|default:"our services" }}.\n\nTo better assist you, could you please provide:\n\n1. Specific information needed\n2. Timeline or deadline\n3. Budget range\n4. Any specific requirements\n\nOnce we have this information, we'll provide you with a tailored solution.\n\nBest regards,\n{{ request.user.get_full_name|default:"Support Team" }}`,
     
-    schedule: `Dear {{ enquiry.first_name }},\n\nThank you for your interest in {{ enquiry.subject|default:"our services" }}.\n\nI would be delighted to discuss this further. I have the following time slots available:\n\n• [Day], [Date] at [Time]\n• [Day], [Date] at [Time]\n• [Day], [Date] at [Time]\n\nPlease let me know which time works best for you.\n\nLooking forward to speaking with you.\n\nBest regards,\n{{ request.user.get_full_name|default:"Support Team" }}`,
+    schedule: `Dear {{ enquiry.first_name }},\n\nThank you for your interest in {{ enquiry.subject|default:"our services" }}.\n\nI would be delighted to discuss this further. Please let me know your availability and I will arrange a suitable time for us to connect.\n\nLooking forward to speaking with you.\n\nBest regards,\n{{ request.user.get_full_name|default:"Support Team" }}`,
     
     closing: `Dear {{ enquiry.first_name }},\n\nThank you for your enquiry regarding {{ enquiry.subject|default:"our services" }}.\n\nI hope the information provided has been helpful. We're committed to providing excellent service and support.\n\nIf you have any further questions, please don't hesitate to reach out.\n\nThank you for considering our services.\n\nBest regards,\n{{ request.user.get_full_name|default:"Support Team" }}`
 };
@@ -814,59 +896,8 @@ window.addEventListener('load', function() {
     }
 });
 
-// File handling
-const fileInput = document.getElementById('fileInput');
-const attachmentArea = document.querySelector('.attachment-area');
-const attachedFiles = document.getElementById('attachedFiles');
-
-attachmentArea.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    this.classList.add('dragover');
-});
-
-attachmentArea.addEventListener('dragleave', function(e) {
-    e.preventDefault();
-    this.classList.remove('dragover');
-});
-
-attachmentArea.addEventListener('drop', function(e) {
-    e.preventDefault();
-    this.classList.remove('dragover');
-    handleFiles(e.dataTransfer.files);
-});
-
-fileInput.addEventListener('change', function(e) {
-    handleFiles(this.files);
-});
-
-function handleFiles(files) {
-    for (let file of files) {
-        displayFile(file);
-    }
-}
-
-function displayFile(file) {
-    const icon = file.type.includes('pdf') ? 'fa-file-pdf' : 
-                 file.type.includes('doc') ? 'fa-file-word' : 
-                 file.type.includes('xls') ? 'fa-file-excel' : 'fa-file';
-    
-    const fileItem = document.createElement('div');
-    fileItem.className = 'file-item';
-    fileItem.innerHTML = `
-        <div class="file-icon">
-            <i class="fas ${icon}"></i>
-        </div>
-        <div class="file-name">${file.name}</div>
-        <div class="file-remove" onclick="this.parentElement.remove()">
-            <i class="fas fa-times"></i>
-        </div>
-    `;
-    
-    attachedFiles.appendChild(fileItem);
-}
-
 // Form submit
-document.getElementById('responseForm').addEventListener('submit', function(e) {
+document.getElementById('enquiryResponseForm').addEventListener('submit', function(e) {
     if (!responseText.value.trim()) {
         e.preventDefault();
         alert('⚠️ Please enter a response message.');
@@ -876,10 +907,8 @@ document.getElementById('responseForm').addEventListener('submit', function(e) {
     localStorage.removeItem('enquiry_response_draft_{{ enquiry.id }}');
     
     const submitBtn = this.querySelector('button[type="submit"]');
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
     submitBtn.disabled = true;
 });
-
-console.log('✅ Enhanced Enquiry Respond Page loaded');
 </script>
 {% endblock %}

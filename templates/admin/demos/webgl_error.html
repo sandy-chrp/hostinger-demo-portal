@@ -1,0 +1,169 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block admin_title %}WebGL Error - Demo Preview{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-exclamation-triangle"></i>
+    WebGL Preview Error
+{% endblock %}
+
+{% block page_subtitle %}
+    <p class="page-subtitle">Unable to load WebGL demo</p>
+{% endblock %}
+
+{% block breadcrumb %}
+    <div class="breadcrumb-wrapper">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'core:admin_dashboard' %}">
+                        <i class="fas fa-home"></i>
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'core:admin_demos' %}">Demos</a>
+                </li>
+                <li class="breadcrumb-item active">WebGL Error</li>
+            </ol>
+        </nav>
+    </div>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="admin-card">
+            <div class="admin-card-header bg-danger text-white">
+                <h2 class="admin-card-title text-white mb-0">
+                    <i class="fas fa-exclamation-circle"></i>
+                    WebGL Demo Error
+                </h2>
+            </div>
+            <div class="admin-card-body">
+                <!-- Error Alert -->
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">
+                        <i class="fas fa-times-circle me-2"></i>
+                        Failed to Load WebGL Demo
+                    </h4>
+                    <hr>
+                    <p class="mb-0">
+                        <strong>Error:</strong> {{ error }}
+                    </p>
+                </div>
+
+                <!-- Demo Information -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Demo Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Demo Title:</strong> {{ demo.title }}</p>
+                                <p><strong>Demo ID:</strong> {{ demo.id }}</p>
+                                <p><strong>Slug:</strong> {{ demo.slug }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>File Type:</strong> {{ demo.get_file_type_display }}</p>
+                                <p><strong>Status:</strong> 
+                                    {% if demo.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </p>
+                                <p><strong>Extract Path:</strong> 
+                                    {% if extract_path %}
+                                        <code>{{ extract_path }}</code>
+                                    {% else %}
+                                        <span class="text-muted">Not extracted</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Troubleshooting -->
+                <div class="card mb-3">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0">
+                            <i class="fas fa-wrench me-2"></i>
+                            Troubleshooting Steps
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ol>
+                            <li><strong>Verify the file:</strong> Ensure the uploaded WebGL file is a valid ZIP archive</li>
+                            <li><strong>Check file structure:</strong> The ZIP should contain an <code>index.html</code> file</li>
+                            <li><strong>Verify permissions:</strong> Ensure the server has write permissions to <code>{{ WEBGL_EXTRACT_ROOT|default:"webgl_extracted/" }}</code></li>
+                            <li><strong>Check file size:</strong> Large files may timeout during extraction</li>
+                            <li><strong>Re-upload:</strong> Try uploading the WebGL file again</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- File Information -->
+                {% if demo.webgl_file %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file me-2"></i>
+                            File Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>File Name:</strong> {{ demo.webgl_file.name }}</p>
+                        <p><strong>File Size:</strong> {{ demo.webgl_file.size|filesizeformat }}</p>
+                        <p><strong>Upload Date:</strong> {{ demo.created_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Actions -->
+                <div class="mt-4 d-flex gap-2">
+                    <a href="{% url 'core:admin_demos' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Back to Demos
+                    </a>
+                    <a href="{% url 'core:admin_demo_detail' demo.id %}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>
+                        Edit Demo
+                    </a>
+                    <button onclick="location.reload()" class="btn btn-info">
+                        <i class="fas fa-sync-alt me-2"></i>
+                        Retry
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_css %}
+<style>
+    .alert-heading {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+    
+    code {
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        color: #d63384;
+    }
+    
+    ol li {
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}

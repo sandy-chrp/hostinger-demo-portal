@@ -1,477 +1,683 @@
-<!-- templates/customers/send_enquiry.html - Complete Version with File Upload -->
+<!-- templates/customers/send_enquiry.html - Compact Single Screen Version -->
 {% extends 'customers/base.html' %}
 {% load static %}
 
 {% block customer_title %}Send Business Enquiry - Customer Portal{% endblock %}
 {% block page_title %}Send Business Enquiry{% endblock %}
 
-{% block customer_extra_css %}
+{% block customer_content %}
 <style>
+    /* Container */
     .enquiry-form-container {
-        max-width: 800px;
+        max-width: 1200px;
         margin: 0 auto;
     }
 
-    .form-card {
+    /* Compact Page Header */
+    .page-header-compact {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-md);
+        padding: var(--spacing-md) var(--spacing-lg);
         background: white;
-        border-radius: var(--radius-xl);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+    }
+
+    .page-header-compact h4 {
+        margin: 0;
+        color: var(--dark-color);
+        font-size: var(--font-xl);
+        font-weight: 600;
+        font-family: var(--heading-font);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+    }
+
+    .page-header-compact .header-actions {
+        display: flex;
+        gap: var(--spacing-xs);
+    }
+
+    /* Compact Form Card */
+    .form-card-compact {
+        background: white;
+        border-radius: var(--radius-lg);
         box-shadow: var(--shadow-md);
         border: 1px solid var(--gray-200);
         overflow: hidden;
     }
 
-    .form-header {
+    /* Form Header - Slim */
+    .form-header-slim {
         background: var(--gradient-primary);
         color: white;
-        padding: var(--spacing-lg);
-        text-align: center;
-    }
-
-    .form-header h2 {
-        margin: 0;
-        font-size: 1.5rem;
-        font-weight: 700;
-    }
-
-    .form-body {
-        padding: var(--spacing-lg);
-    }
-
-    .form-section {
-        margin-bottom: var(--spacing-lg);
-    }
-
-    .section-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--dark-color);
-        margin-bottom: var(--spacing-md);
+        padding: var(--spacing-md) var(--spacing-lg);
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: var(--spacing-sm);
     }
 
-    .section-title i {
-        color: var(--primary-color);
+    .form-header-slim h5 {
+        margin: 0;
+        font-size: var(--font-lg);
+        font-weight: 600;
+        font-family: var(--heading-font);
     }
 
-    .form-group {
+    .form-header-slim .header-info {
+        font-size: var(--font-xs);
+        opacity: 0.9;
+    }
+
+    /* Compact Form Body */
+    .form-body-compact {
+        padding: var(--spacing-lg);
+    }
+
+    /* Three Column Grid Layout */
+    .form-grid-3col {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-md);
         margin-bottom: var(--spacing-md);
     }
 
-    .form-label {
+    /* Two Column Grid */
+    .form-grid-2col {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+    }
+
+    /* Full Width Grid Item */
+    .grid-full {
+        grid-column: span 3;
+    }
+
+    .grid-span-2 {
+        grid-column: span 2;
+    }
+
+    /* Compact Form Group */
+    .form-group-compact {
+        margin-bottom: 0;
+    }
+
+    .form-label-compact {
         font-weight: 600;
         color: var(--gray-700);
-        margin-bottom: var(--spacing-xs);
+        margin-bottom: 0.25rem;
         display: block;
-        font-size: 0.875rem;
+        font-size: var(--font-xs);
+        font-family: var(--primary-font);
     }
 
-    .required-field::after {
+    .required::after {
         content: " *";
         color: var(--danger-color);
-        font-weight: bold;
     }
 
-    .form-control, .form-select {
-        border: 2px solid var(--gray-300);
-        border-radius: var(--radius-lg);
-        padding: var(--spacing-sm) var(--spacing-md);
-        font-size: 0.95rem;
-        transition: all 0.3s ease;
+    /* Smaller Form Controls */
+    .form-control-sm,
+    .form-select-sm {
         width: 100%;
+        padding: 0.375rem 0.75rem;
+        border: 1px solid var(--gray-300);
+        border-radius: var(--radius-md);
+        font-size: var(--font-sm);
+        font-family: var(--primary-font);
+        transition: all 0.2s ease;
+        background: white;
     }
 
-    .form-control:focus, .form-select:focus {
+    .form-control-sm:focus,
+    .form-select-sm:focus {
         border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+        box-shadow: 0 0 0 2px rgba(8, 127, 194, 0.1);
         outline: none;
     }
 
-    .form-select {
-        background-color: white;
-        cursor: pointer;
-    }
-
-    .form-text {
-        font-size: 0.8rem;
-        color: var(--gray-500);
-        margin-top: var(--spacing-xs);
-    }
-
-    .character-counter {
-        text-align: right;
-        font-size: 0.8rem;
-        color: var(--gray-500);
-        margin-top: var(--spacing-xs);
-    }
-
-    .character-counter.warning {
-        color: var(--warning-color);
-    }
-
-    .character-counter.danger {
-        color: var(--danger-color);
-    }
-
-    /* File Upload Styles */
-    .file-upload-wrapper {
-        position: relative;
-        overflow: hidden;
-        display: inline-block;
-        width: 100%;
-    }
-    
-    .file-upload-input {
-        position: absolute;
-        left: -9999px;
-    }
-    
-    .file-upload-label {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: var(--spacing-sm);
-        padding: var(--spacing-md);
-        border: 2px dashed var(--gray-300);
-        border-radius: var(--radius-lg);
-        background: var(--gray-50);
-        cursor: pointer;
-        transition: all 0.3s ease;
+    /* Compact Textarea */
+    textarea.form-control-sm {
         min-height: 80px;
+        resize: vertical;
     }
-    
-    .file-upload-label:hover {
-        border-color: var(--primary-color);
-        background: rgba(30, 60, 114, 0.05);
-    }
-    
-    .file-upload-label.has-file {
-        border-color: var(--success-color);
-        background: rgba(16, 185, 129, 0.05);
-        border-style: solid;
-    }
-    
-    .file-upload-label.is-invalid {
-        border-color: var(--danger-color);
-        background: rgba(239, 68, 68, 0.05);
-    }
-    
-    .file-upload-content {
+
+    /* Compact Priority Pills */
+    .priority-group-compact {
         display: flex;
-        flex-direction: column;
-        align-items: center;
         gap: var(--spacing-xs);
-    }
-    
-    .file-upload-icon {
-        font-size: 1.5rem;
-        color: var(--primary-color);
-    }
-    
-    .file-upload-text {
-        font-size: 0.9rem;
-        color: var(--gray-600);
-        text-align: center;
-    }
-    
-    .file-upload-info {
-        font-size: 0.75rem;
-        color: var(--gray-500);
-    }
-    
-    .file-selected {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-sm);
-        padding: var(--spacing-sm) var(--spacing-md);
-        background: white;
-        border: 1px solid var(--success-color);
-        border-radius: var(--radius-md);
-        margin-top: var(--spacing-sm);
-    }
-    
-    .file-selected-info {
-        flex: 1;
-    }
-    
-    .file-selected-name {
-        font-weight: 600;
-        color: var(--dark-color);
-        font-size: 0.9rem;
-        word-break: break-all;
-    }
-    
-    .file-selected-size {
-        font-size: 0.75rem;
-        color: var(--gray-500);
-    }
-    
-    .file-remove-btn {
-        background: var(--danger-color);
-        color: white;
-        border: none;
-        padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--radius-md);
-        cursor: pointer;
-        font-size: 0.8rem;
-        transition: all 0.3s ease;
-    }
-    
-    .file-remove-btn:hover {
-        background: #dc2626;
-        transform: scale(1.05);
+        margin-top: 0.25rem;
     }
 
-    .submit-section {
-        background: var(--gray-50);
-        padding: var(--spacing-lg);
-        text-align: center;
-        margin: 0 calc(-1 * var(--spacing-lg));
+    .priority-badge {
+        position: relative;
     }
 
-    .submit-btn {
-        background: var(--gradient-primary);
-        color: white;
-        border: none;
-        padding: var(--spacing-sm) var(--spacing-xl);
-        border-radius: var(--radius-lg);
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
+    .priority-badge input {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .priority-badge label {
         display: inline-flex;
         align-items: center;
-        gap: var(--spacing-sm);
-        min-width: 180px;
-        justify-content: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.625rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: var(--font-xs);
+        font-weight: 500;
+        font-family: var(--primary-font);
+        background: white;
     }
 
-    .submit-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
+    .priority-badge label:hover {
+        border-color: var(--primary-color);
+        background: var(--gray-50);
     }
 
-    .submit-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
+    .priority-badge input:checked + label {
+        color: white;
     }
 
-    .form-control.is-invalid, .form-select.is-invalid {
-        border-color: var(--danger-color);
-        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-    }
-
-    .invalid-feedback {
-        color: var(--danger-color);
-        font-size: 0.8rem;
-        margin-top: var(--spacing-xs);
-        display: block;
-    }
-
-    .form-control.is-valid, .form-select.is-valid {
+    .priority-badge.low input:checked + label {
+        background: var(--success-color);
         border-color: var(--success-color);
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .priority-badge.medium input:checked + label {
+        background: var(--warning-color);
+        border-color: var(--warning-color);
+    }
+
+    .priority-badge.high input:checked + label {
+        background: var(--danger-color);
+        border-color: var(--danger-color);
+    }
+
+    /* Inline File Upload */
+    .file-upload-compact {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        padding: 0.375rem 0.75rem;
+        border: 1px solid var(--gray-300);
+        border-radius: var(--radius-md);
+        background: white;
+        min-height: 38px;
+    }
+
+    .file-upload-compact input[type="file"] {
+        display: none;
+    }
+
+    .file-upload-label-compact {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        cursor: pointer;
+        font-size: var(--font-sm);
+        color: var(--primary-color);
+        font-family: var(--primary-font);
+    }
+
+    .file-upload-label-compact:hover {
+        text-decoration: underline;
+    }
+
+    .file-info {
+        flex: 1;
+        font-size: var(--font-xs);
+        color: var(--gray-600);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .file-remove {
+        color: var(--danger-color);
+        cursor: pointer;
+        font-size: var(--font-sm);
+    }
+
+    /* Message Counter */
+    .input-with-counter {
+        position: relative;
+    }
+
+    .char-counter {
+        position: absolute;
+        bottom: 0.25rem;
+        right: 0.5rem;
+        font-size: 10px;
+        color: var(--gray-400);
+        background: white;
+        padding: 0 0.25rem;
+        font-family: var(--primary-font);
+    }
+
+    /* Submit Section */
+    .form-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: var(--spacing-md);
+        border-top: 1px solid var(--gray-200);
+        margin-top: var(--spacing-lg);
+    }
+
+    .form-footer-info {
+        font-size: var(--font-xs);
+        color: var(--gray-600);
+        font-family: var(--primary-font);
+    }
+
+    .form-footer-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+
+    .btn-submit-compact {
+        padding: 0.5rem 1.5rem;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: var(--font-sm);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        font-family: var(--primary-font);
+    }
+
+    .btn-submit-compact:hover {
+        background: var(--secondary-color);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Help Strip */
+    .help-strip {
+        display: flex;
+        justify-content: space-around;
+        padding: var(--spacing-md);
+        background: var(--gray-100);
+        border-radius: var(--radius-lg);
+        margin-top: var(--spacing-md);
+        gap: var(--spacing-lg);
+    }
+
+    .help-item {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-size: var(--font-sm);
+        font-family: var(--primary-font);
+    }
+
+    .help-item i {
+        color: var(--primary-color);
+        font-size: var(--font-md);
+    }
+
+    /* Section Headers */
+    .section-divider {
+        display: flex;
+        align-items: center;
+        margin: var(--spacing-md) 0 var(--spacing-sm) 0;
+        font-size: var(--font-sm);
+        font-weight: 600;
+        color: var(--primary-color);
+        font-family: var(--primary-font);
+    }
+
+    .section-divider::before,
+    .section-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--gray-200);
+    }
+
+    .section-divider span {
+        padding: 0 var(--spacing-sm);
+    }
+
+    /* Alert Compact */
+    .alert-compact {
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-sm);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-size: var(--font-sm);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 992px) {
+        .form-grid-3col {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .grid-full {
+            grid-column: span 2;
+        }
+
+        .grid-span-2 {
+            grid-column: span 2;
+        }
     }
 
     @media (max-width: 768px) {
-        .form-header {
-            padding: var(--spacing-md);
-        }
-
-        .form-header h2 {
-            font-size: 1.25rem;
-        }
-
-        .form-body {
-            padding: var(--spacing-md);
-        }
-
-        .submit-section {
-            padding: var(--spacing-md);
-            margin: 0 calc(-1 * var(--spacing-md));
-        }
-
-        .file-upload-label {
-            min-height: 100px;
-        }
-
-        .file-selected {
+        .page-header-compact {
             flex-direction: column;
             align-items: flex-start;
+            gap: var(--spacing-sm);
+        }
+
+        .page-header-compact .header-actions {
+            width: 100%;
+        }
+
+        .page-header-compact .btn {
+            flex: 1;
+            font-size: var(--font-xs);
+        }
+
+        .form-grid-3col,
+        .form-grid-2col {
+            grid-template-columns: 1fr;
+            gap: var(--spacing-sm);
+        }
+
+        .grid-full,
+        .grid-span-2 {
+            grid-column: span 1;
+        }
+
+        .form-body-compact {
+            padding: var(--spacing-md);
+        }
+
+        .priority-group-compact {
+            flex-direction: column;
+        }
+
+        .priority-badge label {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .help-strip {
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .form-footer {
+            flex-direction: column;
+            gap: var(--spacing-md);
+            align-items: stretch;
+        }
+
+        .form-footer-actions {
+            width: 100%;
+        }
+
+        .btn-submit-compact {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .form-header-slim {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--spacing-xs);
+        }
+
+        .form-label-compact {
+            font-size: 11px;
+        }
+
+        .form-control-sm,
+        .form-select-sm {
+            font-size: var(--font-xs);
+            padding: 0.3rem 0.5rem;
+        }
+    }
+
+    /* For larger screens - 4 column option */
+    @media (min-width: 1400px) {
+        .form-grid-3col {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .grid-full {
+            grid-column: span 4;
+        }
+
+        .grid-span-2 {
+            grid-column: span 2;
+        }
+
+        .grid-span-3 {
+            grid-column: span 3;
         }
     }
 </style>
-{% endblock %}
-
-{% block customer_content %}
-<nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'customers:dashboard' %}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'customers:enquiries' %}">Enquiries</a></li>
-        <li class="breadcrumb-item active">Send Enquiry</li>
-    </ol>
-</nav>
 
 <div class="enquiry-form-container">
-    <div class="form-card">
-        <div class="form-header">
-            <h2><i class="fas fa-envelope me-2"></i>Send Business Enquiry</h2>
+    <!-- Compact Header -->
+    <div class="page-header-compact">
+        <h4>
+            <i class="fas fa-paper-plane" style="color: var(--primary-color);"></i>
+            Send Business Enquiry
+        </h4>
+        <div class="header-actions">
+            <a href="{% url 'customers:enquiries' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-list me-1"></i>My Enquiries
+            </a>
+            <a href="{% url 'customers:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-compact">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Compact Form Card -->
+    <div class="form-card-compact">
+        <div class="form-header-slim">
+            <h5><i class="fas fa-envelope me-2"></i>Business Enquiry Form</h5>
+            <span class="header-info"><i class="fas fa-clock"></i> 24hr Response Time</span>
         </div>
         
-        <div class="form-body">
-            <form id="enquiryForm" method="post" enctype="multipart/form-data">
+        <div class="form-body-compact">
+            <form method="post" id="enquiryForm" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
                 
-                <!-- Business Category Section -->
-                <div class="form-section">
-                    <h3 class="section-title">
-                        <i class="fas fa-building"></i>
-                        Business Category
-                    </h3>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="business_category" class="form-label required-field">Business Category</label>
-                                <select class="form-select" id="business_category" name="business_category" required>
-                                    <option value="">-- Select Category --</option>
-                                    {% for category in business_categories %}
-                                        <option value="{{ category.id }}">
-                                            {% if category.icon %}{{ category.icon }} {% endif %}{{ category.name }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                <div class="form-text">Choose your business category</div>
-                                <div class="invalid-feedback" id="categoryError"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6" id="subcategoryWrapper" style="display: none;">
-                            <div class="form-group">
-                                <label for="business_subcategory" class="form-label">Subcategory</label>
-                                <select class="form-select" id="business_subcategory" name="business_subcategory">
-                                    <option value="">-- All Subcategories --</option>
-                                </select>
-                                <div class="form-text">Optional subcategory</div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Contact Information - 3 Column Grid -->
+                <div class="section-divider">
+                    <span><i class="fas fa-user me-1"></i> Contact Details</span>
                 </div>
                 
-                <!-- Enquiry Details Section -->
-                <div class="form-section">
-                    <h3 class="section-title">
-                        <i class="fas fa-clipboard-list"></i>
-                        Enquiry Details
-                    </h3>
-                    
-                    <div class="form-group">
-                        <label for="subject" class="form-label">Subject</label>
-                        <input type="text" class="form-control" id="subject" name="subject" 
-                               placeholder="Brief subject of your enquiry" maxlength="200">
-                        <div class="form-text">Optional - auto-generated if empty</div>
+                <div class="form-grid-3col">
+                    <div class="form-group-compact">
+                        <label for="name" class="form-label-compact required">Name</label>
+                        <input type="text" class="form-control-sm" id="name" name="name" 
+                               value="{{ user.first_name }} {{ user.last_name }}" required readonly>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="message" class="form-label required-field">Message</label>
-                        <textarea class="form-control" id="message" name="message" rows="6" 
-                                  placeholder="Describe your requirements, questions, or information needed..."
-                                  required maxlength="2000"></textarea>
-                        <div class="character-counter" id="messageCounter">0 / 2000 characters</div>
-                        <div class="invalid-feedback" id="messageError"></div>
+                    <div class="form-group-compact">
+                        <label for="email" class="form-label-compact required">Email</label>
+                        <input type="email" class="form-control-sm" id="email" name="email" 
+                               value="{{ user.email }}" required readonly>
                     </div>
+                    
+                    <div class="form-group-compact">
+                        <label for="mobile" class="form-label-compact">Mobile</label>
+                        <input type="tel" class="form-control-sm" id="mobile" name="mobile" 
+                               value="{{ user.mobile }}" readonly>
+                    </div>
+                </div>
 
-                    <!-- File Upload Field -->
-                    <div class="form-group">
-                        <label for="attachment" class="form-label">
-                            <i class="fas fa-paperclip me-1"></i>Attachment
-                        </label>
-                        <div class="file-upload-wrapper">
-                            <input type="file" class="file-upload-input" id="attachment" name="attachment" 
-                                   accept=".png,.webp,.jpg,.jpeg,.pdf,.xls,.xlsx,.csv,.psd,.doc,.docx">
-                            <label for="attachment" class="file-upload-label" id="fileLabel">
-                                <div class="file-upload-content">
-                                    <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
-                                    <div class="file-upload-text">
-                                        <strong>Click to upload</strong> or drag and drop
-                                    </div>
-                                    <div class="file-upload-info">
-                                        PNG, WEBP, JPG, PDF, Excel, CSV, PSD, DOC (Max 10MB)
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-                        <div id="fileSelectedInfo" class="file-selected" style="display: none;">
-                            <i class="fas fa-file-alt text-success"></i>
-                            <div class="file-selected-info">
-                                <div class="file-selected-name" id="fileName"></div>
-                                <div class="file-selected-size" id="fileSize"></div>
-                            </div>
-                            <button type="button" class="file-remove-btn" id="removeFileBtn">
-                                <i class="fas fa-times"></i> Remove
-                            </button>
-                        </div>
-                        <div class="form-text">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Optional - Upload supporting documents, images, or files
-                        </div>
-                        <div class="invalid-feedback" id="fileError"></div>
+                <!-- Business Category - 2 Column Grid -->
+                <div class="form-grid-2col">
+                    <div class="form-group-compact">
+                        <label for="business_category" class="form-label-compact required">Business Category</label>
+                        <select class="form-select-sm" id="business_category" name="business_category" required>
+                            <option value="">Select Category</option>
+                            {% for category in business_categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group-compact" id="subcategoryWrapper" style="display: none;">
+                        <label for="business_subcategory" class="form-label-compact">Subcategory</label>
+                        <select class="form-select-sm" id="business_subcategory" name="business_subcategory">
+                            <option value="">Select Subcategory</option>
+                        </select>
                     </div>
                 </div>
-                
-                <!-- Submit Section -->
-                <div class="submit-section">
-                    <button type="submit" class="submit-btn" id="submitBtn">
-                        <i class="fas fa-paper-plane"></i>
-                        Send Enquiry
-                    </button>
-                    <div class="form-text mt-2">
-                        <i class="fas fa-clock me-1"></i>
-                        Our team will respond within 24 hours
+
+                <!-- Enquiry Details Section -->
+                <div class="section-divider">
+                    <span><i class="fas fa-message me-1"></i> Enquiry Details</span>
+                </div>
+
+                <div class="form-grid-2col">
+                    <div class="form-group-compact grid-span-2">
+                        <label for="subject" class="form-label-compact">Subject (Optional)</label>
+                        <input type="text" class="form-control-sm" id="subject" name="subject">
+                        <small style="font-size: 11px; color: var(--gray-500);">Leave blank to auto-generate based on category</small>
+                    </div>
+                </div>
+
+                <!-- Message -->
+                <div class="form-grid-2col">
+                    <div class="form-group-compact grid-span-2">
+                        <label for="message" class="form-label-compact required">Message (Min. 10 characters)</label>
+                        <div class="input-with-counter">
+                            <textarea class="form-control-sm" id="message" name="message" 
+                                      rows="4" maxlength="2000" minlength="10" required></textarea>
+                            <span class="char-counter" id="messageCounter">0/2000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Priority and Attachment in same row -->
+                <div class="form-grid-2col">
+                    <div class="form-group-compact">
+                        <label class="form-label-compact">Priority</label>
+                        <div class="priority-group-compact">
+                            <div class="priority-badge low">
+                                <input type="radio" id="priority_low" name="priority" value="low" checked>
+                                <label for="priority_low">Low</label>
+                            </div>
+                            <div class="priority-badge medium">
+                                <input type="radio" id="priority_medium" name="priority" value="medium">
+                                <label for="priority_medium">Medium</label>
+                            </div>
+                            <div class="priority-badge high">
+                                <input type="radio" id="priority_high" name="priority" value="high">
+                                <label for="priority_high">High</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group-compact">
+                        <label class="form-label-compact">Attachment</label>
+                        <div class="file-upload-compact">
+                            <input type="file" id="attachment" name="attachment" 
+                                   accept=".png,.jpg,.jpeg,.pdf,.doc,.docx,.xls,.xlsx">
+                            <label for="attachment" class="file-upload-label-compact">
+                                <i class="fas fa-paperclip"></i>
+                                <span id="fileText">Choose file (Max 10MB)</span>
+                            </label>
+                            <span class="file-info" id="fileInfo"></span>
+                            <span class="file-remove" id="removeFile" style="display:none;">
+                                <i class="fas fa-times"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Footer -->
+                <div class="form-footer">
+                    <div class="form-footer-info">
+                        <i class="fas fa-lock me-1"></i> Your information is secure and confidential
+                    </div>
+                    <div class="form-footer-actions">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="this.form.reset();">
+                            <i class="fas fa-redo me-1"></i>Reset
+                        </button>
+                        <button type="submit" class="btn-submit-compact" id="submitBtn">
+                            <i class="fas fa-paper-plane"></i>
+                            Send Enquiry
+                        </button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
-    
-    <!-- Help Cards -->
-    <div class="mt-3">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="customer-card h-100">
-                    <div class="customer-card-header">
-                        <h6 class="mb-0"><i class="fas fa-headset me-2"></i>Need Help?</h6>
-                    </div>
-                    <div class="customer-card-body">
-                        <div class="mb-2">
-                            <i class="fas fa-phone text-primary me-2"></i>
-                            <strong>+91-1234567890</strong>
-                        </div>
-                        <div>
-                            <i class="fas fa-envelope text-primary me-2"></i>
-                            <strong>support@chrp-india.com</strong>
-                        </div>
-                    </div>
-                </div>
+
+    <!-- Help Strip -->
+    <div class="help-strip">
+        <div class="help-item">
+            <i class="fas fa-phone"></i>
+            <div>
+                <strong>Call Us</strong><br>
+                <small>+91-1234567890</small>
             </div>
-            <div class="col-md-6">
-                <div class="customer-card h-100">
-                    <div class="customer-card-header">
-                        <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Business Hours</h6>
-                    </div>
-                    <div class="customer-card-body">
-                        <div class="mb-1"><strong>Mon-Fri:</strong> 9:00 AM - 6:00 PM</div>
-                        <div class="mb-1"><strong>Saturday:</strong> 10:00 AM - 4:00 PM</div>
-                        <div><strong>Sunday:</strong> Closed</div>
-                    </div>
-                </div>
+        </div>
+        <div class="help-item">
+            <i class="fas fa-envelope"></i>
+            <div>
+                <strong>Email</strong><br>
+                <small>support@chrp-india.com</small>
+            </div>
+        </div>
+        <div class="help-item">
+            <i class="fas fa-clock"></i>
+            <div>
+                <strong>Business Hours</strong><br>
+                <small>Mon-Sat: 9AM-6PM IST</small>
+            </div>
+        </div>
+        <div class="help-item">
+            <i class="fas fa-bolt"></i>
+            <div>
+                <strong>Response Time</strong><br>
+                <small>Within 24 hours</small>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
+{% endblock customer_content %}
 
 {% block customer_extra_js %}
 <script>
@@ -487,262 +693,133 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // File upload elements
     const fileInput = document.getElementById('attachment');
-    const fileLabel = document.getElementById('fileLabel');
-    const fileSelectedInfo = document.getElementById('fileSelectedInfo');
-    const fileName = document.getElementById('fileName');
-    const fileSize = document.getElementById('fileSize');
-    const removeFileBtn = document.getElementById('removeFileBtn');
-    const fileError = document.getElementById('fileError');
+    const fileText = document.getElementById('fileText');
+    const fileInfo = document.getElementById('fileInfo');
+    const removeFile = document.getElementById('removeFile');
     
     // Category change handler
     categorySelect.addEventListener('change', function() {
         const categoryId = this.value;
         
         if (categoryId) {
-            loadSubcategories(categoryId);
-            categorySelect.classList.remove('is-invalid');
-            categorySelect.classList.add('is-valid');
+            fetch(`${BASE_URL}api/business-subcategories/${categoryId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    subcategorySelect.innerHTML = '<option value="">Select</option>';
+                    
+                    if (data.subcategories && data.subcategories.length > 0) {
+                        data.subcategories.forEach(sub => {
+                            const option = document.createElement('option');
+                            option.value = sub.id;
+                            option.textContent = sub.name;
+                            subcategorySelect.appendChild(option);
+                        });
+                        subcategoryWrapper.style.display = 'block';
+                    } else {
+                        subcategoryWrapper.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching subcategories:', error);
+                    subcategoryWrapper.style.display = 'none';
+                });
         } else {
             subcategoryWrapper.style.display = 'none';
-            subcategorySelect.innerHTML = '<option value="">-- All Subcategories --</option>';
-            categorySelect.classList.remove('is-valid');
+            subcategorySelect.innerHTML = '<option value="">Select</option>';
         }
     });
     
-    // Load subcategories
-    function loadSubcategories(categoryId) {
-        fetch(`${BASE_URL}ajax/subcategories/${categoryId}/`)
-            .then(response => response.json())
-            .then(data => {
-                subcategorySelect.innerHTML = '<option value="">-- All Subcategories --</option>';
-                
-                if (data.subcategories && data.subcategories.length > 0) {
-                    data.subcategories.forEach(sub => {
-                        subcategorySelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
-                    });
-                    subcategoryWrapper.style.display = 'block';
-                } else {
-                    subcategoryWrapper.style.display = 'none';
-                }
-            })
-            .catch(error => console.error('Error loading subcategories:', error));
-    }
-    
-    // Character counter
-    function updateCharacterCounter() {
-        const currentLength = messageTextarea.value.length;
-        const maxLength = 2000;
-        const remaining = maxLength - currentLength;
+    // Message counter
+    messageTextarea.addEventListener('input', function() {
+        const length = this.value.length;
+        messageCounter.textContent = `${length}/2000`;
         
-        messageCounter.textContent = `${currentLength} / ${maxLength} characters`;
-        
-        if (remaining < 100) {
-            messageCounter.className = 'character-counter danger';
-        } else if (remaining < 200) {
-            messageCounter.className = 'character-counter warning';
+        if (length > 1800) {
+            messageCounter.style.color = 'var(--danger-color)';
+        } else if (length > 1500) {
+            messageCounter.style.color = 'var(--warning-color)';
         } else {
-            messageCounter.className = 'character-counter';
+            messageCounter.style.color = 'var(--gray-400)';
         }
-    }
+    });
     
-    messageTextarea.addEventListener('input', updateCharacterCounter);
-    
-    // File upload handler
+    // File upload handling
     fileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         
         if (file) {
-            // Validate file
-            const validationResult = validateFile(file);
-            
-            if (!validationResult.valid) {
-                fileLabel.classList.add('is-invalid');
-                fileLabel.classList.remove('has-file');
-                fileError.textContent = validationResult.error;
-                fileError.style.display = 'block';
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                alert('File size must be less than 10MB');
                 fileInput.value = '';
-                fileSelectedInfo.style.display = 'none';
                 return;
             }
             
             // Show file info
-            fileLabel.classList.remove('is-invalid');
-            fileLabel.classList.add('has-file');
-            fileError.style.display = 'none';
-            
-            fileName.textContent = file.name;
-            fileSize.textContent = formatFileSize(file.size);
-            fileSelectedInfo.style.display = 'flex';
+            const fileName = file.name.length > 20 ? 
+                file.name.substring(0, 20) + '...' : file.name;
+            fileText.textContent = fileName;
+            fileInfo.textContent = `(${(file.size / 1024 / 1024).toFixed(1)}MB)`;
+            removeFile.style.display = 'inline';
         }
     });
     
-    // Remove file handler
-    removeFileBtn.addEventListener('click', function() {
+    // Remove file
+    removeFile.addEventListener('click', function() {
         fileInput.value = '';
-        fileLabel.classList.remove('has-file', 'is-invalid');
-        fileSelectedInfo.style.display = 'none';
-        fileError.style.display = 'none';
+        fileText.textContent = 'Choose file (Max 10MB)';
+        fileInfo.textContent = '';
+        removeFile.style.display = 'none';
     });
-    
-    // Drag and drop handlers
-    fileLabel.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.style.borderColor = 'var(--primary-color)';
-        this.style.background = 'rgba(30, 60, 114, 0.1)';
-    });
-    
-    fileLabel.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.style.borderColor = '';
-        this.style.background = '';
-    });
-    
-    fileLabel.addEventListener('drop', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.style.borderColor = '';
-        this.style.background = '';
-        
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            // Create a new DataTransfer object and add the file
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(files[0]);
-            fileInput.files = dataTransfer.files;
-            
-            // Trigger change event
-            fileInput.dispatchEvent(new Event('change'));
-        }
-    });
-    
-    // Validate file
-    function validateFile(file) {
-        const allowedExtensions = ['png', 'webp', 'jpg', 'jpeg', 'pdf', 'xls', 'xlsx', 'csv', 'psd', 'doc', 'docx'];
-        const maxSize = 10 * 1024 * 1024; // 10MB
-        
-        // Check extension
-        const fileName = file.name.toLowerCase();
-        const fileExtension = fileName.split('.').pop();
-        
-        if (!allowedExtensions.includes(fileExtension)) {
-            return {
-                valid: false,
-                error: 'Invalid file type. Allowed: PNG, WEBP, JPG, PDF, Excel, CSV, PSD, DOC'
-            };
-        }
-        
-        // Check size
-        if (file.size > maxSize) {
-            return {
-                valid: false,
-                error: `File too large. Maximum size is 10MB. Your file is ${formatFileSize(file.size)}`
-            };
-        }
-        
-        return { valid: true };
-    }
-    
-    // Format file size
-    function formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        
-        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-    }
     
     // Form validation
-    function validateForm() {
-        let isValid = true;
-        
-        // Reset validation states
-        categorySelect.classList.remove('is-invalid', 'is-valid');
-        messageTextarea.classList.remove('is-invalid', 'is-valid');
-        document.getElementById('categoryError').textContent = '';
-        document.getElementById('messageError').textContent = '';
-        
-        // Validate category
-        if (!categorySelect.value) {
-            categorySelect.classList.add('is-invalid');
-            document.getElementById('categoryError').textContent = 'Please select a business category.';
-            isValid = false;
-        } else {
-            categorySelect.classList.add('is-valid');
-        }
-        
-        // Validate message
-        const message = messageTextarea.value.trim();
-        if (!message) {
-            messageTextarea.classList.add('is-invalid');
-            document.getElementById('messageError').textContent = 'Message is required.';
-            isValid = false;
-        } else if (message.length < 10) {
-            messageTextarea.classList.add('is-invalid');
-            document.getElementById('messageError').textContent = 'Message must be at least 10 characters long.';
-            isValid = false;
-        } else if (message.length > 2000) {
-            messageTextarea.classList.add('is-invalid');
-            document.getElementById('messageError').textContent = 'Message cannot exceed 2000 characters.';
-            isValid = false;
-        } else {
-            messageTextarea.classList.add('is-valid');
-        }
-        
-        // Validate file if present
-        if (fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            const validationResult = validateFile(file);
-            
-            if (!validationResult.valid) {
-                fileLabel.classList.add('is-invalid');
-                fileLabel.classList.remove('has-file');
-                fileError.textContent = validationResult.error;
-                fileError.style.display = 'block';
-                isValid = false;
-            }
-        }
-        
-        return isValid;
-    }
-    
-    // Blur validation
-    messageTextarea.addEventListener('blur', function() {
-        if (messageTextarea.value.trim()) {
-            validateForm();
-        }
-    });
-    
-    categorySelect.addEventListener('blur', function() {
-        if (categorySelect.value) {
-            validateForm();
-        }
-    });
-    
-    // Form submit handler
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        if (!validateForm()) {
-            // Scroll to first error
-            const firstError = document.querySelector('.is-invalid');
-            if (firstError) {
-                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-            return;
+        let isValid = true;
+        let errorMessages = [];
+        
+        // Validate business category
+        if (!categorySelect.value) {
+            categorySelect.style.borderColor = 'var(--danger-color)';
+            errorMessages.push('Please select a business category');
+            isValid = false;
+        } else {
+            categorySelect.style.borderColor = '';
         }
         
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+        // Validate message (minimum 10 characters)
+        if (!messageTextarea.value.trim() || messageTextarea.value.trim().length < 10) {
+            messageTextarea.style.borderColor = 'var(--danger-color)';
+            errorMessages.push('Message must be at least 10 characters long');
+            isValid = false;
+        } else {
+            messageTextarea.style.borderColor = '';
+        }
         
-        this.submit();
+        if (!isValid) {
+            // Show first error message
+            if (errorMessages.length > 0) {
+                alert(errorMessages[0]);
+            }
+            // Focus on first invalid field
+            const firstInvalid = form.querySelector('[style*="danger-color"]');
+            if (firstInvalid) {
+                firstInvalid.focus();
+            }
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            form.submit();
+        }
     });
     
-    // Initialize
-    updateCharacterCounter();
+    // Reset form borders on input
+    form.querySelectorAll('input, select, textarea').forEach(field => {
+        field.addEventListener('input', function() {
+            this.style.borderColor = '';
+        });
+    });
 });
 </script>
-{% endblock %}
+{% endblock customer_extra_js %}

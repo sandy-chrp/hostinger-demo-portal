@@ -527,16 +527,3 @@ def admin_notification_settings(request):
 # TEMPLATES
 # ===============================================
 
-"""
-Create the following template files in templates/admin/notifications/
-
-1. templates/admin/notifications/notifications.html
-2. templates/admin/notifications/templates.html
-3. templates/admin/notifications/edit_template.html
-4. templates/admin/notifications/announcements.html
-5. templates/admin/notifications/create_announcement.html
-6. templates/admin/notifications/edit_announcement.html
-7. templates/admin/notifications/send_bulk.html
-8. templates/admin/notifications/stats.html
-9. templates/admin/notifications/settings.html
-"""

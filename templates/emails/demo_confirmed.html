@@ -1,34 +1,203 @@
 {% extends "emails/base.html" %}
 
-{% block email_title %}Demo Request Confirmed{% endblock %}
+{% block title %}Demo Request Confirmed - Demo Portal{% endblock %}
 
-{% block email_content %}
-<div class="email-greeting">
-    Hi {{ user.first_name }}!
-</div>
+{% block preheader %}Your demo request has been confirmed{% endblock %}
 
-<div class="email-content">
-    <p>Excellent news! Your demo request has been <strong>confirmed</strong>.</p>
-    
-    <div class="notification-card">
-        <h3>✓ Demo Confirmed</h3>
-        <p>Our team will contact you shortly to schedule the demonstration.</p>
-    </div>
-    
-    <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <p style="margin: 0; color: #0369a1;">
-            <strong>Demo:</strong> {{ demo_title }}<br>
-            <strong>Status:</strong> <span style="color: #10b981;">Confirmed</span><br>
-            <strong>Request Date:</strong> {{ request_date }}
-        </p>
-    </div>
-    
-    <div style="text-align: center; margin: 30px 0;">
-        <a href="{{ site_url }}/customer/demo-requests/" class="email-button">
-            View Request Details
-        </a>
-    </div>
-    
-    <p>Looking forward to demonstrating our solution to you!</p>
-</div>
+{% block content %}
+<!-- Success Icon -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 25px 0;">
+    <tr>
+        <td align="center">
+            <div style="width: 80px; height: 80px; background-color: #10b981; background-image: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: inline-block; text-align: center; line-height: 80px; margin-bottom: 20px;">
+                <span style="font-size: 40px; line-height: 80px; vertical-align: middle;">✓</span>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<!-- Main Heading -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+        <td align="center">
+            <h1 style="color: #1f2937 !important; font-size: 28px; font-weight: 700; margin: 0 0 10px 0; mso-line-height-rule: exactly; line-height: 36px;">
+                Demo Request Confirmed!
+            </h1>
+            <p style="color: #10b981 !important; font-size: 16px; margin: 0 0 30px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                We're excited to show you our solution
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- Greeting -->
+<p style="color: #374151 !important; font-size: 16px; line-height: 24px; margin: 0 0 10px 0; mso-line-height-rule: exactly;">
+    Hi <strong style="color: #1f2937 !important;">{{ user.first_name }}</strong>!
+</p>
+
+<p style="color: #374151 !important; font-size: 16px; line-height: 24px; margin: 0 0 25px 0; mso-line-height-rule: exactly;">
+    Excellent news! Your demo request has been <strong style="color: #10b981 !important;">confirmed</strong>.
+</p>
+
+<!-- Confirmation Card -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ecfdf5" style="background-color: #ecfdf5; border-left: 5px solid #10b981; border-radius: 6px; margin: 0 0 25px 0;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #065f46 !important; font-size: 16px; margin: 0 0 10px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                ✓ Demo Confirmed
+            </p>
+            <p style="color: #065f46 !important; font-size: 14px; margin: 0; mso-line-height-rule: exactly; line-height: 20px;">
+                Our team will contact you shortly to schedule the demonstration.
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- Demo Details Box -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f0f9ff" style="background-color: #f0f9ff; border-radius: 8px; margin: 0 0 25px 0; border: 1px solid #bfdbfe;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #1e3a8a !important; font-size: 14px; margin: 0 0 15px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 20px;">
+                📋 Demo Request Details
+            </p>
+            
+            <!-- Info Rows -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td style="color: #0369a1 !important; font-size: 14px; font-weight: 600; width: 35%; mso-line-height-rule: exactly; line-height: 20px;">Demo:</td>
+                                <td style="color: #0c4a6e !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">{{ demo_title }}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td style="color: #0369a1 !important; font-size: 14px; font-weight: 600; width: 35%; mso-line-height-rule: exactly; line-height: 20px;">Status:</td>
+                                <td style="color: #10b981 !important; font-size: 14px; font-weight: 600; mso-line-height-rule: exactly; line-height: 20px;">✓ Confirmed</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td style="color: #0369a1 !important; font-size: 14px; font-weight: 600; width: 35%; mso-line-height-rule: exactly; line-height: 20px;">Request Date:</td>
+                                <td style="color: #0c4a6e !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">{{ request_date }}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- Next Steps -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#fef3c7" style="background-color: #fef3c7; border-left: 5px solid #f59e0b; border-radius: 6px; margin: 0 0 25px 0;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #92400e !important; font-size: 15px; margin: 0 0 10px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 22px;">
+                📞 What Happens Next?
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td style="padding: 5px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding-right: 10px; vertical-align: top; width: 30px;">
+                                    <span style="color: #f59e0b !important; font-size: 18px; font-weight: 600;">1.</span>
+                                </td>
+                                <td>
+                                    <span style="color: #92400e !important; font-size: 13px; mso-line-height-rule: exactly; line-height: 20px;">Our team will contact you within 24-48 hours</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding-right: 10px; vertical-align: top; width: 30px;">
+                                    <span style="color: #f59e0b !important; font-size: 18px; font-weight: 600;">2.</span>
+                                </td>
+                                <td>
+                                    <span style="color: #92400e !important; font-size: 13px; mso-line-height-rule: exactly; line-height: 20px;">We'll schedule a convenient time for your demonstration</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0;">
+                        <table cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding-right: 10px; vertical-align: top; width: 30px;">
+                                    <span style="color: #f59e0b !important; font-size: 18px; font-weight: 600;">3.</span>
+                                </td>
+                                <td>
+                                    <span style="color: #92400e !important; font-size: 13px; mso-line-height-rule: exactly; line-height: 20px;">You'll receive calendar invite and meeting details</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- CTA Button -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 25px 0;">
+    <tr>
+        <td align="center">
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ site_url }}/customer/demo-requests/" style="height:50px;v-text-anchor:middle;width:240px;" arcsize="20%" strokecolor="#087fc2" fillcolor="#087fc2">
+            <w:anchorlock/>
+            <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:600;">📋 View Request Details</center>
+            </v:roundrect>
+            <![endif]-->
+            <!--[if !mso]><!-->
+            <table cellpadding="0" cellspacing="0" border="0" bgcolor="#087fc2" style="background-color: #087fc2; background-image: linear-gradient(135deg, #087fc2 0%, #0669a0 100%); border-radius: 10px; box-shadow: 0 4px 6px rgba(8, 127, 194, 0.3);">
+                <tr>
+                    <td>
+                        <a href="{{ site_url }}/customer/demo-requests/" style="display: inline-block; color: #ffffff !important; text-decoration: none; padding: 16px 40px; font-size: 16px; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
+                            📋 View Request Details
+                        </a>
+                    </td>
+                </tr>
+            </table>
+            <!--<![endif]-->
+        </td>
+    </tr>
+</table>
+
+<!-- Closing Message -->
+<p style="color: #374151 !important; font-size: 15px; line-height: 24px; margin: 0 0 20px 0; text-align: center; mso-line-height-rule: exactly;">
+    Looking forward to demonstrating our solution to you!
+</p>
+
+<!-- Support Section -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 25px 0 0 0; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+    <tr>
+        <td align="center">
+            <p style="color: #1f2937 !important; font-size: 14px; margin: 0 0 10px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 20px;">
+                📞 Questions?
+            </p>
+            <p style="color: #374151 !important; font-size: 13px; line-height: 20px; margin: 0; mso-line-height-rule: exactly;">
+                Email: <a href="mailto:reach@chrp-india.com" style="color: #087fc2 !important; text-decoration: none; font-weight: 600;">reach@chrp-india.com</a><br>
+                Phone: <a href="tel:+918008987948" style="color: #087fc2 !important; text-decoration: none; font-weight: 600;">+91-8008987948</a><br>
+                Hours: 9:00 AM - 7:00 PM (Mon-Sat)
+            </p>
+        </td>
+    </tr>
+</table>
 {% endblock %}
+
+{% block footer_text %}Thank you for choosing CHRP India Demo Portal. We look forward to serving you!{% endblock %}

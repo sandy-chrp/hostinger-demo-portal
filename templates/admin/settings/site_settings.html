@@ -4,123 +4,227 @@
 {% block page_title %}Site Configuration{% endblock %}
 
 {% block admin_content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-lg-8 mx-auto">
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                
-                <!-- Basic Information -->
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-globe me-2"></i>Basic Information
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Site Name</label>
-                            <input type="text" name="site_name" class="form-control" 
-                                   value="{{ site_settings.site_name }}" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Site Description</label>
-                            <textarea name="site_description" class="form-control" rows="3">{{ site_settings.site_description }}</textarea>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Site Logo</label>
-                                <input type="file" name="site_logo" class="form-control" accept="image/*">
-                                {% if site_settings.site_logo %}
-                                <small class="text-muted">Current: {{ site_settings.site_logo.name }}</small>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Favicon</label>
-                                <input type="file" name="favicon" class="form-control" accept="image/*">
-                                {% if site_settings.favicon %}
-                                <small class="text-muted">Current: {{ site_settings.favicon.name }}</small>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="mb-1" style="font-weight: 500; color: #2c3e50;">Site Configuration</h4>
+        <p class="text-muted mb-0" style="font-size: 0.875rem;">Manage your site's basic settings and information</p>
+    </div>
+    <a href="{% url 'core:admin_settings' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Basic Information -->
+            <div class="admin-card mb-4">
+                <div class="admin-card-header">
+                    <h5 class="mb-0" style="font-weight: 500; font-size: 1rem;">
+                        <i class="fas fa-globe me-2"></i>Basic Information
+                    </h5>
                 </div>
-                
-                <!-- Contact Information -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-phone me-2"></i>Contact Information
-                        </h5>
+                <div class="admin-card-body">
+                    <!-- Site Name -->
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">
+                            Site Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               name="site_name" 
+                               class="form-control" 
+                               style="font-size: 0.938rem; height: 38px;"
+                               value="{{ site_settings.site_name }}" 
+                               required>
+                        <small class="text-muted" style="font-size: 0.813rem;">
+                            The name of your website or application
+                        </small>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Contact Email</label>
-                                <input type="email" name="contact_email" class="form-control" 
-                                       value="{{ site_settings.contact_email }}" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Contact Phone</label>
-                                <input type="text" name="contact_phone" class="form-control" 
-                                       value="{{ site_settings.contact_phone }}">
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Address</label>
-                            <textarea name="address" class="form-control" rows="2">{{ site_settings.address }}</textarea>
-                        </div>
+                    
+                    <!-- Site Description -->
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">
+                            Site Description
+                        </label>
+                        <textarea name="site_description" 
+                                  class="form-control" 
+                                  rows="3"
+                                  style="font-size: 0.938rem;">{{ site_settings.site_description }}</textarea>
+                        <small class="text-muted" style="font-size: 0.813rem;">
+                            Brief description of your site (used for SEO)
+                        </small>
                     </div>
-                </div>
-                
-                <!-- Social Media -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-share-alt me-2"></i>Social Media
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">
-                                <i class="fab fa-facebook me-1"></i>Facebook URL
+                    
+                    <!-- Logo & Favicon -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">
+                                Site Logo
                             </label>
-                            <input type="url" name="facebook_url" class="form-control" 
-                                   value="{{ site_settings.facebook_url }}">
+                            <input type="file" 
+                                   name="site_logo" 
+                                   class="form-control" 
+                                   style="font-size: 0.938rem; height: 38px;"
+                                   accept="image/*">
+                            {% if site_settings.site_logo %}
+                            <small class="text-muted d-block mt-1" style="font-size: 0.813rem;">
+                                <i class="fas fa-image me-1"></i>Current: {{ site_settings.site_logo.name }}
+                            </small>
+                            {% endif %}
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">
-                                <i class="fab fa-linkedin me-1"></i>LinkedIn URL
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">
+                                Favicon
                             </label>
-                            <input type="url" name="linkedin_url" class="form-control" 
-                                   value="{{ site_settings.linkedin_url }}">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">
-                                <i class="fab fa-youtube me-1"></i>YouTube URL
-                            </label>
-                            <input type="url" name="youtube_url" class="form-control" 
-                                   value="{{ site_settings.youtube_url }}">
+                            <input type="file" 
+                                   name="favicon" 
+                                   class="form-control" 
+                                   style="font-size: 0.938rem; height: 38px;"
+                                   accept="image/*">
+                            {% if site_settings.favicon %}
+                            <small class="text-muted d-block mt-1" style="font-size: 0.813rem;">
+                                <i class="fas fa-image me-1"></i>Current: {{ site_settings.favicon.name }}
+                            </small>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
-                
-                <!-- Submit Buttons -->
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i>Save Settings
-                    </button>
-                    <a href="{% url 'core:admin_settings' %}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Back
-                    </a>
+            </div>
+            
+            <!-- Contact Information -->
+            <div class="admin-card mb-4">
+                <div class="admin-card-header">
+                    <h5 class="mb-0" style="font-weight: 500; font-size: 1rem;">
+                        <i class="fas fa-phone me-2"></i>Contact Information
+                    </h5>
                 </div>
-            </form>
-        </div>
+                <div class="admin-card-body">
+                    <div class="row">
+                        <!-- Contact Email -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">
+                                Contact Email <span class="text-danger">*</span>
+                            </label>
+                            <input type="email" 
+                                   name="contact_email" 
+                                   class="form-control" 
+                                   style="font-size: 0.938rem; height: 38px;"
+                                   value="{{ site_settings.contact_email }}" 
+                                   required>
+                            <small class="text-muted" style="font-size: 0.813rem;">
+                                Primary contact email address
+                            </small>
+                        </div>
+                        
+                        <!-- Contact Phone -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">
+                                Contact Phone
+                            </label>
+                            <input type="text" 
+                                   name="contact_phone" 
+                                   class="form-control" 
+                                   style="font-size: 0.938rem; height: 38px;"
+                                   value="{{ site_settings.contact_phone }}"
+                                   placeholder="+1 (555) 123-4567">
+                            <small class="text-muted" style="font-size: 0.813rem;">
+                                Primary contact phone number
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Address -->
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">
+                            Address
+                        </label>
+                        <textarea name="address" 
+                                  class="form-control" 
+                                  rows="2"
+                                  style="font-size: 0.938rem;"
+                                  placeholder="123 Main Street, City, State, ZIP">{{ site_settings.address }}</textarea>
+                        <small class="text-muted" style="font-size: 0.813rem;">
+                            Physical business address
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Social Media -->
+            <div class="admin-card mb-4">
+                <div class="admin-card-header">
+                    <h5 class="mb-0" style="font-weight: 500; font-size: 1rem;">
+                        <i class="fas fa-share-alt me-2"></i>Social Media
+                    </h5>
+                </div>
+                <div class="admin-card-body">
+                    <!-- Facebook -->
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">
+                            <i class="fab fa-facebook me-1" style="color: #1877f2;"></i>Facebook URL
+                        </label>
+                        <input type="url" 
+                               name="facebook_url" 
+                               class="form-control" 
+                               style="font-size: 0.938rem; height: 38px;"
+                               value="{{ site_settings.facebook_url }}"
+                               placeholder="https://facebook.com/yourpage">
+                        <small class="text-muted" style="font-size: 0.813rem;">
+                            Link to your Facebook page
+                        </small>
+                    </div>
+                    
+                    <!-- LinkedIn -->
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">
+                            <i class="fab fa-linkedin me-1" style="color: #0a66c2;"></i>LinkedIn URL
+                        </label>
+                        <input type="url" 
+                               name="linkedin_url" 
+                               class="form-control" 
+                               style="font-size: 0.938rem; height: 38px;"
+                               value="{{ site_settings.linkedin_url }}"
+                               placeholder="https://linkedin.com/company/yourcompany">
+                        <small class="text-muted" style="font-size: 0.813rem;">
+                            Link to your LinkedIn profile or page
+                        </small>
+                    </div>
+                    
+                    <!-- YouTube -->
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size: 0.875rem; font-weight: 500;">
+                            <i class="fab fa-youtube me-1" style="color: #ff0000;"></i>YouTube URL
+                        </label>
+                        <input type="url" 
+                               name="youtube_url" 
+                               class="form-control" 
+                               style="font-size: 0.938rem; height: 38px;"
+                               value="{{ site_settings.youtube_url }}"
+                               placeholder="https://youtube.com/@yourchannel">
+                        <small class="text-muted" style="font-size: 0.813rem;">
+                            Link to your YouTube channel
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Submit Buttons -->
+            <div class="admin-card">
+                <div class="admin-card-body">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{% url 'core:admin_settings' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}

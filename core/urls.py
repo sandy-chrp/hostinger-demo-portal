@@ -33,7 +33,7 @@ urlpatterns = [
     # =====================================
     
     # Admin Authentication
-    path('', views.admin_login_view, name='admin_login'),
+    path('admin', views.admin_login_view, name='admin_login'),
     path('admin/logout/', views.admin_logout_view, name='admin_logout'),
     path('admin/dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
     
@@ -84,21 +84,24 @@ urlpatterns = [
     path('admin/webgl-preview/<int:demo_id>/', 
          webgl_views.webgl_preview, 
          name='admin_webgl_preview'),
-    
-    path('admin/universal-preview/<int:demo_id>/', 
-         webgl_views.admin_universal_preview, 
-         name='admin_universal_preview'),
+
+     path('api/webgl/extraction-progress/<int:demo_id>/',
+          webgl_views.webgl_extraction_progress,
+          name='webgl_extraction_progress'),
+
+#     path('admin/universal-preview/<int:demo_id>/', 
+#          webgl_views.admin_universal_preview, 
+#          name='admin_universal_preview'),
     
     # Customer Universal Viewer
-    path('demo/view/<int:demo_id>/', 
-         webgl_views.universal_viewer, 
-         name='universal_viewer'),
+#     path('demo/view/<int:demo_id>/', 
+#          webgl_views.universal_viewer, 
+#          name='universal_viewer'),
     
     # ✅ CRITICAL: Serve WebGL Extracted Files (slug + filepath)
-    path('demo/webgl/<slug:slug>/<path:filepath>', 
-         webgl_views.serve_webgl_file, 
-         name='serve_webgl_file'),
-    
+     path('demo/webgl/<slug:slug>/<path:filepath>', 
+          webgl_views.serve_webgl_file, 
+          name='serve_webgl_file'),
     # WebGL Content Serving (demo_id based - for backward compatibility)
     path('webgl/serve/<int:demo_id>/', 
          webgl_views.serve_webgl_content, 
@@ -159,7 +162,7 @@ urlpatterns = [
     path('admin/categories/bulk-actions/', category_views.admin_bulk_category_actions_view, name='admin_bulk_category_actions'),
     path('admin/categories/reorder/', category_views.admin_reorder_categories_view, name='admin_reorder_categories'),
     path('api/subcategories/', get_subcategories_ajax, name='get_subcategories_ajax'),
-    path('auth/ajax/get-subcategories/', get_subcategories_for_category, name='get_subcategories'),
+#     path('auth/ajax/get-subcategories/', get_subcategories_for_category, name='get_subcategories'),
 
     # Business Category Management
     path('admin/business-categories/', business_categories_views.admin_business_categories, name='admin_business_categories'),
@@ -167,14 +170,17 @@ urlpatterns = [
     path('admin/business-categories/<int:category_id>/edit/', business_categories_views.admin_business_category_edit, name='admin_business_category_edit'),
     path('admin/business-categories/<int:category_id>/delete/', business_categories_views.admin_business_category_delete, name='admin_business_category_delete'),
     path('admin/business-categories/<int:category_id>/toggle-status/', business_categories_views.admin_business_category_toggle_status, name='admin_business_category_toggle_status'),
-    
     # Business Subcategory Management
     path('admin/business-subcategories/', business_categories_views.admin_business_subcategories, name='admin_business_subcategories'),
     path('admin/business-subcategories/create/', business_categories_views.admin_business_subcategory_create, name='admin_business_subcategory_create'),
     path('admin/business-subcategories/<int:subcategory_id>/edit/', business_categories_views.admin_business_subcategory_edit, name='admin_business_subcategory_edit'),
     path('admin/business-subcategories/<int:subcategory_id>/delete/', business_categories_views.admin_business_subcategory_delete, name='admin_business_subcategory_delete'),
     path('admin/business-subcategories/<int:subcategory_id>/toggle-status/', business_categories_views.admin_business_subcategory_toggle_status, name='admin_business_subcategory_toggle_status'),
-
+     path('auth/ajax/get-subcategories/',  views.get_subcategories_for_category,  name='get_subcategories'),
+     #   path('admin/ajax/get-subcategories/', views.admin_get_subcategories,name='admin_get_subcategories'),
+      
+           
+        
     
     # Individual Category Operations
     path('admin/categories/<int:category_id>/', category_views.admin_category_detail_view, name='admin_category_detail'),
