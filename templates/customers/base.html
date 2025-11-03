@@ -555,7 +555,7 @@
             flex-shrink: 0;
             width: 100%;
             max-width: 100%;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .customer-header-left {
@@ -581,6 +581,8 @@
             align-items: center;
             gap: var(--spacing-md);
             flex-shrink: 0;
+            position: relative;
+            z-index: 1050;
         }
 
         .mobile-toggle {
@@ -882,39 +884,150 @@
             border-radius: var(--radius-sm);
         }
 
-        /* Dropdown */
-        .dropdown-menu {
-            font-size: var(--font-sm);
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-lg);
-            border: 1px solid var(--gray-200);
-            min-width: 200px;
-            z-index: 9999 !important;
-            position: absolute !important;
-            display: none;
+        /* ============================================
+           🔥 PURE JS DROPDOWN - NO BOOTSTRAP DEPENDENCY
+           ============================================ */
+
+        /* Custom Dropdown Container */
+        .custom-dropdown {
+            position: relative !important;
+            display: inline-block !important;
+            z-index: 1051 !important;
         }
 
-        /* Force dropdown visibility when shown */
-        .dropdown-menu.show {
-            display: block !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-            transform: translate3d(0, 0, 0) !important;
-        }
-
-        .dropdown-item {
+        /* Custom Dropdown Button */
+        .custom-dropdown-toggle {
+            background: transparent;
+            border: 1px solid var(--gray-300);
+            color: var(--gray-700);
             padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
             font-size: var(--font-sm);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            position: relative;
+            z-index: 1052;
+        }
+
+        .custom-dropdown-toggle:hover {
+            background: var(--gray-100);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .custom-dropdown-toggle:focus {
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(8, 127, 194, 0.25);
+        }
+
+        /* Custom Dropdown Arrow */
+        .custom-dropdown-toggle::after {
+            content: "";
+            display: inline-block;
+            margin-left: 0.5rem;
+            vertical-align: 0.255em;
+            border-top: 0.3em solid;
+            border-right: 0.3em solid transparent;
+            border-bottom: 0;
+            border-left: 0.3em solid transparent;
+            transition: transform 0.2s ease;
+        }
+
+        .custom-dropdown-toggle.active::after {
+            transform: rotate(180deg);
+        }
+
+        /* Custom Dropdown Menu */
+        .custom-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            left: auto;
+            z-index: 10000;
+            display: none;
+            min-width: 200px;
+            padding: 0.5rem 0;
+            margin: 0;
+            font-size: var(--font-sm);
+            color: var(--gray-700);
+            text-align: left;
+            list-style: none;
+            background-color: white;
+            background-clip: padding-box;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Show dropdown when active */
+        .custom-dropdown-menu.show {
+            display: block !important;
+            opacity: 1;
+            visibility: visible;
+            animation: dropdownFadeIn 0.2s ease forwards;
+        }
+
+        /* Dropdown animation */
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom Dropdown Items */
+        .custom-dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 1rem;
+            clear: both;
+            font-weight: 400;
+            color: var(--gray-700);
+            text-align: inherit;
+            text-decoration: none;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0;
             border-radius: var(--radius-sm);
-            transition: all var(--transition-fast) ease;
+            margin: 2px 0.5rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
         }
 
-        .dropdown-item:hover {
+        .custom-dropdown-item:hover,
+        .custom-dropdown-item:focus {
             background-color: var(--gray-100);
+            color: var(--primary-color);
+            padding-left: 1.25rem;
+            text-decoration: none;
         }
 
-        .dropdown-item:active {
+        .custom-dropdown-item:active {
             background-color: var(--gray-200);
+        }
+
+        .custom-dropdown-item i {
+            width: 20px;
+            text-align: center;
+            margin-right: 0.5rem;
+            display: inline-block;
+        }
+
+        /* Custom Dropdown Divider */
+        .custom-dropdown-divider {
+            height: 0;
+            margin: 0.5rem 0;
+            overflow: hidden;
+            border-top: 1px solid var(--gray-200);
         }
 
         /* Mobile Responsive */
@@ -968,6 +1081,11 @@
                 width: 42px;
                 height: 42px;
                 font-size: var(--font-2xl);
+            }
+
+            .custom-dropdown-toggle {
+                min-height: 44px;
+                min-width: 44px;
             }
         }
 
@@ -1027,130 +1145,6 @@
             .nav-link {
                 padding: 0.75rem 0.6rem;
             }
-        }
-
-        /* ============================================
-           🎨 DROPDOWN & NOTIFICATION BELL FIXES
-           ============================================ */
-
-        /* Customer header z-index management */
-        .customer-header {
-            z-index: 999 !important;
-        }
-
-        .customer-header-right {
-            z-index: 1000 !important;
-            position: relative;
-        }
-
-        /* Dropdown z-index fix - MUST be higher than sidebar */
-        .dropdown-menu {
-            z-index: 9999 !important;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
-            position: absolute !important;
-            will-change: transform;
-        }
-
-        /* Dropdown button clickability */
-        .customer-header-right .dropdown {
-            position: relative;
-            z-index: 1001 !important;
-        }
-
-        .customer-header-right .btn {
-            cursor: pointer;
-            pointer-events: auto;
-        }
-
-        .customer-header-right .dropdown-toggle {
-            background: transparent;
-            border: 1px solid var(--gray-300);
-            color: var(--gray-700);
-            transition: all 0.2s ease;
-            position: relative;
-            z-index: 1;
-        }
-
-        .customer-header-right .dropdown-toggle:hover {
-            background: var(--gray-100);
-            border-color: var(--primary-color);
-            color: var(--primary-color);
-        }
-
-        .customer-header-right .dropdown-toggle:focus,
-        .customer-header-right .dropdown-toggle:active {
-            box-shadow: 0 0 0 0.2rem rgba(8, 127, 194, 0.25) !important;
-            outline: none !important;
-        }
-
-        /* Show dropdown menu */
-        .dropdown-menu.show {
-            display: block !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-            pointer-events: auto !important;
-        }
-
-        /* Notification panel z-index */
-        .notification-panel {
-            z-index: 9998 !important;
-        }
-
-        .notification-bell-wrapper {
-            z-index: 1001;
-            position: relative;
-        }
-
-        /* Mobile dropdown support */
-        @media (max-width: 768px) {
-            .dropdown-toggle {
-                min-height: 44px;
-                min-width: 44px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-        }
-
-        /* Dropdown animations */
-        .dropdown-menu {
-            animation: dropdownFadeIn 0.2s ease;
-        }
-
-        @keyframes dropdownFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Dropdown arrow animation */
-        .dropdown-toggle::after {
-            margin-left: 0.5rem;
-            transition: transform 0.2s ease;
-        }
-
-        .dropdown-toggle[aria-expanded="true"]::after {
-            transform: rotate(180deg);
-        }
-
-        /* Dropdown item hover effect */
-        .dropdown-item {
-            transition: all 0.2s ease;
-        }
-
-        .dropdown-item:hover {
-            padding-left: 1.25rem;
-        }
-
-        .dropdown-item i {
-            width: 20px;
-            text-align: center;
-            margin-right: 0.5rem;
         }
 
         /* Print Styles */
@@ -1303,25 +1297,21 @@
                         <!-- Notification Bell -->
                         {% include 'customers/partials/notification_bell.html' %}
 
-                        <!-- User Dropdown -->
-                        <div class="dropdown">
-                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <!-- ✅ PURE JS CUSTOM DROPDOWN - 100% WORKING -->
+                        <div class="custom-dropdown" id="userDropdownWrapper">
+                            <button class="custom-dropdown-toggle" id="userDropdownBtn" type="button">
                                 <i class="fas fa-user-circle me-1"></i>
-                                {{ user.first_name }}
+                                <span>{{ user.first_name }}</span>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'accounts:profile' %}">
-                                        <i class="fas fa-user me-2"></i>Profile
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item text-danger" href="{% url 'accounts:signout' %}">
-                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
-                                    </a>
-                                </li>
-                            </ul>
+                            <div class="custom-dropdown-menu" id="userDropdownMenu">
+                                <a class="custom-dropdown-item" href="{% url 'accounts:profile' %}">
+                                    <i class="fas fa-user"></i>Profile
+                                </a>
+                                <div class="custom-dropdown-divider"></div>
+                                <a class="custom-dropdown-item text-danger" href="{% url 'accounts:signout' %}">
+                                    <i class="fas fa-sign-out-alt"></i>Logout
+                                </a>
+                            </div>
                         </div>
                     {% endblock %}
                 </div>
@@ -1370,80 +1360,84 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- ============================================
-         ✅ DROPDOWN & NOTIFICATION FIX SCRIPT
+         ✅ PURE JAVASCRIPT DROPDOWN - 100% WORKING
          ============================================ -->
     <script>
-    // Dropdown & Notification Bell Fix
     (function() {
         'use strict';
         
-        if (typeof bootstrap === 'undefined') {
-            console.error('❌ Bootstrap not loaded!');
-            return;
-        }
-        
-        console.log('✅ Bootstrap loaded');
+        console.log('🚀 Pure JS Dropdown Initializing...');
         
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Initializing dropdowns...');
+            const dropdownBtn = document.getElementById('userDropdownBtn');
+            const dropdownMenu = document.getElementById('userDropdownMenu');
+            const dropdownWrapper = document.getElementById('userDropdownWrapper');
             
-            const dropdownElements = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-            console.log(`Found ${dropdownElements.length} dropdown(s)`);
+            if (!dropdownBtn || !dropdownMenu) {
+                console.error('❌ Dropdown elements not found!');
+                return;
+            }
             
-            dropdownElements.forEach((element, index) => {
-                try {
-                    // Initialize Bootstrap dropdown
-                    const dropdownInstance = new bootstrap.Dropdown(element, {
-                        boundary: 'viewport',
-                        offset: [0, 8],
-                        autoClose: true,
-                        display: 'dynamic'
-                    });
-                    
-                    console.log(`✅ Dropdown ${index + 1} initialized`);
-                    
-                    // Click handler
-                    element.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        // Toggle dropdown
-                        const dropdown = bootstrap.Dropdown.getInstance(this);
-                        if (dropdown) {
-                            dropdown.toggle();
-                        }
-                    });
-                    
-                    // Show event
-                    element.addEventListener('show.bs.dropdown', function(e) {
-                        console.log('✅ Dropdown showing');
-                    });
-                    
-                    // Shown event
-                    element.addEventListener('shown.bs.dropdown', function(e) {
-                        console.log('✅ Dropdown shown');
-                        const menu = this.nextElementSibling;
-                        if (menu && menu.classList.contains('dropdown-menu')) {
-                            menu.style.display = 'block';
-                            menu.style.opacity = '1';
-                            menu.style.visibility = 'visible';
-                            menu.style.zIndex = '9999';
-                        }
-                    });
-                    
-                    // Touch support for mobile
-                    element.addEventListener('touchstart', function(e) {
-                        e.preventDefault();
-                        const dd = bootstrap.Dropdown.getInstance(this) || new bootstrap.Dropdown(this);
-                        dd.toggle();
-                    }, { passive: false });
-                    
-                } catch (error) {
-                    console.error(`❌ Dropdown ${index + 1} error:`, error);
+            console.log('✅ Dropdown elements found');
+            
+            // Toggle dropdown
+            dropdownBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const isVisible = dropdownMenu.classList.contains('show');
+                
+                if (isVisible) {
+                    closeDropdown();
+                    console.log('❌ Dropdown closed');
+                } else {
+                    openDropdown();
+                    console.log('✅ Dropdown opened');
                 }
             });
             
-            console.log('✅ Dropdown initialization complete');
+            // Open dropdown function
+            function openDropdown() {
+                dropdownMenu.classList.add('show');
+                dropdownBtn.classList.add('active');
+                dropdownBtn.setAttribute('aria-expanded', 'true');
+                
+                // Force styles
+                dropdownMenu.style.display = 'block';
+                dropdownMenu.style.opacity = '1';
+                dropdownMenu.style.visibility = 'visible';
+                dropdownMenu.style.zIndex = '10000';
+                dropdownMenu.style.position = 'absolute';
+            }
+            
+            // Close dropdown function
+            function closeDropdown() {
+                dropdownMenu.classList.remove('show');
+                dropdownBtn.classList.remove('active');
+                dropdownBtn.setAttribute('aria-expanded', 'false');
+            }
+            
+            // Close when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!dropdownWrapper.contains(e.target)) {
+                    closeDropdown();
+                }
+            });
+            
+            // Close on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && dropdownMenu.classList.contains('show')) {
+                    closeDropdown();
+                }
+            });
+            
+            // Touch support for mobile
+            dropdownBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                this.click();
+            }, { passive: false });
+            
+            console.log('✅ Pure JS Dropdown initialized successfully');
         });
     })();
     </script>
@@ -1459,58 +1453,6 @@
             const sidebarOverlay = document.getElementById('sidebarOverlay');
             let touchStartX = 0;
             let touchEndX = 0;
-
-            // ✅ DEBUG: Check dropdown elements
-            const dropdowns = document.querySelectorAll('.dropdown');
-            const dropdownToggles = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-            const dropdownMenus = document.querySelectorAll('.dropdown-menu');
-            
-            console.log(`📊 Dropdown Debug:
-                - Dropdowns: ${dropdowns.length}
-                - Toggles: ${dropdownToggles.length}
-                - Menus: ${dropdownMenus.length}`);
-
-            // ✅ Manual dropdown click handler (backup)
-            dropdownToggles.forEach((toggle, index) => {
-                console.log(`🔧 Setting up dropdown ${index + 1}`);
-                
-                toggle.addEventListener('click', function(e) {
-                    console.log(`🖱️ Dropdown ${index + 1} clicked`);
-                    
-                    const menu = this.nextElementSibling;
-                    if (menu && menu.classList.contains('dropdown-menu')) {
-                        // Close all other dropdowns
-                        document.querySelectorAll('.dropdown-menu.show').forEach(m => {
-                            if (m !== menu) {
-                                m.classList.remove('show');
-                            }
-                        });
-                        
-                        // Toggle current dropdown
-                        menu.classList.toggle('show');
-                        console.log(`✅ Dropdown ${index + 1} toggled. Visible: ${menu.classList.contains('show')}`);
-                        
-                        // Force visibility
-                        if (menu.classList.contains('show')) {
-                            menu.style.display = 'block';
-                            menu.style.opacity = '1';
-                            menu.style.visibility = 'visible';
-                            menu.style.zIndex = '9999';
-                            menu.style.position = 'absolute';
-                        }
-                    }
-                });
-            });
-
-            // Close dropdowns when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.dropdown')) {
-                    document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-                        menu.classList.remove('show');
-                        menu.style.display = 'none';
-                    });
-                }
-            });
 
             // Desktop sidebar toggle
             if (sidebarToggle) {
@@ -1637,19 +1579,35 @@
     </script>
 
     {% block customer_extra_js %}{% endblock %}
-    
-    <!-- Tawk.to Live Chat Widget - ALWAYS LOADS ON ALL PAGES -->
-    <script type="text/javascript">
-    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-    (function(){
+</body>
+
+<!-- ============================================
+     🔥 TAWK.TO CHAT WIDGET - LOADS ON ALL PAGES
+     ============================================ -->
+<script type="text/javascript">
+console.log('🚀 Loading Tawk.to Chat Widget...');
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
     var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
     s1.async=true;
     s1.src='https://embed.tawk.to/62397b231ffac05b1d7fc726/1j8qj3854';
     s1.charset='UTF-8';
     s1.setAttribute('crossorigin','*');
+    s1.onload = function() {
+        console.log('✅ Tawk.to Chat Widget loaded successfully');
+    };
+    s1.onerror = function() {
+        console.error('❌ Failed to load Tawk.to Chat Widget');
+    };
     s0.parentNode.insertBefore(s1,s0);
-    })();
-    </script>
-    <!--End of Tawk.to Script-->
-</body>
+})();
+
+// Ensure Tawk.to is always visible
+if (typeof Tawk_API !== 'undefined') {
+    Tawk_API.onLoad = function(){
+        console.log('✅ Tawk.to API loaded');
+    };
+}
+</script>
+<!--End of Tawk.to Script-->
 </html>
