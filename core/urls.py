@@ -33,7 +33,7 @@ urlpatterns = [
     # =====================================
     
     # Admin Authentication
-    path('admin', views.admin_login_view, name='admin_login'),
+    path('admin/', views.admin_login_view, name='admin_login'),
     path('admin/logout/', views.admin_logout_view, name='admin_logout'),
     path('admin/dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
     
