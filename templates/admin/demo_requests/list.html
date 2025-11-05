@@ -1046,7 +1046,10 @@ function loadAvailableEmployees(dateIso, timeSlotId) {
         });
 }
 
-// ✅ ENHANCED: Display Employees with Detailed Conflict Information
+// ============================================================================
+// FIXED: JavaScript for admin/demo_requests/list.html
+
+
 function displayEmployees(employees, dateIso, timeSlotId) {
     const container = document.getElementById('employeeList');
     if (!container) {
@@ -1061,82 +1064,135 @@ function displayEmployees(employees, dateIso, timeSlotId) {
         return;
     }
 
-    console.log(`\n📋 Displaying ${employees.length} employees`);
+    console.log(`\n📋 Displaying ${employees.length} employees with enhanced status`);
 
-    // Sort: Available first, then by workload
-    const sortedEmployees = employees.sort((a, b) => {
-        // Available employees first
-        if (a.slot_available && !b.slot_available) return -1;
-        if (!a.slot_available && b.slot_available) return 1;
-        // Then sort by workload (fewer demos first)
-        return (a.current_demos || 0) - (b.current_demos || 0);
-    });
+    // Employees are already sorted by backend (available first, then by workload)
 
-    sortedEmployees.forEach((emp, index) => {
+    employees.forEach((emp, index) => {
         console.log(`\n   ${index + 1}. ${emp.name}`);
-        console.log(`      - Available in slot: ${emp.slot_available !== false ? 'YES' : 'NO'}`);
-        console.log(`      - Total demos: ${emp.current_demos || 0}`);
-        console.log(`      - Booked demo:`, emp.booked_demo);
+        console.log(`      - Status: ${emp.status}`);
+        console.log(`      - Available: ${emp.available}`);
+        console.log(`      - Total Demos: ${emp.current_demos || 0}`);
         
-        let cardClass = 'available';
+        let cardClass = '';
         let statusBadge = '';
-        let statusClass = 'status-available';
-        let canSelect = true;
+        let statusClass = '';
+        let canSelect = emp.available;
         let availabilityHTML = '';
         let conflictBadge = '';
 
-        // Check if booked in THIS slot
-        if (emp.slot_available === false || emp.booked_demo) {
-            cardClass = 'unavailable';
-            statusClass = 'status-conflict';
-            statusBadge = '<i class="fas fa-times-circle me-1"></i>Booked in This Slot';
-            canSelect = false;
-            conflictBadge = '<span class="conflict-badge">CONFLICT</span>';
-            
-            // ✅ ENHANCED: Show detailed booking information
-            if (emp.booked_demo) {
-                const bookingStatus = emp.booked_demo.status || 'confirmed';
-                const statusIcon = bookingStatus === 'confirmed' ? 'check-circle' : 'clock';
-                const statusColor = bookingStatus === 'confirmed' ? 'success' : 'warning';
+        // ✅ ENHANCED: Handle all status types properly
+        switch(emp.status) {
+            case 'CONFLICT':
+                // ❌ Conflicted at exact same time slot
+                cardClass = 'unavailable';
+                statusClass = 'status-conflict';
+                statusBadge = '<i class="fas fa-times-circle me-1"></i>Booked in This Slot';
+                canSelect = false;
+                conflictBadge = '<span class="conflict-badge">CONFLICT</span>';
+                
+                if (emp.slot_conflict) {
+                    const booking = emp.slot_conflict;
+                    const statusIcon = booking.status === 'confirmed' ? 'check-circle' : 'clock';
+                    const statusColor = booking.status === 'confirmed' ? 'success' : 'warning';
+                    
+                    availabilityHTML = `
+                        <div class="alert alert-danger alert-sm mt-2 mb-0 py-2">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                                <div class="flex-grow-1">
+                                    <strong class="text-danger">❌ Conflict on ${dateIso}</strong>
+                                    <hr class="my-2" style="border-color: rgba(220, 53, 69, 0.3);">
+                                    <div class="mb-1">
+                                        <i class="fas fa-desktop me-1"></i>
+                                        <strong>Demo:</strong> ${booking.demo_title}
+                                    </div>
+                                    <div class="mb-1">
+                                        <i class="fas fa-user me-1"></i>
+                                        <strong>Customer:</strong> ${booking.customer_name}
+                                    </div>
+                                    ${booking.customer_email ? `
+                                    <div class="mb-1">
+                                        <i class="fas fa-envelope me-1"></i>
+                                        <small>${booking.customer_email}</small>
+                                    </div>
+                                    ` : ''}
+                                    <div>
+                                        <i class="fas fa-${statusIcon} me-1 text-${statusColor}"></i>
+                                        <strong>Status:</strong> 
+                                        <span class="badge bg-${statusColor} text-white">${booking.status.toUpperCase()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                break;
+
+            case 'BUSY_OTHER_SLOTS':
+                // ⚠️ Busy at OTHER slots on SAME date, but FREE in target slot
+                cardClass = 'booked';
+                statusClass = 'status-busy';
+                statusBadge = `<i class="fas fa-clock me-1"></i>Free in This Slot`;
+                canSelect = true;
+                
+                if (emp.same_date_schedule && emp.same_date_schedule.length > 0) {
+                    const schedule = emp.same_date_schedule.map(s => 
+                        `<div class="small"><i class="fas fa-clock me-1"></i>${s.time}: ${s.demo} (${s.customer})</div>`
+                    ).join('');
+                    
+                    availabilityHTML = `
+                        <div class="alert alert-warning alert-sm mt-2 mb-0 py-2">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-info-circle me-2 mt-1 text-warning"></i>
+                                <div class="flex-grow-1">
+                                    <strong class="text-warning">✅ Available in This Slot</strong>
+                                    <hr class="my-2" style="border-color: rgba(245, 158, 11, 0.3);">
+                                    <div class="mb-1">
+                                        <strong>Busy at other times on ${dateIso}:</strong>
+                                    </div>
+                                    <div class="ms-2">
+                                        ${schedule}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                break;
+
+            case 'BUSY_OTHER_DATES':
+                // ℹ️ Has demos on OTHER dates, but completely FREE on this date
+                cardClass = 'available';
+                statusClass = 'status-available';
+                statusBadge = '<i class="fas fa-check-circle me-1"></i>Free on This Date';
+                canSelect = true;
                 
                 availabilityHTML = `
-                    <div class="alert alert-danger alert-sm mt-2 mb-0 py-2">
+                    <div class="alert alert-info alert-sm mt-2 mb-0 py-2">
                         <div class="d-flex align-items-start">
-                            <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                            <i class="fas fa-calendar-check me-2 mt-1 text-info"></i>
                             <div class="flex-grow-1">
-                                <strong class="text-danger">❌ Conflict on ${dateIso}</strong>
-                                <hr class="my-2" style="border-color: rgba(220, 53, 69, 0.3);">
-                                <div class="mb-1">
-                                    <i class="fas fa-desktop me-1"></i>
-                                    <strong>Demo:</strong> ${emp.booked_demo.demo_title || 'N/A'}
-                                </div>
-                                <div class="mb-1">
-                                    <i class="fas fa-user me-1"></i>
-                                    <strong>Customer:</strong> ${emp.booked_demo.customer_name || 'N/A'}
-                                </div>
-                                ${emp.booked_demo.customer_email ? `
-                                <div class="mb-1">
-                                    <i class="fas fa-envelope me-1"></i>
-                                    <small>${emp.booked_demo.customer_email}</small>
-                                </div>
-                                ` : ''}
+                                <strong class="text-info">✅ Fully Available on ${dateIso}</strong>
+                                <hr class="my-2" style="border-color: rgba(59, 130, 246, 0.3);">
                                 <div>
-                                    <i class="fas fa-${statusIcon} me-1 text-${statusColor}"></i>
-                                    <strong>Status:</strong> 
-                                    <span class="badge bg-${statusColor} text-white">${bookingStatus.toUpperCase()}</span>
+                                    <i class="fas fa-tasks me-1"></i>
+                                    Has ${emp.current_demos} demo${emp.current_demos > 1 ? 's' : ''} on other dates
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
-            }
-        } else {
-            // Employee is available in this slot
-            const demos = emp.current_demos || 0;
-            
-            if (demos === 0) {
-                // Completely free - no demos at all
+                break;
+
+            case 'FULLY_AVAILABLE':
+            default:
+                // ✅ Completely free - no demos anywhere
+                cardClass = 'available';
+                statusClass = 'status-available';
                 statusBadge = '<i class="fas fa-check-circle me-1"></i>Fully Available';
+                canSelect = true;
+                
                 availabilityHTML = `
                     <div class="alert alert-success alert-sm mt-2 mb-0 py-2">
                         <div class="d-flex align-items-start">
@@ -1146,55 +1202,13 @@ function displayEmployees(employees, dateIso, timeSlotId) {
                                 <hr class="my-2" style="border-color: rgba(16, 185, 129, 0.3);">
                                 <div>
                                     <i class="fas fa-info-circle me-1"></i>
-                                    No demos scheduled for this date
+                                    No demos scheduled
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
-            } else {
-                // Has other demos on this date but FREE in this slot
-                cardClass = 'booked';
-                statusClass = 'status-busy';
-                statusBadge = `<i class="fas fa-clock me-1"></i>Available (${demos} other demo${demos > 1 ? 's' : ''})`;
-                
-                if (emp.other_slots_text) {
-                    availabilityHTML = `
-                        <div class="alert alert-warning alert-sm mt-2 mb-0 py-2">
-                            <div class="d-flex align-items-start">
-                                <i class="fas fa-info-circle me-2 mt-1 text-warning"></i>
-                                <div class="flex-grow-1">
-                                    <strong class="text-warning">✅ Free in this slot</strong>
-                                    <hr class="my-2" style="border-color: rgba(245, 158, 11, 0.3);">
-                                    <div class="mb-1">
-                                        <i class="fas fa-clock me-1"></i>
-                                        <strong>Busy at other times:</strong>
-                                    </div>
-                                    <div class="ms-3">
-                                        <small>${emp.other_slots_text}</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    availabilityHTML = `
-                        <div class="alert alert-info alert-sm mt-2 mb-0 py-2">
-                            <div class="d-flex align-items-start">
-                                <i class="fas fa-calendar-check me-2 mt-1 text-info"></i>
-                                <div class="flex-grow-1">
-                                    <strong class="text-info">✅ Available in this slot</strong>
-                                    <hr class="my-2" style="border-color: rgba(59, 130, 246, 0.3);">
-                                    <div>
-                                        <i class="fas fa-tasks me-1"></i>
-                                        Has ${demos} demo${demos > 1 ? 's' : ''} at other times/dates
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
+                break;
         }
 
         const card = document.createElement('div');
@@ -1238,9 +1252,8 @@ function displayEmployees(employees, dateIso, timeSlotId) {
         container.appendChild(card);
     });
 
-    console.log(`✅ Displayed ${employees.length} employee cards\n`);
+    console.log(`✅ Displayed ${employees.length} employee cards with enhanced status\n`);
 }
-
 function selectEmployee(employeeId, employeeName) {
     selectedEmployeeId = employeeId;
 

@@ -1119,25 +1119,42 @@ class DemoRequest(models.Model):
     @classmethod
     def get_available_employees(cls, requested_date, requested_time_slot):
         """
-        ✅ SIMPLIFIED: Get employees available for specific date and time slot
-        Shows basic schedule without complex date grouping
+        ✅ ENHANCED: Get employees with detailed slot-specific availability
+        Returns ALL staff with conflict indicators for proper UI display
+        
+        RETURNS:
+        --------
+        List of dicts with structure:
+        {
+            'id': int,
+            'name': str,
+            'email': str,
+            'role': str,
+            'current_demos': int,  # Total demos across all dates
+            'available': bool,  # Can book in THIS specific slot?
+            'status': str,  # CONFLICT | BUSY_OTHER_SLOTS | BUSY_OTHER_DATES | FULLY_AVAILABLE
+            'slot_conflict': dict or None,  # Details if conflicted
+            'same_date_schedule': list,  # Other slots on same date
+        }
         """
         from accounts.models import CustomUser
         
-        print(f"\n{'='*60}")
-        print(f"🔍 Finding Available Employees (Simplified)")
-        print(f"📅 Date: {requested_date}")
-        print(f"⏰ Slot: {requested_time_slot}")
-        print(f"{'='*60}\n")
+        print(f"\n{'='*80}")
+        print(f"🔍 ENHANCED: Finding Available Employees with Slot-Specific Conflicts")
+        print(f"{'='*80}")
+        print(f"📅 Target Date: {requested_date}")
+        print(f"⏰ Target Slot: {requested_time_slot.start_time.strftime('%I:%M %p')} - "
+            f"{requested_time_slot.end_time.strftime('%I:%M %p')}")
+        print(f"{'='*80}\n")
         
-        # Get active staff (no superusers)
+        # Get active staff with permissions (no superusers)
         all_staff = CustomUser.objects.filter(
             is_staff=True,
             is_active=True,
             is_superuser=False
         ).select_related('role').order_by('first_name', 'last_name')
         
-        available = []
+        employees_data = []
         
         for employee in all_staff:
             # Check permissions
@@ -1150,54 +1167,108 @@ class DemoRequest(models.Model):
             if not has_permission:
                 continue
             
-            print(f"   Checking: {employee.get_full_name()}")
+            print(f"📋 Analyzing: {employee.get_full_name()} ({employee.email})")
             
-            # Check for conflict at THIS exact date + time
-            conflict = cls.objects.filter(
+            # ✅ CRITICAL: Check for EXACT slot conflict
+            exact_conflict = cls.objects.filter(
                 assigned_to=employee,
                 requested_date=requested_date,
                 requested_time_slot=requested_time_slot,
                 status__in=['pending', 'confirmed']
-            ).first()
+            ).select_related('demo', 'user').first()
             
-            if conflict:
-                print(f"   ❌ CONFLICT: {conflict.demo.title}")
-                continue  # Skip this employee
-            
-            # Get total demos count
+            # Get total demos (all dates, all slots)
             total_demos = cls.objects.filter(
                 assigned_to=employee,
                 status__in=['pending', 'confirmed']
             ).count()
             
-            # Get other demos (for display)
-            other_demos = cls.objects.filter(
+            # Get demos on SAME DATE but DIFFERENT slots
+            other_slots_same_date = cls.objects.filter(
                 assigned_to=employee,
+                requested_date=requested_date,
                 status__in=['pending', 'confirmed']
             ).exclude(
-                requested_date=requested_date,
                 requested_time_slot=requested_time_slot
-            ).select_related('demo', 'requested_time_slot').order_by('requested_date')[:5]
+            ).select_related('demo', 'requested_time_slot', 'user')
             
-            # Build simple schedule list
-            schedule_text = []
-            for demo in other_demos:
-                slot = demo.requested_time_slot
-                schedule_text.append(
-                    f"{demo.requested_date.strftime('%b %d')}: "
-                    f"{slot.start_time.strftime('%I:%M %p')} - {slot.end_time.strftime('%I:%M %p')}"
-                )
+            # Build schedule text for same date
+            same_date_schedule = []
+            for demo in other_slots_same_date:
+                same_date_schedule.append({
+                    'time': f"{demo.requested_time_slot.start_time.strftime('%I:%M %p')} - "
+                        f"{demo.requested_time_slot.end_time.strftime('%I:%M %p')}",
+                    'demo': demo.demo.title,
+                    'customer': demo.user.get_full_name()
+                })
             
-            available.append({
+            # Determine availability status
+            if exact_conflict:
+                status = 'CONFLICT'
+                available = False
+                conflict_demo = {
+                    'id': exact_conflict.id,
+                    'demo_title': exact_conflict.demo.title,
+                    'customer_name': exact_conflict.user.get_full_name(),
+                    'customer_email': exact_conflict.user.email,
+                    'status': exact_conflict.status,
+                }
+                print(f"   ❌ CONFLICT at {requested_time_slot}: {exact_conflict.demo.title} "
+                    f"for {exact_conflict.user.get_full_name()}")
+            elif other_slots_same_date.exists():
+                status = 'BUSY_OTHER_SLOTS'
+                available = True
+                conflict_demo = None
+                print(f"   ⚠️  BUSY at {other_slots_same_date.count()} other slot(s) "
+                    f"but FREE in target slot")
+            elif total_demos > 0:
+                status = 'BUSY_OTHER_DATES'
+                available = True
+                conflict_demo = None
+                print(f"   ℹ️  Has {total_demos} demo(s) on other dates, FREE on this date")
+            else:
+                status = 'FULLY_AVAILABLE'
+                available = True
+                conflict_demo = None
+                print(f"   ✅ FULLY AVAILABLE (no demos scheduled)")
+            
+            # Build employee data
+            employee_info = {
                 'id': employee.id,
                 'name': employee.get_full_name(),
                 'email': employee.email,
                 'role': employee.role.name if employee.role else 'Staff',
                 'current_demos': total_demos,
-                'other_slots_text': ', '.join(schedule_text) if schedule_text else None,
-            })
+                'available': available,
+                'status': status,
+                'slot_conflict': conflict_demo,  # Details of exact conflict
+                'same_date_schedule': same_date_schedule,  # Array of other slots
+            }
             
-            print(f"   ✅ Available (Total: {total_demos} demos)")
+            employees_data.append(employee_info)
+            print(f"   📊 Total Demos: {total_demos}")
+            print(f"   🎯 Status: {status}")
+            print()
         
-        print(f"\n✅ Found {len(available)} available employees\n")
-        return available 
+        # Sort: Available first, then by total workload
+        employees_data.sort(key=lambda x: (
+            not x['available'],  # Available first (False comes before True)
+            x['current_demos'],  # Then by workload (ascending)
+            x['name']  # Then alphabetically
+        ))
+        
+        print(f"{'='*80}")
+        print(f"✅ Returning {len(employees_data)} employees")
+        print(f"   • Available: {sum(1 for e in employees_data if e['available'])}")
+        print(f"   • Conflicted: {sum(1 for e in employees_data if not e['available'])}")
+        print(f"{'='*80}\n")
+        
+        return employees_data
+
+
+
+
+
+
+
+
