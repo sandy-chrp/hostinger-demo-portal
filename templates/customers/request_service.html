@@ -238,7 +238,7 @@
         padding: 0.15rem 0.4rem;
         border-radius: var(--radius-sm);
         font-weight: 600;
-        text-transform: uppercase;
+        text-transform:capitalization;
         letter-spacing: 0.3px;
         font-family: var(--primary-font);
     }
@@ -674,8 +674,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const radioInput = (slot.is_available && slot.status === 'available') ? 
                 `<input type="radio" name="time_slot_id" value="${slot.id}" id="slot_radio_${slot.id}" required>` : '';
             
+            // ✅ FIXED: Proper capitalization for all statuses
             let statusClass = 'available';
-            let statusText = 'AVAILABLE';
+            let statusText = 'Available';  // ✅ Changed from 'AVAILABLE'
             
             if (slot.status === 'past') {
                 statusClass = 'past';
@@ -738,16 +739,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 slotDiv.style.pointerEvents = 'none';
                 
                 slotDiv.title = slot.status === 'past' ? 'This time slot has passed' :
-                               slot.status === 'starting_soon' ? 'Cannot book slots starting within 30 minutes' :
-                               slot.status === 'already_booked' ? 'You have already booked this slot' :
-                               slot.status === 'full' ? 'This slot is fully booked' :
-                               'Not available';
+                            slot.status === 'starting_soon' ? 'Cannot book slots starting within 30 minutes' :
+                            slot.status === 'already_booked' ? 'You have already booked this slot' :
+                            slot.status === 'full' ? 'This slot is fully booked' :
+                            'Not available';
             }
             
             slotsContainer.appendChild(slotDiv);
         });
     }
-    
+        
     function updateSelectedSlot() {
         document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
         if (selectedSlotId) {
