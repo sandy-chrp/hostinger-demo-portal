@@ -97,6 +97,30 @@
         padding: 1.5rem 1.25rem;
     }
     
+    /* Welcome Message */
+    .welcome-message {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 1px solid #bae6fd;
+        border-radius: 0.5rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    
+    .welcome-message h5 {
+        color: #0c4a6e;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .welcome-message p {
+        color: #075985;
+        font-size: 0.75rem;
+        margin: 0;
+        line-height: 1.5;
+    }
+    
     .status-steps {
         margin-bottom: 1.5rem;
     }
@@ -287,6 +311,49 @@
         font-size: 0.7rem;
     }
     
+    /* Email Check Notice */
+    .email-check-notice {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 1px solid #fbbf24;
+        border-radius: 0.5rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .email-check-notice .icon {
+        flex-shrink: 0;
+        width: 35px;
+        height: 35px;
+        background: #f59e0b;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+    }
+    
+    .email-check-notice .content {
+        flex: 1;
+    }
+    
+    .email-check-notice .content h6 {
+        color: #92400e;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .email-check-notice .content p {
+        color: #78350f;
+        font-size: 0.7rem;
+        margin: 0;
+        line-height: 1.5;
+    }
+    
     @media (max-width: 768px) {
         .pending-container {
             margin: 1rem auto;
@@ -352,6 +419,24 @@
         
         <!-- Body -->
         <div class="pending-body">
+            
+            <!-- Welcome Message for New Users -->
+            <div class="welcome-message">
+                <h5>👋 Welcome, {{ user.first_name }}!</h5>
+                <p>Thank you for registering with Demo Portal. We've received your account details and our team is reviewing your application.</p>
+            </div>
+            
+            <!-- Email Check Notice -->
+            <div class="email-check-notice">
+                <div class="icon">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="content">
+                    <h6>📧 Check Your Email Inbox</h6>
+                    <p>We've sent a welcome email to <strong>{{ user.email }}</strong> with your account details and next steps. Please check your inbox (and spam folder).</p>
+                </div>
+            </div>
+            
             <!-- Status Steps -->
             <div class="status-steps">
                 <!-- Step 1: Account Created (Always completed) -->
@@ -360,7 +445,7 @@
                         <i class="fas fa-check"></i>
                     </div>
                     <div class="step-content">
-                        <h6>Account Created</h6>
+                        <h6>✅ Account Created</h6>
                         <small>Your account has been successfully created</small>
                     </div>
                 </div>
@@ -375,11 +460,11 @@
                         {% endif %}
                     </div>
                     <div class="step-content">
-                        <h6>Email Verification</h6>
+                        <h6>{% if user.is_email_verified %}✅{% else %}📧{% endif %} Email Verification</h6>
                         {% if user.is_email_verified %}
                             <small>Your email address has been verified</small>
                         {% else %}
-                            <small>Please check your email to verify your account</small>
+                            <small>Your email has been verified during registration</small>
                         {% endif %}
                     </div>
                 </div>
@@ -396,11 +481,11 @@
                         {% endif %}
                     </div>
                     <div class="step-content">
-                        <h6>Admin Review</h6>
+                        <h6>{% if user.is_approved %}✅{% else %}⏳{% endif %} Admin Review</h6>
                         {% if user.is_approved %}
                             <small>Your account has been approved by our team</small>
                         {% else %}
-                            <small>Our team is reviewing your business credentials</small>
+                            <small>Our team is reviewing your business credentials (typically takes 24-48 hours)</small>
                         {% endif %}
                     </div>
                 </div>
@@ -415,11 +500,11 @@
                         {% endif %}
                     </div>
                     <div class="step-content">
-                        <h6>Account Approved</h6>
+                        <h6>{% if user.is_approved %}✅{% else %}🔒{% endif %} Account Approved & Active</h6>
                         {% if user.is_approved %}
                             <small>You now have full access to the demo portal!</small>
                         {% else %}
-                            <small>You'll receive full access to the demo portal</small>
+                            <small>Once approved, you'll receive full access to login and explore demos</small>
                         {% endif %}
                     </div>
                 </div>
@@ -431,7 +516,7 @@
                 <ul class="info-list">
                     <li>
                         <i class="fas fa-search"></i>
-                        <span>Our team reviews your business email and organization details</span>
+                        <span>Our team reviews your business email and organization details to verify authenticity</span>
                     </li>
                     <li>
                         <i class="fas fa-shield-alt"></i>
@@ -439,11 +524,11 @@
                     </li>
                     <li>
                         <i class="fas fa-envelope"></i>
-                        <span>You'll receive an email notification once approved (typically within 24 hours)</span>
+                        <span>You'll receive an approval email notification once your account is verified (typically within 24-48 hours)</span>
                     </li>
                     <li>
                         <i class="fas fa-key"></i>
-                        <span>After approval, you can access our full demo library</span>
+                        <span>After approval, you can login and access our complete demo library with all features</span>
                     </li>
                 </ul>
             </div>
@@ -451,13 +536,13 @@
             <!-- Action Buttons -->
             <div class="action-buttons">
                 <a href="{% url 'accounts:signin' %}" class="btn-custom btn-primary-custom">
-                    <i class="fas fa-sign-in-alt me-1"></i>Go to Login
+                    <i class="fas fa-sign-in-alt me-1"></i>Go to Login Page
                 </a>
             </div>
             
             <!-- Contact Information -->
             <div class="contact-info">
-                <h6><i class="fas fa-headset me-1"></i>Need Help?</h6>
+                <h6><i class="fas fa-headset me-1"></i>Need Help or Have Questions?</h6>
                 <div class="contact-detail">
                     <i class="fas fa-envelope"></i>
                     <span>reach@chrp-india.com</span>

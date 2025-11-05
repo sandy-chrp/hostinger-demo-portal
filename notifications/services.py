@@ -308,23 +308,52 @@ class NotificationService:
         
         return notification
     
+
     @staticmethod
     def notify_demo_request_rescheduled(demo_request, old_date, old_slot, send_email=True):
-        """Demo request rescheduled"""
+        """
+        Demo request rescheduled
+        ✅ UPDATED: Sends HTML email with template
+        """
+        # ✅ Pre-format dates and times
+        old_date_str = old_date.strftime('%B %d, %Y') if old_date else 'Previous date'
+        new_date_str = demo_request.requested_date.strftime('%B %d, %Y')
+        
+        old_time_str = f"{old_slot.start_time.strftime('%I:%M %p')} - {old_slot.end_time.strftime('%I:%M %p')}" if old_slot else 'Previous time'
+        new_time_str = f"{demo_request.requested_time_slot.start_time.strftime('%I:%M %p')} - {demo_request.requested_time_slot.end_time.strftime('%I:%M %p')}"
+        
+        # Create notification
         notification = Notification.objects.create(
             user=demo_request.user,
             title='Demo Request Rescheduled',
-            message=f'Your demo for "{demo_request.demo.title}" has been rescheduled to {demo_request.requested_date.strftime("%B %d, %Y")}.',
+            message=f'Your demo for "{demo_request.demo.title}" has been rescheduled to {new_date_str} at {new_time_str}.',
             notification_type='demo_reschedule',
             content_object=demo_request
         )
         
         if send_email:
+            # ✅ Get reschedule reason from admin_notes or default
+            reschedule_reason = ''
+            if demo_request.admin_notes:
+                # Extract reason from admin_notes if it contains "Rescheduled:"
+                if "Rescheduled:" in demo_request.admin_notes:
+                    reason_start = demo_request.admin_notes.find("Rescheduled:") + len("Rescheduled:")
+                    reason_end = demo_request.admin_notes.find("\n", reason_start)
+                    if reason_end == -1:
+                        reason_end = len(demo_request.admin_notes)
+                    reschedule_reason = demo_request.admin_notes[reason_start:reason_end].strip()
+            
             context = {
-                'demo_title': demo_request.demo.title,
-                'old_date': old_date.strftime('%B %d, %Y') if old_date else 'Previous date',
-                'new_date': demo_request.requested_date.strftime('%B %d, %Y'),
+                'demo_request': demo_request,
+                'old_date': old_date_str,
+                'old_time': old_time_str,
+                'new_date': new_date_str,
+                'new_time': new_time_str,
+                'reschedule_reason': reschedule_reason or 'Schedule adjustment',
+                'demo_url': f"{getattr(settings, 'SITE_URL', 'http://localhost:8000')}/customer/demo-requests/{demo_request.id}/",
+                'year': timezone.now().year,
             }
+            
             NotificationService.send_email_notification(
                 user=demo_request.user,
                 subject=f'Demo Rescheduled - {demo_request.demo.title}',
@@ -333,7 +362,7 @@ class NotificationService:
             )
         
         return notification
-    
+
     @staticmethod
     def notify_demo_request_cancelled(demo_request, reason='', send_email=True):
         """Demo request cancelled"""

@@ -1,6 +1,8 @@
 <!-- templates/base.html - OPTIMIZED RESPONSIVE NAVIGATION -->
 <!DOCTYPE html>
 <html lang="en">
+    {% load static %}
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,8 +11,11 @@
     <title>{% block title %}Demo Portal - CHRP India{% endblock %}</title>
     <meta name="csrf-token" content="{{ csrf_token }}">
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{% load static %}{% static 'images/favicon.ico' %}">
+   <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'images/fav.png' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/fav.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/fav.png' %}">
+
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

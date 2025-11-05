@@ -357,7 +357,7 @@ def admin_create_demo_request_view(request):
                 
                 # Send confirmation notification and email
                 create_demo_confirmation_notification(demo_request)
-                send_demo_confirmation_email(demo_request)
+                # send_demo_confirmation_email(demo_request)
                 
                 messages.success(
                     request, 
@@ -837,19 +837,18 @@ CHRP India
 def create_demo_confirmation_notification(demo_request):
     """
     Create confirmation notification for demo request
-    ✅ FIXED: Only creates notification, email already sent separately
+    ✅ UPDATED: Email sent via NotificationService
     """
     try:
         from notifications.services import NotificationService
         
-        # ✅ CRITICAL FIX: send_email=False to prevent duplicate
-        # Email is already sent by send_demo_confirmation_email() function
+        # ✅ Send email via NotificationService
         notification = NotificationService.notify_demo_request_confirmed(
             demo_request=demo_request,
-            send_email=False  # ✅ CHANGED: Notification only, no email
+            send_email=True  # ✅ CHANGED: Now sends email
         )
         
-        print(f"✅ Confirmation notification created (no email - already sent)")
+        print(f"✅ Notification created and email sent via NotificationService")
         return notification
         
     except Exception as e:
@@ -857,7 +856,6 @@ def create_demo_confirmation_notification(demo_request):
         import traceback
         traceback.print_exc()
         return None
-
 # ================================================================================
 # EDIT DEMO REQUEST
 # ================================================================================
@@ -1259,7 +1257,7 @@ def admin_confirm_demo_request_view(request, request_id):
             demo_request.save()
             
             # Send confirmation email
-            send_demo_confirmation_email(demo_request)
+            # send_demo_confirmation_email(demo_request)
             
             # Create notification
             create_demo_confirmation_notification(demo_request)
@@ -1586,12 +1584,11 @@ def admin_demo_requests_calendar_view(request):
 # ================================================================================
 
 @login_required
-@permission_required('view_demo_requests')
-@require_http_methods(["GET"])
+@require_GET
 def ajax_admin_check_slot_availability(request):
     """
     AJAX endpoint for admin to check time slot availability
-    ✅ Fixed: Slot in progress logic
+    ✅ ENHANCED: Now includes assigned employee information in booking details
     """
     try:
         requested_date = request.GET.get('date')
@@ -1638,12 +1635,12 @@ def ajax_admin_check_slot_availability(request):
         if not all_slots.exists():
             return JsonResponse({'success': False, 'message': 'No time slots configured'})
         
-        # Get all confirmed bookings for this date
+        # ✅ ENHANCED: Get all confirmed bookings with assigned employees
         confirmed_bookings = DemoRequest.objects.filter(
             Q(confirmed_date=check_date) | 
             Q(requested_date=check_date, confirmed_date__isnull=True),
             status__in=['pending', 'confirmed']
-        ).select_related('demo', 'user', 'confirmed_time_slot', 'requested_time_slot')
+        ).select_related('demo', 'user', 'confirmed_time_slot', 'requested_time_slot', 'assigned_to')
         
         slots_data = []
         max_bookings_per_slot = 1
@@ -1654,29 +1651,25 @@ def ajax_admin_check_slot_availability(request):
             is_starting_soon = False
             
             if is_today:
-                # ✅ FIXED: Check if slot has ENDED (current time >= end time)
+                # Check if slot has ENDED
                 if current_time >= slot.end_time:
                     is_past_slot = True
-                    print(f"⏰ Slot {slot.start_time}-{slot.end_time} - ENDED (current: {current_time})")
+                    print(f"⏰ Slot {slot.start_time}-{slot.end_time} - ENDED")
                 else:
-                    # Slot hasn't ended - check if it's starting soon
+                    # Check if starting soon
                     slot_start_datetime = indian_tz.localize(
                         datetime.combine(check_date, slot.start_time)
                     )
                     current_datetime = now_indian
                     time_until_start = (slot_start_datetime - current_datetime).total_seconds() / 60
                     
-                    # Check if starting within 30 minutes
                     if 0 < time_until_start < 30:
                         is_starting_soon = True
-                        is_past_slot = True  # Block booking
+                        is_past_slot = True
                         print(f"   ⚠️ Starting soon ({time_until_start:.2f} min) - BLOCKED")
                     elif time_until_start <= 0:
-                        # Slot has already started but not ended
                         minutes_since_start = abs(time_until_start)
                         print(f"   ✅ Slot in progress (started {minutes_since_start:.2f} min ago) - BOOKABLE")
-                    else:
-                        print(f"   ✅ Future slot: {time_until_start:.2f} minutes until start - BOOKABLE")
             
             # Get bookings for this slot
             slot_bookings = confirmed_bookings.filter(
@@ -1705,7 +1698,7 @@ def ajax_admin_check_slot_availability(request):
                 is_available = True
                 status_message = 'Available'
             
-            # Get booking details for admin
+            # ✅ ENHANCED: Get booking details with assigned employee info
             booking_details = []
             for booking in slot_bookings:
                 booking_details.append({
@@ -1714,6 +1707,9 @@ def ajax_admin_check_slot_availability(request):
                     'customer_email': booking.user.email,
                     'demo_title': booking.demo.title,
                     'status': booking.get_status_display(),
+                    'assigned_employee_id': booking.assigned_to.id if booking.assigned_to else None,
+                    'assigned_employee_name': booking.assigned_to.get_full_name() if booking.assigned_to else 'Not assigned',
+                    'assigned_employee_email': booking.assigned_to.email if booking.assigned_to else None,
                 })
             
             slot_info = {
@@ -1729,7 +1725,7 @@ def ajax_admin_check_slot_availability(request):
                 'status_message': status_message,
                 'is_past': is_past_slot,
                 'is_starting_soon': is_starting_soon,
-                'booking_details': booking_details,
+                'booking_details': booking_details,  # ✅ Now includes assigned employee info
             }
             
             slots_data.append(slot_info)
@@ -1755,7 +1751,7 @@ def ajax_admin_check_slot_availability(request):
             'error': 'Server error occurred',
             'details': str(e)
         }, status=500)
-    
+
 
 @login_required
 @permission_required('manage_demo_requests')
@@ -1976,7 +1972,8 @@ def check_employee_availability(request):
 @permission_required('manage_demo_requests')
 def get_available_employees(request):
     """
-    Get list of employees available for given date and time slot
+    API endpoint to get employees available for given date and time slot
+    ✅ FINAL VERSION: Returns complete schedule with dates
     """
     try:
         from datetime import datetime
@@ -1989,7 +1986,7 @@ def get_available_employees(request):
         print(f"{'='*60}")
         print(f"📅 Date: {date}")
         print(f"⏰ Time Slot ID: {time_slot_id}")
-        print(f"👤 User: {request.user.email}")
+        print(f"👤 Requested by: {request.user.email}")
         print(f"{'='*60}\n")
         
         if not date or not time_slot_id:
@@ -2002,24 +1999,24 @@ def get_available_employees(request):
         requested_date = datetime.strptime(date, '%Y-%m-%d').date()
         time_slot = TimeSlot.objects.get(id=time_slot_id)
         
+        # ✅ Get employees with complete schedule
         available_employees = DemoRequest.get_available_employees(requested_date, time_slot)
         
-        employees_data = [{
-            'id': emp.id,
-            'name': emp.get_full_name(),
-            'email': emp.email,
-            'current_demos': DemoRequest.objects.filter(
-                assigned_to=emp,
-                status__in=['pending', 'confirmed']
-            ).count()
-        } for emp in available_employees]
+        # Format response (already in correct format)
+        employees_data = available_employees
         
-        print(f"✅ Returning {len(employees_data)} employees")
+        print(f"✅ Returning {len(employees_data)} employees with complete schedules")
         
         return JsonResponse({
             'success': True,
             'employees': employees_data,
-            'count': len(employees_data)
+            'count': len(employees_data),
+            'requested_date': date,
+            'requested_time_slot': {
+                'id': time_slot.id,
+                'start_time': time_slot.start_time.strftime('%I:%M %p'),
+                'end_time': time_slot.end_time.strftime('%I:%M %p'),
+            }
         })
         
     except TimeSlot.DoesNotExist:
@@ -2266,7 +2263,7 @@ def employee_demo_request_detail(request, request_id):
 def reschedule_demo_request(request, request_id):
     """
     Reschedule a demo request to a new date and time
-    Used by: details.html → handleReschedule() → POST /admin/demo-requests/{id}/reschedule/
+    ✅ FIXED: Old date and time now correctly captured BEFORE updating
     """
     try:
         demo_request = get_object_or_404(DemoRequest, id=request_id)
@@ -2312,7 +2309,6 @@ def reschedule_demo_request(request, request_id):
         
         # Check if assigned employee is available on new date/time (if assigned)
         if demo_request.assigned_to:
-            # Check for conflicts
             conflicting_demos = DemoRequest.objects.filter(
                 assigned_to=demo_request.assigned_to,
                 requested_date=reschedule_date,
@@ -2326,10 +2322,11 @@ def reschedule_demo_request(request, request_id):
                     'error': f'Assigned employee {demo_request.assigned_to.get_full_name()} is not available at this time'
                 })
         
-        # Update demo request
-        old_date = demo_request.requested_date
-        old_time = str(demo_request.requested_time_slot)  # Fixed: use str() instead of get_display_time()
+        # ✅ CRITICAL FIX: Store old values BEFORE updating the object
+        old_date_obj = demo_request.requested_date  # Store the date object
+        old_time_slot_obj = demo_request.requested_time_slot  # Store the time slot object
         
+        # Update demo request
         demo_request.requested_date = reschedule_date
         demo_request.requested_time_slot = time_slot
         
@@ -2340,62 +2337,66 @@ def reschedule_demo_request(request, request_id):
         
         demo_request.save()
         
-        # Send notification to customer if requested
+        # ✅ Format old and new values AFTER saving (using stored objects)
+        old_date = old_date_obj.strftime('%B %d, %Y')
+        old_time = f"{old_time_slot_obj.start_time.strftime('%I:%M %p')} - {old_time_slot_obj.end_time.strftime('%I:%M %p')}"
+        
+        new_date = reschedule_date.strftime('%B %d, %Y')
+        new_time = f"{time_slot.start_time.strftime('%I:%M %p')} - {time_slot.end_time.strftime('%I:%M %p')}"
+        
+        # ✅ Send notification to customer if requested
         if notify_customer:
             try:
-                # Send email to customer
+                from notifications.services import NotificationService
+                from django.template.loader import render_to_string
+                from django.core.mail import send_mail
+                from django.conf import settings
+                
+                # ✅ Render email template with old and new values
+                subject = f'Demo Rescheduled - {demo_request.demo.title}'
+                
+                html_message = render_to_string('emails/demo_rescheduled.html', {
+                    'demo_request': demo_request,
+                    'old_date': old_date,  # ✅ Pass formatted old date
+                    'old_time': old_time,  # ✅ Pass formatted old time
+                    'new_date': new_date,  # ✅ Pass formatted new date
+                    'new_time': new_time,  # ✅ Pass formatted new time
+                    'reschedule_reason': reschedule_reason,
+                    'year': 2025,
+                })
+                
                 send_mail(
-                    subject=f'Demo Rescheduled - {demo_request.demo.title}',
-                    message=f'''
-Dear {demo_request.user.get_full_name()},
-
-Your demo for "{demo_request.demo.title}" has been rescheduled.
-
-Previous Schedule:
-Date: {old_date.strftime('%B %d, %Y')}
-Time: {old_time}
-
-New Schedule:
-Date: {reschedule_date.strftime('%B %d, %Y')}
-Time: {str(time_slot)}  # Fixed: use str() instead of get_display_time()
-
-Reason: {reschedule_reason if reschedule_reason else 'Not specified'}
-
-If you have any questions, please contact us.
-
-Best regards,
-Demo Management Team
-                    ''',
+                    subject=subject,
+                    message='',  # Empty plain text
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[demo_request.user.email],
-                    fail_silently=True,
+                    html_message=html_message,
+                    fail_silently=False,
                 )
                 
-                # Create notification
-                Notification.objects.create(
-                    recipient=demo_request.user,
-                    title='Demo Rescheduled',
-                    message=f'Your demo for "{demo_request.demo.title}" has been rescheduled to {reschedule_date.strftime("%B %d, %Y")} at {str(time_slot)}',  # Fixed: use str() instead of get_display_time()
-                    notification_type='demo_rescheduled',
-                    content_type=ContentType.objects.get_for_model(DemoRequest),
-                    object_id=demo_request.id
-                )
+                print(f"✅ Reschedule email sent to {demo_request.user.email}")
+                print(f"   Old: {old_date} at {old_time}")
+                print(f"   New: {new_date} at {new_time}")
+                
             except Exception as e:
-                print(f"Error sending notification: {e}")
+                print(f"⚠️ Error sending reschedule notification: {e}")
+                import traceback
+                traceback.print_exc()
         
-        # Notify assigned employee (if any)
+        # ✅ Notify assigned employee (if any)
         if demo_request.assigned_to:
             try:
                 Notification.objects.create(
-                    recipient=demo_request.assigned_to,
+                    user=demo_request.assigned_to,
                     title='Demo Rescheduled',
-                    message=f'Demo request #{demo_request.id} for {demo_request.user.get_full_name()} has been rescheduled to {reschedule_date.strftime("%B %d, %Y")} at {str(time_slot)}',  # Fixed: use str() instead of get_display_time()
-                    notification_type='demo_rescheduled',
+                    message=f'Demo request #{demo_request.id} for {demo_request.user.get_full_name()} has been rescheduled from {old_date} at {old_time} to {new_date} at {new_time}',
+                    notification_type='demo_reschedule',
                     content_type=ContentType.objects.get_for_model(DemoRequest),
                     object_id=demo_request.id
                 )
+                print(f"✅ Employee notification created for {demo_request.assigned_to.email}")
             except Exception as e:
-                print(f"Error creating employee notification: {e}")
+                print(f"⚠️ Error creating employee notification: {e}")
         
         return JsonResponse({
             'success': True,
@@ -2403,12 +2404,14 @@ Demo Management Team
         })
         
     except Exception as e:
+        print(f"❌ Error in reschedule_demo_request: {e}")
+        import traceback
+        traceback.print_exc()
+        
         return JsonResponse({
             'success': False,
             'error': str(e)
         })
-
-
 # ================================================================================
 # 🔥 NEW: REACTIVATE CANCELLED REQUEST
 # ================================================================================

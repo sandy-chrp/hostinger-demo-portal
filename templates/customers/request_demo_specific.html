@@ -809,20 +809,20 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // ✅ Determine status badge
             let statusClass = 'available';
-            let statusText = 'AVAILABLE';
+            let statusText = 'Available';
             
             if (slot.status === 'past') {
                 statusClass = 'past';
-                statusText = 'TIME PASSED';
+                statusText = 'Time Passed';
             } else if (slot.status === 'starting_soon') {
                 statusClass = 'starting_soon';
-                statusText = 'STARTING SOON';
+                statusText = 'Starting SOON';
             } else if (slot.status === 'already_booked') {
                 statusClass = 'already_booked';
-                statusText = 'YOUR BOOKING';
+                statusText = 'Your Booking';
             } else if (slot.status === 'full') {
                 statusClass = 'full';
-                statusText = 'BOOKED';
+                statusText = 'Booked';
             }
             
             const capacityPercent = slot.occupancy_percentage || 0;

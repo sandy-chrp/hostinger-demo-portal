@@ -3,7 +3,7 @@
 from django.urls import path,re_path
 from . import views
 from . import liked_demos_views
-
+from . import security_views
 app_name = 'customers'
 
 urlpatterns = [
@@ -34,13 +34,13 @@ urlpatterns = [
     
     # Liked Demos
     path('liked-demos/', liked_demos_views.liked_demos, name='liked_demos'),
+    path('demos/<int:demo_id>/like/', views.toggle_like, name='toggle_like'),
 
     # Notifications
     path('notifications/', views.notifications, name='notifications'),
     
     # AJAX Endpoints
-    path('ajax/demo/<int:demo_id>/like/', views.toggle_demo_like, name='toggle_demo_like'),
-    path('ajax/demo/<int:demo_id>/feedback/', views.submit_demo_feedback, name='submit_demo_feedback'),
+    # path('ajax/demo/<int:demo_id>/feedback/', views.submit_demo_feedback, name='submit_demo_feedback'),
     path('ajax/notification/<int:notification_id>/mark-read/', views.mark_notification_read, name='mark_notification_read'),
     path('ajax/notifications/mark-all-read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
     # Feedback success page
@@ -52,12 +52,19 @@ urlpatterns = [
     path('ajax/demo-request/<int:request_id>/cancel/', views.cancel_demo_request, name='cancel_demo_request'),
     path('ajax/check-slot-availability/', views.ajax_check_slot_availability, name='check_slot_availability'),
     path('ajax/booking-calendar/', views.ajax_get_booking_calendar, name='booking_calendar'),
+    path('ajax/demo/<int:demo_id>/feedback/', views.submit_feedback, name='submit_feedback'),
 
         # Security violation logging
     path('ajax/log-security-violation/', 
          views.log_security_violation, 
          name='log_security_violation'),
     
+    path('ajax/log-security-violation/', 
+         security_views.log_security_violation, 
+         name='log_security_violation'),
+    path('security/logout/', 
+         security_views.security_logout, 
+         name='security_logout'),
 
   
 

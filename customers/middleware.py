@@ -1,4 +1,5 @@
 
+import logging
 from django.utils.deprecation import MiddlewareMixin
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -12,6 +13,7 @@ import mimetypes
 from django.utils.deprecation import MiddlewareMixin
 from django.http import FileResponse
 import os
+logger = logging.getLogger(__name__)
 
 
 
@@ -363,6 +365,85 @@ class SmartCSPMiddleware:
         
         response['Content-Security-Policy'] = '; '.join(csp_parts)
 
+
+class ScreenshotProtectionMiddleware(MiddlewareMixin):
+    """FIXED - Headers only, no logout logic"""
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.protected_paths = ['/customer/', '/customers/']
+    
+    def __call__(self, request):
+        if any(request.path.startswith(path) for path in self.protected_paths):
+            if hasattr(request, 'user') and request.user and request.user.is_authenticated:
+                response = self.get_response(request)
+                return self.add_security_headers(response)
+        
+        return self.get_response(request)
+    
+    def add_security_headers(self, response):
+        """Only add headers, no logout logic"""
+        try:
+            response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+            response['X-Frame-Options'] = 'SAMEORIGIN'  # Changed from DENY
+            response['X-Content-Type-Options'] = 'nosniff'
+        except Exception:
+            pass
+        return response
+    
+    def add_security_headers(self, response):
+        """Add security headers to prevent screenshots"""
+        try:
+            # Prevent caching
+            response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+            
+            # Content Security Policy - SIMPLIFIED
+            response['Content-Security-Policy'] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://code.jquery.com https://embed.tawk.to; "
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                "img-src 'self' data: blob: https:; "
+                "frame-src 'self' https://embed.tawk.to; "
+                "connect-src 'self' https://embed.tawk.to wss://tawk.to; "
+                "frame-ancestors 'none'; "
+                "base-uri 'self';"
+            )
+            
+            # Prevent embedding in frames
+            response['X-Frame-Options'] = 'DENY'
+            response['X-Content-Type-Options'] = 'nosniff'
+            
+        except Exception as e:
+            # If headers fail, just return response as-is
+            print(f"Header setting error: {e}")
+        
+        return response
+    
+    def add_security_headers(self, response):
+        """Add security headers to prevent screenshots"""
+        # Prevent caching
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        
+        # Content Security Policy
+        response['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://code.jquery.com; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "img-src 'self' data:; "
+            "font-src 'self' https://cdnjs.cloudflare.com; "
+            "frame-ancestors 'none'; "
+            "base-uri 'self';"
+        )
+        
+        # Prevent embedding in frames
+        response['X-Frame-Options'] = 'DENY'
+        response['X-Content-Type-Options'] = 'nosniff'
+        
+        return response
 
 # class EnhancedContentProtectionMiddleware(MiddlewareMixin):
 #     """

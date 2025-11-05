@@ -1,1413 +1,975 @@
-<!-- templates/customers/demo_detail.html - COMPLETE UPDATED FILE -->
 {% extends 'customers/base.html' %}
 {% load static %}
 
-{% block customer_title %}{{ demo.title }} - Demo Portal{% endblock %}
-{% block page_title %}{{ demo.title }}{% endblock %}
+{% block customer_title %}{{ demo.title }}{% endblock %}
 
 {% block customer_extra_css %}
 <style>
     /* ==========================================
-       🎨 FONT SYSTEM - MATCHED WITH BASE.HTML
+       COMPLETE DEMO VIEWER - WORKING
        ========================================== */
+    
+    :root {
+        --primary: #087fc2;
+        --primary-dark: #0669a0;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --dark: #1e293b;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+    }
+    
     * {
+        box-sizing: border-box;
         font-family: var(--primary-font);
     }
-
-    /* Security Protection */
-    .video-content * {
-        -webkit-user-select: none !important;
-        -moz-user-select: none !important;
-        -ms-user-select: none !important;
-        user-select: none !important;
+    
+    body {
+        background: var(--gray-50);
+        font-family: var(--primary-font);
     }
-
-    video {
-        -webkit-user-drag: none !important;
-        user-drag: none !important;
-        pointer-events: none !important;
+    
+    .demo-container {
+        width: 100%;
+        max-width: 100%;
+        padding: 1.5rem;
+        margin: 0 auto;
     }
-
-    /* Allow form controls */
-    input, textarea, button, a, select {
-        -webkit-user-select: auto !important;
-        user-select: auto !important;
-        pointer-events: auto !important;
+    
+    .breadcrumb {
+        background: transparent;
+        padding: 0 0 1rem 0;
+        margin: 0;
+        font-size: 0.875rem;
     }
-
-    /* ==========================================
-       📹 VIDEO CONTAINER - 16:9 RESPONSIVE
-       ========================================== */
-    .video-container {
-        position: relative;
-        background: #000;
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-        height: fit-content;
-        margin-bottom: var(--spacing-lg);
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: "›";
+        padding: 0 0.5rem;
     }
-
-    .video-wrapper {
+    
+    /* CONTENT PLAYER */
+    .content-player {
         position: relative;
         width: 100%;
-        padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    
+    .content-wrapper {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%;
         background: #000;
     }
-
-    .demo-video {
+    
+    .content-wrapper video,
+    .content-wrapper iframe {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
         border: none;
+        background: #000;
     }
-
-    /* Video Security Overlays */
-    .video-protection-overlay {
+    
+    .watermark {
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: transparent;
-        z-index: 999;
-        pointer-events: none;
-    }
-
-    .video-watermark {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: rgba(0, 0, 0, 0.75);
+        top: 12px;
+        left: 12px;
+        background: rgba(0,0,0,0.75);
         color: white;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: var(--font-xs);
-        font-weight: 600;
-        z-index: 1000;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        z-index: 10;
         pointer-events: none;
     }
-
-    .video-timestamp {
+    
+    .timestamp {
         position: absolute;
         bottom: 70px;
-        left: 15px;
-        background: rgba(0, 0, 0, 0.75);
+        left: 12px;
+        background: rgba(0,0,0,0.75);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        z-index: 10;
+        pointer-events: none;
+    }
+    
+    .file-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: var(--primary);
         color: white;
         padding: 6px 14px;
         border-radius: 20px;
-        font-size: var(--font-xs);
-        z-index: 1000;
+        font-size: 0.7rem;
+        font-weight: 700;
+        z-index: 10;
         pointer-events: none;
+        text-transform: uppercase;
     }
-
-    /* Custom Video Controls */
-    .custom-controls {
-        background: rgba(0, 0, 0, 0.95);
-        color: white;
-        padding: 12px 15px;
+    
+    /* CONTROLS BAR */
+    .controls-bar {
+        background: linear-gradient(to bottom, #1a1a1a, #0a0a0a);
+        padding: 14px 16px;
         display: flex;
         align-items: center;
         gap: 12px;
-        flex-wrap: wrap;
+        border-top: 1px solid rgba(255,255,255,0.1);
     }
-
+    
     .control-btn {
-        background: none;
+        background: rgba(255,255,255,0.1);
         border: none;
         color: white;
-        font-size: var(--font-md);
         cursor: pointer;
-        padding: 6px;
-        border-radius: 50%;
-        transition: all 0.3s ease;
+        padding: 10px 14px;
+        border-radius: 6px;
+        transition: all 0.2s;
+        font-size: 0.875rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        min-width: 32px;
-        min-height: 32px;
     }
-
+    
     .control-btn:hover {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255,255,255,0.2);
+        transform: translateY(-1px);
     }
-
+    
+    .control-info {
+        flex: 1;
+        color: #ccc;
+        font-size: 0.875rem;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
     .progress-container {
         flex: 1;
         display: flex;
         align-items: center;
-        gap: 8px;
-        min-width: 200px;
+        gap: 12px;
     }
-
+    
     .progress-track {
         flex: 1;
         height: 5px;
-        background: rgba(255, 255, 255, 0.3);
+        background: rgba(255,255,255,0.2);
         border-radius: 3px;
         cursor: pointer;
-        position: relative;
     }
-
+    
     .progress-bar {
         height: 100%;
-        background: linear-gradient(90deg, #4ecdc4, #556270);
-        border-radius: 3px;
+        background: var(--primary);
         width: 0%;
-        position: relative;
+        border-radius: 3px;
+        transition: width 0.1s;
     }
-
-    .progress-handle {
-        position: absolute;
-        right: -6px;
-        top: 50%;
-        transform: translateY(-50%);
+    
+    .time-display {
+        color: #ccc;
+        font-size: 0.75rem;
+        min-width: 50px;
+    }
+    
+    .volume-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .volume-slider {
+        width: 80px;
+        height: 4px;
+        -webkit-appearance: none;
+        background: rgba(255,255,255,0.2);
+        border-radius: 2px;
+        outline: none;
+    }
+    
+    .volume-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
         width: 12px;
         height: 12px;
         background: white;
         border-radius: 50%;
-        opacity: 0;
-        transition: opacity 0.3s;
-    }
-
-    .progress-track:hover .progress-handle {
-        opacity: 1;
-    }
-
-    .time-display {
-        color: #ccc;
-        font-size: var(--font-xs);
-        font-family: monospace;
-        min-width: 42px;
-    }
-
-    .volume-container {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .volume-slider {
-        width: 50px;
-        height: 3px;
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 2px;
         cursor: pointer;
     }
-
-    /* ==========================================
-       📄 DEMO HEADER - RESPONSIVE
-       ========================================== */
-    .demo-header {
+    
+    /* DEMO INFO */
+    .demo-info {
         background: white;
-        padding: var(--spacing-lg);
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-sm);
-        margin-bottom: var(--spacing-lg);
-        border: 1px solid var(--gray-200);
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-
+    
     .demo-title {
-        font-size: var(--font-3xl);
+        font-size: 2.25rem;
         font-weight: 700;
-        color: var(--dark-color);
-        margin-bottom: var(--spacing-sm);
+        color: var(--dark);
+        margin: 0 0 1rem 0;
         line-height: 1.3;
-        font-family: var(--heading-font);
     }
-
-    .demo-meta-info {
+    
+    .demo-meta {
         display: flex;
+        gap: 24px;
         flex-wrap: wrap;
-        gap: var(--spacing-md);
-        margin: var(--spacing-md) 0;
-        padding-bottom: var(--spacing-md);
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
         border-bottom: 1px solid var(--gray-200);
     }
-
+    
     .meta-item {
         display: flex;
         align-items: center;
         gap: 6px;
         color: var(--gray-600);
-        font-size: var(--font-sm);
+        font-size: 0.875rem;
     }
-
+    
     .meta-item i {
-        color: var(--primary-color);
-        width: 16px;
+        color: var(--primary);
     }
-
+    
     .demo-description {
         color: var(--gray-700);
-        line-height: 1.6;
-        font-size: var(--font-base);
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+        font-size: 1rem;
     }
-
-    .demo-actions-section {
+    
+    .demo-actions {
         display: flex;
-        flex-direction: column;
-        gap: var(--spacing-sm);
-        margin-top: 0;
-    }
-
-    .action-btn {
-        padding: 10px 16px;
-        border-radius: var(--radius-md);
-        font-weight: 600;
-        font-size: var(--font-sm);
-        transition: all 0.3s ease;
-        border: none;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        text-decoration: none;
-        width: 100%;
-        text-align: center;
-    }
-
-    .btn-like {
-        background: transparent;
-        color: #f59e0b;
-        border: 2px solid #f59e0b;
-    }
-
-    .btn-like:hover {
-        background: #f59e0b;
-        color: white;
-    }
-
-    .btn-like.liked {
-        background: #f59e0b;
-        color: white;
-    }
-
-    .btn-request-demo {
-        background: var(--gradient-primary);
-        color: white;
-    }
-
-    .btn-request-demo:hover {
-        background: var(--secondary-color);
-        transform: translateY(-2px);
-        color: white;
-    }
-
-    /* Consultation Card */
-    .consultation-card {
-        background: white;
-        border-radius: var(--radius-lg);
-        padding: var(--spacing-xl);
-        text-align: center;
-        box-shadow: var(--shadow-sm);
-        border: 1px solid var(--gray-200);
-        margin-bottom: var(--spacing-lg);
-    }
-
-    .consultation-icon {
-        font-size: 4rem;
-        color: var(--primary-color);
-        margin-bottom: var(--spacing-lg);
-    }
-
-    .consultation-card h3 {
-        font-size: var(--font-3xl);
-        font-weight: 700;
-        margin-bottom: var(--spacing-md);
-        color: var(--dark-color);
-        font-family: var(--heading-font);
-    }
-
-    .consultation-card p {
-        color: var(--gray-600);
-        margin-bottom: var(--spacing-lg);
-        font-size: var(--font-base);
-    }
-
-    /* ==========================================
-       📱 LATEST VIDEOS SIDEBAR
-       ========================================== */
-    .related-sidebar {
-        background: white;
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-sm);
-        border: 1px solid var(--gray-200);
-        height: fit-content;
-        position: sticky;
-        top: 90px;
-    }
-
-    .sidebar-header {
-        padding: var(--spacing-md) var(--spacing-lg);
-        border-bottom: 1px solid var(--gray-200);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .sidebar-title {
-        font-size: var(--font-lg);
-        font-weight: 700;
-        color: var(--dark-color);
-        margin: 0;
-        font-family: var(--heading-font);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .sidebar-header .badge {
-        font-size: var(--font-xs);
-        padding: 0.3rem 0.6rem;
-        background: var(--primary-color);
-    }
-
-    .sidebar-content {
-        padding: var(--spacing-md);
-        max-height: 600px;
-        overflow-y: auto;
-    }
-
-    .sidebar-content::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    .sidebar-content::-webkit-scrollbar-track {
-        background: var(--gray-100);
-    }
-
-    .sidebar-content::-webkit-scrollbar-thumb {
-        background: var(--gray-400);
-        border-radius: 2px;
-    }
-
-    /* Related Demo Card */
-    .related-card {
-        background: white;
-        border: 1px solid var(--gray-200);
-        border-radius: var(--radius-md);
-        overflow: hidden;
-        transition: all 0.3s ease;
-        margin-bottom: var(--spacing-md);
-        position: relative;
-    }
-
-    .related-card:last-child {
-        margin-bottom: 0;
-    }
-
-    .related-card:hover {
-        box-shadow: var(--shadow-md);
-        transform: translateY(-2px);
-    }
-
-    .related-thumbnail {
-        width: 100%;
-        height: 120px;
-        object-fit: cover;
-    }
-
-    .related-content {
-        padding: var(--spacing-md);
-    }
-
-    .related-title {
-        font-size: var(--font-sm);
-        font-weight: 600;
-        margin-bottom: var(--spacing-xs);
-        color: var(--dark-color);
-        line-height: 1.3;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .related-meta {
-        color: var(--gray-500);
-        font-size: var(--font-xs);
-        margin-bottom: var(--spacing-sm);
-        display: flex;
-        gap: 8px;
+        gap: 12px;
         flex-wrap: wrap;
     }
-
-    .related-date {
-        margin-top: var(--spacing-xs);
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        margin-bottom: var(--spacing-sm);
-    }
-
-    .related-date i {
-        font-size: var(--font-xs);
-        color: var(--gray-400);
-    }
-
-    .related-date span {
-        font-size: var(--font-xs);
-        color: var(--gray-500);
-    }
-
-    .related-card .btn {
-        font-size: var(--font-xs);
-        padding: 6px 12px;
-        width: 100%;
-    }
-
-    /* Fresh/New badge for demos less than 7 days old */
-    .fresh-badge {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: var(--success-color);
-        color: white;
-        font-size: var(--font-xs);
-        padding: 0.25rem 0.5rem;
-        border-radius: 12px;
+    
+    .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
         font-weight: 600;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        z-index: 10;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+        cursor: pointer;
+        font-size: 0.875rem;
+        white-space: nowrap;
     }
-
-    /* ==========================================
-       💬 FEEDBACK SECTION
-       ========================================== */
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(8, 127, 194, 0.3);
+    }
+    
+    .btn-outline {
+        background: white;
+        color: var(--primary);
+        border-color: var(--primary);
+    }
+    
+    .btn-outline:hover {
+        background: var(--primary);
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .btn-outline.liked {
+        background: var(--warning);
+        color: white;
+        border-color: var(--warning);
+    }
+    
+    /* FEEDBACK */
     .feedback-section {
         background: white;
-        padding: var(--spacing-lg);
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-sm);
-        margin-top: var(--spacing-lg);
-        border: 1px solid var(--gray-200);
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-
-    .feedback-section h3 {
-        font-size: var(--font-2xl);
+    
+    .section-title {
+        font-size: 1.5rem;
         font-weight: 700;
-        margin-bottom: var(--spacing-lg);
-        font-family: var(--heading-font);
+        color: var(--dark);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
-
-    .feedback-section * {
-        -webkit-user-select: text !important;
-        user-select: text !important;
-    }
-
-    .feedback-form {
-        background: var(--gray-50);
-        padding: var(--spacing-lg);
-        border-radius: var(--radius-md);
-        margin-bottom: var(--spacing-lg);
-    }
-
+    
     .rating-stars {
         display: flex;
-        gap: var(--spacing-sm);
-        margin-bottom: var(--spacing-md);
+        gap: 8px;
+        margin-bottom: 1rem;
     }
-
+    
     .star {
-        font-size: var(--font-3xl);
-        color: var(--gray-300);
+        font-size: 2.25rem;
         cursor: pointer;
-        transition: all 0.3s ease;
-        -webkit-user-select: none !important;
-        user-select: none !important;
+        color: var(--gray-300);
+        transition: all 0.2s;
+        user-select: none;
     }
-
+    
     .star:hover,
     .star.active {
-        color: var(--warning-color);
+        color: #fbbf24;
         transform: scale(1.1);
     }
-
-    .feedback-item {
-        background: white;
-        padding: var(--spacing-md);
-        border-radius: var(--radius-md);
-        margin-bottom: var(--spacing-md);
-        border-left: 3px solid var(--primary-color);
-        box-shadow: var(--shadow-sm);
+    
+    .feedback-form textarea {
+        width: 100%;
+        padding: 14px;
+        border: 2px solid var(--gray-200);
+        border-radius: 8px;
+        resize: vertical;
+        min-height: 120px;
+        font-size: 0.875rem;
+        transition: border-color 0.2s;
     }
-
+    
+    .feedback-form textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+    
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .alert-success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #10b981;
+    }
+    
+    .feedback-list {
+        margin-top: 2rem;
+    }
+    
+    .feedback-item {
+        background: var(--gray-50);
+        padding: 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        border-left: 3px solid var(--primary);
+    }
+    
     .feedback-header {
         display: flex;
         justify-content: space-between;
-        margin-bottom: var(--spacing-xs);
+        align-items: center;
+        margin-bottom: 0.75rem;
     }
-
+    
     .feedback-author {
         font-weight: 600;
-        color: var(--dark-color);
-        font-size: var(--font-sm);
+        color: var(--dark);
+        font-size: 0.875rem;
     }
-
+    
     .feedback-date {
+        font-size: 0.75rem;
         color: var(--gray-500);
-        font-size: var(--font-xs);
     }
-
-    /* Security Warning */
-    .security-warning {
+    
+    .feedback-rating {
+        margin-bottom: 0.5rem;
+    }
+    
+    .feedback-text {
+        color: var(--gray-700);
+        line-height: 1.6;
+        margin: 0;
+        font-size: 0.875rem;
+    }
+    
+    /* TOAST */
+    .toast {
         position: fixed;
         top: 80px;
         right: 20px;
-        background: var(--danger-color);
-        color: white;
-        padding: 10px 16px;
-        border-radius: var(--radius-md);
-        font-size: var(--font-sm);
-        z-index: 10000;
-        display: none;
-        box-shadow: var(--shadow-lg);
+        background: white;
+        padding: 16px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 9999;
         animation: slideIn 0.3s ease;
+        font-size: 0.875rem;
+        min-width: 300px;
     }
-
+    
     @keyframes slideIn {
-        from { transform: translateX(100%); }
-        to { transform: translateX(0); }
+        from { transform: translateX(400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
-
-    /* Loading & Toast */
+    
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error { border-left: 4px solid var(--danger); }
+    .toast i { font-size: 1.25rem; }
+    
     .loading {
-        opacity: 0.6;
-        pointer-events: none;
-    }
-
-    .spinner {
-        display: inline-block;
-        width: 16px;
-        height: 16px;
-        border: 2px solid currentColor;
-        border-radius: 50%;
-        border-right-color: transparent;
-        animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    /* ==========================================
-       📱 RESPONSIVE BREAKPOINTS
-       ========================================== */
-    @media (max-width: 1024px) {
-        .related-sidebar {
-            position: static;
-            margin-top: var(--spacing-lg);
-        }
-
-        .sidebar-content {
-            max-height: 400px;
-        }
-        
-        .demo-title {
-            font-size: var(--font-2xl);
-        }
-        
-        .consultation-card h3 {
-            font-size: var(--font-2xl);
-        }
-    }
-
-    @media (max-width: 768px) {
-        .demo-title {
-            font-size: var(--font-xl);
-        }
-
-        .video-wrapper {
-            padding-bottom: 75%;
-        }
-
-        .custom-controls {
-            flex-wrap: wrap;
-            gap: 8px;
-            padding: 10px;
-        }
-
-        .volume-container {
-            display: none;
-        }
-        
-        .progress-container {
-            min-width: 150px;
-        }
-        
-        .demo-header {
-            padding: var(--spacing-md);
-        }
-        
-        .feedback-section h3 {
-            font-size: var(--font-xl);
-        }
-        
-        .consultation-card {
-            padding: var(--spacing-lg);
-        }
-        
-        .consultation-card h3 {
-            font-size: var(--font-xl);
-        }
-        
-        .consultation-icon {
-            font-size: 3rem;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .demo-title {
-            font-size: var(--font-lg);
-        }
-        
-        .meta-item {
-            font-size: var(--font-xs);
-        }
-        
-        .demo-description {
-            font-size: var(--font-sm);
-        }
-        
-        .action-btn {
-            font-size: var(--font-xs);
-            padding: 8px 12px;
-        }
-        
-        .custom-controls {
-            padding: 8px;
-        }
-        
-        .control-btn {
-            min-width: 28px;
-            min-height: 28px;
-            font-size: var(--font-sm);
-        }
-        
-        .time-display {
-            font-size: 0.625rem;
-        }
-        
-        .feedback-section {
-            padding: var(--spacing-md);
-        }
-        
-        .feedback-section h3 {
-            font-size: var(--font-lg);
-        }
-        
-        .star {
-            font-size: var(--font-2xl);
-        }
-    }
-
-    .demo-video::-webkit-media-controls {
-        display: none !important;
-    }
-
-    /* Fullscreen Styles */
-    .video-container:fullscreen,
-    .video-container:-webkit-full-screen,
-    .video-container:-moz-full-screen {
-        width: 100vw;
-        height: 100vh;
-        border-radius: 0;
-    }
-
-    .video-container:fullscreen .video-wrapper {
-        padding-bottom: 0;
-        height: 100%;
-    }
-
-    .video-container:fullscreen .demo-video {
-        object-fit: contain;
-    }
-
-    .video-container:fullscreen .custom-controls {
         position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 10000;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 0.875rem;
+    }
+    
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+        .demo-container { padding: 1rem; }
+        .demo-title { font-size: 1.875rem; }
+        .section-title { font-size: 1.25rem; }
+        .demo-meta { gap: 16px; font-size: 0.75rem; }
+        .volume-container { display: none; }
+        .btn { padding: 10px 18px; font-size: 0.75rem; }
+    }
+    
+    @media (max-width: 576px) {
+        .content-wrapper { padding-bottom: 75%; }
+        .demo-actions { flex-direction: column; }
+        .demo-actions .btn { width: 100%; }
+        .controls-bar { padding: 10px 12px; gap: 8px; }
+        .star { font-size: 1.875rem; }
     }
 </style>
 {% endblock %}
 
 {% block customer_content %}
-{% csrf_token %}
-
-<div class="security-warning" id="securityWarning">
-    <i class="fas fa-shield-alt me-2"></i>
-    <span id="warningText">Unauthorized action detected!</span>
-</div>
-
-<nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'customers:dashboard' %}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'customers:browse_demos' %}">Demos</a></li>
-        <li class="breadcrumb-item active">{{ demo.title|truncatechars:30 }}</li>
-    </ol>
-</nav>
-
-{# ✅ WebGL Auto-Redirect #}
-{% if demo.file_type == 'webgl' %}
-    <script>
-        console.log('🎮 WebGL demo detected, redirecting to viewer...');
-        window.location.href = "{% url 'customers:webgl_viewer' demo.slug %}";
-    </script>
+<div class="demo-container">
     
-    <div class="customer-card text-center py-5">
-        <div class="spinner-border text-primary mb-3" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-        <h4><i class="fas fa-cube me-2"></i>Loading 3D Viewer...</h4>
-        <p class="text-muted">Redirecting to WebGL viewer...</p>
-    </div>
-{% else %}
-    {# Video/Regular Demo Content #}
-    <div class="row g-4">
-        <div class="col-lg-8">
-            {% if demo.video_file %}
-            <!-- Video Container -->
-            <div class="video-container video-content">
-                <div class="video-wrapper">
-                    <video 
-                        class="demo-video" 
-                        id="demoVideo"
-                        controlslist="nodownload nofullscreen noremoteplayback"
-                        disablepictureinpicture
-                        disableremoteplayback
-                        oncontextmenu="return false;"
-                        preload="metadata">
-                        <source src="{{ demo.video_file.url }}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                    
-                    <div class="video-protection-overlay"></div>
-                    
-                    <div class="video-timestamp" id="videoTimestamp">
-                        <span id="currentTime"></span>
-                    </div>
-                </div>
-                
-                <div class="custom-controls">
-                    <button id="playPauseBtn" class="control-btn" title="Play/Pause">
-                        <i class="fas fa-play"></i>
-                    </button>
-                    
-                    <div class="progress-container">
-                        <span id="currentDuration" class="time-display">00:00</span>
-                        <div class="progress-track" id="progressTrack">
-                            <div id="progressBar" class="progress-bar">
-                                <div class="progress-handle"></div>
-                            </div>
-                        </div>
-                        <span id="totalDuration" class="time-display">00:00</span>
-                    </div>
-                    
-                    <div class="volume-container">
-                        <button id="volumeBtn" class="control-btn" title="Volume">
-                            <i class="fas fa-volume-up"></i>
-                        </button>
-                        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.1" value="1">
-                    </div>
-                    
-                    <button id="fullscreenBtn" class="control-btn" title="Fullscreen">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    
-                    <div style="color: #888; font-size: var(--font-xs);">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                </div>
-            </div>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'customers:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'customers:browse_demos' %}">Demos</a></li>
+            <li class="breadcrumb-item active">{{ demo.title|truncatechars:30 }}</li>
+        </ol>
+    </nav>
+    
+    <div class="content-player">
+        <div class="content-wrapper">
+            
+            {% if demo.file_type == 'video' and demo.video_file %}
+                <video id="demoVideo" controlslist="nodownload" disablepictureinpicture oncontextmenu="return false;">
+                    <source src="{{ demo.video_file.url }}" type="video/mp4">
+                </video>
+            {% elif demo.file_type == 'webgl' and content_url %}
+                <iframe id="demoContent" src="{{ content_url }}" sandbox="allow-scripts allow-same-origin allow-pointer-lock" allowfullscreen></iframe>
+            {% elif demo.file_type == 'lms' and content_url %}
+                <iframe id="demoContent" src="{{ content_url }}" sandbox="allow-scripts allow-same-origin allow-forms" allowfullscreen></iframe>
             {% else %}
-            <!-- No Video - Consultation Card -->
-            <div class="consultation-card">
-                <i class="fas fa-calendar-check consultation-icon"></i>
-                <h3>Schedule Your Consultation</h3>
-                <p>This is a consultation service. Book a live session with our team.</p>
-                <a href="{% url 'customers:request_demo' %}?demo={{ demo.id }}" 
-                   class="btn btn-primary btn-lg">
-                    <i class="fas fa-calendar-plus me-2"></i>Request Consultation
-                </a>
-            </div>
+                <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
             {% endif %}
-
-            <!-- Demo Information -->
-            <div class="demo-header">
-                <div class="row align-items-start">
-                    <div class="col-lg-8">
-                        <h1 class="demo-title">{{ demo.title }}</h1>
-                        
-                        <div class="demo-meta-info">
-                            <div class="meta-item">
-                                <i class="fas fa-eye"></i>
-                                <span>{{ demo.views_count }} views</span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-star text-warning"></i>
-                                <span id="likesCount">{{ demo.likes_count }}</span> likes
-                            </div>
-                            {% if demo.duration %}
-                            <div class="meta-item">
-                                <i class="fas fa-clock"></i>
-                                <span>{{ demo.duration }} min</span>
-                            </div>
-                            {% endif %}
-                            <div class="meta-item">
-                                <i class="fas fa-calendar"></i>
-                                <span>{{ demo.created_at|date:"M d, Y" }}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="demo-description">
-                            {{ demo.description|linebreaks }}
-                        </div>
+            
+            <div class="watermark">{{ request.user.email }}</div>
+            <div class="timestamp" id="timestamp"></div>
+            {% comment %} <div class="file-badge">
+                {% if demo.file_type == 'video' %}VIDEO
+                {% elif demo.file_type == 'webgl' %}WEBGL 3D
+                {% elif demo.file_type == 'lms' %}LMS COURSE
+                {% else %}DEMO{% endif %}
+            </div> {% endcomment %}
+        </div>
+        
+        <div class="controls-bar">
+            {% if demo.file_type == 'video' %}
+                <button class="control-btn" id="playBtn" title="Play/Pause"><i class="fas fa-play"></i></button>
+                <div class="progress-container">
+                    <span class="time-display" id="currentTime">0:00</span>
+                    <div class="progress-track" id="progressTrack">
+                        <div class="progress-bar" id="progressBar"></div>
                     </div>
-                    
-                    <div class="col-lg-4">
-                        <div class="demo-actions-section">
-                            <button 
-                                class="action-btn btn-like {% if user_liked %}liked{% endif %}" 
-                                id="likeBtn"
-                                data-demo-id="{{ demo.id }}">
-                                <i class="fas fa-star"></i>
-                                <span id="likeText">{% if user_liked %}Liked{% else %}Like{% endif %}</span>
-                            </button>
-                            
-                            <a href="{% url 'customers:request_demo' %}?demo={{ demo.id }}" 
-                               class="action-btn btn-request-demo">
-                                <i class="fas fa-calendar-plus"></i>
-                                Request Live Demo
-                            </a>
-                        </div>
-                    </div>
+                    <span class="time-display" id="totalTime">0:00</span>
                 </div>
-            </div>
-
-            <!-- Feedback Section -->
-            <div class="feedback-section" id="feedback">
-                <h3><i class="fas fa-comments me-2"></i>Share Your Feedback</h3>
-                
-                {% if not user_feedback %}
-                <div class="feedback-form">
-                    <form id="feedbackForm">
-                        <div class="mb-3">
-                            <label class="form-label">Rate this demo:</label>
-                            <div class="rating-stars" id="ratingStars">
-                                <i class="fas fa-star star" data-rating="1"></i>
-                                <i class="fas fa-star star" data-rating="2"></i>
-                                <i class="fas fa-star star" data-rating="3"></i>
-                                <i class="fas fa-star star" data-rating="4"></i>
-                                <i class="fas fa-star star" data-rating="5"></i>
-                            </div>
-                            <input type="hidden" id="selectedRating" value="0">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="feedbackText" class="form-label">Your feedback:</label>
-                            <textarea 
-                                class="form-control" 
-                                id="feedbackText" 
-                                rows="3" 
-                                placeholder="Share your thoughts..."
-                                required></textarea>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane me-2"></i>Submit Feedback
-                        </button>
-                    </form>
+                <div class="volume-container">
+                    <button class="control-btn" id="volumeBtn" title="Mute"><i class="fas fa-volume-up"></i></button>
+                    <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="100">
                 </div>
-                {% else %}
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle me-2"></i>
-                    Thank you for your feedback!
-                    {% if user_feedback.rating %}
-                        <div class="mt-2">
-                            Rating: 
-                            {% for i in "12345" %}
-                                <i class="fas fa-star {% if forloop.counter <= user_feedback.rating %}text-warning{% else %}text-muted{% endif %}"></i>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+            {% else %}
+                <button class="control-btn" id="reloadBtn" title="Reload"><i class="fas fa-redo"></i></button>
+                <div class="control-info">
+                    <i class="fas fa-{% if demo.file_type == 'webgl' %}cube{% else %}graduation-cap{% endif %}"></i>
+                    {% if demo.file_type == 'webgl' %}Interactive 3D{% else %}Learning Content{% endif %}
                 </div>
-                {% endif %}
-                
-                {% if approved_feedbacks %}
-                <h4 class="mt-4 mb-3" style="font-size: var(--font-xl); font-weight: 600;">Customer Reviews</h4>
+            {% endif %}
+            <button class="control-btn" id="fullscreenBtn" title="Fullscreen (F)"><i class="fas fa-expand"></i></button>
+        </div>
+    </div>
+    
+    <div class="demo-info">
+        <h1 class="demo-title">{{ demo.title }}</h1>
+        
+        <div class="demo-meta">
+            <span class="meta-item"><i class="fas fa-eye"></i> <span>{{ demo.views_count }} views</span></span>
+            <span class="meta-item"><i class="fas fa-star"></i> <span id="likesCount">{{ demo.likes_count }}</span> likes</span>
+            {% if demo.duration %}<span class="meta-item"><i class="fas fa-clock"></i> <span>{{ demo.duration }} min</span></span>{% endif %}
+            <span class="meta-item"><i class="fas fa-calendar"></i> <span>{{ demo.created_at|date:"M d, Y" }}</span></span>
+        </div>
+        
+        <div class="demo-description">{{ demo.description|linebreaks }}</div>
+        
+        <div class="demo-actions">
+            {# ✅ FIXED: Direct URL construction without Django reverse #}
+            <button class="btn btn-outline {% if user_liked %}liked{% endif %}" 
+                    id="likeBtn" 
+                    data-demo-id="{{ demo.id }}"
+                    data-liked="{% if user_liked %}true{% else %}false{% endif %}">
+                <i class="fas fa-star"></i>
+                <span id="likeText">{% if user_liked %}Liked{% else %}Like{% endif %}</span>
+            </button>
+            <a href="{% url 'customers:request_demo' %}?demo={{ demo.id }}" class="btn btn-primary">
+                <i class="fas fa-calendar-plus"></i> Request Live Demo
+            </a>
+        </div>
+    </div>
+    
+    <div class="feedback-section">
+        <h2 class="section-title"><i class="fas fa-comment-dots"></i> Share Your Feedback</h2>
+        
+        {% if user_feedback %}
+            <div class="alert alert-success"><i class="fas fa-check-circle"></i> Thank you for your feedback!</div>
+        {% else %}
+            <form class="feedback-form" id="feedbackForm">
+                {% csrf_token %}
+                <div class="rating-stars" id="ratingStars">
+                    <span class="star" data-rating="1">★</span>
+                    <span class="star" data-rating="2">★</span>
+                    <span class="star" data-rating="3">★</span>
+                    <span class="star" data-rating="4">★</span>
+                    <span class="star" data-rating="5">★</span>
+                </div>
+                <input type="hidden" name="rating" id="ratingInput">
+                <textarea name="feedback" id="feedbackText" placeholder="Share your thoughts..." required></textarea>
+                <button type="submit" class="btn btn-primary" style="margin-top:1rem">
+                    <i class="fas fa-paper-plane"></i> Submit Feedback
+                </button>
+            </form>
+        {% endif %}
+        
+        {% if approved_feedbacks %}
+            <div class="feedback-list">
+                <h3 class="section-title">Customer Reviews</h3>
                 {% for feedback in approved_feedbacks %}
                     <div class="feedback-item">
                         <div class="feedback-header">
-                            <div class="feedback-author">{{ feedback.user.first_name }} {{ feedback.user.last_name.0 }}.</div>
-                            <div class="feedback-date">{{ feedback.created_at|date:"M d, Y" }}</div>
+                            <span class="feedback-author">{{ feedback.user.first_name }} {{ feedback.user.last_name|first }}.</span>
+                            <span class="feedback-date">{{ feedback.created_at|date:"M d, Y" }}</span>
                         </div>
                         {% if feedback.rating %}
-                            <div class="mb-2">
+                            <div class="feedback-rating">
                                 {% for i in "12345" %}
-                                    <i class="fas fa-star {% if forloop.counter <= feedback.rating %}text-warning{% else %}text-muted{% endif %} small"></i>
+                                    <span style="color:{% if forloop.counter <= feedback.rating %}#fbbf24{% else %}#d1d5db{% endif %};font-size:16px">★</span>
                                 {% endfor %}
                             </div>
                         {% endif %}
-                        <p class="mb-0" style="font-size: var(--font-sm);">{{ feedback.feedback_text }}</p>
+                        <p class="feedback-text">{{ feedback.feedback_text }}</p>
                     </div>
                 {% endfor %}
-                {% endif %}
             </div>
-        </div>
-
-        <!-- ✅ RIGHT SIDEBAR: Latest 10 Video Demos -->
-        <div class="col-lg-4">
-            {% if latest_video_demos %}
-            <div class="related-sidebar">
-                <div class="sidebar-header">
-                    <h3 class="sidebar-title">
-                        <i class="fas fa-fire"></i>
-                        Latest Videos
-                    </h3>
-                    <span class="badge">{{ latest_video_demos|length }}</span>
-                </div>
-                <div class="sidebar-content">
-                    {% for latest_demo in latest_video_demos %}
-                    <div class="related-card">
-                        {% if latest_demo.thumbnail %}
-                            <img src="{{ latest_demo.thumbnail.url }}" 
-                                 alt="{{ latest_demo.title }}" 
-                                 class="related-thumbnail">
-                            
-                            {# Show "NEW" badge if demo is less than 7 days old #}
-                            {% load tz %}
-                            {% now "U" as current_timestamp %}
-                            {% with demo_timestamp=latest_demo.created_at|date:"U"|add:"0" %}
-                                {% with time_diff=current_timestamp|add:"-604800" %}
-                                    {% if demo_timestamp > time_diff %}
-                                    <span class="fresh-badge">
-                                        ✨ NEW
-                                    </span>
-                                    {% endif %}
-                                {% endwith %}
-                            {% endwith %}
-                        {% else %}
-                            <div class="related-thumbnail" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-video" style="font-size: 2rem; color: white;"></i>
-                            </div>
-                        {% endif %}
-                        
-                        <div class="related-content">
-                            <h4 class="related-title">{{ latest_demo.title }}</h4>
-                            
-                            <div class="related-meta">
-                                <span><i class="fas fa-eye me-1"></i>{{ latest_demo.views_count }}</span>
-                                <span><i class="fas fa-star text-warning me-1"></i>{{ latest_demo.likes_count }}</span>
-                                {% if latest_demo.duration %}
-                                <span><i class="fas fa-clock me-1"></i>{{ latest_demo.formatted_duration }}</span>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="related-date">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>{{ latest_demo.created_at|timesince }} ago</span>
-                            </div>
-                            
-                            <a href="{% url 'customers:demo_detail' latest_demo.slug %}" 
-                               class="btn btn-primary btn-sm mt-2">
-                                <i class="fas fa-play me-1"></i>Watch Now
-                            </a>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-        </div>
+        {% endif %}
     </div>
-{% endif %} {# End WebGL check #}
+    
+</div>
 
-<div id="toastContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 11000;"></div>
+<div id="toastContainer"></div>
+
 {% endblock %}
 
 {% block customer_extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎬 Demo Detail Page Initializing...');
-    
-    const video = document.getElementById('demoVideo');
-    
-    // Video controls initialization
-    if (video) {
-        console.log('✅ Video element found');
-        
-        const playPauseBtn = document.getElementById('playPauseBtn');
-        const progressBar = document.getElementById('progressBar');
-        const progressTrack = document.getElementById('progressTrack');
-        const currentDuration = document.getElementById('currentDuration');
-        const totalDuration = document.getElementById('totalDuration');
-        const currentTimeSpan = document.getElementById('currentTime');
-        const volumeBtn = document.getElementById('volumeBtn');
-        const volumeSlider = document.getElementById('volumeSlider');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        const videoContainer = document.querySelector('.video-container');
-        
-        initVideoSecurity();
-        initVideoControls();
-        updateTimestamp();
-        setInterval(updateTimestamp, 1000);
-        
-        function initVideoSecurity() {
-            video.controls = false;
-            video.oncontextmenu = () => false;
-            
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'f' || e.key === 'F') {
-                    e.preventDefault();
-                    toggleFullscreen();
-                    return false;
-                }
-                
-                if (e.key === 'F12' || e.key === 'PrintScreen' ||
-                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
-                    (e.ctrlKey && e.key === 'u')) {
-                    e.preventDefault();
-                    showWarning('Action blocked');
-                    return false;
-                }
-            });
-            
-            window.addEventListener('blur', () => {
-                if (video && !video.paused && !video.ended && video.readyState >= 2) {
-                    video.pause();
-                    updatePlayPause();
-                }
-            });
-        }
-        
-        function initVideoControls() {
-            playPauseBtn.addEventListener('click', () => {
-                video.paused ? video.play() : video.pause();
-            });
-            
-            video.addEventListener('play', updatePlayPause);
-            video.addEventListener('pause', updatePlayPause);
-            video.addEventListener('timeupdate', updateProgress);
-            video.addEventListener('loadedmetadata', () => {
-                totalDuration.textContent = formatTime(video.duration);
-            });
-            
-            video.addEventListener('error', (e) => {
-                console.error('❌ Video Error:', e);
-                showToast('Error loading video', 'error');
-            });
-            
-            progressTrack.addEventListener('click', (e) => {
-                if (!video.duration || isNaN(video.duration) || video.duration === 0 || video.duration === Infinity) {
-                    return;
-                }
-                
-                const rect = progressTrack.getBoundingClientRect();
-                const pos = (e.clientX - rect.left) / rect.width;
-                const newTime = pos * video.duration;
-                
-                if (!isNaN(newTime) && isFinite(newTime) && newTime >= 0 && newTime <= video.duration) {
-                    video.currentTime = newTime;
-                }
-            });
-            
-            volumeBtn.addEventListener('click', () => {
-                video.muted = !video.muted;
-                updateVolume();
-            });
-            
-            volumeSlider.addEventListener('input', () => {
-                video.volume = volumeSlider.value;
-                video.muted = false;
-                updateVolume();
-            });
-            
-            if (fullscreenBtn) {
-                fullscreenBtn.addEventListener('click', toggleFullscreen);
-            }
-            
-            document.addEventListener('fullscreenchange', updateFullscreenButton);
-            document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
-            document.addEventListener('mozfullscreenchange', updateFullscreenButton);
-            document.addEventListener('MSFullscreenChange', updateFullscreenButton);
-        }
-        
-        function toggleFullscreen() {
-            if (!document.fullscreenElement && 
-                !document.webkitFullscreenElement && 
-                !document.mozFullScreenElement &&
-                !document.msFullscreenElement) {
-                if (videoContainer.requestFullscreen) {
-                    videoContainer.requestFullscreen();
-                } else if (videoContainer.webkitRequestFullscreen) {
-                    videoContainer.webkitRequestFullscreen();
-                } else if (videoContainer.mozRequestFullScreen) {
-                    videoContainer.mozRequestFullScreen();
-                } else if (videoContainer.msRequestFullscreen) {
-                    videoContainer.msRequestFullscreen();
-                }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                } else if (document.mozCancelFullScreen) {
-                    document.mozCancelFullScreen();
-                } else if (document.msExitFullscreen) {
-                    document.msExitFullscreen();
-                }
-            }
-        }
-        
-        function updateFullscreenButton() {
-            if (!fullscreenBtn) return;
-            
-            const icon = fullscreenBtn.querySelector('i');
-            const isFullscreen = document.fullscreenElement || 
-                               document.webkitFullscreenElement || 
-                               document.mozFullScreenElement ||
-                               document.msFullscreenElement;
-            
-            if (isFullscreen) {
-                icon.className = 'fas fa-compress';
-                fullscreenBtn.title = 'Exit Fullscreen (ESC)';
-            } else {
-                icon.className = 'fas fa-expand';
-                fullscreenBtn.title = 'Fullscreen (F)';
-            }
-        }
-        
-        function updatePlayPause() {
-            const icon = playPauseBtn.querySelector('i');
-            icon.className = video.paused ? 'fas fa-play' : 'fas fa-pause';
-        }
-        
-        function updateProgress() {
-            if (!video.duration || isNaN(video.duration) || video.duration === 0 || video.duration === Infinity) {
-                return;
-            }
-            
-            const progress = (video.currentTime / video.duration) * 100;
-            
-            if (!isNaN(progress) && isFinite(progress) && progress >= 0 && progress <= 100) {
-                progressBar.style.width = progress + '%';
-                currentDuration.textContent = formatTime(video.currentTime);
-            }
-        }
-        
-        function updateVolume() {
-            const icon = volumeBtn.querySelector('i');
-            if (video.muted || video.volume === 0) {
-                icon.className = 'fas fa-volume-mute';
-            } else if (video.volume < 0.5) {
-                icon.className = 'fas fa-volume-down';
-            } else {
-                icon.className = 'fas fa-volume-up';
-            }
-            
-            if (!video.muted) {
-                volumeSlider.value = video.volume;
-            }
-        }
-        
-        function formatTime(seconds) {
-            if (!seconds || isNaN(seconds) || !isFinite(seconds)) {
-                return '00:00';
-            }
-            
-            const m = Math.floor(seconds / 60);
-            const s = Math.floor(seconds % 60);
-            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-        }
-        
-        function updateTimestamp() {
-            if (currentTimeSpan) {
-                currentTimeSpan.textContent = new Date().toLocaleTimeString();
-            }
-        }
-    }
-    
-    // Like feature
-    initLikeFeature();
-    
-    // Feedback feature
-    initFeedback();
-    
-    function initLikeFeature() {
-        const likeBtn = document.getElementById('likeBtn');
-        if (likeBtn) {
-            likeBtn.addEventListener('click', function() {
-                const demoId = this.getAttribute('data-demo-id');
-                this.classList.add('loading');
-                
-                fetch(`/customer/ajax/demo/${demoId}/like/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCsrfToken(),
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(r => {
-                    if (!r.ok) throw new Error('Network error');
-                    return r.json();
-                })
-                .then(data => {
-                    if (data.liked !== undefined) {
-                        if (data.liked) {
-                            this.classList.add('liked');
-                            document.getElementById('likeText').textContent = 'Liked';
-                            showToast('Demo liked!', 'success');
-                        } else {
-                            this.classList.remove('liked');
-                            document.getElementById('likeText').textContent = 'Like';
-                            showToast('Like removed', 'info');
-                        }
-                        document.getElementById('likesCount').textContent = data.likes_count;
-                    } else {
-                        showToast(data.error || 'Error', 'error');
-                    }
-                })
-                .catch(() => showToast('Error liking demo', 'error'))
-                .finally(() => this.classList.remove('loading'));
-            });
-        }
-    }
-    
-    function initFeedback() {
-        const form = document.getElementById('feedbackForm');
-        const stars = document.querySelectorAll('.star');
-        let rating = 0;
-        
-        stars.forEach(star => {
-            star.addEventListener('click', function() {
-                rating = parseInt(this.dataset.rating);
-                document.getElementById('selectedRating').value = rating;
-                updateStars();
-            });
-            
-            star.addEventListener('mouseenter', function() {
-                const hoverRating = parseInt(this.dataset.rating);
-                stars.forEach((s, i) => {
-                    s.classList.toggle('active', i < hoverRating);
-                });
-            });
-        });
-        
-        document.getElementById('ratingStars').addEventListener('mouseleave', updateStars);
-        
-        function updateStars() {
-            stars.forEach((s, i) => {
-                s.classList.toggle('active', i < rating);
-            });
-        }
-        
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const text = document.getElementById('feedbackText').value.trim();
-                if (!text || text.length < 5) {
-                    showToast('Feedback too short (minimum 5 characters)', 'warning');
-                    return;
-                }
-                
-                if (rating === 0) {
-                    showToast('Please select a rating', 'warning');
-                    return;
-                }
-                
-                const btn = form.querySelector('button[type="submit"]');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<span class="spinner"></span> Submitting...';
-                btn.disabled = true;
-                
-                const demoId = '{{ demo.id }}';
-                
-                fetch(`/customer/ajax/demo/${demoId}/feedback/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCsrfToken(),
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        feedback: text,
-                        rating: rating
-                    })
-                })
-                .then(r => {
-                    if (!r.ok) throw new Error('Network error');
-                    return r.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        showToast(data.message || 'Feedback submitted successfully!', 'success');
-                        form.style.display = 'none';
-                        const msg = document.createElement('div');
-                        msg.className = 'alert alert-success';
-                        msg.innerHTML = '<i class="fas fa-check-circle me-2"></i>Thank you for your feedback! It will be reviewed by our team.';
-                        form.parentNode.insertBefore(msg, form);
-                    } else {
-                        showToast(data.error || 'Error submitting feedback', 'error');
-                    }
-                })
-                .catch(() => showToast('Error submitting feedback', 'error'))
-                .finally(() => {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                });
-            });
-        }
-    }
-    
-    function getCsrfToken() {
-        const input = document.querySelector('[name=csrfmiddlewaretoken]');
-        if (input) return input.value;
-        
+// CSRF TOKEN
+function getCsrfToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
         const cookies = document.cookie.split(';');
-        for (let cookie of cookies) {
-            const [name, value] = cookie.trim().split('=');
-            if (name === 'csrftoken') return value;
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
         }
-        return '';
     }
-    
-    function showWarning(msg) {
-        const warning = document.getElementById('securityWarning');
-        document.getElementById('warningText').textContent = msg;
-        warning.style.display = 'block';
-        setTimeout(() => warning.style.display = 'none', 3000);
+    if (!cookieValue) {
+        const tokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (tokenInput) cookieValue = tokenInput.value;
     }
-    
-    function showToast(msg, type = 'info') {
-        const container = document.getElementById('toastContainer');
-        const id = 'toast-' + Date.now();
-        const alertClass = type === 'error' ? 'danger' : type;
-        const icon = type === 'success' ? 'check-circle' : 
-                    type === 'error' ? 'exclamation-triangle' : 
-                    type === 'warning' ? 'exclamation-circle' : 'info-circle';
-        
-        const html = `
-            <div class="alert alert-${alertClass} alert-dismissible fade show" role="alert" id="${id}">
-                <i class="fas fa-${icon} me-2"></i>
-                ${msg}
-                <button type="button" class="btn-close" onclick="document.getElementById('${id}').remove()"></button>
-            </div>
-        `;
-        
-        container.insertAdjacentHTML('beforeend', html);
-        setTimeout(() => {
-            const toast = document.getElementById(id);
-            if (toast) toast.remove();
-        }, 5000);
+    return cookieValue;
+}
+
+// TIMESTAMP
+function updateTimestamp() {
+    const el = document.getElementById('timestamp');
+    if (el) el.textContent = new Date().toLocaleTimeString();
+}
+updateTimestamp();
+setInterval(updateTimestamp, 1000);
+
+// VIDEO CONTROLS
+{% if demo.file_type == 'video' %}
+const video = document.getElementById('demoVideo');
+const playBtn = document.getElementById('playBtn');
+const progressBar = document.getElementById('progressBar');
+const progressTrack = document.getElementById('progressTrack');
+const currentTimeEl = document.getElementById('currentTime');
+const totalTimeEl = document.getElementById('totalTime');
+const volumeBtn = document.getElementById('volumeBtn');
+const volumeSlider = document.getElementById('volumeSlider');
+
+if (playBtn && video) {
+    playBtn.addEventListener('click', () => {
+        if (video.paused) {
+            video.play();
+            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        } else {
+            video.pause();
+            playBtn.innerHTML = '<i class="fas fa-play"></i>';
+        }
+    });
+}
+
+if (video && progressBar) {
+    video.addEventListener('timeupdate', () => {
+        const progress = (video.currentTime / video.duration) * 100;
+        progressBar.style.width = progress + '%';
+        if (currentTimeEl) currentTimeEl.textContent = formatTime(video.currentTime);
+    });
+    video.addEventListener('loadedmetadata', () => {
+        if (totalTimeEl) totalTimeEl.textContent = formatTime(video.duration);
+    });
+}
+
+if (progressTrack && video) {
+    progressTrack.addEventListener('click', (e) => {
+        const rect = progressTrack.getBoundingClientRect();
+        const pos = (e.clientX - rect.left) / rect.width;
+        video.currentTime = pos * video.duration;
+    });
+}
+
+if (volumeBtn && video) {
+    volumeBtn.addEventListener('click', () => {
+        if (video.muted) {
+            video.muted = false;
+            volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+        } else {
+            video.muted = true;
+            volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+        }
+    });
+}
+
+if (volumeSlider && video) {
+    volumeSlider.addEventListener('input', (e) => {
+        video.volume = e.target.value / 100;
+    });
+}
+
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return mins + ':' + (secs < 10 ? '0' : '') + secs;
+}
+{% endif %}
+
+// RELOAD BUTTON
+const reloadBtn = document.getElementById('reloadBtn');
+if (reloadBtn) {
+    reloadBtn.addEventListener('click', () => {
+        const iframe = document.getElementById('demoContent');
+        if (iframe) {
+            iframe.src = iframe.src;
+            showToast('Content reloaded', 'success');
+        }
+    });
+}
+
+// FULLSCREEN
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+if (fullscreenBtn) {
+    fullscreenBtn.addEventListener('click', () => {
+        const player = document.querySelector('.content-player');
+        if (player) {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            } else {
+                player.requestFullscreen().catch(err => console.error(err));
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            }
+        }
+    });
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'f' || e.key === 'F') {
+        if (fullscreenBtn) fullscreenBtn.click();
     }
-    
-    console.log('✅ Demo Detail Page Initialized');
 });
+
+// RATING STARS
+const stars = document.querySelectorAll('.star');
+const ratingInput = document.getElementById('ratingInput');
+
+stars.forEach(star => {
+    star.addEventListener('click', function() {
+        const rating = this.dataset.rating;
+        if (ratingInput) ratingInput.value = rating;
+        stars.forEach((s, index) => {
+            if (index < rating) {
+                s.classList.add('active');
+            } else {
+                s.classList.remove('active');
+            }
+        });
+    });
+    star.addEventListener('mouseenter', function() {
+        const rating = this.dataset.rating;
+        stars.forEach((s, index) => {
+            s.style.color = index < rating ? '#fbbf24' : '#d1d5db';
+        });
+    });
+});
+
+const ratingStars = document.getElementById('ratingStars');
+if (ratingStars) {
+    ratingStars.addEventListener('mouseleave', () => {
+        const currentRating = ratingInput ? ratingInput.value : 0;
+        stars.forEach((s, index) => {
+            s.style.color = index < currentRating ? '#fbbf24' : '#d1d5db';
+        });
+    });
+}
+
+// ==========================================
+// ✅ LIKE BUTTON - FIXED WITH DIRECT URL
+// ==========================================
+const likeBtn = document.getElementById('likeBtn');
+
+if (likeBtn) {
+    const demoId = likeBtn.dataset.demoId;
+    const likeUrl = `/customer/demos/${demoId}/like/`; // ✅ Direct URL
+    
+    console.log('🎯 Like button initialized');
+    console.log('📍 Demo ID:', demoId);
+    console.log('🔗 Like URL:', likeUrl);
+    
+    likeBtn.addEventListener('click', function() {
+        console.log('🔄 Like button clicked');
+        
+        const csrfToken = getCsrfToken();
+        
+        if (!csrfToken) {
+            console.error('❌ No CSRF token');
+            showToast('Security error. Please refresh.', 'error');
+            return;
+        }
+        
+        console.log('✅ CSRF token found');
+        console.log('📤 Sending POST to:', likeUrl);
+        
+        likeBtn.disabled = true;
+        likeBtn.style.opacity = '0.6';
+        
+        fetch(likeUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            console.log('📥 Response status:', response.status);
+            
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.error('❌ Response error:', text);
+                    throw new Error(`HTTP ${response.status}: ${text.substring(0, 100)}`);
+                });
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            console.log('✅ Success:', data);
+            
+            const likesCount = document.getElementById('likesCount');
+            const likeText = document.getElementById('likeText');
+            
+            if (likesCount) likesCount.textContent = data.likes_count;
+            if (likeText) likeText.textContent = data.liked ? 'Liked' : 'Like';
+            
+            this.dataset.liked = data.liked;
+            
+            if (data.liked) {
+                this.classList.add('liked');
+                showToast('✅ Demo liked! Check Liked Videos page.', 'success');
+            } else {
+                this.classList.remove('liked');
+                showToast('Like removed', 'success');
+            }
+        })
+        .catch(err => {
+            console.error('❌ Error:', err);
+            showToast(`Failed: ${err.message}`, 'error');
+        })
+        .finally(() => {
+            likeBtn.disabled = false;
+            likeBtn.style.opacity = '1';
+        });
+    });
+}
+
+// FEEDBACK FORM
+const feedbackForm = document.getElementById('feedbackForm');
+if (feedbackForm) {
+    feedbackForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const rating = document.getElementById('ratingInput').value;
+        const feedback = document.getElementById('feedbackText').value.trim();
+        const csrfToken = getCsrfToken();
+        
+        if (!rating) {
+            showToast('Please select a rating', 'error');
+            return;
+        }
+        
+        if (!feedback || feedback.length < 5) {
+            showToast('Feedback must be at least 5 characters', 'error');
+            return;
+        }
+        
+        if (!csrfToken) {
+            showToast('Security error. Please refresh.', 'error');
+            return;
+        }
+        
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        }
+        
+        fetch(`/customer/ajax/demo/{{ demo.id }}/feedback/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                rating: parseInt(rating),
+                feedback: feedback
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'Feedback submitted!', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.error || 'Failed', 'error');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Feedback';
+                }
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Failed to submit. Please try again.', 'error');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Feedback';
+            }
+        });
+    });
+}
+
+// TOAST
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    if (!container) {
+        alert(message);
+        return;
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+// SECURITY
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C'))) {
+        e.preventDefault();
+        return false;
+    }
+});
+
+console.log('✅ Demo viewer initialized');
 </script>
 {% endblock %}

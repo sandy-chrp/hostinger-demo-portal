@@ -196,6 +196,7 @@ def signup_view(request):
     
     return render(request, 'accounts/signup.html', {'form': form})
 
+
 def verify_otp_view(request):
     """Step 2: Verify OTP and create account"""
     signup_data = request.session.get('signup_data')
@@ -237,9 +238,9 @@ def verify_otp_view(request):
                     organization=signup_data['organization'],
                     referral_source=signup_data.get('referral_source', ''),
                     referral_message=signup_data.get('referral_message', ''),
-                    is_email_verified=True,
-                    is_approved=False,
-                    is_active=True
+                    is_email_verified=True,  # ✅ Email verified after OTP
+                    is_approved=False,       # ✅ Pending admin approval
+                    is_active=True           # ✅ Account active
                 )
                 user.set_password(signup_data['password'])
                 
@@ -259,12 +260,85 @@ def verify_otp_view(request):
                 
                 user.save()
                 
+                # ✅ Send welcome email with pending approval notice
+                try:
+                    from django.core.mail import EmailMultiAlternatives
+                    from django.template.loader import render_to_string
+                    from django.urls import reverse
+                    
+                    subject = "Welcome to Demo Portal - Account Pending Approval"
+                    
+                    # Build pending approval URL
+                    pending_approval_url = request.build_absolute_uri(
+                        reverse('accounts:pending_approval')
+                    )
+                    
+                    # Render welcome email HTML
+                    html_content = render_to_string('emails/welcome_email.html', {
+                        'user': user,
+                        'pending_approval_url': pending_approval_url,
+                        'year': timezone.now().year,
+                    })
+                    
+                    # Plain text version
+                    text_content = f"""
+Dear {user.first_name} {user.last_name},
+
+Welcome to Demo Portal! 🎉
+
+Your account has been successfully created, but you cannot login yet. Your account is currently under review by our admin team.
+
+ACCOUNT DETAILS:
+- Name: {user.first_name} {user.last_name}
+- Email: {user.email}
+- Mobile: {user.country_code} {user.mobile}
+- Job Title: {user.job_title}
+- Organization: {user.organization}
+- Status: Pending Approval
+
+WHAT HAPPENS NEXT?
+1. ✓ Account Created - Your account has been successfully created
+2. ⏳ Admin Review - Our team is reviewing your business credentials (In Progress)
+3. Approval Notification - You'll receive an email once approved
+4. Access Full Portal - Login and explore our demo library
+
+IMPORTANT: You cannot login until your account is approved by our admin team. This usually takes 24-48 hours during business days.
+
+View your account status: {pending_approval_url}
+
+NEED HELP?
+📧 reach@chrp-india.com
+📞 +91-8008987948
+Business Hours: 9:00 AM - 7:00 PM (Mon-Sat)
+
+Thank you for choosing CHRP India!
+
+---
+© {timezone.now().year} CHRP India. All rights reserved.
+"""
+                    
+                    # Send email
+                    email_msg = EmailMultiAlternatives(
+                        subject=subject,
+                        body=text_content,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        to=[user.email],
+                    )
+                    email_msg.attach_alternative(html_content, "text/html")
+                    email_msg.send(fail_silently=True)  # Don't fail if email doesn't send
+                    
+                    print(f"✅ Welcome email sent to {user.email}")
+                    
+                except Exception as e:
+                    print(f"⚠️ Failed to send welcome email: {e}")
+                    # Continue even if email fails
+                
                 # Clear session
                 request.session.pop('signup_data', None)
                 request.session.pop('signup_otp', None)
                 request.session.pop('otp_created_at', None)
                 
-                messages.success(request, 'Account created successfully! Awaiting admin approval.')
+                messages.success(request, 'Account created successfully! Please check your email for further instructions.')
                 return redirect('accounts:pending_approval')
                 
             except Exception as e:
@@ -290,6 +364,7 @@ def verify_otp_view(request):
     }
     return render(request, 'accounts/verify_otp.html', context)
 
+
 def resend_otp_view(request):
     """Resend OTP"""
     signup_data = request.session.get('signup_data')
@@ -309,7 +384,10 @@ def resend_otp_view(request):
     print(f"Resend OTP for {email}: {otp}")
     print("="*60 + "\n")
     
-    if send_otp_email(email, otp, full_name):
+    # ✅ FIX: Check result properly
+    result = send_otp_email(email, otp, full_name)
+    
+    if result['success']:
         messages.success(request, 'New verification code sent to your email.')
     else:
         messages.warning(request, 'Email service unavailable. Check console for OTP.')
@@ -454,9 +532,11 @@ def pending_approval_view(request):
     """
     Account pending approval page
     Automatically redirects if user is already approved
+    Shows user-friendly message about registration status
     """
-    # If user is not authenticated, redirect to signin
+    # If user is not authenticated, redirect to signin with message
     if not request.user.is_authenticated:
+        messages.info(request, 'Please sign in to view your account status.')
         return redirect('accounts:signin')
     
     # Check if user is approved
@@ -468,16 +548,22 @@ def pending_approval_view(request):
         
         if not request.user.is_active:
             # User is blocked
+            messages.error(request, 'Your account has been deactivated. Please contact support.')
             return redirect('accounts:account_blocked')
     else:
         # Staff/admin users shouldn't be here
         if request.user.is_staff or request.user.is_superuser:
             return redirect('core:admin_dashboard')
         else:
+            # Regular user without approval system
             return redirect('customers:dashboard')
     
     # User is pending approval - show the page
-    return render(request, 'accounts/pending_approval.html')
+    context = {
+        'user': request.user,
+        'page_title': 'Account Pending Approval',
+    }
+    return render(request, 'accounts/pending_approval.html', context)
 
 def account_blocked_view(request):
     """Account blocked page"""

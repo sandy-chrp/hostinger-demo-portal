@@ -235,73 +235,49 @@ def browse_demos(request):
 @login_required
 def demo_detail(request, slug):
     """
-    Demo detail/hub page - handles both video and WebGL
-    Redirects WebGL to viewer, shows video player for videos
+    ✅ COMPLETE FIX: Unified demo viewer with proper feedback handling
+    Works for VIDEO, WEBGL, and LMS
     """
     demo = get_object_or_404(Demo, slug=slug, is_active=True)
     
-    # Check if user can access this demo
+    # Check access
     if not demo.can_customer_access(request.user):
         messages.error(request, "You don't have permission to access this demo.")
         return redirect('customers:browse_demos')
     
-    # ✅ NEW: Auto-redirect WebGL demos to 3D viewer
-    if demo.file_type == 'webgl':
-        # Record view
-        DemoView.objects.update_or_create(
-            demo=demo,
-            user=request.user,
-            defaults={'ip_address': get_client_ip(request)}
-        )
-        # Increment view count using F()
-        demo.views_count = F('views_count') + 1
-        demo.save(update_fields=['views_count'])
-        
-        # Redirect to WebGL viewer
-        return redirect('customers:webgl_viewer', slug=slug)
-    
-    # ✅ For video demos, continue with normal detail page
-    # Record demo view
+    # Record view
     DemoView.objects.update_or_create(
         demo=demo,
         user=request.user,
         defaults={'ip_address': get_client_ip(request)}
     )
     
-    # Increment view count using F()
+    # Increment view count
     demo.views_count = F('views_count') + 1
     demo.save(update_fields=['views_count'])
+    demo.refresh_from_db()
     
-    # Check if user has liked this demo
+    # User interactions
     user_liked = DemoLike.objects.filter(demo=demo, user=request.user).exists()
-    
-    # Check if user has already submitted feedback
     user_feedback = DemoFeedback.objects.filter(demo=demo, user=request.user).first()
     
-    # Get approved feedbacks for display
+    # Approved feedbacks
     approved_feedbacks = DemoFeedback.objects.filter(
         demo=demo,
         is_approved=True
     ).select_related('user').order_by('-created_at')[:10]
     
-    # ✅ FIXED: Get latest 10 video demos WITHOUT slicing first
-    latest_video_demos_qs = Demo.objects.filter(
-        is_active=True,
-        file_type='video',
-        video_file__isnull=False
-    ).exclude(
-        id=demo.id  # Exclude current demo
-    ).select_related('created_by')
+    # Latest demos
+    latest_video_demos_qs = Demo.objects.filter(is_active=True).exclude(id=demo.id)
     
-    # ✅ FIXED: Filter by user's business category BEFORE slicing
-    if request.user.business_category:
+    if hasattr(request.user, 'business_category') and request.user.business_category:
         latest_video_demos_qs = latest_video_demos_qs.filter(
             target_business_categories=request.user.business_category
         )
     
-    # ✅ FIXED: Slice at the end
     latest_video_demos = latest_video_demos_qs.order_by('-created_at')[:10]
     
+    # Base context
     context = {
         'demo': demo,
         'user_liked': user_liked,
@@ -311,43 +287,122 @@ def demo_detail(request, slug):
         'user_email': request.user.email,
     }
     
+    # ========================================
+    # 🔥 CRITICAL: Get content_url for all file types
+    # ========================================
+    
+    content_url = None
+    
+    if demo.file_type == 'video':
+        # Video file - direct URL
+        if demo.video_file:
+            content_url = demo.video_file.url
+            print(f"✅ Video URL: {content_url}")
+    
+    elif demo.file_type == 'webgl':
+        # WebGL content
+        if hasattr(demo, 'get_webgl_index_url'):
+            try:
+                content_url = demo.get_webgl_index_url()
+                print(f"✅ WebGL URL: {content_url}")
+            except Exception as e:
+                print(f"⚠️ WebGL URL error: {e}")
+        
+        # Fallback check
+        if not content_url:
+            import glob
+            extracted_base = os.path.join(settings.MEDIA_ROOT, 'webgl_extracted', f'demo_{slug}')
+            
+            if os.path.exists(extracted_base):
+                index_files = glob.glob(os.path.join(extracted_base, '**/index.html'), recursive=True)
+                if index_files:
+                    relative_path = os.path.relpath(index_files[0], settings.MEDIA_ROOT)
+                    relative_path = relative_path.replace('\\', '/')
+                    content_url = f"{settings.MEDIA_URL}{relative_path}"
+                    print(f"✅ WebGL fallback URL: {content_url}")
+    
+    elif demo.file_type == 'lms':
+        # LMS content
+        if hasattr(demo, 'get_lms_index_url'):
+            try:
+                content_url = demo.get_lms_index_url()
+                print(f"✅ LMS URL: {content_url}")
+            except Exception as e:
+                print(f"⚠️ LMS URL error: {e}")
+        
+        # Fallback check
+        if not content_url:
+            import glob
+            extracted_base = os.path.join(settings.MEDIA_ROOT, 'lms_extracted', f'demo_{slug}')
+            
+            if os.path.exists(extracted_base):
+                # Try common LMS index file names
+                possible_files = [
+                    'index.html',
+                    'index_lms.html', 
+                    'story.html',
+                    'scormdriver/indexAPI.html'
+                ]
+                
+                for filename in possible_files:
+                    test_path = os.path.join(extracted_base, filename)
+                    if os.path.exists(test_path):
+                        relative_path = os.path.relpath(test_path, settings.MEDIA_ROOT)
+                        relative_path = relative_path.replace('\\', '/')
+                        content_url = f"{settings.MEDIA_URL}{relative_path}"
+                        print(f"✅ LMS fallback URL: {content_url}")
+                        break
+                
+                # If still not found, search recursively
+                if not content_url:
+                    index_files = glob.glob(os.path.join(extracted_base, '**/index*.html'), recursive=True)
+                    if index_files:
+                        relative_path = os.path.relpath(index_files[0], settings.MEDIA_ROOT)
+                        relative_path = relative_path.replace('\\', '/')
+                        content_url = f"{settings.MEDIA_URL}{relative_path}"
+                        print(f"✅ LMS recursive search URL: {content_url}")
+    
+    context['content_url'] = content_url
+    
+    print(f"\n{'='*60}")
+    print(f"📊 Demo Detail Context")
+    print(f"{'='*60}")
+    print(f"Demo: {demo.title}")
+    print(f"Type: {demo.file_type}")
+    print(f"Content URL: {content_url}")
+    print(f"User Feedback: {user_feedback}")
+    print(f"{'='*60}\n")
+    
     return render(request, 'customers/demo_detail.html', context)
 
 @login_required
 @require_http_methods(["POST"])
-def toggle_demo_like(request, demo_id):
-    """AJAX endpoint to like/unlike demo"""
-    if not request.user.is_approved:
-        return JsonResponse({'error': 'Not authorized'}, status=403)
-    
-    demo = get_object_or_404(Demo, id=demo_id, is_active=True)
-    
-    # Check access
-    if not demo.can_customer_access(request.user):
-        return JsonResponse({'error': 'Not authorized'}, status=403)
-    
-    like_obj, created = DemoLike.objects.get_or_create(
-        demo=demo,
-        user=request.user
-    )
-    
-    if not created:
-        like_obj.delete()
-        liked = False
-        # Decrement likes count
-        Demo.objects.filter(id=demo.id).update(likes_count=F('likes_count') - 1)
-    else:
-        liked = True
-        # Increment likes count
-        Demo.objects.filter(id=demo.id).update(likes_count=F('likes_count') + 1)
-    
-    # Get updated count
-    demo.refresh_from_db()
-    
-    return JsonResponse({
-        'liked': liked,
-        'likes_count': demo.likes_count
-    })
+def toggle_like(request, demo_id):
+    try:
+        demo = Demo.objects.get(id=demo_id, is_active=True)
+        
+        if not demo.can_customer_access(request.user):
+            return JsonResponse({'success': False, 'error': 'Access denied'}, status=403)
+        
+        like_obj, created = DemoLike.objects.get_or_create(demo=demo, user=request.user)
+        
+        if not created:
+            like_obj.delete()
+            Demo.objects.filter(id=demo_id).update(likes_count=F('likes_count') - 1)
+            liked = False
+        else:
+            Demo.objects.filter(id=demo_id).update(likes_count=F('likes_count') + 1)
+            liked = True
+        
+        demo.refresh_from_db()
+        
+        return JsonResponse({
+            'success': True,
+            'liked': liked,
+            'likes_count': demo.likes_count
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 # customers/views.py - Fixed demo_requests view with status filtering
 @login_required
@@ -444,9 +499,20 @@ def webgl_viewer(request, slug):
 
 @login_required
 def serve_webgl_file(request, slug, filepath):
-    """Serve WebGL files with caching"""
+    """
+    ✅ Serve WebGL/LMS files with proper MIME types and caching
+    Works for both WebGL and LMS content
+    """
     
-    demo = get_object_or_404(Demo, slug=slug, is_active=True, file_type='webgl')
+    demo = get_object_or_404(Demo, slug=slug, is_active=True)
+    
+    # Check if it's WebGL or LMS
+    if demo.file_type == 'webgl':
+        base_folder = 'webgl_extracted'
+    elif demo.file_type == 'lms':
+        base_folder = 'lms_extracted'
+    else:
+        raise Http404("Invalid file type")
     
     # Normalize filepath
     filepath_normalized = filepath.replace('/', os.sep)
@@ -455,19 +521,23 @@ def serve_webgl_file(request, slug, filepath):
     if demo.extracted_path:
         full_path = os.path.join(settings.MEDIA_ROOT, demo.extracted_path, filepath_normalized)
     else:
-        full_path = demo.webgl_file.path if demo.webgl_file else None
+        full_path = os.path.join(settings.MEDIA_ROOT, base_folder, f'demo_{slug}', filepath_normalized)
     
     # Verify file exists
-    if not full_path or not os.path.isfile(full_path):
+    if not os.path.isfile(full_path):
+        print(f"❌ File not found: {full_path}")
         raise Http404(f"File not found: {filepath}")
     
     # Security check
     real_path = os.path.realpath(full_path)
     base_path = os.path.realpath(settings.MEDIA_ROOT)
     if not real_path.startswith(base_path):
+        print(f"❌ Security violation: Path outside media root")
         raise Http404("Invalid file path")
     
     # Determine content type
+    content_type = None
+    
     if filepath.endswith('.js'):
         content_type = 'application/javascript; charset=utf-8'
     elif filepath.endswith('.wasm'):
@@ -484,10 +554,14 @@ def serve_webgl_file(request, slug, filepath):
         content_type = 'image/jpeg'
     elif filepath.endswith('.png'):
         content_type = 'image/png'
+    elif filepath.endswith('.svg'):
+        content_type = 'image/svg+xml'
     elif filepath.endswith('.ico'):
         content_type = 'image/x-icon'
     elif filepath.endswith('.mp4'):
         content_type = 'video/mp4'
+    elif filepath.endswith('.xml'):
+        content_type = 'application/xml; charset=utf-8'
     else:
         content_type, _ = mimetypes.guess_type(full_path)
         if not content_type:
@@ -498,15 +572,22 @@ def serve_webgl_file(request, slug, filepath):
         with open(full_path, 'rb') as f:
             file_content = f.read()
         
-        # ✅ NEW: Inject base tag for HTML files
+        # ✅ Inject base tag for HTML files
         if filepath.endswith(('.html', '.htm')):
             try:
                 html_content = file_content.decode('utf-8')
                 html_dir = os.path.dirname(filepath).replace('\\', '/')
-                if html_dir:
-                    base_url = f"/customer/demos/{slug}/webgl-content/{html_dir}/"
-                else:
-                    base_url = f"/customer/demos/{slug}/webgl-content/"
+                
+                if demo.file_type == 'webgl':
+                    if html_dir:
+                        base_url = f"/customer/demos/{slug}/webgl-content/{html_dir}/"
+                    else:
+                        base_url = f"/customer/demos/{slug}/webgl-content/"
+                else:  # LMS
+                    if html_dir:
+                        base_url = f"/customer/demos/{slug}/lms-content/{html_dir}/"
+                    else:
+                        base_url = f"/customer/demos/{slug}/lms-content/"
                 
                 base_tag = f'<base href="{base_url}">'
                 
@@ -516,13 +597,13 @@ def serve_webgl_file(request, slug, filepath):
                     html_content = html_content.replace('<HEAD>', f'<HEAD>\n    {base_tag}', 1)
                 
                 file_content = html_content.encode('utf-8')
-            except:
-                pass
+            except Exception as e:
+                print(f"⚠️ Error injecting base tag: {e}")
         
         response = HttpResponse(file_content, content_type=content_type)
         
-        # ✅ NEW: Strong caching headers
-        response['Cache-Control'] = 'public, max-age=31536000, immutable'  # 1 year
+        # ✅ Strong caching headers
+        response['Cache-Control'] = 'public, max-age=31536000, immutable'
         response['Access-Control-Allow-Origin'] = '*'
         response['X-Content-Type-Options'] = 'nosniff'
         
@@ -530,7 +611,10 @@ def serve_webgl_file(request, slug, filepath):
         
     except Exception as e:
         print(f"❌ Error serving file: {e}")
+        import traceback
+        traceback.print_exc()
         raise Http404("Error serving file")
+
 
 
 @login_required
@@ -1146,106 +1230,26 @@ def mark_all_notifications_read(request):
             'error': 'Failed to mark notifications as read'
         }, status=500)
 
-# AJAX Views
-@login_required
-@csrf_exempt
-@require_http_methods(["POST"])
-def submit_demo_feedback(request, demo_id):
-    """Submit feedback for a demo - FIXED VERSION"""
-    if not request.user.is_approved:
-        return JsonResponse({'error': 'Not authorized'}, status=403)
-    
-    try:
-        # Get the demo
-        demo = get_object_or_404(Demo, id=demo_id, is_active=True)
-        
-        # Check if user can access this demo
-        if not demo.can_customer_access(request.user):
-            return JsonResponse({'error': 'Not authorized'}, status=403)
-        
-        # Parse JSON data
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
-        
-        feedback_text = data.get('feedback', '').strip()
-        rating = data.get('rating')
-        
-        # Validate feedback
-        if not feedback_text:
-            return JsonResponse({'error': 'Feedback text is required'}, status=400)
-        
-        if len(feedback_text) < 5:
-            return JsonResponse({'error': 'Feedback must be at least 5 characters long'}, status=400)
-        
-        # Validate rating if provided
-        if rating is not None:
-            try:
-                rating = int(rating)
-                if rating < 1 or rating > 5:
-                    return JsonResponse({'error': 'Rating must be between 1 and 5'}, status=400)
-            except (ValueError, TypeError):
-                rating = None
-        
-        # Check if user already submitted feedback
-        existing_feedback = DemoFeedback.objects.filter(
-            demo=demo, 
-            user=request.user
-        ).first()
-        
-        if existing_feedback:
-            # Update existing feedback
-            existing_feedback.feedback_text = feedback_text
-            existing_feedback.rating = rating
-            existing_feedback.is_approved = False  # Requires re-approval
-            existing_feedback.save()
-            
-            message = 'Feedback updated successfully! It will be reviewed by our team.'
-        else:
-            # Create new feedback
-            feedback = DemoFeedback.objects.create(
-                demo=demo,
-                user=request.user,
-                feedback_text=feedback_text,
-                rating=rating,
-                is_approved=False  # Requires admin approval
-            )
-            
-            message = 'Feedback submitted successfully! It will be reviewed by our team.'
-        
-        # Log activity
-        try:
-            from .models import CustomerActivity
-            CustomerActivity.objects.create(
-                user=request.user,
-                activity_type='demo_feedback',
-                description=f'Submitted feedback for demo: {demo.title}',
-                ip_address=request.META.get('REMOTE_ADDR', ''),
-                user_agent=request.META.get('HTTP_USER_AGENT', ''),
-                metadata={
-                    'demo_id': demo.id,
-                    'demo_title': demo.title,
-                    'rating': rating,
-                    'feedback_length': len(feedback_text)
-                }
-            )
-        except Exception as e:
-            print(f"Activity logging error: {e}")
-        
-        return JsonResponse({
-            'success': True,
-            'message': message
-        })
-        
-    except Demo.DoesNotExist:
-        return JsonResponse({'error': 'Demo not found'}, status=404)
-    except Exception as e:
-        print(f"Error submitting feedback: {e}")
-        return JsonResponse({
-            'error': 'An error occurred while submitting feedback'
-        }, status=500) 
 
+@login_required
+@require_http_methods(["POST"])
+def submit_feedback(request, demo_id):
+    try:
+        data = json.loads(request.body)
+        demo = Demo.objects.get(id=demo_id, is_active=True)
+        
+        from demos.models import DemoFeedback
+        DemoFeedback.objects.create(
+            demo=demo,
+            user=request.user,
+            rating=data.get('rating'),
+            feedback_text=data.get('feedback'),
+            is_approved=False
+        )
+        
+        return JsonResponse({'success': True, 'message': 'Thank you!'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @login_required
 @require_http_methods(["POST"])
@@ -1723,105 +1727,41 @@ def ajax_get_booking_calendar(request):
             'error': 'Server error occurred'
         }, status=500)
 
-
-
-@csrf_exempt  # ✅ ADD THIS - Temporarily exempt for debugging
+@csrf_exempt
 @require_POST
 def log_security_violation(request):
-    """
-    AJAX endpoint to log security violations from frontend
-    ✅ FIXED: Better error handling and CSRF handling
-    """
+    """Fixed - No auto-logout"""
     try:
-        # Check if user is authenticated
         if not request.user.is_authenticated:
-            return JsonResponse({
-                'success': False,
-                'error': 'User not authenticated'
-            }, status=401)
+            return JsonResponse({'success': False, 'error': 'Not authenticated'}, status=401)
         
-        # Parse JSON body
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError as e:
-            return JsonResponse({
-                'success': False,
-                'error': f'Invalid JSON: {str(e)}'
-            }, status=400)
-        
+        data = json.loads(request.body)
         violation_type = data.get('violation_type', 'unknown')
         description = data.get('description', '')
-        page_url = data.get('page_url', '')
         
-        # Validation
-        if not violation_type:
-            return JsonResponse({
-                'success': False,
-                'error': 'violation_type is required'
-            }, status=400)
-        
-        # Map violation types
-        violation_type_mapping = {
-            'devtools_detected': 'devtools_detected',
-            'screen_recording': 'screen_recording',
-            'copy_attempt': 'unauthorized_access',
-            'clipboard_image': 'unauthorized_access',
-            'multiple_focus_loss': 'suspicious_activity',
-            'right_click_attempt': 'unauthorized_access',
-            'keyboard_shortcut': 'unauthorized_access',
-            'screenshot_attempt': 'unauthorized_access',
-            'drag_attempt': 'unauthorized_access',
-            'focus_loss_suspicious': 'suspicious_activity',
-            'screenshot_tool_detected': 'suspicious_activity',
-            'screen_recording_blocked': 'screen_recording',
-            'screen_capture_blocked': 'screen_recording',
-            'devtools_open': 'devtools_detected',
-            'canvas_screenshot': 'unauthorized_access',
-        }
-        
-        mapped_type = violation_type_mapping.get(
-            violation_type, 
-            'unauthorized_access'
-        )
-        
-        # Create security violation record
-        violation = SecurityViolation.objects.create(
+        # Log violation but DON'T logout
+        SecurityViolation.objects.create(
             user=request.user,
-            violation_type=mapped_type,
-            description=f"{violation_type}: {description}",
+            violation_type=violation_type,
+            description=description,
             ip_address=get_client_ip(request),
             user_agent=request.META.get('HTTP_USER_AGENT', ''),
-            page_url=page_url,
-            referrer=request.META.get('HTTP_REFERER', ''),
+            page_url=data.get('page_url', ''),
         )
         
-        # Log as customer activity (optional)
-        try:
-            log_customer_activity(
-                user=request.user,
-                activity_type='security_violation',
-                description=description,
-                request=request,
-                violation_type=violation_type
-            )
-        except Exception as e:
-            print(f"⚠️ Activity logging error: {e}")
-        
+        # IMPORTANT: Just return success, no logout
         return JsonResponse({
             'success': True,
-            'message': 'Security violation logged',
-            'violation_id': violation.id
+            'message': 'Violation logged',
+            'action': 'warning_only'  # No logout action
         })
         
     except Exception as e:
-        print(f"❌ Error in log_security_violation: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        
         return JsonResponse({
             'success': False,
             'error': str(e)
         }, status=500)
+
 @login_required
 def demo_feedback_view(request, slug):
     """

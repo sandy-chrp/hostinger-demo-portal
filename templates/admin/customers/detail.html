@@ -1,4 +1,4 @@
-<!-- templates/admin/customers/detail.html - IMPROVED PROFESSIONAL VERSION -->
+<!-- templates/admin/customers/detail.html - FIXED AJAX VERSION -->
 {% extends 'admin/base.html' %}
 {% load static %}
 
@@ -1016,23 +1016,17 @@
                 </a>
                 
                 {% if not customer.is_approved %}
-                    <form method="post" action="{% url 'core:admin_approve_customer' customer.id %}" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn-action btn-success-action" onclick="return confirm('Approve {{ customer.full_name }}?')">
-                            <i class="fas fa-check"></i>
-                            <span>Approve Customer</span>
-                        </button>
-                    </form>
+                    <button type="button" class="btn-action btn-success-action" onclick="approveCustomer()">
+                        <i class="fas fa-check"></i>
+                        <span>Approve Customer</span>
+                    </button>
                 {% endif %}
                 
                 {% if customer.is_active %}
-                    <form method="post" action="{% url 'core:admin_block_customer' customer.id %}" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn-action btn-warning-action" onclick="return confirm('Block {{ customer.full_name }}?')">
-                            <i class="fas fa-ban"></i>
-                            <span>Block Customer</span>
-                        </button>
-                    </form>
+                    <button type="button" class="btn-action btn-warning-action" onclick="blockCustomer()">
+                        <i class="fas fa-ban"></i>
+                        <span>Block Customer</span>
+                    </button>
                 {% else %}
                     <button type="button" class="btn-action btn-success-action" onclick="unblockCustomer()">
                         <i class="fas fa-unlock"></i>
@@ -1058,6 +1052,8 @@
 {% block admin_extra_js %}
 <script>
     const csrfToken = '{{ csrf_token }}';
+    const customerId = {{ customer.id }};
+    const customerName = '{{ customer.full_name|escapejs }}';
 
     // Toggle individual section
     function toggleSection(sectionId) {
@@ -1124,33 +1120,91 @@
         }
     }
 
-    function unblockCustomer() {
-        const customerName = '{{ customer.full_name|escapejs }}';
-        
-        if (confirm(`Unblock ${customerName}? They will regain access to the portal.`)) {
-            fetch(`/admin/customers/{{ customer.id }}/unblock/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                    'Content-Type': 'application/json',
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    throw new Error(data.message || 'Error unblocking customer');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Error unblocking customer. Please try again.', 'error');
-            });
+    // ✅ FIXED: Approve Customer with AJAX
+    function approveCustomer() {
+        if (!confirm(`Approve ${customerName}? They will gain full access to the portal.`)) {
+            return;
         }
+
+        fetch(`/admin/customers/${customerId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                throw new Error(data.message || 'Error approving customer');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error approving customer. Please try again.', 'error');
+        });
     }
 
+    // ✅ FIXED: Block Customer with AJAX
+    function blockCustomer() {
+        if (!confirm(`Block ${customerName}? They will lose access to the portal.`)) {
+            return;
+        }
+
+        fetch(`/admin/customers/${customerId}/block/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                throw new Error(data.message || 'Error blocking customer');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error blocking customer. Please try again.', 'error');
+        });
+    }
+
+    // ✅ FIXED: Unblock Customer with AJAX
+    function unblockCustomer() {
+        if (!confirm(`Unblock ${customerName}? They will regain access to the portal.`)) {
+            return;
+        }
+
+        fetch(`/admin/customers/${customerId}/unblock/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                throw new Error(data.message || 'Error unblocking customer');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error unblocking customer. Please try again.', 'error');
+        });
+    }
+
+    // ✅ Professional Notification System
     function showNotification(message, type = 'info') {
         const notification = document.createElement('div');
         notification.className = `alert alert-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : type === 'error' ? 'danger' : 'info'} alert-dismissible fade show`;

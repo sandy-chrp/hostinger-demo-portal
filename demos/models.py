@@ -65,6 +65,11 @@ def demo_thumbnail_path(instance, filename):
     """Generate upload path for thumbnail images"""
     return f'demos/thumbnails/{instance.slug}/{filename}'
 
+
+# ============================================================================
+# COMPLETE DEMO MODEL CLASS - CORRECTED VERSION
+# ============================================================================
+
 class Demo(models.Model):
     """Demo videos/presentations/WebGL/LMS content with complete support"""
     
@@ -239,9 +244,8 @@ class Demo(models.Model):
             raise ValidationError({'lms_file': 'LMS/SCORM file is required when file type is LMS'})
 
     def save(self, *args, **kwargs):
-        """Custom save to handle slug and file processing"""
+        """✅ IMPROVED: Custom save to handle slug and file processing"""
         
-        # Extract skip_extraction from kwargs before passing to super()
         skip_extraction = kwargs.pop('skip_extraction', False)
         
         # Generate slug if not exists
@@ -254,7 +258,7 @@ class Demo(models.Model):
                 counter += 1
             self.slug = slug
         
-        # Check if this is a new instance or file has changed
+        # Check if file changed
         is_new = self.pk is None
         old_instance = None
         file_changed = False
@@ -271,28 +275,42 @@ class Demo(models.Model):
             except Demo.DoesNotExist:
                 pass
         
-        # Save to database
+        # Save to database first
         super().save(*args, **kwargs)
         
         # Handle file extraction after save
         if not skip_extraction and (is_new or file_changed):
+            
+            # WebGL extraction
             if self.file_type == 'webgl' and self.webgl_file:
-                if self.webgl_file.size < 10 * 1024 * 1024:
+                if self.webgl_file.name.endswith('.zip'):
                     try:
                         self._extract_webgl_zip()
+                        # ✅ Save extracted_path to database
+                        Demo.objects.filter(pk=self.pk).update(
+                            extracted_path=self.extracted_path
+                        )
+                        print(f"✅ WebGL extraction successful, path saved: {self.extracted_path}")
                     except Exception as e:
                         print(f"❌ Error extracting WebGL: {e}")
-                else:
-                    print(f"⏳ Large WebGL file, skipping extraction")
             
+            # ✅ IMPROVED: LMS extraction with path saving
             elif self.file_type == 'lms' and self.lms_file:
-                if self.lms_file.size < 10 * 1024 * 1024:
+                if self.lms_file.name.endswith('.zip'):
                     try:
-                        self._extract_lms_zip()
+                        success = self._extract_lms_zip()
+                        if success:
+                            # ✅ Save extracted_path to database
+                            Demo.objects.filter(pk=self.pk).update(
+                                extracted_path=self.extracted_path
+                            )
+                            print(f"✅ LMS extraction successful, path saved: {self.extracted_path}")
+                        else:
+                            print(f"❌ LMS extraction failed")
                     except Exception as e:
                         print(f"❌ Error extracting LMS: {e}")
-                else:
-                    print(f"⏳ Large LMS file, skipping extraction")
+                        import traceback
+                        traceback.print_exc()
 
     def _calculate_file_size(self):
         """Auto-calculate file size based on file type"""
@@ -381,9 +399,10 @@ class Demo(models.Model):
             self.extracted_path = ''
     
     def _extract_lms_zip(self):
-        """Extract LMS/SCORM ZIP package"""
+        """✅ IMPROVED: Extract LMS/SCORM ZIP package with better detection"""
         if not self.lms_file or not self.lms_file.name.endswith('.zip'):
-            return
+            print("⚠️ No LMS ZIP file to extract")
+            return False
         
         extract_dir = os.path.join(
             settings.MEDIA_ROOT,
@@ -391,14 +410,26 @@ class Demo(models.Model):
             f'demo_{self.slug}'
         )
         
+        print(f"\n{'='*60}")
+        print(f"📦 LMS ZIP EXTRACTION")
+        print(f"{'='*60}")
+        print(f"Demo: {self.title}")
+        print(f"File: {self.lms_file.name}")
+        print(f"Extract to: {extract_dir}")
+        
+        # Clean up old extraction
         if os.path.exists(extract_dir):
+            print(f"🗑️  Cleaning up old extraction...")
             shutil.rmtree(extract_dir)
         
         os.makedirs(extract_dir, exist_ok=True)
         
         try:
+            # Check if using S3 or local storage
             if hasattr(settings, 'USE_S3') and settings.USE_S3:
                 import tempfile
+                
+                print(f"📥 Downloading ZIP from S3...")
                 
                 with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp_file:
                     self.lms_file.open('rb')
@@ -406,22 +437,96 @@ class Demo(models.Model):
                     self.lms_file.close()
                     tmp_zip_path = tmp_file.name
                 
-                with zipfile.ZipFile(tmp_zip_path, 'r') as zip_ref:
-                    zip_ref.extractall(extract_dir)
-                
-                os.remove(tmp_zip_path)
+                print(f"✅ Downloaded to temp: {tmp_zip_path}")
+                zip_path = tmp_zip_path
             else:
-                with zipfile.ZipFile(self.lms_file.path, 'r') as zip_ref:
-                    zip_ref.extractall(extract_dir)
+                print(f"📂 Using local file: {self.lms_file.path}")
+                zip_path = self.lms_file.path
             
+            # Extract ZIP
+            print(f"📤 Extracting ZIP contents...")
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                # Get list of files
+                file_list = zip_ref.namelist()
+                print(f"📄 Files in ZIP: {len(file_list)}")
+                
+                # Extract all files
+                zip_ref.extractall(extract_dir)
+            
+            # Clean up temp file if S3
+            if hasattr(settings, 'USE_S3') and settings.USE_S3:
+                os.remove(tmp_zip_path)
+                print(f"🗑️  Cleaned up temp file")
+            
+            # Count extracted files
+            file_count = 0
+            html_files = []
+            
+            for root, dirs, files in os.walk(extract_dir):
+                file_count += len(files)
+                for file in files:
+                    if file.lower().endswith(('.html', '.htm')):
+                        rel_path = os.path.relpath(os.path.join(root, file), extract_dir)
+                        html_files.append(rel_path)
+            
+            print(f"✅ Extraction complete!")
+            print(f"   📊 Total files: {file_count}")
+            print(f"   📄 HTML files found: {len(html_files)}")
+            
+            # Show HTML files for debugging
+            if html_files:
+                print(f"   📋 HTML files:")
+                for html_file in html_files[:5]:  # Show first 5
+                    print(f"      - {html_file}")
+                if len(html_files) > 5:
+                    print(f"      ... and {len(html_files) - 5} more")
+            
+            # Set extracted path
             self.extracted_path = f'lms_extracted/demo_{self.slug}'
             
-            file_count = sum([len(files) for _, _, files in os.walk(extract_dir)])
-            print(f"✅ LMS ZIP extracted successfully! Files: {file_count}")
+            # Try to find the main entry point
+            entry_points = [
+                'index.html',
+                'index_lms.html',
+                'story.html',
+                'scormdriver/indexAPI.html',
+                'res/index.html',
+                'launch.html',
+                'start.html',
+                'index_scorm.html',
+            ]
             
+            found_entry = None
+            for entry in entry_points:
+                test_path = os.path.join(extract_dir, entry)
+                if os.path.exists(test_path):
+                    found_entry = entry
+                    break
+            
+            if found_entry:
+                print(f"   ✅ Entry point found: {found_entry}")
+            else:
+                print(f"   ⚠️  No standard entry point found")
+                print(f"   💡 Will use first HTML file: {html_files[0] if html_files else 'None'}")
+            
+            print(f"{'='*60}\n")
+            
+            return True
+            
+        except zipfile.BadZipFile:
+            print(f"❌ Error: Invalid or corrupted ZIP file")
+            self.extracted_path = ''
+            return False
+        except PermissionError as e:
+            print(f"❌ Permission error: {e}")
+            self.extracted_path = ''
+            return False
         except Exception as e:
             print(f"❌ Error extracting LMS ZIP: {e}")
+            import traceback
+            traceback.print_exc()
             self.extracted_path = ''
+            return False
 
     def get_thumbnail_url(self):
         """Return thumbnail URL or default icon based on file type"""
@@ -466,7 +571,7 @@ class Demo(models.Model):
                     url_path = rel_path.replace('\\', '/')
                     
                     try:
-                        return reverse('core:serve_webgl_file', kwargs={
+                        return reverse('customers:serve_webgl_file', kwargs={
                             'slug': self.slug,
                             'filepath': url_path
                         })
@@ -487,7 +592,7 @@ class Demo(models.Model):
                             url_path = rel_path.replace('\\', '/')
                             
                             try:
-                                return reverse('core:serve_webgl_file', kwargs={
+                                return reverse('customers:serve_webgl_file', kwargs={
                                     'slug': self.slug,
                                     'filepath': url_path
                                 })
@@ -504,18 +609,23 @@ class Demo(models.Model):
         return None
     
     def get_lms_index_url(self):
-        """Get URL to LMS/SCORM index.html"""
+        """✅ IMPROVED: Get URL to LMS/SCORM index.html with better detection"""
         from django.urls import reverse
         
         if self.file_type != 'lms' or not self.lms_file:
             return None
         
+        # If ZIP was extracted
         if self.lms_file.name.endswith('.zip') and self.extracted_path:
             possible_index_files = [
                 'index.html',
                 'index_lms.html',
                 'story.html',
                 'scormdriver/indexAPI.html',
+                'res/index.html',
+                'launch.html',
+                'start.html',
+                'index_scorm.html',
             ]
             
             for rel_path in possible_index_files:
@@ -529,12 +639,44 @@ class Demo(models.Model):
                     url_path = rel_path.replace('\\', '/')
                     
                     try:
-                        return reverse('core:serve_lms_file', kwargs={
+                        # Use the same serve function as WebGL
+                        return reverse('customers:serve_webgl_file', kwargs={
                             'slug': self.slug,
                             'filepath': url_path
                         })
-                    except Exception:
-                        return None
+                    except Exception as e:
+                        print(f"❌ Error generating LMS URL for {url_path}: {e}")
+            
+            # Fallback: Search for any HTML file
+            extracted_dir = os.path.join(settings.MEDIA_ROOT, self.extracted_path)
+            
+            if os.path.exists(extracted_dir):
+                for root, dirs, files in os.walk(extracted_dir):
+                    for file in files:
+                        if file.lower().endswith(('.html', '.htm')):
+                            rel_path = os.path.relpath(
+                                os.path.join(root, file),
+                                extracted_dir
+                            )
+                            url_path = rel_path.replace('\\', '/')
+                            
+                            try:
+                                return reverse('customers:serve_webgl_file', kwargs={
+                                    'slug': self.slug,
+                                    'filepath': url_path
+                                })
+                            except Exception as e:
+                                print(f"❌ Error generating URL: {e}")
+                                
+                            # Return first HTML found
+                            break
+                    # Break outer loop too
+                    if url_path:
+                        break
+        
+        # Direct HTML file (not zipped)
+        elif self.lms_file.name.endswith(('.html', '.htm')):
+            return self.lms_file.url
         
         return None
 
@@ -672,6 +814,11 @@ class Demo(models.Model):
             return ", ".join([cat.name for cat in categories])
         return "All Categories"
 
+
+# ============================================================================
+# END OF DEMO MODEL CLASS
+# ============================================================================
+
 class DemoView(models.Model):
     """Track demo views by users"""
     
@@ -753,6 +900,10 @@ class TimeSlot(models.Model):
         verbose_name = 'Time Slot'
         verbose_name_plural = 'Time Slots'
         ordering = ['start_time']
+    
+    def get_display_time(self):
+        """Return formatted time slot for display"""
+        return f"{self.start_time.strftime('%I:%M %p')} - {self.end_time.strftime('%I:%M %p')}"
     
     def __str__(self):
         return f"{self.get_slot_type_display()}: {self.start_time.strftime('%I:%M %p')} - {self.end_time.strftime('%I:%M %p')}"
@@ -968,77 +1119,85 @@ class DemoRequest(models.Model):
     @classmethod
     def get_available_employees(cls, requested_date, requested_time_slot):
         """
-        Get list of employees available for given date and time slot
-        
-        ✅ FIXED: Now includes ALL staff members who have ANY demo-related permission
+        ✅ SIMPLIFIED: Get employees available for specific date and time slot
+        Shows basic schedule without complex date grouping
         """
         from accounts.models import CustomUser
         
         print(f"\n{'='*60}")
-        print(f"🔍 Finding Available Employees")
-        print(f"{'='*60}")
+        print(f"🔍 Finding Available Employees (Simplified)")
         print(f"📅 Date: {requested_date}")
-        print(f"⏰ Time Slot: {requested_time_slot}")
+        print(f"⏰ Slot: {requested_time_slot}")
+        print(f"{'='*60}\n")
         
-        # Get all active staff members
+        # Get active staff (no superusers)
         all_staff = CustomUser.objects.filter(
             is_staff=True,
-            is_active=True
-        ).order_by('first_name', 'last_name')
-        
-        print(f"👥 Total Active Staff: {all_staff.count()}")
+            is_active=True,
+            is_superuser=False
+        ).select_related('role').order_by('first_name', 'last_name')
         
         available = []
         
         for employee in all_staff:
-            print(f"\n   Checking: {employee.get_full_name()} (ID: {employee.id})")
-            print(f"   - Email: {employee.email}")
-            print(f"   - Is Staff: {employee.is_staff}")
-            print(f"   - Is Superuser: {employee.is_superuser}")
+            # Check permissions
+            has_permission = (
+                employee.has_permission('manage_demo_requests') or
+                employee.has_permission('view_demo_requests') or
+                employee.has_permission('approve_demo_request')
+            )
             
-            # ✅ UPDATED: Include if employee has ANY of these permissions:
-            # 1. Superuser (automatic)
-            # 2. Has 'manage_demo_requests' permission
-            # 3. Has 'view_demo_requests' permission  
-            # 4. Has 'approve_demo_request' permission
+            if not has_permission:
+                continue
             
-            has_permission = False
+            print(f"   Checking: {employee.get_full_name()}")
             
-            if employee.is_superuser:
-                has_permission = True
-                print(f"   ✓ Is Superuser - INCLUDED")
-            elif employee.has_permission('manage_demo_requests'):
-                has_permission = True
-                print(f"   ✓ Has 'manage_demo_requests' - INCLUDED")
-            elif employee.has_permission('view_demo_requests'):
-                has_permission = True
-                print(f"   ✓ Has 'view_demo_requests' - INCLUDED")
-            elif employee.has_permission('approve_demo_request'):
-                has_permission = True
-                print(f"   ✓ Has 'approve_demo_request' - INCLUDED")
-            else:
-                print(f"   ✗ No demo permissions - EXCLUDED")
+            # Check for conflict at THIS exact date + time
+            conflict = cls.objects.filter(
+                assigned_to=employee,
+                requested_date=requested_date,
+                requested_time_slot=requested_time_slot,
+                status__in=['pending', 'confirmed']
+            ).first()
             
-            if has_permission:
-                # Check if employee has conflict at this time
-                has_conflict = cls.objects.filter(
-                    assigned_to=employee,
-                    requested_date=requested_date,
-                    requested_time_slot=requested_time_slot,
-                    status__in=['pending', 'confirmed']
-                ).exists()
-                
-                if has_conflict:
-                    print(f"   ⚠️ Has scheduling conflict - EXCLUDED")
-                else:
-                    print(f"   ✓ Available - ADDED TO LIST")
-                    available.append(employee)
+            if conflict:
+                print(f"   ❌ CONFLICT: {conflict.demo.title}")
+                continue  # Skip this employee
+            
+            # Get total demos count
+            total_demos = cls.objects.filter(
+                assigned_to=employee,
+                status__in=['pending', 'confirmed']
+            ).count()
+            
+            # Get other demos (for display)
+            other_demos = cls.objects.filter(
+                assigned_to=employee,
+                status__in=['pending', 'confirmed']
+            ).exclude(
+                requested_date=requested_date,
+                requested_time_slot=requested_time_slot
+            ).select_related('demo', 'requested_time_slot').order_by('requested_date')[:5]
+            
+            # Build simple schedule list
+            schedule_text = []
+            for demo in other_demos:
+                slot = demo.requested_time_slot
+                schedule_text.append(
+                    f"{demo.requested_date.strftime('%b %d')}: "
+                    f"{slot.start_time.strftime('%I:%M %p')} - {slot.end_time.strftime('%I:%M %p')}"
+                )
+            
+            available.append({
+                'id': employee.id,
+                'name': employee.get_full_name(),
+                'email': employee.email,
+                'role': employee.role.name if employee.role else 'Staff',
+                'current_demos': total_demos,
+                'other_slots_text': ', '.join(schedule_text) if schedule_text else None,
+            })
+            
+            print(f"   ✅ Available (Total: {total_demos} demos)")
         
-        print(f"\n{'='*60}")
-        print(f"✅ Found {len(available)} Available Employees:")
-        for emp in available:
-            print(f"   - {emp.get_full_name()} ({emp.email})")
-        print(f"{'='*60}\n")
-        
-        return available
-    
+        print(f"\n✅ Found {len(available)} available employees\n")
+        return available 

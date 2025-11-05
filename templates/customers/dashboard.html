@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block customer_title %}Dashboard - Customer Portal{% endblock %}
-{% block page_title %}Dashboardkk{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 
 {% block customer_content %}
 <div class="dashboard-container">
@@ -98,7 +98,7 @@
                             <img src="{{ demo.thumbnail.url }}" alt="{{ demo.title }}" class="demo-thumbnail-img">
                         {% else %}
                             <div class="demo-thumbnail-placeholder">
-                                <i class="fas fa-{% if demo.file_type == 'webgl' %}cube{% else %}video{% endif %}"></i>
+                                <i class="fas fa-{% if demo.file_type == 'webgl' %}cube{% elif demo.file_type == 'lms' %}graduation-cap{% else %}video{% endif %}"></i>
                             </div>
                         {% endif %}
                         
@@ -156,19 +156,18 @@
                         
                         <!-- Demo Actions -->
                         <div class="demo-actions">
-                            {% if demo.file_type == 'video' and demo.video_file %}
-                                <a href="{% url 'customers:demo_detail' demo.slug %}" class="btn btn-primary btn-sm w-100">
+                            {# ✅ ALL DEMO TYPES NOW GO TO demo_detail VIEW #}
+                            <a href="{% url 'customers:demo_detail' demo.slug %}" class="btn btn-primary btn-sm w-100">
+                                {% if demo.file_type == 'video' %}
                                     <i class="fas fa-play me-1"></i>View Demo
-                                </a>
-                            {% elif demo.file_type == 'webgl' and demo.webgl_file %}
-                                <a href="{% url 'customers:webgl_viewer' demo.slug %}" class="btn btn-primary btn-sm w-100">
+                                {% elif demo.file_type == 'webgl' %}
                                     <i class="fas fa-cube me-1"></i>View Demo
-                                </a>
-                            {% else %}
-                                <a href="{% url 'customers:request_demo' %}?demo={{ demo.id }}" class="btn btn-primary btn-sm w-100">
-                                    <i class="fas fa-calendar-plus me-1"></i>Request Demo
-                                </a>
-                            {% endif %}
+                                {% elif demo.file_type == 'lms' %}
+                                    <i class="fas fa-graduation-cap me-1"></i>View Demo
+                                {% else %}
+                                    <i class="fas fa-eye me-1"></i>View Demo
+                                {% endif %}
+                            </a>
                         </div>
                     </div>
                 </div>

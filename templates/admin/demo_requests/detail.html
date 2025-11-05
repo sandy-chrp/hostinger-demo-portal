@@ -271,7 +271,6 @@
         z-index: 1;
     }
 
-    /* Form elements */
     .form-label {
         font-size: var(--font-sm);
         font-weight: 500;
@@ -302,7 +301,6 @@
         font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
 
-    /* Buttons */
     .btn {
         font-size: var(--font-sm);
         font-weight: 500;
@@ -317,7 +315,6 @@
         font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
 
-    /* Workload stats cards */
     .card {
         border-radius: 8px;
     }
@@ -338,7 +335,6 @@
         padding: 0.75rem;
     }
 
-    /* Modal styles */
     .modal-title {
         font-size: var(--font-lg);
         font-weight: 600;
@@ -359,7 +355,6 @@
         padding: 0.875rem 1.25rem;
     }
 
-    /* Alert messages */
     .alert {
         font-size: var(--font-sm);
         padding: 0.75rem;
@@ -383,14 +378,12 @@
         font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
 
-    /* Always show assignment section */
     #assignmentSection {
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
     }
 
-    /* Responsive adjustments */
     @media (max-width: 768px) {
         .info-grid {
             grid-template-columns: 1fr;
@@ -451,37 +444,24 @@
             font-size: var(--font-3xl);
         }
     }
-    
-    @media (max-width: 576px) {
-        .info-card-body {
-            padding: 0.875rem;
-        }
-        
-        .info-card-header {
-            padding: 0.625rem 0.875rem;
-        }
-        
-        .assign-card,
-        .reassign-card {
-            padding: 1rem;
-        }
-        
-        .demo-header h1 {
-            font-size: var(--font-lg);
-        }
-        
-        .employee-card {
-            padding: 0.875rem;
-        }
-        
-        .card-body h3 {
-            font-size: var(--font-2xl);
-        }
-    }
 </style>
 {% endblock %}
 
 {% block admin_content %}
+
+{# ✅ SUCCESS/ERROR MESSAGES SECTION - ADDED #}
+{% if messages %}
+<div class="container-fluid mb-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <!-- Demo Request Header -->
 <div class="demo-header">
     <div>
@@ -625,7 +605,7 @@
             </div>
         </div>
         
-        <!-- Schedule Information -->
+        <!-- Schedule Information - ✅ FIXED TIME SLOT DISPLAY -->
         <div class="info-card">
             <div class="info-card-header">
                 <i class="far fa-calendar-alt"></i>
@@ -640,10 +620,16 @@
                     
                     <div class="info-label">Time Slot:</div>
                     <div class="info-value">
-                        <i class="far fa-clock text-primary me-1"></i>{{ demo_request.requested_time_slot.get_display_time }}
+                        <i class="far fa-clock text-primary me-1"></i>
+                        {# ✅ FIXED: Proper time slot display with null check #}
+                        {% if demo_request.requested_time_slot %}
+                            {{ demo_request.requested_time_slot.get_display_time }}
+                        {% else %}
+                            <span class="text-muted">Not specified</span>
+                        {% endif %}
                     </div>
                     
-                    {% if demo_request.is_confirmed and demo_request.confirmed_date %}
+                    {% if demo_request.status == 'confirmed' and demo_request.confirmed_date %}
                     <div class="info-label">Confirmed Date:</div>
                     <div class="info-value">
                         <i class="fas fa-calendar-check text-success me-1"></i>{{ demo_request.confirmed_date|date:"l, F d, Y" }}
@@ -655,10 +641,13 @@
                     <div class="info-label">Confirmed Time:</div>
                     <div class="info-value">
                         <i class="fas fa-check-circle text-success me-1"></i>
+                        {# ✅ FIXED: Proper confirmed time slot display with null check #}
                         {% if demo_request.confirmed_time_slot %}
                             {{ demo_request.confirmed_time_slot.get_display_time }}
-                        {% else %}
+                        {% elif demo_request.requested_time_slot %}
                             {{ demo_request.requested_time_slot.get_display_time }}
+                        {% else %}
+                            <span class="text-muted">Not specified</span>
                         {% endif %}
                     </div>
                     {% endif %}
@@ -675,7 +664,7 @@
             </div>
         </div>
         
-        <!-- Assignment Information - ALWAYS VISIBLE -->
+        <!-- Assignment Information -->
         <div class="info-card" id="assignmentSection">
             <div class="info-card-header">
                 <i class="fas fa-user-check"></i>
@@ -686,7 +675,6 @@
             </div>
             <div class="info-card-body">
                 {% if demo_request.assigned_to %}
-                    <!-- Employee Card for assigned employee -->
                     <div class="employee-card">
                         <div class="employee-avatar">
                             <i class="fas fa-user"></i>
@@ -715,7 +703,6 @@
                         </div>
                     </div>
                     
-                    <!-- Reassign Form (hidden by default) -->
                     <div class="reassign-card" id="reassignForm" style="display: none;">
                         <h5 class="card-title">Reassign Demo Request</h5>
                         <form id="reassignDemoForm">
@@ -760,7 +747,6 @@
                         </form>
                     </div>
                 {% else %}
-                    <!-- No assignment message and assign form -->
                     <p class="mb-3">This demo request is currently unassigned.</p>
                     
                     {% if user|has_permission:'manage_demo_requests' and demo_request.status != 'completed' and demo_request.status != 'cancelled' %}
@@ -805,7 +791,6 @@
                     {% endif %}
                 {% endif %}
                 
-                <!-- Employee Workload Stats -->
                 {% if demo_request.assigned_to %}
                 <div class="mt-4">
                     <h6 class="mb-3">
@@ -873,12 +858,10 @@
             </div>
             <div class="info-card-body">
                 <div class="d-grid gap-2">
-                    <!-- Back to List -->
                     <a href="{% url 'core:admin_demo_requests' %}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-1"></i>Back to List
                     </a>
                     
-                    <!-- Status-based actions -->
                     {% if demo_request.status == 'pending' %}
                         {% if user|has_permission:'approve_demo_request' %}
                         <button type="button" class="btn btn-success" onclick="confirmDemoRequest({{ demo_request.id }})">
@@ -917,7 +900,6 @@
                         {% endif %}
                     {% endif %}
                     
-                    <!-- Delete action (admin only) -->
                     {% if user|has_permission:'reject_demo_request' %}
                     <button type="button" class="btn btn-outline-danger" onclick="confirmDelete({{ demo_request.id }})">
                         <i class="fas fa-trash me-1"></i>Delete Request
@@ -937,7 +919,6 @@
                 <div class="status-timeline">
                     <div class="timeline-line"></div>
                     
-                    <!-- Submitted -->
                     <div class="timeline-item">
                         <div class="timeline-icon bg-info">
                             <i class="fas fa-plus"></i>
@@ -948,7 +929,6 @@
                         </div>
                     </div>
                     
-                    <!-- Assignment, if any -->
                     {% if demo_request.assigned_to %}
                     <div class="timeline-item">
                         <div class="timeline-icon bg-primary">
@@ -968,21 +948,14 @@
                     </div>
                     {% endif %}
                     
-                    <!-- Status changes -->
-                    {% if demo_request.is_confirmed %}
+                    {% if demo_request.status == 'confirmed' %}
                     <div class="timeline-item">
                         <div class="timeline-icon bg-success">
                             <i class="fas fa-check-circle"></i>
                         </div>
                         <div class="timeline-content">
                             <div class="timeline-title">Request Confirmed</div>
-                            <div class="timeline-date">
-                                {% if demo_request.confirmed_at %}
-                                    {{ demo_request.confirmed_at|date:"M d, Y h:i A" }}
-                                {% else %}
-                                    Unknown date
-                                {% endif %}
-                            </div>
+                            <div class="timeline-date">{{ demo_request.updated_at|date:"M d, Y h:i A" }}</div>
                         </div>
                     </div>
                     {% endif %}
@@ -994,13 +967,7 @@
                         </div>
                         <div class="timeline-content">
                             <div class="timeline-title">Demo Completed</div>
-                            <div class="timeline-date">
-                                {% if demo_request.completed_at %}
-                                    {{ demo_request.completed_at|date:"M d, Y h:i A" }}
-                                {% else %}
-                                    Unknown date
-                                {% endif %}
-                            </div>
+                            <div class="timeline-date">{{ demo_request.updated_at|date:"M d, Y h:i A" }}</div>
                         </div>
                     </div>
                     {% endif %}
@@ -1016,7 +983,7 @@
                                 {% if demo_request.cancelled_at %}
                                     {{ demo_request.cancelled_at|date:"M d, Y h:i A" }}
                                 {% else %}
-                                    Unknown date
+                                    {{ demo_request.updated_at|date:"M d, Y h:i A" }}
                                 {% endif %}
                             </div>
                             
@@ -1037,9 +1004,7 @@
     </div>
 </div>
 
-<!-- Modals -->
-
-<!-- Reschedule Modal -->
+<!-- Reschedule Modal - ✅ UPDATED WITH VALIDATION -->
 <div class="modal fade" id="rescheduleModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1057,6 +1022,7 @@
                         <label for="rescheduleDate" class="form-label">Select New Date</label>
                         <input type="date" id="rescheduleDate" name="reschedule_date" class="form-control" required 
                                min="{{ current_date|date:'Y-m-d' }}">
+                        <small class="text-muted">Sundays are not available for demos</small>
                     </div>
                     
                     <div class="mb-3">
@@ -1068,12 +1034,13 @@
                         <select id="rescheduleTimeSlot" name="reschedule_time_slot" class="form-select" required disabled>
                             <option value="">-- Select Time Slot --</option>
                         </select>
+                        <small class="text-muted">Only available slots are shown</small>
                     </div>
                     
                     <div class="mb-3">
                         <label for="rescheduleReason" class="form-label">Reason for Rescheduling</label>
                         <textarea id="rescheduleReason" name="reschedule_reason" class="form-control" rows="3" 
-                                  placeholder="Provide a reason for rescheduling"></textarea>
+                                  placeholder="Provide a reason for rescheduling" required></textarea>
                     </div>
                     
                     <div class="mb-3">
@@ -1151,25 +1118,42 @@
 
 {% block admin_extra_js %}
 <script>
-// CSRF token
 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-// Modals
 let rescheduleModal;
 let cancelModal;
 
-// Document ready
+// ✅ HELPER FUNCTION - Show Success/Error Messages
+function showMessage(message, type = 'success') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid') || document.querySelector('main');
+    if (container.firstChild) {
+        container.insertBefore(alertDiv, container.firstChild);
+    } else {
+        container.appendChild(alertDiv);
+    }
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize modals
     rescheduleModal = new bootstrap.Modal(document.getElementById('rescheduleModal'));
     cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
     
-    // Load available employees if form exists
     if (document.getElementById('assignDemoForm')) {
         loadAvailableEmployees();
     }
     
-    // Make sure assignment section is always visible
     const assignmentSection = document.getElementById('assignmentSection');
     if (assignmentSection) {
         assignmentSection.style.display = 'block';
@@ -1178,7 +1162,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Load available employees for assignment
 function loadAvailableEmployees() {
     const loadingDiv = document.getElementById('loadingEmployees');
     const employeeSelect = document.getElementById('employeeSelect');
@@ -1188,7 +1171,6 @@ function loadAvailableEmployees() {
     loadingDiv.style.display = 'block';
     employeeSelect.disabled = true;
     
-    // Get date and time slot from the page
     const date = "{{ demo_request.requested_date|date:'Y-m-d' }}";
     const timeSlotId = "{{ demo_request.requested_time_slot.id }}";
     
@@ -1213,11 +1195,10 @@ function loadAvailableEmployees() {
         })
         .catch(error => {
             loadingDiv.style.display = 'none';
-            alert('Error loading employees: ' + error.message);
+            showMessage('Error loading employees: ' + error.message, 'error');
         });
 }
 
-// Check employee availability
 function checkEmployeeAvailability(employeeId) {
     const statusDiv = document.getElementById('availabilityStatus');
     if (!statusDiv) return;
@@ -1225,7 +1206,6 @@ function checkEmployeeAvailability(employeeId) {
     statusDiv.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm"></div> Checking...</div>';
     statusDiv.style.display = 'block';
     
-    // Get date and time slot from the page
     const date = "{{ demo_request.requested_date|date:'Y-m-d' }}";
     const timeSlotId = "{{ demo_request.requested_time_slot.id }}";
     const requestId = "{{ demo_request.id }}";
@@ -1248,18 +1228,15 @@ function checkEmployeeAvailability(employeeId) {
         });
 }
 
-// Show/Hide reassign form
 function showReassignForm() {
     document.getElementById('reassignForm').style.display = 'block';
     
-    // Load available employees
     const loadingDiv = document.getElementById('loadingEmployees');
     const employeeSelect = document.getElementById('employeeSelect');
     
     loadingDiv.style.display = 'block';
     employeeSelect.disabled = true;
     
-    // Get date and time slot
     const date = "{{ demo_request.requested_date|date:'Y-m-d' }}";
     const timeSlotId = "{{ demo_request.requested_time_slot.id }}";
     
@@ -1278,7 +1255,6 @@ function showReassignForm() {
                 });
                 employeeSelect.disabled = false;
                 
-                // Add change listener for availability check
                 employeeSelect.addEventListener('change', function() {
                     if (this.value) {
                         checkEmployeeAvailability(this.value);
@@ -1290,7 +1266,7 @@ function showReassignForm() {
         })
         .catch(error => {
             loadingDiv.style.display = 'none';
-            alert('Error loading employees: ' + error.message);
+            showMessage('Error loading employees: ' + error.message, 'error');
         });
 }
 
@@ -1298,18 +1274,16 @@ function hideReassignForm() {
     document.getElementById('reassignForm').style.display = 'none';
 }
 
-// Handle assign demo request
 function handleAssign(requestId) {
     const form = document.getElementById('assignDemoForm');
     const formData = new FormData(form);
     const employeeId = formData.get('employee_id');
     
     if (!employeeId) {
-        alert('Please select an employee');
+        showMessage('Please select an employee', 'error');
         return;
     }
     
-    // Disable form
     form.querySelectorAll('button, select, textarea').forEach(el => el.disabled = true);
     form.querySelector('button').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Assigning...';
     
@@ -1324,35 +1298,32 @@ function handleAssign(requestId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            showMessage('✓ Employee assigned successfully!', 'success');
+            setTimeout(() => location.reload(), 1500);
         } else {
-            alert('Error: ' + (data.error || 'Failed to assign'));
-            // Re-enable form
+            showMessage('✗ ' + (data.error || 'Failed to assign'), 'error');
             form.querySelectorAll('button, select, textarea').forEach(el => el.disabled = false);
             form.querySelector('button').innerHTML = '<i class="fas fa-user-plus me-1"></i>Assign';
         }
     })
     .catch(error => {
         console.error('Assignment error:', error);
-        alert('Error: ' + error.message);
-        // Re-enable form
+        showMessage('✗ Error: ' + error.message, 'error');
         form.querySelectorAll('button, select, textarea').forEach(el => el.disabled = false);
         form.querySelector('button').innerHTML = '<i class="fas fa-user-plus me-1"></i>Assign';
     });
 }
 
-// Handle reassign demo request
 function handleReassign(requestId) {
     const form = document.getElementById('reassignDemoForm');
     const formData = new FormData(form);
     const employeeId = document.getElementById('employeeSelect').value;
     
     if (!employeeId) {
-        alert('Please select an employee');
+        showMessage('Please select an employee', 'error');
         return;
     }
     
-    // Disable form
     form.querySelectorAll('button, select, textarea').forEach(el => el.disabled = true);
     form.querySelector('button[type="button"]').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Reassigning...';
     
@@ -1367,27 +1338,24 @@ function handleReassign(requestId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            showMessage('✓ Employee reassigned successfully!', 'success');
+            setTimeout(() => location.reload(), 1500);
         } else {
-            alert('Error: ' + (data.error || 'Failed to reassign'));
-            // Re-enable form
+            showMessage('✗ ' + (data.error || 'Failed to reassign'), 'error');
             form.querySelectorAll('button, select, textarea').forEach(el => el.disabled = false);
             form.querySelector('button[type="button"]').innerHTML = '<i class="fas fa-user-plus me-1"></i>Reassign';
         }
     })
     .catch(error => {
         console.error('Reassignment error:', error);
-        alert('Error: ' + error.message);
-        // Re-enable form
+        showMessage('✗ Error: ' + error.message, 'error');
         form.querySelectorAll('button, select, textarea').forEach(el => el.disabled = false);
         form.querySelector('button[type="button"]').innerHTML = '<i class="fas fa-user-plus me-1"></i>Reassign';
     });
 }
 
-// Confirm unassign demo request
 function confirmUnassign(requestId) {
     if (confirm('Are you sure you want to unassign this demo request?')) {
-        // Disable button
         const button = document.querySelector('.employee-actions button.btn-danger');
         button.disabled = true;
         button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Unassigning...';
@@ -1402,87 +1370,116 @@ function confirmUnassign(requestId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                location.reload();
+                showMessage('✓ Employee unassigned successfully!', 'success');
+                setTimeout(() => location.reload(), 1500);
             } else {
-                alert('Error: ' + (data.error || 'Failed to unassign'));
-                // Re-enable button
+                showMessage('✗ ' + (data.error || 'Failed to unassign'), 'error');
                 button.disabled = false;
                 button.innerHTML = '<i class="fas fa-user-minus me-1"></i>Unassign';
             }
         })
         .catch(error => {
             console.error('Unassign error:', error);
-            alert('Error: ' + error.message);
-            // Re-enable button
+            showMessage('✗ Error: ' + error.message, 'error');
             button.disabled = false;
             button.innerHTML = '<i class="fas fa-user-minus me-1"></i>Unassign';
         });
     }
 }
 
-// Show reschedule modal
+// ✅ FIXED: Show reschedule modal with Sunday validation
 function showRescheduleModal(requestId) {
-    // Set min date for reschedule
-    document.getElementById('rescheduleDate').min = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('rescheduleDate');
     
-    // Initialize reschedule date to current date
-    document.getElementById('rescheduleDate').value = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    dateInput.value = today;
     
-    // Add change handler for date
-    document.getElementById('rescheduleDate').addEventListener('change', function() {
+    dateInput.addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        
+        if (selectedDate.getDay() === 0) {
+            showMessage('Sundays are not available for demos. Please select another date.', 'warning');
+            this.value = '';
+            document.getElementById('rescheduleTimeSlot').innerHTML = '<option value="">Select date first</option>';
+            document.getElementById('rescheduleTimeSlot').disabled = true;
+            return;
+        }
+        
         loadTimeSlots(this.value);
     });
     
-    // Load time slots for today
-    loadTimeSlots(new Date().toISOString().split('T')[0]);
-    
-    // Show modal
+    loadTimeSlots(today);
     rescheduleModal.show();
 }
 
-// Load time slots for a given date
+// ✅ FIXED: Load time slots with validation
 function loadTimeSlots(date) {
     const loadingDiv = document.getElementById('loadingTimeSlots');
     const timeSlotSelect = document.getElementById('rescheduleTimeSlot');
     
     loadingDiv.style.display = 'block';
     timeSlotSelect.disabled = true;
+    timeSlotSelect.innerHTML = '<option value="">-- Loading... --</option>';
     
     fetch(`/api/demo-requests/available-slots/?date=${date}`)
         .then(r => r.json())
         .then(data => {
             loadingDiv.style.display = 'none';
-            timeSlotSelect.innerHTML = '<option value="">-- Select Time Slot --</option>';
             
-            if (data.success && data.slots && data.slots.length > 0) {
+            if (!data.success) {
+                timeSlotSelect.innerHTML = `<option value="">Error: ${data.error || 'Failed to load slots'}</option>`;
+                showMessage(data.error || 'Failed to load time slots', 'error');
+                return;
+            }
+            
+            if (data.slots && data.slots.length > 0) {
+                timeSlotSelect.innerHTML = '<option value="">-- Select Time Slot --</option>';
+                
                 data.slots.forEach(slot => {
                     const option = document.createElement('option');
                     option.value = slot.id;
                     option.textContent = slot.display_time;
+                    
+                    if (slot.status === 'available') {
+                        option.textContent += ' ✓';
+                    } else if (slot.status === 'full') {
+                        option.textContent += ' ✗ Full';
+                        option.disabled = true;
+                    }
+                    
                     timeSlotSelect.appendChild(option);
                 });
+                
                 timeSlotSelect.disabled = false;
             } else {
-                timeSlotSelect.innerHTML = '<option>No time slots available</option>';
+                timeSlotSelect.innerHTML = '<option value="">No available time slots</option>';
+                showMessage('No available time slots for this date', 'warning');
             }
         })
         .catch(error => {
             loadingDiv.style.display = 'none';
-            alert('Error loading time slots: ' + error.message);
+            timeSlotSelect.innerHTML = '<option value="">Error loading slots</option>';
+            showMessage('Error loading time slots: ' + error.message, 'error');
+            console.error('Load slots error:', error);
         });
 }
 
-// Handle reschedule
+// ✅ FIXED: Handle reschedule with success message
 function handleReschedule(requestId) {
     const form = document.getElementById('rescheduleForm');
     const formData = new FormData(form);
     
     if (!formData.get('reschedule_date') || !formData.get('reschedule_time_slot')) {
-        alert('Please select a date and time slot');
+        showMessage('Please select both date and time slot', 'error');
         return;
     }
     
-    // Disable buttons
+    if (!formData.get('reschedule_reason')?.trim()) {
+        showMessage('Please provide a reason for rescheduling', 'error');
+        return;
+    }
+    
     const buttons = form.parentElement.nextElementSibling.querySelectorAll('button');
     buttons.forEach(btn => btn.disabled = true);
     buttons[1].innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Rescheduling...';
@@ -1499,39 +1496,36 @@ function handleReschedule(requestId) {
     .then(data => {
         if (data.success) {
             rescheduleModal.hide();
-            location.reload();
+            showMessage('✓ Demo request rescheduled successfully!', 'success');
+            setTimeout(() => location.reload(), 1500);
         } else {
-            alert('Error: ' + (data.error || 'Failed to reschedule'));
-            // Re-enable buttons
+            showMessage('✗ ' + (data.error || 'Failed to reschedule'), 'error');
             buttons.forEach(btn => btn.disabled = false);
             buttons[1].innerHTML = '<i class="fas fa-calendar-check me-1"></i>Reschedule';
         }
     })
     .catch(error => {
         console.error('Reschedule error:', error);
-        alert('Error: ' + error.message);
-        // Re-enable buttons
+        showMessage('✗ Error: ' + error.message, 'error');
         buttons.forEach(btn => btn.disabled = false);
         buttons[1].innerHTML = '<i class="fas fa-calendar-check me-1"></i>Reschedule';
     });
 }
 
-// Show cancel modal
 function showCancelModal(requestId) {
     cancelModal.show();
 }
 
-// Handle cancel
+// ✅ FIXED: Handle cancel with success message
 function handleCancel(requestId) {
     const form = document.getElementById('cancelForm');
     const formData = new FormData(form);
     
     if (!formData.get('cancel_reason')) {
-        alert('Please select a cancellation reason');
+        showMessage('Please select a cancellation reason', 'error');
         return;
     }
     
-    // Disable buttons
     const buttons = form.parentElement.nextElementSibling.querySelectorAll('button');
     buttons.forEach(btn => btn.disabled = true);
     buttons[1].innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Cancelling...';
@@ -1553,115 +1547,41 @@ function handleCancel(requestId) {
     .then(data => {
         if (data.success) {
             cancelModal.hide();
-            location.reload();
+            showMessage('✓ Demo request cancelled successfully', 'success');
+            setTimeout(() => location.reload(), 1500);
         } else {
-            alert('Error: ' + (data.error || 'Failed to cancel'));
-            // Re-enable buttons
+            showMessage('✗ ' + (data.error || 'Failed to cancel'), 'error');
             buttons.forEach(btn => btn.disabled = false);
             buttons[1].innerHTML = '<i class="fas fa-times-circle me-1"></i>Cancel Request';
         }
     })
     .catch(error => {
         console.error('Cancel error:', error);
-        alert('Error: ' + error.message);
-        // Re-enable buttons
+        showMessage('✗ Error: ' + error.message, 'error');
         buttons.forEach(btn => btn.disabled = false);
         buttons[1].innerHTML = '<i class="fas fa-times-circle me-1"></i>Cancel Request';
     });
 }
 
-// Confirm demo request
+// ✅ FIXED: Confirm demo with success message
 function confirmDemoRequest(requestId) {
-    if (confirm('Are you sure you want to confirm this demo request?')) {
-        const button = document.querySelector('.btn-success');
-        button.disabled = true;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Confirming...';
-        
-        // Get date and time slot from the page
-        const dateIso = "{{ demo_request.requested_date|date:'Y-m-d' }}";
-        const timeSlotId = "{{ demo_request.requested_time_slot.id }}";
-        
-        fetch(`/admin/demo-requests/${requestId}/confirm/`, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'confirm',
-                confirmed_date: dateIso,
-                confirmed_time_slot_id: timeSlotId
-            }),
-            headers: { 
-                'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + (data.error || 'Failed to confirm'));
-                // Re-enable button
-                button.disabled = false;
-                button.innerHTML = '<i class="fas fa-check-circle me-1"></i>Confirm Demo';
-            }
-        })
-        .catch(error => {
-            console.error('Confirm error:', error);
-            alert('Error: ' + error.message);
-            // Re-enable button
-            button.disabled = false;
-            button.innerHTML = '<i class="fas fa-check-circle me-1"></i>Confirm Demo';
-        });
+    if (!confirm('Are you sure you want to confirm this demo request?')) {
+        return;
     }
-}
-
-// Mark demo as completed
-function markCompleted(requestId) {
-    if (confirm('Are you sure you want to mark this demo as completed?')) {
-        const button = document.querySelector('.btn-info');
-        button.disabled = true;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
-        
-        fetch(`/admin/demo-requests/${requestId}/mark-complete/`, {
-            method: 'POST',
-            headers: { 
-                'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + (data.error || 'Failed to mark as completed'));
-                // Re-enable button
-                button.disabled = false;
-                button.innerHTML = '<i class="fas fa-flag-checkered me-1"></i>Mark as Completed';
-            }
-        })
-        .catch(error => {
-            console.error('Complete error:', error);
-            alert('Error: ' + error.message);
-            // Re-enable button
-            button.disabled = false;
-            button.innerHTML = '<i class="fas fa-flag-checkered me-1"></i>Mark as Completed';
-        });
-    }
-}
-
-// Save admin notes
-function saveAdminNotes(requestId) {
-    const notes = document.getElementById('adminNotes').value;
-    const button = document.querySelector('#adminNotesForm button');
     
-    // Disable button
+    const button = document.querySelector('.btn-success');
     button.disabled = true;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Confirming...';
     
-    fetch(`/admin/demo-requests/${requestId}/update-notes/`, {
+    const dateIso = "{{ demo_request.requested_date|date:'Y-m-d' }}";
+    const timeSlotId = "{{ demo_request.requested_time_slot.id }}";
+    
+    fetch(`/admin/demo-requests/${requestId}/confirm/`, {
         method: 'POST',
         body: JSON.stringify({
-            admin_notes: notes
+            action: 'confirm',
+            confirmed_date: dateIso,
+            confirmed_time_slot_id: timeSlotId
         }),
         headers: { 
             'X-CSRFToken': csrfToken,
@@ -1671,35 +1591,92 @@ function saveAdminNotes(requestId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Show success message
-            const successAlert = document.createElement('div');
-            successAlert.className = 'alert alert-success mt-3';
-            successAlert.innerHTML = '<i class="fas fa-check-circle me-1"></i>Notes saved successfully';
-            document.getElementById('adminNotesForm').appendChild(successAlert);
-            
-            // Remove after 3 seconds
-            setTimeout(() => {
-                successAlert.remove();
-            }, 3000);
+            showMessage('✓ Demo request confirmed successfully!', 'success');
+            setTimeout(() => location.reload(), 1500);
         } else {
-            alert('Error: ' + (data.error || 'Failed to save notes'));
+            showMessage('✗ ' + (data.error || 'Failed to confirm'), 'error');
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-check-circle me-1"></i>Confirm Demo';
         }
-        
-        // Re-enable button
+    })
+    .catch(error => {
+        console.error('Confirm error:', error);
+        showMessage('✗ Error: ' + error.message, 'error');
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-check-circle me-1"></i>Confirm Demo';
+    });
+}
+
+// ✅ FIXED: Mark completed with success message
+function markCompleted(requestId) {
+    if (!confirm('Are you sure you want to mark this demo as completed?')) {
+        return;
+    }
+    
+    const button = document.querySelector('.btn-info');
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+    
+    fetch(`/admin/demo-requests/${requestId}/mark-complete/`, {
+        method: 'POST',
+        headers: { 
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('✓ Demo marked as completed!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showMessage('✗ ' + (data.error || 'Failed to mark as completed'), 'error');
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-flag-checkered me-1"></i>Mark as Completed';
+        }
+    })
+    .catch(error => {
+        console.error('Complete error:', error);
+        showMessage('✗ Error: ' + error.message, 'error');
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-flag-checkered me-1"></i>Mark as Completed';
+    });
+}
+
+// ✅ FIXED: Save admin notes with success message
+function saveAdminNotes(requestId) {
+    const notes = document.getElementById('adminNotes').value;
+    const button = document.querySelector('#adminNotesForm button');
+    
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+    
+    fetch(`/admin/demo-requests/${requestId}/update-notes/`, {
+        method: 'POST',
+        body: JSON.stringify({ admin_notes: notes }),
+        headers: { 
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('✓ Admin notes saved successfully', 'success');
+        } else {
+            showMessage('✗ Failed to save notes', 'error');
+        }
         button.disabled = false;
         button.innerHTML = '<i class="fas fa-save me-1"></i>Save Notes';
     })
     .catch(error => {
         console.error('Save notes error:', error);
-        alert('Error: ' + error.message);
-        
-        // Re-enable button
+        showMessage('✗ Error: ' + error.message, 'error');
         button.disabled = false;
         button.innerHTML = '<i class="fas fa-save me-1"></i>Save Notes';
     });
 }
 
-// Delete request
 function confirmDelete(requestId) {
     if (confirm('Are you sure you want to delete this request permanently? This action cannot be undone.')) {
         const button = document.querySelector('.btn-outline-danger');
@@ -1715,25 +1692,25 @@ function confirmDelete(requestId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                window.location.href = "{% url 'core:admin_demo_requests' %}";
+                showMessage('✓ Demo request deleted successfully', 'success');
+                setTimeout(() => {
+                    window.location.href = "{% url 'core:admin_demo_requests' %}";
+                }, 1500);
             } else {
-                alert('Error: ' + (data.error || 'Failed to delete'));
-                // Re-enable button
+                showMessage('✗ ' + (data.error || 'Failed to delete'), 'error');
                 button.disabled = false;
                 button.innerHTML = '<i class="fas fa-trash me-1"></i>Delete Request';
             }
         })
         .catch(error => {
             console.error('Delete error:', error);
-            alert('Error: ' + error.message);
-            // Re-enable button
+            showMessage('✗ Error: ' + error.message, 'error');
             button.disabled = false;
             button.innerHTML = '<i class="fas fa-trash me-1"></i>Delete Request';
         });
     }
 }
 
-// Reactivate cancelled request
 function reactivateRequest(requestId) {
     if (confirm('Are you sure you want to reactivate this cancelled request?')) {
         const button = document.querySelector('.btn-success');
@@ -1750,25 +1727,23 @@ function reactivateRequest(requestId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                location.reload();
+                showMessage('✓ Demo request reactivated successfully!', 'success');
+                setTimeout(() => location.reload(), 1500);
             } else {
-                alert('Error: ' + (data.error || 'Failed to reactivate'));
-                // Re-enable button
+                showMessage('✗ ' + (data.error || 'Failed to reactivate'), 'error');
                 button.disabled = false;
                 button.innerHTML = '<i class="fas fa-redo me-1"></i>Reactivate Request';
             }
         })
         .catch(error => {
             console.error('Reactivate error:', error);
-            alert('Error: ' + error.message);
-            // Re-enable button
+            showMessage('✗ Error: ' + error.message, 'error');
             button.disabled = false;
             button.innerHTML = '<i class="fas fa-redo me-1"></i>Reactivate Request';
         });
     }
 }
 
-// Add employee selection event handler
 document.addEventListener('DOMContentLoaded', function() {
     const employeeSelect = document.getElementById('employeeSelect');
     if (employeeSelect) {
@@ -1782,22 +1757,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Always make sure assignment section is visible
     const assignmentSection = document.getElementById('assignmentSection');
     if (assignmentSection) {
-        // Make it always visible by adding inline styles and CSS override
         assignmentSection.style.display = 'block !important';
         assignmentSection.style.visibility = 'visible !important';
         assignmentSection.style.opacity = '1 !important';
         
-        // Add a class to ensure visibility
         assignmentSection.classList.add('always-visible');
     }
 });
 </script>
 
 <style>
-/* Additional styles to ensure assignment section visibility */
 #assignmentSection, 
 #assignmentSection.info-card,
 #assignmentSection .info-card-header,

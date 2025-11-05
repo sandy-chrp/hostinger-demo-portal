@@ -1,9 +1,3 @@
-# notifications/signals.py
-"""
-Django signals for automatic notification creation
-Triggers notifications when models change
-"""
-
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.apps import apps
@@ -72,7 +66,10 @@ def store_old_demo_request_status(sender, instance, **kwargs):
 
 @receiver(post_save, sender='demos.DemoRequest')
 def notify_demo_request_changes(sender, instance, created, **kwargs):
-    """Notify on demo request status changes"""
+    """
+    Notify on demo request status changes
+    ✅ FIXED: Confirmation email sent from view, not signal
+    """
     NotificationService = get_notification_service()
     
     # Notify admin on new request
@@ -87,7 +84,14 @@ def notify_demo_request_changes(sender, instance, created, **kwargs):
         
         if old_status != new_status:
             if new_status == 'confirmed':
-                NotificationService.notify_demo_request_confirmed(instance)
+                # ✅ CRITICAL FIX: send_email=False
+                # Email is sent from view via create_demo_confirmation_notification()
+                # Signal only creates notification, no email
+                NotificationService.notify_demo_request_confirmed(
+                    instance, 
+                    send_email=False  # ✅ NO EMAIL FROM SIGNAL
+                )
+                logger.info(f"✅ Confirmation notification created (email sent from view)")
             elif new_status == 'cancelled':
                 NotificationService.notify_demo_request_cancelled(instance)
             elif new_status == 'rescheduled':
@@ -213,8 +217,6 @@ def notify_enquiry_status_change(sender, instance, created, **kwargs):
                     )        
 
 
-
-
 @receiver(post_save, sender='demos.DemoRequest')
 def notify_admin_on_customer_cancellation(sender, instance, created, **kwargs):
     """
@@ -239,5 +241,3 @@ def notify_admin_on_customer_cancellation(sender, instance, created, **kwargs):
                     logger.info(f"✅ Admin notified of customer cancellation for request #{instance.id}")
                 except Exception as e:
                     logger.error(f"❌ Error notifying admin of cancellation: {e}")
-
-

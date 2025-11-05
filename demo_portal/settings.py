@@ -61,7 +61,10 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     # 'customers.middleware.EnhancedContentProtectionMiddleware',
     # 'customers.middleware.SecurityViolationRateLimitMiddleware',
+   
     # 'customers.middleware.AntiScreenCaptureMiddleware',
+    # 'customers.middleware.ScreenshotProtectionMiddleware',
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -75,6 +78,12 @@ MIDDLEWARE = [
     'customers.middleware.CheckUserStatusMiddleware',
     'customers.middleware.BrotliContentEncodingMiddleware',
 ]
+
+
+# Security settings
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
 
 # ============================================
 # SECURITY SETTINGS

@@ -123,26 +123,36 @@
                             <img src="{{ demo.thumbnail.url }}" alt="{{ demo.title }}" class="demo-thumbnail-img">
                         {% else %}
                             <div class="demo-thumbnail-placeholder">
-                                <i class="fas fa-video"></i>
+                                {% if demo.file_type == 'webgl' %}
+                                    <i class="fas fa-cube"></i>
+                                {% elif demo.file_type == 'lms' %}
+                                    <i class="fas fa-graduation-cap"></i>
+                                {% else %}
+                                    <i class="fas fa-video"></i>
+                                {% endif %}
                             </div>
                         {% endif %}
                         
                         <!-- Demo Type Badge -->
-                        <div class="demo-type-badge">
-                            {% if demo.demo_type == 'video' %}
+                        {% comment %} <div class="demo-type-badge">
+                            {% if demo.file_type == 'video' %}
                                 <span class="badge bg-primary">
                                     <i class="fas fa-play-circle me-1"></i>Video
                                 </span>
-                            {% elif demo.demo_type == 'webgl' %}
+                            {% elif demo.file_type == 'webgl' %}
                                 <span class="badge bg-success">
                                     <i class="fas fa-cube me-1"></i>WebGL
                                 </span>
-                            {% elif demo.demo_type == 'iframe' %}
+                            {% elif demo.file_type == 'lms' %}
                                 <span class="badge bg-info">
-                                    <i class="fas fa-window-maximize me-1"></i>Interactive
+                                    <i class="fas fa-graduation-cap me-1"></i>LMS
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-file me-1"></i>Demo
                                 </span>
                             {% endif %}
-                        </div>
+                        </div> {% endcomment %}
                         
                         <!-- New Badge -->
                         {% if demo.is_new %}
@@ -180,16 +190,16 @@
                         
                         <!-- Demo Actions -->
                         <div class="demo-actions">
-                            {# FIX: Open WebGL demos directly with webgl_viewer route, video demos go to demo_detail #}
-                            {% if demo.file_type == 'webgl' %}
-                                <a href="{% url 'customers:webgl_viewer' demo.slug %}" class="btn btn-primary btn-sm w-100">
+                            {# ✅ UNIFIED: All file types go to demo_detail (no separate webgl_viewer) #}
+                            <a href="{% url 'customers:demo_detail' demo.slug %}" class="btn btn-primary btn-sm w-100">
+                                {% if demo.file_type == 'webgl' %}
                                     <i class="fas fa-cube me-1"></i>View Demo
-                                </a>
-                            {% else %}
-                                <a href="{% url 'customers:demo_detail' demo.slug %}" class="btn btn-primary btn-sm w-100">
+                                {% elif demo.file_type == 'lms' %}
+                                    <i class="fas fa-graduation-cap me-1"></i>View Demo
+                                {% else %}
                                     <i class="fas fa-play me-1"></i>View Demo
-                                </a>
-                            {% endif %}
+                                {% endif %}
+                            </a>
                         </div>
                         
                         <!-- User Interaction Indicators -->
