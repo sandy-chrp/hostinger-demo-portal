@@ -5,7 +5,9 @@ from django.http import JsonResponse, Http404, HttpResponse, FileResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count, Q, F
+import logging
 
+logger = logging.getLogger(__name__)
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.conf import settings
@@ -14,6 +16,7 @@ from django.urls import reverse
 # ✅ CRITICAL: Import these for date/time handling
 from datetime import datetime, timedelta, time as datetime_time
 from django.utils.timesince import timesince
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 import json
 import mimetypes
@@ -37,7 +40,8 @@ from .utils import log_customer_activity, get_client_ip, log_security_violation
 from django.core.files.storage import default_storage
 from .validators import validate_file_extension, validate_file_size
 from django.db.models import Count, Q
- 
+from django.http import JsonResponse, Http404, HttpResponse, FileResponse, HttpResponseForbidden
+from django.core.exceptions import ValidationError
 
 def get_customer_context(user):
     """Helper function to get common customer context"""
@@ -233,6 +237,430 @@ def browse_demos(request):
     return render(request, 'customers/browse_demos.html', context)
 
 @login_required
+@xframe_options_exempt
+def serve_webgl_file(request, slug, filepath):
+    """
+    Serve extracted WebGL/LMS files with full LMS/SCORM support
+    
+    Handles:
+    - WebGL 3D content (zipped or direct)
+    - LMS/SCORM packages (zipped)
+    - Proper security checks
+    - Auto re-extraction if files missing
+    - LMS-specific HTTP headers
+    """
+    
+    # ==========================================
+    # LOGGING & DIAGNOSTICS
+    # ==========================================
+    print(f"\n{'='*70}")
+    print(f"🎯 SERVE CONTENT FILE")
+    print(f"{'='*70}")
+    print(f"📍 Slug: {slug}")
+    print(f"📄 File: {filepath}")
+    print(f"👤 User: {request.user.email if request.user.is_authenticated else 'Anonymous'}")
+    print(f"🌐 IP: {get_client_ip(request)}")
+    
+    # ==========================================
+    # GET DEMO
+    # ==========================================
+    try:
+        demo = Demo.objects.get(slug=slug)
+        print(f"\n✅ DEMO FOUND")
+        print(f"   Title: {demo.title}")
+        print(f"   Type: {demo.file_type.upper()}")
+        print(f"   Active: {demo.is_active}")
+        print(f"   Extracted: {demo.extracted_path if hasattr(demo, 'extracted_path') and demo.extracted_path else 'Not set'}")
+    except Demo.DoesNotExist:
+        print(f"\n❌ ERROR: Demo not found")
+        print(f"   Available slugs: {list(Demo.objects.values_list('slug', flat=True)[:10])}")
+        print(f"{'='*70}\n")
+        raise Http404(f"Demo not found: {slug}")
+    except Exception as e:
+        print(f"\n❌ DATABASE ERROR: {e}")
+        print(f"{'='*70}\n")
+        raise Http404("Database error")
+    
+    # ==========================================
+    # ACCESS CONTROL
+    # ==========================================
+    
+    # Check if demo is active (staff can bypass)
+    if not demo.is_active:
+        if request.user.is_staff or request.user.is_superuser:
+            print(f"⚠️ Demo inactive - allowing (staff/superuser)")
+        else:
+            print(f"❌ Demo inactive - access denied")
+            print(f"{'='*70}\n")
+            raise Http404("Demo not available")
+    
+    # Check customer access (staff can bypass)
+    try:
+        can_access = demo.can_customer_access(request.user)
+        if not can_access:
+            if request.user.is_staff or request.user.is_superuser:
+                print(f"⚠️ Access restricted - allowing (staff/superuser)")
+            else:
+                print(f"❌ Access denied for user")
+                print(f"{'='*70}\n")
+                return HttpResponseForbidden("You don't have permission to access this content")
+    except Exception as e:
+        print(f"⚠️ Access check error: {e}")
+        # Continue if error (failsafe)
+    
+    # ==========================================
+    # SECURITY - PATH TRAVERSAL CHECK
+    # ==========================================
+    if '..' in filepath or filepath.startswith('/') or filepath.startswith('\\'):
+        print(f"🚨 SECURITY ALERT: Path traversal attempt")
+        print(f"   Path: {filepath}")
+        print(f"   IP: {get_client_ip(request)}")
+        print(f"{'='*70}\n")
+        
+        # Log security violation
+        try:
+            from .models import SecurityViolation
+            SecurityViolation.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                violation_type='path_traversal',
+                description=f'Path traversal attempt: {filepath}',
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                page_url=request.path
+            )
+        except:
+            pass
+        
+        return HttpResponseForbidden("Invalid file path")
+    
+    # ==========================================
+    # ✅ KEY FIX #1: DETERMINE BASE DIRECTORY
+    # Check extracted_path FIRST, then fallback
+    # ==========================================
+    
+    if demo.file_type == 'lms':
+        # LMS: Check extracted_path first
+        if hasattr(demo, 'extracted_path') and demo.extracted_path:
+            base_dir = os.path.join(settings.MEDIA_ROOT, demo.extracted_path)
+            print(f"\n📂 LMS Path: Using demo.extracted_path")
+            print(f"   {demo.extracted_path}")
+        else:
+            base_dir = os.path.join(settings.MEDIA_ROOT, 'lms_extracted', f'demo_{slug}')
+            print(f"\n📂 LMS Path: Using fallback")
+            print(f"   lms_extracted/demo_{slug}")
+            
+    elif demo.file_type == 'webgl':
+        # WebGL: Check extracted_path first
+        if hasattr(demo, 'extracted_path') and demo.extracted_path:
+            base_dir = os.path.join(settings.MEDIA_ROOT, demo.extracted_path)
+            print(f"\n📂 WebGL Path: Using demo.extracted_path")
+            print(f"   {demo.extracted_path}")
+        else:
+            base_dir = os.path.join(settings.MEDIA_ROOT, 'webgl_extracted', f'demo_{slug}')
+            print(f"\n📂 WebGL Path: Using fallback")
+            print(f"   webgl_extracted/demo_{slug}")
+    else:
+        print(f"\n❌ Invalid demo type: {demo.file_type}")
+        print(f"{'='*70}\n")
+        raise Http404(f"Invalid demo type")
+    
+    # Build full file path
+    file_path = os.path.join(base_dir, filepath)
+    
+    print(f"\n📁 Full Paths:")
+    print(f"   Base: {base_dir}")
+    print(f"   File: {file_path}")
+    print(f"   Base exists: {os.path.exists(base_dir)}")
+    print(f"   File exists: {os.path.exists(file_path)}")
+    
+    # ==========================================
+    # SECURITY - ENSURE FILE WITHIN BASE DIR
+    # ==========================================
+    try:
+        real_base = os.path.realpath(base_dir)
+        real_file = os.path.realpath(file_path)
+        
+        if not real_file.startswith(real_base):
+            print(f"\n🚨 SECURITY ALERT: File outside base directory")
+            print(f"   Base: {real_base}")
+            print(f"   File: {real_file}")
+            print(f"{'='*70}\n")
+            return HttpResponseForbidden("Access denied")
+    except Exception as e:
+        print(f"⚠️ Path validation error: {e}")
+    
+    # ==========================================
+    # ✅ KEY FIX #2: AUTO RE-EXTRACTION
+    # If directory missing, try to re-extract
+    # ==========================================
+    
+    if not os.path.exists(base_dir):
+        print(f"\n⚠️ Base directory not found - attempting re-extraction...")
+        
+        if demo.file_type == 'lms':
+            if hasattr(demo, 'lms_file') and demo.lms_file:
+                try:
+                    print(f"🔄 Re-extracting LMS file...")
+                    success = demo._extract_lms_zip()
+                    
+                    if success:
+                        # Refresh demo from DB to get updated extracted_path
+                        demo.refresh_from_db()
+                        
+                        # Update paths
+                        if hasattr(demo, 'extracted_path') and demo.extracted_path:
+                            base_dir = os.path.join(settings.MEDIA_ROOT, demo.extracted_path)
+                            file_path = os.path.join(base_dir, filepath)
+                            
+                            if os.path.exists(file_path):
+                                print(f"✅ Re-extraction successful!")
+                            else:
+                                print(f"❌ File still not found after re-extraction")
+                                raise Http404(f"File not found: {filepath}")
+                        else:
+                            print(f"❌ No extracted_path after re-extraction")
+                            raise Http404(f"Extraction path not set")
+                    else:
+                        print(f"❌ Re-extraction failed")
+                        raise Http404(f"Failed to extract LMS content")
+                        
+                except Exception as e:
+                    print(f"❌ Re-extraction error: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    raise Http404(f"Cannot access LMS content")
+            else:
+                print(f"❌ No LMS file to extract")
+                raise Http404(f"LMS file not available")
+                
+        elif demo.file_type == 'webgl':
+            if hasattr(demo, 'webgl_file') and demo.webgl_file:
+                try:
+                    print(f"🔄 Re-extracting WebGL file...")
+                    demo._extract_webgl_zip()
+                    
+                    # Refresh and update paths
+                    demo.refresh_from_db()
+                    
+                    if hasattr(demo, 'extracted_path') and demo.extracted_path:
+                        base_dir = os.path.join(settings.MEDIA_ROOT, demo.extracted_path)
+                        file_path = os.path.join(base_dir, filepath)
+                        
+                        if os.path.exists(file_path):
+                            print(f"✅ Re-extraction successful!")
+                        else:
+                            print(f"❌ File still not found after re-extraction")
+                            raise Http404(f"File not found: {filepath}")
+                    else:
+                        print(f"❌ No extracted_path after re-extraction")
+                        raise Http404(f"Extraction path not set")
+                        
+                except Exception as e:
+                    print(f"❌ Re-extraction error: {e}")
+                    raise Http404(f"Cannot access WebGL content")
+            else:
+                print(f"❌ No WebGL file to extract")
+                raise Http404(f"WebGL file not available")
+        else:
+            print(f"❌ Unknown file type")
+            raise Http404(f"Content not available")
+    
+    # ==========================================
+    # VERIFY FILE EXISTS
+    # ==========================================
+    
+    if not os.path.exists(file_path):
+        print(f"\n❌ FILE NOT FOUND: {filepath}")
+        
+        # Debug: List available files
+        if os.path.exists(base_dir):
+            print(f"\n📋 Available files in extraction directory:")
+            try:
+                file_count = 0
+                html_files = []
+                
+                for root, dirs, files in os.walk(base_dir):
+                    for file in files:
+                        rel_path = os.path.relpath(os.path.join(root, file), base_dir)
+                        
+                        if file_count < 20:
+                            print(f"   {rel_path}")
+                        
+                        if file.lower().endswith(('.html', '.htm')):
+                            html_files.append(rel_path)
+                        
+                        file_count += 1
+                
+                if file_count == 0:
+                    print(f"   (empty directory)")
+                elif file_count > 20:
+                    print(f"   ... and {file_count - 20} more files")
+                
+                if html_files:
+                    print(f"\n📄 HTML entry points found:")
+                    for h in html_files[:5]:
+                        print(f"   {h}")
+                        
+            except Exception as e:
+                print(f"   Error listing files: {e}")
+        else:
+            print(f"   Base directory doesn't exist: {base_dir}")
+        
+        print(f"{'='*70}\n")
+        raise Http404(f"File not found: {filepath}")
+    
+    # Verify it's a file (not directory)
+    if not os.path.isfile(file_path):
+        print(f"❌ Not a file: {file_path}")
+        print(f"{'='*70}\n")
+        raise Http404("Invalid file path")
+    
+    # ==========================================
+    # DETERMINE CONTENT TYPE
+    # ==========================================
+    
+    content_type, _ = mimetypes.guess_type(file_path)
+    ext = os.path.splitext(file_path)[1].lower()
+    
+    if not content_type:
+        # Comprehensive content type mapping
+        content_type_map = {
+            # Web
+            '.html': 'text/html; charset=utf-8',
+            '.htm': 'text/html; charset=utf-8',
+            '.css': 'text/css; charset=utf-8',
+            '.js': 'application/javascript; charset=utf-8',
+            '.json': 'application/json',
+            '.xml': 'application/xml',
+            '.xsd': 'application/xml',
+            
+            # Images
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.gif': 'image/gif',
+            '.svg': 'image/svg+xml',
+            '.webp': 'image/webp',
+            '.ico': 'image/x-icon',
+            
+            # Fonts
+            '.woff': 'font/woff',
+            '.woff2': 'font/woff2',
+            '.ttf': 'font/ttf',
+            '.eot': 'application/vnd.ms-fontobject',
+            '.otf': 'font/otf',
+            
+            # Media
+            '.mp3': 'audio/mpeg',
+            '.mp4': 'video/mp4',
+            '.webm': 'video/webm',
+            '.wav': 'audio/wav',
+            '.ogg': 'audio/ogg',
+            
+            # 3D
+            '.glb': 'model/gltf-binary',
+            '.gltf': 'model/gltf+json',
+            
+            # Binary
+            '.bin': 'application/octet-stream',
+            '.data': 'application/octet-stream',
+        }
+        content_type = content_type_map.get(ext, 'application/octet-stream')
+    
+    file_size = os.path.getsize(file_path)
+    file_name = os.path.basename(file_path)
+    
+    print(f"\n✅ SERVING FILE")
+    print(f"   Name: {file_name}")
+    print(f"   Type: {content_type}")
+    print(f"   Size: {file_size:,} bytes ({file_size/(1024*1024):.2f} MB)")
+    print(f"   Demo Type: {demo.file_type.upper()}")
+    
+    # ==========================================
+    # ✅ KEY FIX #3: LMS-SPECIFIC HEADERS
+    # Different cache/security for LMS
+    # ==========================================
+    
+    try:
+        response = FileResponse(
+            open(file_path, 'rb'),
+            content_type=content_type
+        )
+        
+        # Common security headers
+        response['X-Content-Type-Options'] = 'nosniff'
+        response['X-Frame-Options'] = 'SAMEORIGIN'
+        
+        # ===== LMS-SPECIFIC CONFIGURATION =====
+        if demo.file_type == 'lms':
+            print(f"🎓 Applying LMS-specific headers")
+            
+            # CSP for SCORM API
+            response['Content-Security-Policy'] = "frame-ancestors 'self'"
+            
+            if ext in ['.html', '.htm']:
+                # ✅ CRITICAL: NO CACHE for LMS HTML
+                # LMS needs fresh HTML for state management
+                print(f"   ⚠️ NO CACHE (LMS HTML)")
+                response['Cache-Control'] = 'private, no-cache, must-revalidate, max-age=0'
+                response['Pragma'] = 'no-cache'
+                response['Expires'] = '0'
+                
+                # Allow storage for SCORM tracking
+                response['Feature-Policy'] = "storage-access 'self'"
+            else:
+                # Cache assets (images, CSS, JS, fonts)
+                print(f"   ✅ Cache: 24h (asset)")
+                response['Cache-Control'] = 'public, max-age=86400'
+        
+        # ===== WEBGL CONFIGURATION =====
+        elif demo.file_type == 'webgl':
+            print(f"🎮 Applying WebGL headers")
+            
+            if ext in ['.html', '.htm']:
+                # No cache for WebGL HTML
+                print(f"   ⚠️ NO CACHE (WebGL HTML)")
+                response['Cache-Control'] = 'private, no-cache, must-revalidate'
+            elif ext in ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.css', '.js', '.woff', '.woff2', '.ttf']:
+                # Cache assets
+                print(f"   ✅ Cache: 24h (asset)")
+                response['Cache-Control'] = 'public, max-age=86400'
+            else:
+                # Default cache
+                response['Cache-Control'] = 'private, max-age=3600'
+        
+        # ===== OTHER CONTENT =====
+        else:
+            if ext in ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.css', '.js', '.woff', '.woff2']:
+                response['Cache-Control'] = 'public, max-age=86400'
+            else:
+                response['Cache-Control'] = 'private, max-age=3600'
+        
+        # ===== CORS FOR DEVELOPMENT =====
+        if settings.DEBUG:
+            response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Credentials'] = 'true'
+            response['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+            response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+            print(f"   🌐 CORS enabled (DEBUG mode)")
+        
+        print(f"{'='*70}\n")
+        return response
+        
+    except IOError as e:
+        print(f"\n❌ FILE READ ERROR: {e}")
+        print(f"{'='*70}\n")
+        raise Http404("Error reading file")
+        
+    except Exception as e:
+        print(f"\n❌ UNEXPECTED ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        print(f"{'='*70}\n")
+        raise Http404("Error serving file")
+
+
+@login_required
 def demo_detail(request, slug):
     """
     ✅ COMPLETE FIX: Unified demo viewer with proper feedback handling
@@ -277,16 +705,6 @@ def demo_detail(request, slug):
     
     latest_video_demos = latest_video_demos_qs.order_by('-created_at')[:10]
     
-    # Base context
-    context = {
-        'demo': demo,
-        'user_liked': user_liked,
-        'user_feedback': user_feedback,
-        'approved_feedbacks': approved_feedbacks,
-        'latest_video_demos': latest_video_demos,
-        'user_email': request.user.email,
-    }
-    
     # ========================================
     # 🔥 CRITICAL: Get content_url for all file types
     # ========================================
@@ -294,84 +712,163 @@ def demo_detail(request, slug):
     content_url = None
     
     if demo.file_type == 'video':
-        # Video file - direct URL
+        # ✅ VIDEO: Direct file URL
         if demo.video_file:
             content_url = demo.video_file.url
             print(f"✅ Video URL: {content_url}")
     
     elif demo.file_type == 'webgl':
-        # WebGL content
+        # ✅ WEBGL: Use model method first, then fallback
         if hasattr(demo, 'get_webgl_index_url'):
             try:
                 content_url = demo.get_webgl_index_url()
-                print(f"✅ WebGL URL: {content_url}")
+                if content_url:
+                    print(f"✅ WebGL URL (model method): {content_url}")
             except Exception as e:
-                print(f"⚠️ WebGL URL error: {e}")
+                print(f"⚠️ WebGL model method error: {e}")
         
-        # Fallback check
-        if not content_url:
-            import glob
-            extracted_base = os.path.join(settings.MEDIA_ROOT, 'webgl_extracted', f'demo_{slug}')
+        # Fallback: Manual search for index.html
+        if not content_url and demo.extracted_path:
+            extracted_dir = os.path.join(settings.MEDIA_ROOT, demo.extracted_path)
             
-            if os.path.exists(extracted_base):
-                index_files = glob.glob(os.path.join(extracted_base, '**/index.html'), recursive=True)
-                if index_files:
-                    relative_path = os.path.relpath(index_files[0], settings.MEDIA_ROOT)
-                    relative_path = relative_path.replace('\\', '/')
-                    content_url = f"{settings.MEDIA_URL}{relative_path}"
-                    print(f"✅ WebGL fallback URL: {content_url}")
+            if os.path.exists(extracted_dir):
+                # Try common WebGL entry points
+                possible_entries = [
+                    'index.html',
+                    'Index.html',
+                    'build/index.html',
+                    'Build/index.html',
+                    'dist/index.html',
+                ]
+                
+                for entry in possible_entries:
+                    test_path = os.path.join(extracted_dir, entry)
+                    if os.path.exists(test_path):
+                        # Build URL using reverse
+                        try:
+                            from django.urls import reverse
+                            url_path = entry.replace('\\', '/')
+                            content_url = reverse('customers:serve_webgl_file', kwargs={
+                                'slug': demo.slug,
+                                'filepath': url_path
+                            })
+                            print(f"✅ WebGL URL (fallback): {content_url}")
+                            break
+                        except Exception as e:
+                            print(f"❌ Error generating WebGL URL: {e}")
+                
+                # Last resort: Search recursively for any HTML file
+                if not content_url:
+                    import glob
+                    html_files = glob.glob(os.path.join(extracted_dir, '**/*.html'), recursive=True)
+                    if html_files:
+                        # Use first HTML file found
+                        rel_path = os.path.relpath(html_files[0], extracted_dir)
+                        url_path = rel_path.replace('\\', '/')
+                        try:
+                            from django.urls import reverse
+                            content_url = reverse('customers:serve_webgl_file', kwargs={
+                                'slug': demo.slug,
+                                'filepath': url_path
+                            })
+                            print(f"✅ WebGL URL (recursive search): {content_url}")
+                        except Exception as e:
+                            print(f"❌ Error generating WebGL URL: {e}")
     
     elif demo.file_type == 'lms':
-        # LMS content
+        # ✅ LMS/SCORM: Use model method first, then fallback
         if hasattr(demo, 'get_lms_index_url'):
             try:
                 content_url = demo.get_lms_index_url()
-                print(f"✅ LMS URL: {content_url}")
+                if content_url:
+                    print(f"✅ LMS URL (model method): {content_url}")
             except Exception as e:
-                print(f"⚠️ LMS URL error: {e}")
+                print(f"⚠️ LMS model method error: {e}")
         
-        # Fallback check
-        if not content_url:
-            import glob
-            extracted_base = os.path.join(settings.MEDIA_ROOT, 'lms_extracted', f'demo_{slug}')
+        # Fallback: Manual search for LMS entry points
+        if not content_url and demo.extracted_path:
+            extracted_dir = os.path.join(settings.MEDIA_ROOT, demo.extracted_path)
             
-            if os.path.exists(extracted_base):
-                # Try common LMS index file names
-                possible_files = [
+            if os.path.exists(extracted_dir):
+                # Try common LMS/SCORM entry points (in priority order)
+                possible_entries = [
                     'index.html',
-                    'index_lms.html', 
+                    'index_lms.html',
                     'story.html',
-                    'scormdriver/indexAPI.html'
+                    'scormdriver/indexAPI.html',
+                    'res/index.html',
+                    'launch.html',
+                    'start.html',
+                    'index_scorm.html',
                 ]
                 
-                for filename in possible_files:
-                    test_path = os.path.join(extracted_base, filename)
+                for entry in possible_entries:
+                    test_path = os.path.join(extracted_dir, entry)
                     if os.path.exists(test_path):
-                        relative_path = os.path.relpath(test_path, settings.MEDIA_ROOT)
-                        relative_path = relative_path.replace('\\', '/')
-                        content_url = f"{settings.MEDIA_URL}{relative_path}"
-                        print(f"✅ LMS fallback URL: {content_url}")
-                        break
+                        # Build URL using reverse
+                        try:
+                            from django.urls import reverse
+                            url_path = entry.replace('\\', '/')
+                            content_url = reverse('customers:serve_webgl_file', kwargs={
+                                'slug': demo.slug,
+                                'filepath': url_path
+                            })
+                            print(f"✅ LMS URL (fallback): {content_url} [{entry}]")
+                            break
+                        except Exception as e:
+                            print(f"❌ Error generating LMS URL: {e}")
                 
-                # If still not found, search recursively
+                # Last resort: Search recursively for HTML files
                 if not content_url:
-                    index_files = glob.glob(os.path.join(extracted_base, '**/index*.html'), recursive=True)
-                    if index_files:
-                        relative_path = os.path.relpath(index_files[0], settings.MEDIA_ROOT)
-                        relative_path = relative_path.replace('\\', '/')
-                        content_url = f"{settings.MEDIA_URL}{relative_path}"
-                        print(f"✅ LMS recursive search URL: {content_url}")
+                    import glob
+                    html_files = glob.glob(os.path.join(extracted_dir, '**/*.html'), recursive=True)
+                    
+                    if html_files:
+                        # Prioritize files with "index" in name
+                        index_files = [f for f in html_files if 'index' in os.path.basename(f).lower()]
+                        target_file = index_files[0] if index_files else html_files[0]
+                        
+                        rel_path = os.path.relpath(target_file, extracted_dir)
+                        url_path = rel_path.replace('\\', '/')
+                        
+                        try:
+                            from django.urls import reverse
+                            content_url = reverse('customers:serve_webgl_file', kwargs={
+                                'slug': demo.slug,
+                                'filepath': url_path
+                            })
+                            print(f"✅ LMS URL (recursive search): {content_url}")
+                        except Exception as e:
+                            print(f"❌ Error generating LMS URL: {e}")
     
-    context['content_url'] = content_url
+    # Base context
+    context = {
+        'demo': demo,
+        'content_url': content_url,
+        'user_liked': user_liked,
+        'user_feedback': user_feedback,
+        'approved_feedbacks': approved_feedbacks,
+        'latest_video_demos': latest_video_demos,
+        'user_email': request.user.email,
+    }
     
+    # Debug output
     print(f"\n{'='*60}")
     print(f"📊 Demo Detail Context")
     print(f"{'='*60}")
     print(f"Demo: {demo.title}")
     print(f"Type: {demo.file_type}")
+    print(f"Slug: {demo.slug}")
+    print(f"Extracted Path: {demo.extracted_path if hasattr(demo, 'extracted_path') else 'N/A'}")
     print(f"Content URL: {content_url}")
-    print(f"User Feedback: {user_feedback}")
+    print(f"User Liked: {user_liked}")
+    print(f"User Feedback: {'Yes' if user_feedback else 'No'}")
     print(f"{'='*60}\n")
+    
+    # Warning if no content URL found
+    if not content_url:
+        print(f"⚠️ WARNING: No content URL generated for {demo.file_type} demo: {demo.title}")
+        messages.warning(request, f"Content may not be available for this demo.")
     
     return render(request, 'customers/demo_detail.html', context)
 
@@ -496,125 +993,6 @@ def webgl_viewer(request, slug):
     }
     
     return render(request, 'customers/webgl_viewer.html', context)
-
-@login_required
-def serve_webgl_file(request, slug, filepath):
-    """
-    ✅ Serve WebGL/LMS files with proper MIME types and caching
-    Works for both WebGL and LMS content
-    """
-    
-    demo = get_object_or_404(Demo, slug=slug, is_active=True)
-    
-    # Check if it's WebGL or LMS
-    if demo.file_type == 'webgl':
-        base_folder = 'webgl_extracted'
-    elif demo.file_type == 'lms':
-        base_folder = 'lms_extracted'
-    else:
-        raise Http404("Invalid file type")
-    
-    # Normalize filepath
-    filepath_normalized = filepath.replace('/', os.sep)
-    
-    # Build full file path
-    if demo.extracted_path:
-        full_path = os.path.join(settings.MEDIA_ROOT, demo.extracted_path, filepath_normalized)
-    else:
-        full_path = os.path.join(settings.MEDIA_ROOT, base_folder, f'demo_{slug}', filepath_normalized)
-    
-    # Verify file exists
-    if not os.path.isfile(full_path):
-        print(f"❌ File not found: {full_path}")
-        raise Http404(f"File not found: {filepath}")
-    
-    # Security check
-    real_path = os.path.realpath(full_path)
-    base_path = os.path.realpath(settings.MEDIA_ROOT)
-    if not real_path.startswith(base_path):
-        print(f"❌ Security violation: Path outside media root")
-        raise Http404("Invalid file path")
-    
-    # Determine content type
-    content_type = None
-    
-    if filepath.endswith('.js'):
-        content_type = 'application/javascript; charset=utf-8'
-    elif filepath.endswith('.wasm'):
-        content_type = 'application/wasm'
-    elif filepath.endswith('.data'):
-        content_type = 'application/octet-stream'
-    elif filepath.endswith(('.html', '.htm')):
-        content_type = 'text/html; charset=utf-8'
-    elif filepath.endswith('.json'):
-        content_type = 'application/json; charset=utf-8'
-    elif filepath.endswith('.css'):
-        content_type = 'text/css; charset=utf-8'
-    elif filepath.endswith(('.jpg', '.jpeg')):
-        content_type = 'image/jpeg'
-    elif filepath.endswith('.png'):
-        content_type = 'image/png'
-    elif filepath.endswith('.svg'):
-        content_type = 'image/svg+xml'
-    elif filepath.endswith('.ico'):
-        content_type = 'image/x-icon'
-    elif filepath.endswith('.mp4'):
-        content_type = 'video/mp4'
-    elif filepath.endswith('.xml'):
-        content_type = 'application/xml; charset=utf-8'
-    else:
-        content_type, _ = mimetypes.guess_type(full_path)
-        if not content_type:
-            content_type = 'application/octet-stream'
-    
-    # Read file
-    try:
-        with open(full_path, 'rb') as f:
-            file_content = f.read()
-        
-        # ✅ Inject base tag for HTML files
-        if filepath.endswith(('.html', '.htm')):
-            try:
-                html_content = file_content.decode('utf-8')
-                html_dir = os.path.dirname(filepath).replace('\\', '/')
-                
-                if demo.file_type == 'webgl':
-                    if html_dir:
-                        base_url = f"/customer/demos/{slug}/webgl-content/{html_dir}/"
-                    else:
-                        base_url = f"/customer/demos/{slug}/webgl-content/"
-                else:  # LMS
-                    if html_dir:
-                        base_url = f"/customer/demos/{slug}/lms-content/{html_dir}/"
-                    else:
-                        base_url = f"/customer/demos/{slug}/lms-content/"
-                
-                base_tag = f'<base href="{base_url}">'
-                
-                if '<head>' in html_content:
-                    html_content = html_content.replace('<head>', f'<head>\n    {base_tag}', 1)
-                elif '<HEAD>' in html_content:
-                    html_content = html_content.replace('<HEAD>', f'<HEAD>\n    {base_tag}', 1)
-                
-                file_content = html_content.encode('utf-8')
-            except Exception as e:
-                print(f"⚠️ Error injecting base tag: {e}")
-        
-        response = HttpResponse(file_content, content_type=content_type)
-        
-        # ✅ Strong caching headers
-        response['Cache-Control'] = 'public, max-age=31536000, immutable'
-        response['Access-Control-Allow-Origin'] = '*'
-        response['X-Content-Type-Options'] = 'nosniff'
-        
-        return response
-        
-    except Exception as e:
-        print(f"❌ Error serving file: {e}")
-        import traceback
-        traceback.print_exc()
-        raise Http404("Error serving file")
-
 
 
 @login_required

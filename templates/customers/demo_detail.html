@@ -6,7 +6,7 @@
 {% block customer_extra_css %}
 <style>
     /* ==========================================
-       COMPLETE DEMO VIEWER - WORKING
+       COMPLETE DEMO VIEWER - ALL FORMATS
        ========================================== */
     
     :root {
@@ -71,10 +71,11 @@
     .content-wrapper {
         position: relative;
         width: 100%;
-        padding-bottom: 56.25%;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
         background: #000;
     }
     
+    /* ✅ IMPROVED: Better iframe handling for all content types */
     .content-wrapper video,
     .content-wrapper iframe {
         position: absolute;
@@ -84,6 +85,11 @@
         height: 100%;
         border: none;
         background: #000;
+    }
+    
+    /* ✅ NEW: LMS-specific styling */
+    .content-wrapper iframe.lms-content {
+        background: #fff;
     }
     
     .watermark {
@@ -128,6 +134,10 @@
         text-transform: uppercase;
     }
     
+    .file-badge.video { background: #ef4444; }
+    .file-badge.webgl { background: #10b981; }
+    .file-badge.lms { background: #f59e0b; }
+    
     /* CONTROLS BAR */
     .controls-bar {
         background: linear-gradient(to bottom, #1a1a1a, #0a0a0a);
@@ -155,6 +165,11 @@
     .control-btn:hover {
         background: rgba(255,255,255,0.2);
         transform: translateY(-1px);
+    }
+    
+    .control-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
     
     .control-info {
@@ -219,6 +234,73 @@
         background: white;
         border-radius: 50%;
         cursor: pointer;
+    }
+    
+    /* ✅ NEW: Loading state */
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.8);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        z-index: 5;
+    }
+    
+    .loading-overlay i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .loading-overlay.hidden {
+        display: none;
+    }
+    
+    /* ✅ NEW: Error state */
+    .error-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(239, 68, 68, 0.95);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        padding: 2rem;
+        text-align: center;
+        z-index: 5;
+    }
+    
+    .error-overlay.show {
+        display: flex;
+    }
+    
+    .error-overlay i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .error-overlay h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.5rem;
+    }
+    
+    .error-overlay p {
+        margin: 0;
+        opacity: 0.9;
     }
     
     /* DEMO INFO */
@@ -454,15 +536,6 @@
     .toast.error { border-left: 4px solid var(--danger); }
     .toast i { font-size: 1.25rem; }
     
-    .loading {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: white;
-        font-size: 0.875rem;
-    }
-    
     /* RESPONSIVE */
     @media (max-width: 768px) {
         .demo-container { padding: 1rem; }
@@ -494,34 +567,82 @@
         </ol>
     </nav>
     
+    <!-- ✅ IMPROVED: Content Player with better error handling -->
     <div class="content-player">
         <div class="content-wrapper">
             
             {% if demo.file_type == 'video' and demo.video_file %}
-                <video id="demoVideo" controlslist="nodownload" disablepictureinpicture oncontextmenu="return false;">
+                <!-- VIDEO PLAYER -->
+                <video id="demoVideo" 
+                       controlslist="nodownload" 
+                       disablepictureinpicture 
+                       oncontextmenu="return false;">
                     <source src="{{ demo.video_file.url }}" type="video/mp4">
+                    Your browser does not support video playback.
                 </video>
+                
             {% elif demo.file_type == 'webgl' and content_url %}
-                <iframe id="demoContent" src="{{ content_url }}" sandbox="allow-scripts allow-same-origin allow-pointer-lock" allowfullscreen></iframe>
+                <!-- WEBGL CONTENT -->
+                <iframe id="demoContent" 
+                        src="{{ content_url }}" 
+                        class="webgl-content"
+                        sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-forms" 
+                        allowfullscreen
+                        loading="eager"></iframe>
+                
             {% elif demo.file_type == 'lms' and content_url %}
-                <iframe id="demoContent" src="{{ content_url }}" sandbox="allow-scripts allow-same-origin allow-forms" allowfullscreen></iframe>
+                <!-- ✅ LMS/SCORM CONTENT - FIXED SANDBOX ATTRIBUTES -->
+                <iframe id="demoContent" 
+                        src="{{ content_url }}" 
+                        class="lms-content"
+                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-top-navigation-by-user-activation" 
+                        allowfullscreen
+                        loading="eager"></iframe>
+                
             {% else %}
-                <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+                <!-- ERROR STATE -->
+                <div class="error-overlay show">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Content Not Available</h3>
+                    <p>{{ demo.get_file_type_display }} content could not be loaded.</p>
+                </div>
             {% endif %}
             
+            <!-- ✅ LOADING OVERLAY -->
+            <div class="loading-overlay" id="loadingOverlay">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading {{ demo.get_file_type_display }}...</p>
+            </div>
+            
+            <!-- ✅ ERROR OVERLAY -->
+            <div class="error-overlay" id="errorOverlay">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Failed to Load</h3>
+                <p id="errorMessage">An error occurred while loading the content.</p>
+            </div>
+            
+            <!-- WATERMARK -->
             <div class="watermark">{{ request.user.email }}</div>
+            
+            <!-- TIMESTAMP -->
             <div class="timestamp" id="timestamp"></div>
-            {% comment %} <div class="file-badge">
+            
+            <!-- ✅ FILE BADGE - IMPROVED -->
+            <div class="file-badge {{ demo.file_type }}">
                 {% if demo.file_type == 'video' %}VIDEO
                 {% elif demo.file_type == 'webgl' %}WEBGL 3D
                 {% elif demo.file_type == 'lms' %}LMS COURSE
                 {% else %}DEMO{% endif %}
-            </div> {% endcomment %}
+            </div>
         </div>
         
+        <!-- ✅ IMPROVED: Controls Bar -->
         <div class="controls-bar">
             {% if demo.file_type == 'video' %}
-                <button class="control-btn" id="playBtn" title="Play/Pause"><i class="fas fa-play"></i></button>
+                <!-- VIDEO CONTROLS -->
+                <button class="control-btn" id="playBtn" title="Play/Pause">
+                    <i class="fas fa-play"></i>
+                </button>
                 <div class="progress-container">
                     <span class="time-display" id="currentTime">0:00</span>
                     <div class="progress-track" id="progressTrack">
@@ -530,34 +651,65 @@
                     <span class="time-display" id="totalTime">0:00</span>
                 </div>
                 <div class="volume-container">
-                    <button class="control-btn" id="volumeBtn" title="Mute"><i class="fas fa-volume-up"></i></button>
+                    <button class="control-btn" id="volumeBtn" title="Mute">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
                     <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="100">
                 </div>
+                
             {% else %}
-                <button class="control-btn" id="reloadBtn" title="Reload"><i class="fas fa-redo"></i></button>
+                <!-- WEBGL / LMS CONTROLS -->
+                <button class="control-btn" id="reloadBtn" title="Reload Content">
+                    <i class="fas fa-redo"></i>
+                </button>
                 <div class="control-info">
                     <i class="fas fa-{% if demo.file_type == 'webgl' %}cube{% else %}graduation-cap{% endif %}"></i>
-                    {% if demo.file_type == 'webgl' %}Interactive 3D{% else %}Learning Content{% endif %}
+                    <span>
+                        {% if demo.file_type == 'webgl' %}Interactive 3D Experience
+                        {% else %}Interactive Learning Module{% endif %}
+                    </span>
                 </div>
             {% endif %}
-            <button class="control-btn" id="fullscreenBtn" title="Fullscreen (F)"><i class="fas fa-expand"></i></button>
+            
+            <!-- FULLSCREEN BUTTON (ALL TYPES) -->
+            <button class="control-btn" id="fullscreenBtn" title="Fullscreen (F)">
+                <i class="fas fa-expand"></i>
+            </button>
         </div>
     </div>
     
+    <!-- DEMO INFO -->
     <div class="demo-info">
         <h1 class="demo-title">{{ demo.title }}</h1>
         
         <div class="demo-meta">
-            <span class="meta-item"><i class="fas fa-eye"></i> <span>{{ demo.views_count }} views</span></span>
-            <span class="meta-item"><i class="fas fa-star"></i> <span id="likesCount">{{ demo.likes_count }}</span> likes</span>
-            {% if demo.duration %}<span class="meta-item"><i class="fas fa-clock"></i> <span>{{ demo.duration }} min</span></span>{% endif %}
-            <span class="meta-item"><i class="fas fa-calendar"></i> <span>{{ demo.created_at|date:"M d, Y" }}</span></span>
+            <span class="meta-item">
+                <i class="fas fa-eye"></i> 
+                <span>{{ demo.views_count }} views</span>
+            </span>
+            <span class="meta-item">
+                <i class="fas fa-star"></i> 
+                <span id="likesCount">{{ demo.likes_count }}</span> likes
+            </span>
+            {% if demo.duration %}
+            <span class="meta-item">
+                <i class="fas fa-clock"></i> 
+                <span>{{ demo.formatted_duration }}</span>
+            </span>
+            {% endif %}
+            <span class="meta-item">
+                <i class="fas fa-calendar"></i> 
+                <span>{{ demo.created_at|date:"M d, Y" }}</span>
+            </span>
+            <span class="meta-item">
+                <i class="fas fa-{% if demo.file_type == 'video' %}video{% elif demo.file_type == 'webgl' %}cube{% else %}graduation-cap{% endif %}"></i>
+                <span>{{ demo.get_file_type_display }}</span>
+            </span>
         </div>
         
         <div class="demo-description">{{ demo.description|linebreaks }}</div>
         
         <div class="demo-actions">
-            {# ✅ FIXED: Direct URL construction without Django reverse #}
             <button class="btn btn-outline {% if user_liked %}liked{% endif %}" 
                     id="likeBtn" 
                     data-demo-id="{{ demo.id }}"
@@ -571,11 +723,16 @@
         </div>
     </div>
     
+    <!-- FEEDBACK SECTION -->
     <div class="feedback-section">
-        <h2 class="section-title"><i class="fas fa-comment-dots"></i> Share Your Feedback</h2>
+        <h2 class="section-title">
+            <i class="fas fa-comment-dots"></i> Share Your Feedback
+        </h2>
         
         {% if user_feedback %}
-            <div class="alert alert-success"><i class="fas fa-check-circle"></i> Thank you for your feedback!</div>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> Thank you for your feedback!
+            </div>
         {% else %}
             <form class="feedback-form" id="feedbackForm">
                 {% csrf_token %}
@@ -587,7 +744,10 @@
                     <span class="star" data-rating="5">★</span>
                 </div>
                 <input type="hidden" name="rating" id="ratingInput">
-                <textarea name="feedback" id="feedbackText" placeholder="Share your thoughts..." required></textarea>
+                <textarea name="feedback" 
+                          id="feedbackText" 
+                          placeholder="Share your thoughts about this {{ demo.get_file_type_display|lower }}..." 
+                          required></textarea>
                 <button type="submit" class="btn btn-primary" style="margin-top:1rem">
                     <i class="fas fa-paper-plane"></i> Submit Feedback
                 </button>
@@ -600,7 +760,9 @@
                 {% for feedback in approved_feedbacks %}
                     <div class="feedback-item">
                         <div class="feedback-header">
-                            <span class="feedback-author">{{ feedback.user.first_name }} {{ feedback.user.last_name|first }}.</span>
+                            <span class="feedback-author">
+                                {{ feedback.user.first_name }} {{ feedback.user.last_name|first }}.
+                            </span>
                             <span class="feedback-date">{{ feedback.created_at|date:"M d, Y" }}</span>
                         </div>
                         {% if feedback.rating %}
@@ -625,7 +787,13 @@
 
 {% block customer_extra_js %}
 <script>
-// CSRF TOKEN
+console.log('🎬 Demo Viewer Initializing...');
+console.log('📂 File Type:', '{{ demo.file_type }}');
+console.log('🔗 Content URL:', '{{ content_url|default:"None" }}');
+
+// ==========================================
+// ✅ CSRF TOKEN
+// ==========================================
 function getCsrfToken() {
     const name = 'csrftoken';
     let cookieValue = null;
@@ -646,15 +814,80 @@ function getCsrfToken() {
     return cookieValue;
 }
 
-// TIMESTAMP
+// ==========================================
+// ✅ TIMESTAMP
+// ==========================================
 function updateTimestamp() {
     const el = document.getElementById('timestamp');
-    if (el) el.textContent = new Date().toLocaleTimeString();
+    if (el) {
+        const now = new Date();
+        el.textContent = now.toLocaleTimeString();
+    }
 }
 updateTimestamp();
 setInterval(updateTimestamp, 1000);
 
-// VIDEO CONTROLS
+// ==========================================
+// ✅ CONTENT LOADING HANDLER
+// ==========================================
+const loadingOverlay = document.getElementById('loadingOverlay');
+const errorOverlay = document.getElementById('errorOverlay');
+const demoContent = document.getElementById('demoContent');
+const demoVideo = document.getElementById('demoVideo');
+
+// Hide loading after content loads
+if (demoContent) {
+    console.log('📱 iframe detected: {{ demo.get_file_type_display }}');
+    
+    // Show loading initially
+    if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+    
+    demoContent.addEventListener('load', function() {
+        console.log('✅ iframe loaded successfully');
+        if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    });
+    
+    demoContent.addEventListener('error', function() {
+        console.error('❌ iframe failed to load');
+        if (loadingOverlay) loadingOverlay.classList.add('hidden');
+        if (errorOverlay) {
+            errorOverlay.classList.add('show');
+            document.getElementById('errorMessage').textContent = 
+                'Failed to load {{ demo.get_file_type_display }} content. Please try refreshing the page.';
+        }
+    });
+    
+    // Timeout fallback (hide loading after 10 seconds)
+    setTimeout(() => {
+        if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
+            console.log('⏱️ Loading timeout - hiding overlay');
+            loadingOverlay.classList.add('hidden');
+        }
+    }, 10000);
+}
+
+if (demoVideo) {
+    console.log('🎥 Video player detected');
+    
+    demoVideo.addEventListener('loadeddata', function() {
+        console.log('✅ Video loaded successfully');
+        if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    });
+    
+    demoVideo.addEventListener('error', function() {
+        console.error('❌ Video failed to load');
+        if (loadingOverlay) loadingOverlay.classList.add('hidden');
+        if (errorOverlay) {
+            errorOverlay.classList.add('show');
+            document.getElementById('errorMessage').textContent = 
+                'Failed to load video. Please check your connection and try again.';
+        }
+    });
+}
+
+// ==========================================
+// ✅ VIDEO CONTROLS
+// ==========================================
 {% if demo.file_type == 'video' %}
 const video = document.getElementById('demoVideo');
 const playBtn = document.getElementById('playBtn');
@@ -675,6 +908,15 @@ if (playBtn && video) {
             playBtn.innerHTML = '<i class="fas fa-play"></i>';
         }
     });
+    
+    // Auto-update play button on video state change
+    video.addEventListener('play', () => {
+        playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+    });
+    
+    video.addEventListener('pause', () => {
+        playBtn.innerHTML = '<i class="fas fa-play"></i>';
+    });
 }
 
 if (video && progressBar) {
@@ -683,6 +925,7 @@ if (video && progressBar) {
         progressBar.style.width = progress + '%';
         if (currentTimeEl) currentTimeEl.textContent = formatTime(video.currentTime);
     });
+    
     video.addEventListener('loadedmetadata', () => {
         if (totalTimeEl) totalTimeEl.textContent = formatTime(video.duration);
     });
@@ -701,6 +944,7 @@ if (volumeBtn && video) {
         if (video.muted) {
             video.muted = false;
             volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            if (volumeSlider) volumeSlider.value = video.volume * 100;
         } else {
             video.muted = true;
             volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
@@ -711,29 +955,45 @@ if (volumeBtn && video) {
 if (volumeSlider && video) {
     volumeSlider.addEventListener('input', (e) => {
         video.volume = e.target.value / 100;
-    });
-}
-
-function formatTime(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return mins + ':' + (secs < 10 ? '0' : '') + secs;
-}
-{% endif %}
-
-// RELOAD BUTTON
-const reloadBtn = document.getElementById('reloadBtn');
-if (reloadBtn) {
-    reloadBtn.addEventListener('click', () => {
-        const iframe = document.getElementById('demoContent');
-        if (iframe) {
-            iframe.src = iframe.src;
-            showToast('Content reloaded', 'success');
+        video.muted = false;
+        if (volumeBtn) {
+            volumeBtn.innerHTML = video.volume > 0 ? 
+                '<i class="fas fa-volume-up"></i>' : 
+                '<i class="fas fa-volume-mute"></i>';
         }
     });
 }
 
-// FULLSCREEN
+function formatTime(seconds) {
+    if (isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return mins + ':' + (secs < 10 ? '0' : '') + secs;
+}
+
+console.log('✅ Video controls initialized');
+{% endif %}
+
+// ==========================================
+// ✅ RELOAD BUTTON (WebGL/LMS)
+// ==========================================
+const reloadBtn = document.getElementById('reloadBtn');
+if (reloadBtn) {
+    reloadBtn.addEventListener('click', () => {
+        console.log('🔄 Reloading content...');
+        const iframe = document.getElementById('demoContent');
+        if (iframe) {
+            if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+            iframe.src = iframe.src; // Force reload
+            showToast('Content reloading...', 'success');
+        }
+    });
+    console.log('✅ Reload button initialized');
+}
+
+// ==========================================
+// ✅ FULLSCREEN CONTROL
+// ==========================================
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 if (fullscreenBtn) {
     fullscreenBtn.addEventListener('click', () => {
@@ -743,20 +1003,39 @@ if (fullscreenBtn) {
                 document.exitFullscreen();
                 fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
             } else {
-                player.requestFullscreen().catch(err => console.error(err));
-                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                player.requestFullscreen()
+                    .then(() => {
+                        fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                    })
+                    .catch(err => {
+                        console.error('Fullscreen error:', err);
+                        showToast('Fullscreen not supported', 'error');
+                    });
             }
         }
     });
+    
+    // Listen for fullscreen changes
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+            fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+        }
+    });
+    
+    console.log('✅ Fullscreen controls initialized');
 }
 
+// Keyboard shortcut for fullscreen
 document.addEventListener('keydown', (e) => {
     if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
         if (fullscreenBtn) fullscreenBtn.click();
     }
 });
 
-// RATING STARS
+// ==========================================
+// ✅ RATING STARS
+// ==========================================
 const stars = document.querySelectorAll('.star');
 const ratingInput = document.getElementById('ratingInput');
 
@@ -764,6 +1043,7 @@ stars.forEach(star => {
     star.addEventListener('click', function() {
         const rating = this.dataset.rating;
         if (ratingInput) ratingInput.value = rating;
+        
         stars.forEach((s, index) => {
             if (index < rating) {
                 s.classList.add('active');
@@ -772,6 +1052,7 @@ stars.forEach(star => {
             }
         });
     });
+    
     star.addEventListener('mouseenter', function() {
         const rating = this.dataset.rating;
         stars.forEach((s, index) => {
@@ -791,15 +1072,15 @@ if (ratingStars) {
 }
 
 // ==========================================
-// ✅ LIKE BUTTON - FIXED WITH DIRECT URL
+// ✅ LIKE BUTTON
 // ==========================================
 const likeBtn = document.getElementById('likeBtn');
 
 if (likeBtn) {
     const demoId = likeBtn.dataset.demoId;
-    const likeUrl = `/customer/demos/${demoId}/like/`; // ✅ Direct URL
+    const likeUrl = `/customer/demos/${demoId}/like/`;
     
-    console.log('🎯 Like button initialized');
+    console.log('💖 Like button initialized');
     console.log('📍 Demo ID:', demoId);
     console.log('🔗 Like URL:', likeUrl);
     
@@ -813,9 +1094,6 @@ if (likeBtn) {
             showToast('Security error. Please refresh.', 'error');
             return;
         }
-        
-        console.log('✅ CSRF token found');
-        console.log('📤 Sending POST to:', likeUrl);
         
         likeBtn.disabled = true;
         likeBtn.style.opacity = '0.6';
@@ -835,7 +1113,7 @@ if (likeBtn) {
             if (!response.ok) {
                 return response.text().then(text => {
                     console.error('❌ Response error:', text);
-                    throw new Error(`HTTP ${response.status}: ${text.substring(0, 100)}`);
+                    throw new Error(`HTTP ${response.status}`);
                 });
             }
             
@@ -854,15 +1132,15 @@ if (likeBtn) {
             
             if (data.liked) {
                 this.classList.add('liked');
-                showToast('✅ Demo liked! Check Liked Videos page.', 'success');
+                showToast('✅ Added to Liked Videos!', 'success');
             } else {
                 this.classList.remove('liked');
-                showToast('Like removed', 'success');
+                showToast('Removed from liked videos', 'success');
             }
         })
         .catch(err => {
             console.error('❌ Error:', err);
-            showToast(`Failed: ${err.message}`, 'error');
+            showToast(`Failed to like: ${err.message}`, 'error');
         })
         .finally(() => {
             likeBtn.disabled = false;
@@ -871,7 +1149,9 @@ if (likeBtn) {
     });
 }
 
-// FEEDBACK FORM
+// ==========================================
+// ✅ FEEDBACK FORM
+// ==========================================
 const feedbackForm = document.getElementById('feedbackForm');
 if (feedbackForm) {
     feedbackForm.addEventListener('submit', function(e) {
@@ -906,7 +1186,8 @@ if (feedbackForm) {
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             credentials: 'same-origin',
             body: JSON.stringify({
@@ -917,10 +1198,10 @@ if (feedbackForm) {
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                showToast(data.message || 'Feedback submitted!', 'success');
+                showToast(data.message || 'Feedback submitted successfully!', 'success');
                 setTimeout(() => location.reload(), 1500);
             } else {
-                showToast(data.error || 'Failed', 'error');
+                showToast(data.error || 'Failed to submit feedback', 'error');
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Feedback';
@@ -928,7 +1209,7 @@ if (feedbackForm) {
             }
         })
         .catch(err => {
-            console.error(err);
+            console.error('Feedback error:', err);
             showToast('Failed to submit. Please try again.', 'error');
             if (submitBtn) {
                 submitBtn.disabled = false;
@@ -936,13 +1217,17 @@ if (feedbackForm) {
             }
         });
     });
+    
+    console.log('✅ Feedback form initialized');
 }
 
-// TOAST
+// ==========================================
+// ✅ TOAST NOTIFICATIONS
+// ==========================================
 function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');
     if (!container) {
-        alert(message);
+        console.warn('Toast container not found');
         return;
     }
     
@@ -961,15 +1246,21 @@ function showToast(message, type = 'success') {
     }, 4000);
 }
 
-// SECURITY
+// ==========================================
+// ✅ SECURITY MEASURES
+// ==========================================
 document.addEventListener('contextmenu', e => e.preventDefault());
+
 document.addEventListener('keydown', e => {
-    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C'))) {
+    // Prevent F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+    if (e.key === 'F12' || 
+        (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key))) {
         e.preventDefault();
         return false;
     }
 });
 
-console.log('✅ Demo viewer initialized');
+console.log('✅ Security measures active');
+console.log('✅ Demo viewer fully initialized');
 </script>
 {% endblock %}

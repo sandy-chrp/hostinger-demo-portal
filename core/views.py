@@ -1628,27 +1628,42 @@ def admin_add_demo_view(request):
 
 
 @login_required
+@user_passes_test(is_admin)
 def admin_edit_demo_view(request, demo_id):
     """
-    Admin view to edit existing demo - 3 file types
+    Admin view to edit existing demo - Supports video, webgl, and lms file types
     """
     demo = get_object_or_404(Demo, id=demo_id)
     
     if request.method == 'POST':
         try:
-            # Update basic fields
-            demo.title = request.POST.get('title')
-            demo.description = request.POST.get('description')
-            demo.file_type = request.POST.get('file_type')
+            print(f"\n{'='*60}")
+            print(f"📝 EDITING DEMO: {demo.title} (ID: {demo.id})")
+            print(f"{'='*60}")
+            
+            # Debug: Print all POST data
+            print(f"📦 POST Keys: {list(request.POST.keys())}")
+            print(f"📁 FILES Keys: {list(request.FILES.keys())}")
+            
+            # ===== UPDATE BASIC FIELDS =====
+            demo.title = request.POST.get('title', '').strip()
+            demo.description = request.POST.get('description', '').strip()
             demo.is_featured = request.POST.get('is_featured') == 'on'
             demo.is_active = request.POST.get('is_active') == 'on'
             
-            # Validate file type
-            if demo.file_type not in ['video', 'webgl', 'lms']:
-                messages.error(request, 'Invalid file type selected.')
-                return redirect('core:admin_edit_demo', demo_id=demo_id)
+            print(f"✏️ Title: {demo.title}")
+            print(f"✏️ Featured: {demo.is_featured}")
+            print(f"✏️ Active: {demo.is_active}")
             
-            # Handle file updates
+            # Validate required fields
+            if not demo.title or not demo.description:
+                messages.error(request, '❌ Title and description are required.')
+                return redirect('core:admin_demo_detail', demo_id=demo_id)
+            
+            # ===== HANDLE FILE UPDATES =====
+            file_updated = False
+            
+            # Map file types to field names
             file_field_mapping = {
                 'video': 'video_file',
                 'webgl': 'webgl_file',
@@ -1659,97 +1674,138 @@ def admin_edit_demo_view(request, demo_id):
             new_demo_file = request.FILES.get(file_field_name)
             
             if new_demo_file:
-                # Delete old file
-                if demo.file_type == 'video' and demo.video_file:
-                    demo.video_file.delete(save=False)
-                    demo.video_file = new_demo_file
-                elif demo.file_type == 'webgl' and demo.webgl_file:
-                    demo.webgl_file.delete(save=False)
-                    demo.webgl_file = new_demo_file
-                elif demo.file_type == 'lms' and demo.lms_file:
-                    demo.lms_file.delete(save=False)
-                    demo.lms_file = new_demo_file
+                print(f"📤 New {demo.file_type} file uploaded: {new_demo_file.name}")
+                print(f"📏 File size: {formatFileSize(new_demo_file.size)}")
                 
-                # Update file size
-                demo.file_size = new_demo_file.size
+                # Validate file size
+                is_valid, error_msg = validate_file_size(new_demo_file, demo.file_type)
+                if not is_valid:
+                    messages.error(request, f'❌ {error_msg}')
+                    return redirect('core:admin_demo_detail', demo_id=demo_id)
+                
+                # Delete old file
+                try:
+                    if demo.file_type == 'video' and demo.video_file:
+                        old_file_path = demo.video_file.path
+                        demo.video_file.delete(save=False)
+                        print(f"🗑️ Deleted old video file: {old_file_path}")
+                        demo.video_file = new_demo_file
+                        
+                    elif demo.file_type == 'webgl' and demo.webgl_file:
+                        old_file_path = demo.webgl_file.path
+                        demo.webgl_file.delete(save=False)
+                        print(f"🗑️ Deleted old WebGL file: {old_file_path}")
+                        demo.webgl_file = new_demo_file
+                        
+                    elif demo.file_type == 'lms' and demo.lms_file:
+                        old_file_path = demo.lms_file.path
+                        demo.lms_file.delete(save=False)
+                        print(f"🗑️ Deleted old LMS file: {old_file_path}")
+                        demo.lms_file = new_demo_file
+                    
+                    # Update file size
+                    demo.file_size = new_demo_file.size
+                    file_updated = True
+                    
+                except Exception as e:
+                    print(f"⚠️ Error deleting old file: {e}")
+                    # Continue anyway - assign new file
+                    if demo.file_type == 'video':
+                        demo.video_file = new_demo_file
+                    elif demo.file_type == 'webgl':
+                        demo.webgl_file = new_demo_file
+                    elif demo.file_type == 'lms':
+                        demo.lms_file = new_demo_file
+                    
+                    demo.file_size = new_demo_file.size
+                    file_updated = True
             
-            # Handle thumbnail update
+            # ===== HANDLE THUMBNAIL UPDATE =====
             new_thumbnail = request.FILES.get('thumbnail')
             if new_thumbnail:
+                print(f"🖼️ New thumbnail uploaded: {new_thumbnail.name}")
+                
+                # Validate thumbnail size
+                is_valid, error_msg = validate_file_size(new_thumbnail, 'thumbnail')
+                if not is_valid:
+                    messages.error(request, f'❌ {error_msg}')
+                    return redirect('core:admin_demo_detail', demo_id=demo_id)
+                
+                # Delete old thumbnail
                 if demo.thumbnail:
-                    demo.thumbnail.delete(save=False)
+                    try:
+                        demo.thumbnail.delete(save=False)
+                        print(f"🗑️ Deleted old thumbnail")
+                    except Exception as e:
+                        print(f"⚠️ Error deleting old thumbnail: {e}")
+                
                 demo.thumbnail = new_thumbnail
             
-            # Save demo
-            demo.save()
+            # ===== SAVE DEMO =====
+            if file_updated and new_demo_file and new_demo_file.size > 10 * 1024 * 1024:
+                print(f"⏳ Large file - saving with skip_extraction")
+                demo.save(skip_extraction=True)
+            else:
+                demo.save()
             
-            # Update business categories
+            print(f"✅ Demo saved successfully")
+            
+            # ===== UPDATE BUSINESS CATEGORIES =====
             all_business_categories = request.POST.get('allBusinessCategoriesCheckbox')
+            
             if all_business_categories:
+                print(f"🌐 Available to ALL business categories")
                 demo.target_business_categories.clear()
                 demo.target_business_subcategories.clear()
             else:
                 selected_categories = request.POST.getlist('target_business_categories')
-                demo.target_business_categories.set(selected_categories)
-                
                 selected_subcategories = request.POST.getlist('target_business_subcategories')
+                
+                print(f"🏢 Selected categories: {len(selected_categories)}")
+                print(f"📁 Selected subcategories: {len(selected_subcategories)}")
+                
+                demo.target_business_categories.set(selected_categories)
                 demo.target_business_subcategories.set(selected_subcategories)
             
-            # Update customers
+            # ===== UPDATE TARGET CUSTOMERS =====
             all_customers = request.POST.get('allCustomersCheckbox')
+            
             if all_customers:
+                print(f"👥 Available to ALL customers")
                 demo.target_customers.clear()
             else:
                 selected_customers = request.POST.getlist('target_customers')
+                print(f"👤 Selected customers: {len(selected_customers)}")
                 demo.target_customers.set(selected_customers)
             
-            messages.success(request, f'Demo "{demo.title}" updated successfully!')
+            print(f"{'='*60}")
+            print(f"✅ DEMO UPDATE COMPLETE")
+            print(f"{'='*60}\n")
+            
+            messages.success(request, f'✅ Demo "{demo.title}" updated successfully!')
             return redirect('core:admin_demos')
             
         except Exception as e:
-            messages.error(request, f'Error updating demo: {str(e)}')
-            print(f"Error in admin_edit_demo_view: {e}")
+            print(f"\n{'='*60}")
+            print(f"❌ ERROR UPDATING DEMO")
+            print(f"{'='*60}")
+            print(f"Error: {e}")
             import traceback
             traceback.print_exc()
-            return redirect('core:admin_edit_demo', demo_id=demo_id)
+            print(f"{'='*60}\n")
+            
+            messages.error(request, f'❌ Error updating demo: {str(e)}')
+            return redirect('core:admin_demo_detail', demo_id=demo_id)
     
-    # GET request
-    business_categories = BusinessCategory.objects.prefetch_related('subcategories').all()
-    customers = CustomUser.objects.filter(
-        user_type='customer',
-        is_active=True
-    ).order_by('first_name', 'last_name')
-    
-    context = {
-        'demo': demo,
-        'business_categories': business_categories,
-        'customers': customers,
-        'form_data': {
-            'title': demo.title,
-            'description': demo.description,
-            'file_type': demo.file_type,
-            'is_featured': demo.is_featured,
-            'is_active': demo.is_active,
-            'all_business_categories': demo.is_for_all_business_categories,
-            'selected_business_categories': list(demo.target_business_categories.values_list('id', flat=True)),
-            'selected_business_subcategories': list(demo.target_business_subcategories.values_list('id', flat=True)),
-            'selected_customers': list(demo.target_customers.values_list('id', flat=True)),
-        }
-    }
-    
-    return render(request, 'admin/demos/edit.html', context)
-
-@login_required
-def admin_demo_detail_view(request, demo_id):
-    """View and edit demo details"""
-    
-    demo = get_object_or_404(Demo, id=demo_id)
+    # ===== GET REQUEST - SHOW FORM =====
     
     # Get all business categories with subcategories
-    business_categories = BusinessCategory.objects.prefetch_related('subcategories').all()
+    business_categories = BusinessCategory.objects.prefetch_related('subcategories').filter(is_active=True).order_by('name')
     
     # Get all approved customers
     customers = CustomUser.objects.filter(
+        user_type='customer',
+        is_active=True,
         is_approved=True
     ).order_by('first_name', 'last_name')
     
@@ -1768,33 +1824,43 @@ def admin_demo_detail_view(request, demo_id):
         if demo.target_business_subcategories.exists():
             query |= Q(business_subcategory__in=demo.target_business_subcategories.all())
         total_accessible_customers = CustomUser.objects.filter(
-            is_approved=True
+            is_approved=True,
+            is_active=True
         ).filter(query).distinct().count()
     else:
         total_accessible_customers = CustomUser.objects.filter(
-            is_approved=True
+            is_approved=True,
+            is_active=True,
+            user_type='customer'
         ).count()
     
     # Get recent activity
     recent_views = demo.demo_views.select_related('user').order_by('-viewed_at')[:5] if hasattr(demo, 'demo_views') else []
     recent_requests = demo.demo_requests.select_related('user').order_by('-created_at')[:5] if hasattr(demo, 'demo_requests') else []
     
-    # Initialize form data
+    # Prepare form data
     form_data = {
         'title': demo.title,
         'description': demo.description,
+        'file_type': demo.file_type,
         'is_featured': demo.is_featured,
         'is_active': demo.is_active,
-        'all_business_categories': not demo.target_business_categories.exists(),
+        'all_business_categories': not demo.target_business_categories.exists() and not demo.target_business_subcategories.exists(),
         'selected_business_categories': [str(cat.id) for cat in demo.target_business_categories.all()],
         'selected_business_subcategories': [str(sub.id) for sub in demo.target_business_subcategories.all()],
         'selected_customers': [str(cust.id) for cust in demo.target_customers.all()],
     }
     
-    # Handle POST request (form submission)
-    if request.method == 'POST':
-        # ... your existing POST handling code ...
-        pass
+    # Sidebar context
+    pending_approvals = User.objects.filter(
+        is_approved=False, 
+        is_active=True,
+        is_staff=False,
+        is_superuser=False
+    ).count()
+    
+    open_enquiries = BusinessEnquiry.objects.filter(status='open').count()
+    demo_requests_pending = DemoRequest.objects.filter(status='pending').count()
     
     context = {
         'demo': demo,
@@ -1811,6 +1877,216 @@ def admin_demo_detail_view(request, demo_id):
         # Recent activity
         'recent_views': recent_views,
         'recent_requests': recent_requests,
+        
+        # Sidebar badges
+        'pending_approvals': pending_approvals,
+        'open_enquiries': open_enquiries,
+        'demo_requests_pending': demo_requests_pending,
+    }
+    
+    return render(request, 'admin/demos/detail.html', context)
+
+
+def formatFileSize(size):
+    """Helper function to format file size"""
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if size < 1024.0:
+            return f"{size:.2f} {unit}"
+        size /= 1024.0
+    return f"{size:.2f} TB"
+
+@login_required
+def admin_demo_detail_view(request, demo_id):
+    """View and edit demo details - COMBINED VIEW"""
+    
+    demo = get_object_or_404(Demo, id=demo_id)
+    
+    # ===== HANDLE POST (FORM SUBMISSION) =====
+    if request.method == 'POST':
+        try:
+            print(f"\n{'='*60}")
+            print(f"📝 EDITING DEMO: {demo.title} (ID: {demo.id})")
+            print(f"{'='*60}")
+            
+            # Debug
+            print(f"📦 POST Keys: {list(request.POST.keys())}")
+            print(f"📁 FILES Keys: {list(request.FILES.keys())}")
+            
+            # Update basic fields
+            demo.title = request.POST.get('title', '').strip()
+            demo.description = request.POST.get('description', '').strip()
+            demo.is_featured = request.POST.get('is_featured') == 'on'
+            demo.is_active = request.POST.get('is_active') == 'on'
+            
+            # Validate
+            if not demo.title or not demo.description:
+                messages.error(request, '❌ Title and description are required.')
+                return redirect('core:admin_demo_detail', demo_id=demo_id)
+            
+            # Handle file updates
+            file_field_mapping = {
+                'video': 'video_file',
+                'webgl': 'webgl_file',
+                'lms': 'lms_file'
+            }
+            
+            file_field_name = file_field_mapping.get(demo.file_type)
+            new_demo_file = request.FILES.get(file_field_name)
+            
+            if new_demo_file:
+                print(f"📤 New {demo.file_type} file: {new_demo_file.name}")
+                
+                # Validate file size
+                is_valid, error_msg = validate_file_size(new_demo_file, demo.file_type)
+                if not is_valid:
+                    messages.error(request, f'❌ {error_msg}')
+                    return redirect('core:admin_demo_detail', demo_id=demo_id)
+                
+                # Delete old & assign new
+                try:
+                    if demo.file_type == 'video' and demo.video_file:
+                        demo.video_file.delete(save=False)
+                        demo.video_file = new_demo_file
+                    elif demo.file_type == 'webgl' and demo.webgl_file:
+                        demo.webgl_file.delete(save=False)
+                        demo.webgl_file = new_demo_file
+                    elif demo.file_type == 'lms' and demo.lms_file:
+                        demo.lms_file.delete(save=False)
+                        demo.lms_file = new_demo_file
+                    
+                    demo.file_size = new_demo_file.size
+                except Exception as e:
+                    print(f"⚠️ Error with old file: {e}")
+                    # Assign anyway
+                    if demo.file_type == 'video':
+                        demo.video_file = new_demo_file
+                    elif demo.file_type == 'webgl':
+                        demo.webgl_file = new_demo_file
+                    elif demo.file_type == 'lms':
+                        demo.lms_file = new_demo_file
+                    demo.file_size = new_demo_file.size
+            
+            # Handle thumbnail
+            new_thumbnail = request.FILES.get('thumbnail')
+            if new_thumbnail:
+                print(f"🖼️ New thumbnail: {new_thumbnail.name}")
+                
+                is_valid, error_msg = validate_file_size(new_thumbnail, 'thumbnail')
+                if not is_valid:
+                    messages.error(request, f'❌ {error_msg}')
+                    return redirect('core:admin_demo_detail', demo_id=demo_id)
+                
+                if demo.thumbnail:
+                    try:
+                        demo.thumbnail.delete(save=False)
+                    except:
+                        pass
+                
+                demo.thumbnail = new_thumbnail
+            
+            # Save demo
+            if new_demo_file and new_demo_file.size > 10 * 1024 * 1024:
+                demo.save(skip_extraction=True)
+            else:
+                demo.save()
+            
+            print(f"✅ Demo saved")
+            
+            # Update categories
+            all_business_categories = request.POST.get('allBusinessCategoriesCheckbox')
+            
+            if all_business_categories:
+                demo.target_business_categories.clear()
+                demo.target_business_subcategories.clear()
+            else:
+                selected_categories = request.POST.getlist('target_business_categories')
+                selected_subcategories = request.POST.getlist('target_business_subcategories')
+                
+                demo.target_business_categories.set(selected_categories)
+                demo.target_business_subcategories.set(selected_subcategories)
+            
+            # Update customers
+            all_customers = request.POST.get('allCustomersCheckbox')
+            
+            if all_customers:
+                demo.target_customers.clear()
+            else:
+                selected_customers = request.POST.getlist('target_customers')
+                demo.target_customers.set(selected_customers)
+            
+            print(f"{'='*60}\n")
+            
+            messages.success(request, f'✅ Demo "{demo.title}" updated successfully!')
+            return redirect('core:admin_demos')
+            
+        except Exception as e:
+            print(f"\n❌ ERROR: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            messages.error(request, f'❌ Error: {str(e)}')
+            return redirect('core:admin_demo_detail', demo_id=demo_id)
+    
+    # ===== GET REQUEST - SHOW FORM =====
+    
+    # Get data for form
+    business_categories = BusinessCategory.objects.prefetch_related('subcategories').filter(is_active=True).order_by('name')
+    customers = CustomUser.objects.filter(user_type='customer', is_active=True, is_approved=True).order_by('first_name', 'last_name')
+    
+    # Stats
+    total_views = demo.demo_views.count() if hasattr(demo, 'demo_views') else 0
+    total_likes = demo.demo_likes.count() if hasattr(demo, 'demo_likes') else 0
+    total_requests = demo.demo_requests.count() if hasattr(demo, 'demo_requests') else 0
+    
+    # Accessible customers
+    if demo.target_customers.exists():
+        total_accessible_customers = demo.target_customers.count()
+    elif demo.target_business_categories.exists() or demo.target_business_subcategories.exists():
+        query = Q()
+        if demo.target_business_categories.exists():
+            query |= Q(business_category__in=demo.target_business_categories.all())
+        if demo.target_business_subcategories.exists():
+            query |= Q(business_subcategory__in=demo.target_business_subcategories.all())
+        total_accessible_customers = CustomUser.objects.filter(is_approved=True, is_active=True).filter(query).distinct().count()
+    else:
+        total_accessible_customers = CustomUser.objects.filter(is_approved=True, is_active=True, user_type='customer').count()
+    
+    # Recent activity
+    recent_views = demo.demo_views.select_related('user').order_by('-viewed_at')[:5] if hasattr(demo, 'demo_views') else []
+    recent_requests = demo.demo_requests.select_related('user').order_by('-created_at')[:5] if hasattr(demo, 'demo_requests') else []
+    
+    # Form data
+    form_data = {
+        'title': demo.title,
+        'description': demo.description,
+        'file_type': demo.file_type,
+        'is_featured': demo.is_featured,
+        'is_active': demo.is_active,
+        'all_business_categories': not demo.target_business_categories.exists() and not demo.target_business_subcategories.exists(),
+        'selected_business_categories': [str(cat.id) for cat in demo.target_business_categories.all()],
+        'selected_business_subcategories': [str(sub.id) for sub in demo.target_business_subcategories.all()],
+        'selected_customers': [str(cust.id) for cust in demo.target_customers.all()],
+    }
+    
+    # Sidebar
+    pending_approvals = User.objects.filter(is_approved=False, is_active=True, is_staff=False, is_superuser=False).count()
+    open_enquiries = BusinessEnquiry.objects.filter(status='open').count()
+    demo_requests_pending = DemoRequest.objects.filter(status='pending').count()
+    
+    context = {
+        'demo': demo,
+        'business_categories': business_categories,
+        'customers': customers,
+        'form_data': form_data,
+        'total_views': total_views,
+        'total_likes': total_likes,
+        'total_requests': total_requests,
+        'total_accessible_customers': total_accessible_customers,
+        'recent_views': recent_views,
+        'recent_requests': recent_requests,
+        'pending_approvals': pending_approvals,
+        'open_enquiries': open_enquiries,
+        'demo_requests_pending': demo_requests_pending,
     }
     
     return render(request, 'admin/demos/detail.html', context)
