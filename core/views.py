@@ -1473,6 +1473,8 @@ def admin_demos_view(request):
         'total_views': Demo.objects.aggregate(total=Sum('views_count'))['total'] or 0,
         'video_count': Demo.objects.filter(file_type='video').count(),
         'webgl_count': Demo.objects.filter(file_type='webgl').count(),
+        'lms_count': Demo.objects.filter(file_type='lms').count(), 
+
     }
     
     # Sidebar context

@@ -281,11 +281,12 @@
             </div>
             <div class="col-6 col-md-3">
                 <label style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; display: block;">File Type</label>
-                <select class="form-select" name="file_type" onchange="this.form.submit()" style="font-size: 0.75rem; height: 38px;">
-                    <option value="">All Types</option>
-                    <option value="video" {% if file_type_filter == 'video' %}selected{% endif %}>Video</option>
-                    <option value="webgl" {% if file_type_filter == 'webgl' %}selected{% endif %}>WebGL</option>
-                </select>
+             <select class="form-select" name="file_type" onchange="this.form.submit()" style="font-size: 0.75rem; height: 38px;">
+                <option value="">All Types</option>
+                <option value="video" {% if file_type_filter == 'video' %}selected{% endif %}>Video</option>
+                <option value="webgl" {% if file_type_filter == 'webgl' %}selected{% endif %}>WebGL</option>
+                <option value="lms" {% if file_type_filter == 'lms' %}selected{% endif %}>LMS/SCORM</option>
+            </select>
             </div>
             <div class="col-6 col-md-3">
                 <label style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; display: block;">Business Category</label>
@@ -412,21 +413,29 @@
                                 </td>
                                 <td style="padding: 0.65rem 0.5rem;">
                                     <div style="display: flex; gap: 0.25rem; justify-content: center; flex-wrap: nowrap;">
-                                        {% if user|has_permission:'view_demos' %}
+                                   {% if user|has_permission:'view_demos' %}
                                             {% if demo.file_type == 'webgl' %}
                                                 <a href="{% url 'core:admin_webgl_preview' demo.id %}" 
-                                                   class="btn btn-sm btn-outline-info btn-hover" 
-                                                   title="Preview"
-                                                   target="_blank"
-                                                   style="padding: 0.25rem 0.4rem; font-size: 0.65rem;">
+                                                class="btn btn-sm btn-outline-info btn-hover" 
+                                                title="Preview WebGL"
+                                                target="_blank"
+                                                style="padding: 0.25rem 0.4rem; font-size: 0.65rem;">
                                                     <i class="fas fa-cube"></i>
+                                                </a>
+                                            {% elif demo.file_type == 'lms' %}
+                                                <a href="{% url 'core:admin_lms_preview' demo.id %}" 
+                                                class="btn btn-sm btn-outline-success btn-hover" 
+                                                title="Preview LMS"
+                                                target="_blank"
+                                                style="padding: 0.25rem 0.4rem; font-size: 0.65rem;">
+                                                    <i class="fas fa-graduation-cap"></i>
                                                 </a>
                                             {% else %}
                                                 <a href="{% url 'core:admin_demo_watch' demo.id %}" 
-                                                   class="btn btn-sm btn-outline-info btn-hover" 
-                                                   title="Watch"
-                                                   target="_blank"
-                                                   style="padding: 0.25rem 0.4rem; font-size: 0.65rem;">
+                                                class="btn btn-sm btn-outline-info btn-hover" 
+                                                title="Watch Video"
+                                                target="_blank"
+                                                style="padding: 0.25rem 0.4rem; font-size: 0.65rem;">
                                                     <i class="fas fa-play"></i>
                                                 </a>
                                             {% endif %}
@@ -551,16 +560,23 @@
                     {% if user|has_permission:'view_demos' %}
                         {% if demo.file_type == 'webgl' %}
                             <a href="{% url 'core:admin_webgl_preview' demo.id %}" 
-                               class="btn btn-sm btn-info btn-hover" 
-                               target="_blank"
-                               style="flex: 1; min-width: 90px; font-size: 0.7rem;">
+                            class="btn btn-sm btn-info btn-hover" 
+                            target="_blank"
+                            style="flex: 1; min-width: 90px; font-size: 0.7rem;">
                                 <i class="fas fa-cube me-1"></i>Preview
+                            </a>
+                        {% elif demo.file_type == 'lms' %}
+                            <a href="{% url 'core:admin_lms_preview' demo.id %}" 
+                            class="btn btn-sm btn-success btn-hover" 
+                            target="_blank"
+                            style="flex: 1; min-width: 90px; font-size: 0.7rem;">
+                                <i class="fas fa-graduation-cap me-1"></i>Preview LMS
                             </a>
                         {% else %}
                             <a href="{% url 'core:admin_demo_watch' demo.id %}" 
-                               class="btn btn-sm btn-info btn-hover" 
-                               target="_blank"
-                               style="flex: 1; min-width: 90px; font-size: 0.7rem;">
+                            class="btn btn-sm btn-info btn-hover" 
+                            target="_blank"
+                            style="flex: 1; min-width: 90px; font-size: 0.7rem;">
                                 <i class="fas fa-play me-1"></i>Watch
                             </a>
                         {% endif %}

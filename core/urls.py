@@ -14,6 +14,7 @@ from notifications.models import Notification
 
 # Import WebGL views
 from . import webgl_views
+from . import lms_views
 
 app_name = 'core'
 
@@ -89,14 +90,21 @@ urlpatterns = [
           webgl_views.webgl_extraction_progress,
           name='webgl_extraction_progress'),
 
-#     path('admin/universal-preview/<int:demo_id>/', 
-#          webgl_views.admin_universal_preview, 
-#          name='admin_universal_preview'),
-    
-    # Customer Universal Viewer
-#     path('demo/view/<int:demo_id>/', 
-#          webgl_views.universal_viewer, 
-#          name='universal_viewer'),
+     path('admin/lms-preview/<int:demo_id>/', 
+          lms_views.lms_preview, 
+          name='admin_lms_preview'),
+     
+     path('api/lms/extraction-progress/<int:demo_id>/',
+          lms_views.lms_extraction_progress,
+          name='lms_extraction_progress'),
+     
+     path('admin/lms-info/<int:demo_id>/', 
+          lms_views.lms_file_info, 
+          name='lms_file_info'),
+
+     path('demo/lms/<slug:slug>/<path:filepath>', 
+          lms_views.serve_lms_file, 
+          name='serve_lms_file'),     
     
     # ✅ CRITICAL: Serve WebGL Extracted Files (slug + filepath)
      path('demo/webgl/<slug:slug>/<path:filepath>', 

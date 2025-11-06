@@ -1,0 +1,225 @@
+<!-- templates/admin/demos/extraction_error.html -->
+{% extends 'admin/base.html' %}
+
+{% block admin_title %}LMS Extraction Error{% endblock %}
+{% block page_title %}LMS Content Error{% endblock %}
+
+{% block breadcrumb %}
+<div class="admin-breadcrumb">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:admin_dashboard' %}">
+                    <i class="fas fa-home me-1"></i>Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:admin_demos' %}">Demo Content</a>
+            </li>
+            <li class="breadcrumb-item active">Error</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block admin_extra_css %}
+<style>
+    .error-container {
+        background: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 3rem 2rem;
+        text-align: center;
+        max-width: 600px;
+        margin: 2rem auto;
+    }
+
+    .error-icon {
+        font-size: 4rem;
+        color: #ef4444;
+        margin-bottom: 1.5rem;
+    }
+
+    .error-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 1rem;
+    }
+
+    .error-message {
+        font-size: 0.95rem;
+        color: #6b7280;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .demo-info-box {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+        text-align: left;
+    }
+
+    .demo-info-title {
+        font-size: 0.75rem;
+        color: #991b1b;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+    }
+
+    .demo-info-item {
+        font-size: 0.875rem;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+
+    .demo-info-item strong {
+        font-weight: 600;
+    }
+
+    .help-box {
+        background: #f9fafb;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: left;
+    }
+
+    .help-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .help-list {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin: 0;
+        padding-left: 1.5rem;
+        line-height: 1.8;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-action-primary {
+        background: #10b981;
+        color: white;
+        border: none;
+    }
+
+    .btn-action-primary:hover {
+        background: #059669;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-action-secondary {
+        background: #f8fafc;
+        color: #1f2937;
+        border: 1px solid #e2e8f0;
+    }
+
+    .btn-action-secondary:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        color: #1f2937;
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="error-container">
+    <!-- Error Icon -->
+    <div class="error-icon">
+        <i class="fas fa-exclamation-circle"></i>
+    </div>
+    
+    <!-- Error Title -->
+    <h2 class="error-title">
+        LMS Content Extraction Failed
+    </h2>
+    
+    <!-- Error Message -->
+    <p class="error-message">
+        {{ error }}
+    </p>
+    
+    <!-- Demo Info -->
+    <div class="demo-info-box">
+        <div class="demo-info-title">Demo Information</div>
+        <div class="demo-info-item">
+            <strong>Title:</strong> {{ demo.title }}
+        </div>
+        <div class="demo-info-item">
+            <strong>ID:</strong> #{{ demo.id }}
+        </div>
+        <div class="demo-info-item">
+            <strong>Slug:</strong> {{ demo.slug }}
+        </div>
+    </div>
+    
+    <!-- Help Box -->
+    <div class="help-box">
+        <div class="help-title">
+            <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+            Common Issues:
+        </div>
+        <ul class="help-list">
+            <li>Invalid or corrupted ZIP file</li>
+            <li>Missing SCORM manifest (imsmanifest.xml)</li>
+            <li>No index.html or story.html entry point</li>
+            <li>Package not properly structured</li>
+            <li>File permissions issue on server</li>
+        </ul>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{% url 'core:admin_demo_detail' demo.id %}" class="btn-action btn-action-primary">
+            <i class="fas fa-edit"></i>
+            Edit Demo & Re-upload
+        </a>
+        <a href="{% url 'core:admin_demos' %}" class="btn-action btn-action-secondary">
+            <i class="fas fa-arrow-left"></i>
+            Back to Demos
+        </a>
+        <button onclick="location.reload()" class="btn-action btn-action-secondary">
+            <i class="fas fa-sync-alt"></i>
+            Retry Extraction
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+console.log('❌ LMS Extraction Error');
+console.log('Error:', '{{ error|escapejs }}');
+</script>
+{% endblock %}

@@ -1,22 +1,22 @@
+<!-- templates/admin/demos/webgl_preview.html -->
 {% extends 'admin/base.html' %}
 
 {% block admin_title %}{{ demo.title }} - WebGL Preview{% endblock %}
-{% block page_title %}{{ demo.title }} - WebGL Preview{% endblock %}
+{% block page_title %}WebGL Preview{% endblock %}
 
 {% block breadcrumb %}
 <div class="admin-breadcrumb">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item">
-                <a href="{% url 'core:admin_dashboard' %}"><i class="fas fa-home me-1"></i>Dashboard</a>
+                <a href="{% url 'core:admin_dashboard' %}">
+                    <i class="fas fa-home me-1"></i>Dashboard
+                </a>
             </li>
             <li class="breadcrumb-item">
-                <a href="{% url 'core:admin_demos' %}">Demos</a>
+                <a href="{% url 'core:admin_demos' %}">Demo Content</a>
             </li>
-            <li class="breadcrumb-item">
-                <a href="{% url 'core:admin_demo_detail' demo.id %}">{{ demo.title }}</a>
-            </li>
-            <li class="breadcrumb-item active">WebGL Preview</li>
+            <li class="breadcrumb-item active">{{ demo.title }}</li>
         </ol>
     </nav>
 </div>
@@ -24,317 +24,570 @@
 
 {% block header_actions %}
 <div class="d-flex align-items-center gap-2">
-    <a href="{% url 'core:admin_demo_detail' demo.id %}" class="btn btn-outline-secondary btn-sm">
+    <a href="{% url 'core:admin_demos' %}" class="btn btn-outline-secondary btn-sm">
         <i class="fas fa-arrow-left me-1"></i>Back
     </a>
-    <button class="btn btn-outline-primary btn-sm" id="fullscreenBtn" onclick="toggleFullscreen()">
-        <i class="fas fa-expand me-2" id="fullscreenIcon"></i>
-        <span id="fullscreenText">Fullscreen</span>
-    </button>
+    <a href="{% url 'core:admin_demo_detail' demo.id %}" class="btn btn-primary btn-sm">
+        <i class="fas fa-edit me-1"></i>Edit
+    </a>
 </div>
 {% endblock %}
 
 {% block admin_extra_css %}
 <style>
-    .admin-main-content { padding: 0 !important; }
-    
+    /* WebGL Container */
     .webgl-container {
-        position: fixed;
-        top: var(--admin-header-height);
-        left: var(--admin-sidebar-width);
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-        z-index: 1;
+        background: #000;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+        aspect-ratio: 16/9;
     }
-    
-    .admin-sidebar.collapsed ~ .admin-content .webgl-container {
-        left: var(--admin-sidebar-collapsed);
-    }
-    
+
     .webgl-iframe {
         width: 100%;
         height: 100%;
         border: none;
         display: block;
-        opacity: 0;
-        transition: opacity 0.5s ease;
+        background: #1a1a1a;
     }
-    
-    .webgl-iframe.loaded {
-        opacity: 1;
+
+    .webgl-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        color: rgba(255, 255, 255, 0.7);
+        background: linear-gradient(135deg, #1e40af, #3b82f6);
     }
-    
+
+    /* Loading Overlay */
     .loading-overlay {
         position: absolute;
         top: 0;
         left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
+        width: 100%;
+        height: 100%;
+        background: rgba(30, 64, 175, 0.95);
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 100;
-        transition: opacity 0.5s ease;
+        z-index: 10;
     }
-    
+
     .loading-overlay.hidden {
-        opacity: 0;
-        pointer-events: none;
+        display: none;
     }
-    
-    .loading-content {
-        text-align: center;
-        color: white;
-        max-width: 500px;
-        padding: 40px;
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 20px;
-        backdrop-filter: blur(10px);
-    }
-    
+
     .spinner {
-        width: 80px;
-        height: 80px;
-        border: 8px solid rgba(255,255,255,0.2);
-        border-top-color: white;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3b82f6;
         border-radius: 50%;
+        width: 50px;
+        height: 50px;
         animation: spin 1s linear infinite;
-        margin: 0 auto 30px;
     }
-    
+
     @keyframes spin {
-        to { transform: rotate(360deg); }
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
-    
-    .loading-title {
+
+    /* WebGL Info Box */
+    .webgl-info-box {
+        background: white;
+        padding: 1.25rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .webgl-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.75rem;
+    }
+
+    .webgl-description {
+        color: #4b5563;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .admin-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(59, 130, 246, 0.95);
+        color: white;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+        z-index: 10;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Stats Cards */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-mini {
+        background: white;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        border-left: 3px solid;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .stat-mini:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-mini.views { border-left-color: #087fc2; }
+    .stat-mini.likes { border-left-color: #ef4444; }
+    .stat-mini.requests { border-left-color: #f59e0b; }
+    .stat-mini.type { border-left-color: #3b82f6; }
+
+    .stat-mini-number {
         font-size: 1.5rem;
         font-weight: 700;
-        margin-bottom: 15px;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
     }
-    
-    .loading-text {
-        font-size: 1rem;
-        opacity: 0.9;
-        margin-bottom: 20px;
+
+    .stat-mini-label {
+        color: #6b7280;
+        font-size: 0.8rem;
+        font-weight: 500;
     }
-    
-    .progress-bar-container {
-        width: 100%;
-        height: 6px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 3px;
-        margin-top: 20px;
+
+    /* Category & Subcategory Badges */
+    .category-badge {
+        display: inline-block;
+        padding: 0.25rem 0.625rem;
+        background: rgba(8, 127, 194, 0.1);
+        color: #087fc2;
+        border: 1px solid rgba(8, 127, 194, 0.3);
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-right: 0.375rem;
+        margin-bottom: 0.375rem;
+    }
+
+    .subcategory-badge {
+        display: inline-block;
+        padding: 0.25rem 0.625rem;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-right: 0.375rem;
+        margin-bottom: 0.375rem;
+    }
+
+    .all-categories-text {
+        font-size: 0.875rem;
+        color: #9ca3af;
+        font-style: italic;
+    }
+
+    /* Info Section */
+    .info-section {
+        background: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
         overflow: hidden;
     }
-    
-    .progress-bar-fill {
-        height: 100%;
-        background: white;
-        border-radius: 3px;
-        transition: width 0.3s ease;
-        width: 0%;
+
+    .info-header {
+        padding: 1rem 1.25rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid #e2e8f0;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease;
     }
-    
-    .progress-percentage {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin-top: 15px;
-        color: #4ade80;
+
+    .info-header:hover {
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
     }
-    
-    @media (max-width: 1024px) {
-        .webgl-container { left: 0; }
+
+    .info-header-title {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-header-icon {
+        color: #3b82f6;
+        transition: transform 0.3s ease;
+    }
+
+    .info-header.collapsed .info-header-icon {
+        transform: rotate(-90deg);
+    }
+
+    .info-body {
+        padding: 1.25rem;
+        max-height: 1000px;
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+
+    .info-body.collapsed {
+        max-height: 0;
+        padding: 0 1.25rem;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.625rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-weight: 500;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 0.875rem;
+        text-align: right;
+    }
+
+    .info-value.categories-display {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.25rem;
+        max-width: 60%;
+    }
+
+    /* Action Buttons */
+    .action-btn {
+        padding: 0.625rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    .action-btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .action-btn-primary:hover {
+        background: #2563eb;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+    }
+
+    .action-btn-secondary {
+        background: #f8fafc;
+        color: #1f2937;
+        border: 1px solid #e2e8f0;
+    }
+
+    .action-btn-secondary:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        color: #1f2937;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .webgl-title {
+            font-size: 1.1rem;
+        }
+
+        .info-item {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .info-value {
+            text-align: left;
+        }
+
+        .info-value.categories-display {
+            justify-content: flex-start;
+            max-width: 100%;
+        }
     }
 </style>
 {% endblock %}
 
 {% block admin_content %}
-<div class="webgl-container">
-    <!-- Simple Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-content">
-            <div class="spinner"></div>
-            <h4 class="loading-title">
-                <i class="fas fa-cube me-2"></i>
-                Loading WebGL Content
-            </h4>
-            <p class="loading-text" id="loadingText">
-                Preparing {{ demo.title }}...
-            </p>
-            <div class="progress-percentage" id="progressPercent">0%</div>
-            <div class="progress-bar-container">
-                <div class="progress-bar-fill" id="progressBar"></div>
+<div class="row">
+    <!-- Left Column - WebGL Content -->
+    <div class="col-lg-8">
+        <div class="webgl-container">
+            <div class="admin-badge">
+                <i class="fas fa-shield-alt me-1"></i>Admin Preview
+            </div>
+            
+            <div class="loading-overlay" id="loadingOverlay">
+                <div style="text-align: center; color: white;">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 1rem; font-weight: 500;">Loading WebGL Content...</p>
+                </div>
+            </div>
+            
+            {% if webgl_url %}
+                <iframe 
+                    id="webglFrame"
+                    class="webgl-iframe" 
+                    src="{{ webgl_url }}"
+                    allowfullscreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    onload="hideLoading()">
+                </iframe>
+            {% else %}
+                <div class="webgl-placeholder">
+                    <i class="fas fa-cube fa-3x mb-3" style="opacity: 0.4;"></i>
+                    <h5 style="margin-bottom: 0.5rem;">No WebGL Content</h5>
+                    <p style="margin: 0; opacity: 0.7; font-size: 0.9rem;">Upload a WebGL file to preview</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- WebGL Title & Description -->
+        <div class="webgl-info-box">
+            <h4 class="webgl-title">{{ demo.title }}</h4>
+            <p class="webgl-description">{{ demo.description|default:"No description provided." }}</p>
+        </div>
+
+        <!-- Stats Below -->
+        <div class="stats-row">
+            <div class="stat-mini views">
+                <div class="stat-mini-number">{{ demo.views_count }}</div>
+                <div class="stat-mini-label">Views</div>
+            </div>
+            
+            <div class="stat-mini likes">
+                <div class="stat-mini-number">{{ demo.likes_count }}</div>
+                <div class="stat-mini-label">Likes</div>
+            </div>
+            
+            <div class="stat-mini requests">
+                <div class="stat-mini-number">{{ demo_requests_count|default:0 }}</div>
+                <div class="stat-mini-label">Requests</div>
+            </div>
+            
+            <div class="stat-mini type">
+                <div class="stat-mini-number"><i class="fas fa-cube"></i></div>
+                <div class="stat-mini-label">WebGL</div>
             </div>
         </div>
     </div>
-    
-    <!-- WebGL Iframe -->
-    {% if demo.get_webgl_index_url %}
-        <iframe 
-            id="webglFrame"
-            class="webgl-iframe" 
-            src="{% url 'core:serve_webgl_file' slug=demo.slug filepath='index.html' %}"
-            allowfullscreen
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; xr-spatial-tracking"
-            sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads"
-            onload="onIframeLoad()">
-        </iframe>
-    {% endif %}
+
+    <!-- Right Column - Info & Actions -->
+    <div class="col-lg-4">
+
+        <!-- Demo Information -->
+        <div class="info-section">
+            <div class="info-header" onclick="toggleSection('demoInfo')">
+                <div class="info-header-title">
+                    <i class="fas fa-info-circle"></i>
+                    Demo Information
+                </div>
+                <i class="fas fa-chevron-down info-header-icon" id="demoInfoIcon"></i>
+            </div>
+            <div class="info-body" id="demoInfo">
+                <div class="info-item">
+                    <span class="info-label">Demo ID</span>
+                    <span class="info-value">#{{ demo.id }}</span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Business Categories</span>
+                    <span class="info-value categories-display">
+                        {% if business_categories %}
+                            {% for category in business_categories %}
+                                <span class="category-badge">{{ category.name }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="all-categories-text">All Categories</span>
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Subcategories</span>
+                    <span class="info-value categories-display">
+                        {% if business_subcategories %}
+                            {% for subcategory in business_subcategories %}
+                                <span class="subcategory-badge" title="{{ subcategory.category.name }}">
+                                    {{ subcategory.name }}
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="all-categories-text">All Subcategories</span>
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Created</span>
+                    <span class="info-value">{{ demo.created_at|date:"M d, Y" }}</span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Updated</span>
+                    <span class="info-value">{{ demo.updated_at|date:"M d, Y" }}</span>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Created By</span>
+                    <span class="info-value">{{ demo.created_by.full_name|default:"System" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="info-section">
+            <div class="info-header" onclick="toggleSection('quickActions')">
+                <div class="info-header-title">
+                    <i class="fas fa-bolt"></i>
+                    Quick Actions
+                </div>
+                <i class="fas fa-chevron-down info-header-icon" id="quickActionsIcon"></i>
+            </div>
+            <div class="info-body" id="quickActions">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'core:admin_demo_detail' demo.id %}" class="action-btn action-btn-primary">
+                        <i class="fas fa-edit"></i>Edit Demo
+                    </a>
+                    <button class="action-btn action-btn-secondary" onclick="reloadWebGL()">
+                        <i class="fas fa-sync-alt"></i>Reload Content
+                    </button>
+                    <button class="action-btn action-btn-secondary" onclick="openFullscreen()">
+                        <i class="fas fa-expand"></i>Fullscreen
+                    </button>
+                    <button class="action-btn action-btn-secondary" onclick="copyDemoLink()">
+                        <i class="fas fa-link"></i>Copy Customer Link
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block admin_extra_js %}
 <script>
-const DEMO_ID = {{ demo.id }};
-const loadStartTime = Date.now();
-let progressValue = 0;
-let progressInterval = null;
-let iframeLoaded = false;
-let apiAvailable = false;
-
-// ✅ Check if API available
-async function checkAPI() {
-    try {
-        const response = await fetch(`/api/webgl/extraction-progress/${DEMO_ID}/`);
-        if (response.ok) {
-            apiAvailable = true;
-            console.log('✅ Progress API available');
-            pollProgress();
-        } else {
-            console.log('⚠️ Progress API not available, using fallback');
-            simulateProgress();
-        }
-    } catch (error) {
-        console.log('⚠️ Progress API failed, using fallback');
-        simulateProgress();
-    }
-}
-
-// ✅ Real progress polling (if API available)
-async function pollProgress() {
-    try {
-        const response = await fetch(`/api/webgl/extraction-progress/${DEMO_ID}/`);
-        const data = await response.json();
-        
-        updateProgress(data.percent, data.message || 'Loading...');
-        
-        if (data.stage !== 'complete' && data.percent < 100) {
-            setTimeout(pollProgress, 500);
-        } else if (iframeLoaded) {
-            setTimeout(hideLoading, 500);
-        }
-    } catch (error) {
-        console.error('Poll error:', error);
-        if (iframeLoaded) {
-            hideLoading();
-        }
-    }
-}
-
-// ✅ Fallback: Simulate progress (if API not available)
-function simulateProgress() {
-    progressInterval = setInterval(() => {
-        if (progressValue < 90) {
-            progressValue += Math.random() * 10 + 5;
-            progressValue = Math.min(progressValue, 90);
-            updateProgress(progressValue, 'Loading...');
-        }
-        
-        if (iframeLoaded && progressValue >= 90) {
-            progressValue = 100;
-            updateProgress(100, 'Complete!');
-            clearInterval(progressInterval);
-            setTimeout(hideLoading, 500);
-        }
-    }, 300);
-}
-
-// ✅ Update progress UI
-function updateProgress(percent, message) {
-    progressValue = percent;
-    document.getElementById('progressBar').style.width = `${percent}%`;
-    document.getElementById('progressPercent').textContent = `${Math.round(percent)}%`;
-    document.getElementById('loadingText').textContent = message;
-}
-
-// ✅ Hide loading overlay
+// Hide loading overlay
 function hideLoading() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    console.log('✅ WebGL Content Loaded');
+}
+
+// Collapsible sections
+function toggleSection(sectionId) {
+    const body = document.getElementById(sectionId);
+    const header = body.previousElementSibling;
+    const icon = document.getElementById(sectionId + 'Icon');
+    
+    body.classList.toggle('collapsed');
+    header.classList.toggle('collapsed');
+}
+
+// Reload WebGL
+function reloadWebGL() {
+    const frame = document.getElementById('webglFrame');
     const overlay = document.getElementById('loadingOverlay');
-    const iframe = document.getElementById('webglFrame');
     
-    if (overlay) {
-        overlay.classList.add('hidden');
-    }
-    
-    if (iframe) {
-        iframe.classList.add('loaded');
-    }
-    
-    if (progressInterval) {
-        clearInterval(progressInterval);
-    }
-    
-    const loadTime = ((Date.now() - loadStartTime) / 1000).toFixed(1);
-    console.log(`✅ WebGL loaded in ${loadTime}s`);
+    overlay.classList.remove('hidden');
+    frame.src = frame.src;
 }
 
-// ✅ Iframe loaded successfully
-function onIframeLoad() {
-    console.log('✅ Iframe loaded');
-    iframeLoaded = true;
-    
-    // If using fallback, complete immediately
-    if (!apiAvailable) {
-        updateProgress(100, 'Complete!');
-        setTimeout(hideLoading, 500);
-    }
-    // If API available, wait for 100%
-    else if (progressValue >= 100) {
-        setTimeout(hideLoading, 500);
+// Fullscreen
+function openFullscreen() {
+    const frame = document.getElementById('webglFrame');
+    if (frame.requestFullscreen) {
+        frame.requestFullscreen();
+    } else if (frame.webkitRequestFullscreen) {
+        frame.webkitRequestFullscreen();
+    } else if (frame.msRequestFullscreen) {
+        frame.msRequestFullscreen();
     }
 }
 
-// ✅ Toggle fullscreen
-function toggleFullscreen() {
-    const container = document.querySelector('.webgl-container');
-    const icon = document.getElementById('fullscreenIcon');
-    const text = document.getElementById('fullscreenText');
+// Copy demo link
+function copyDemoLink() {
+    const demoSlug = '{{ demo.slug }}';
+    const customerLink = `${window.location.origin}/demos/${demoSlug}/`;
     
-    if (!document.fullscreenElement) {
-        container.requestFullscreen().then(() => {
-            icon.className = 'fas fa-compress me-2';
-            text.textContent = 'Exit Fullscreen';
-        }).catch(err => {
-            console.error('Fullscreen error:', err);
-        });
-    } else {
-        document.exitFullscreen().then(() => {
-            icon.className = 'fas fa-expand me-2';
-            text.textContent = 'Fullscreen';
-        });
-    }
+    navigator.clipboard.writeText(customerLink).then(() => {
+        showToast('Link copied to clipboard!', 'success');
+    }).catch(() => {
+        prompt('Copy this link:', customerLink);
+    });
 }
 
-// ✅ Keyboard shortcut (F for fullscreen)
-document.addEventListener('keydown', (e) => {
-    if ((e.key === 'f' || e.key === 'F') && !e.target.matches('input, textarea')) {
-        e.preventDefault();
-        toggleFullscreen();
-    }
-});
+// Toast notification
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 80px; right: 20px; z-index: 10000; min-width: 280px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 4000);
+}
 
-// ✅ Initialize
-console.log('🚀 WebGL Viewer initialized');
-checkAPI();
-
-// ✅ Fallback timeout (30 seconds max)
-setTimeout(() => {
-    if (!iframeLoaded) {
-        console.warn('⚠️ Load timeout');
-    }
-    hideLoading();
-}, 30000);
+console.log('✅ WebGL Preview Loaded');
 </script>
 {% endblock %}
