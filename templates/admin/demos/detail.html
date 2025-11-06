@@ -23,573 +23,1110 @@
 
 {% block admin_extra_css %}
 <style>
-    /* ============================================================================ */
-    /* UPLOAD PROGRESS MODAL */
-    /* ============================================================================ */
-    .upload-progress-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.75);
-        backdrop-filter: blur(10px);
-        z-index: 9999;
-        display: none;
-        align-items: center;
-        justify-content: center;
-    }
+/* ============================================================================ */
+/* COPY ALL CSS FROM add.html - EXACT SAME STYLING */
+/* ============================================================================ */
+.page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
 
-    .upload-progress-overlay.active {
-        display: flex;
-    }
+.compact-form {
+    background: white;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    padding: 1.5rem;
+}
 
-    .upload-modal-compact {
-        background: white;
-        border-radius: 16px;
-        width: 90%;
-        max-width: 420px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        animation: slideUp 0.3s ease;
-        overflow: hidden;
-    }
+/* SECTION HEADERS - PROFESSIONAL NORMAL WEIGHT */
+.section-header {
+    font-weight: 500;
+    color: var(--dark-color);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
 
-    @keyframes slideUp {
-        from { opacity: 0; transform: translateY(30px) scale(0.95); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-    }
+.section-header i {
+    color: var(--primary-color);
+    font-size: 1rem;
+}
 
-    .modal-header-compact {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 1.25rem 1.5rem;
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        border-bottom: 1px solid #e2e8f0;
-    }
+/* FORM GRID */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
 
-    .upload-icon-small {
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, var(--primary-color), #0669a0);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        box-shadow: 0 4px 12px rgba(8, 127, 194, 0.3);
-        animation: pulse 2s ease-in-out infinite;
-    }
+.form-grid .full-width {
+    grid-column: 1 / -1;
+}
 
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-    }
+.form-label {
+    font-size: var(--font-sm);
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: var(--spacing-xs);
+    display: block;
+}
 
-    .upload-icon-small i {
-        font-size: 1.5rem;
-        color: white;
-    }
+.form-control,
+.form-select {
+    font-size: var(--font-sm);
+    font-weight: 400;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast) ease;
+}
 
-    .modal-title-area {
-        flex: 1;
-    }
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
+    outline: none;
+}
 
-    .modal-title-small {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0 0 0.25rem;
-    }
+/* FILE UPLOAD AREA */
+.file-upload-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
 
-    .modal-subtitle-small {
-        font-size: 0.85rem;
-        color: #64748b;
-        margin: 0;
-    }
+.upload-section {
+    position: relative;
+}
 
-    .modal-body-compact {
-        padding: 1.5rem;
-    }
+.file-upload-area {
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1rem;
+    text-align: center;
+    background: var(--gray-50);
+    cursor: pointer;
+    transition: all var(--transition-normal) ease;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
 
-    .percentage-display-small {
-        text-align: center;
-        margin-bottom: 1rem;
-    }
+.file-upload-area:hover {
+    border-color: var(--primary-color);
+    background: rgba(8, 127, 194, 0.02);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
 
-    .percentage-display-small span {
-        font-size: 2.75rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, var(--primary-color), #0669a0);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        line-height: 1;
-    }
+.file-upload-area.has-file {
+    border-color: var(--success-color);
+    background: rgba(16, 185, 129, 0.02);
+    border-style: solid;
+}
 
-    .progress-track-small {
-        height: 8px;
-        background: #e2e8f0;
-        border-radius: 10px;
-        overflow: hidden;
-        margin-bottom: 1rem;
-    }
+.file-upload-icon {
+    font-size: 2rem;
+    color: var(--gray-400);
+    margin-bottom: 0.5rem;
+    transition: all var(--transition-normal) ease;
+}
 
-    .progress-fill-small {
-        height: 100%;
-        background: linear-gradient(90deg, var(--primary-color), #0669a0);
-        border-radius: 10px;
-        width: 0%;
-        transition: width 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
+.file-upload-area:hover .file-upload-icon {
+    transform: scale(1.1);
+}
 
-    .progress-fill-small::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        animation: shimmer 2s infinite;
-    }
+.file-upload-title {
+    font-size: var(--font-sm);
+    font-weight: 500;
+    color: var(--dark-color);
+    margin-bottom: 0.25rem;
+}
 
-    @keyframes shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
+.file-upload-hint {
+    font-size: var(--font-xs);
+    font-weight: 400;
+    color: var(--gray-600);
+    margin-bottom: 0.5rem;
+}
 
-    .stats-row-small {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-    }
+.file-upload-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: 12px;
+    font-size: var(--font-xs);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
 
-    .stat-item-small {
-        background: #f8fafc;
-        padding: 0.75rem 0.5rem;
-        border-radius: 8px;
-        text-align: center;
-        border: 1px solid #e2e8f0;
-    }
+/* Current File Badge */
+.current-file-badge {
+    display: inline-block;
+    padding: 0.35rem 0.65rem;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-xs);
+    font-weight: 400;
+    color: var(--gray-700);
+    margin-top: 0.5rem;
+}
 
-    .stat-item-small i {
-        display: block;
-        font-size: 1rem;
-        color: var(--primary-color);
-        margin-bottom: 0.25rem;
-    }
+.current-file-badge i {
+    color: var(--success-color);
+    margin-right: 0.25rem;
+    font-size: var(--font-sm);
+}
 
-    .stat-item-small span {
-        display: block;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #475569;
-    }
+/* File Preview */
+.file-upload-preview {
+    display: none;
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--success-color);
+    width: 100%;
+}
 
-    .modal-footer-compact {
-        padding: 0.75rem 1.5rem;
-        background: #fef3c7;
-        border-top: 1px solid #fde68a;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        font-size: 0.8rem;
-        color: #92400e;
-    }
+.file-upload-preview.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
 
-    .modal-footer-compact i {
-        color: #f59e0b;
-    }
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 
-    /* SUCCESS STATE */
-    .success-message {
-        text-align: center;
-        padding: 2rem 1rem;
-    }
+.preview-content-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 
-    .success-icon-wrapper {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 1rem;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        animation: successPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
+.preview-icon-large {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gradient-success);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
 
-    @keyframes successPop {
-        0% { transform: scale(0); opacity: 0; }
-        50% { transform: scale(1.1); }
-        100% { transform: scale(1); opacity: 1; }
-    }
+.preview-icon-large i {
+    font-size: var(--font-md);
+    color: white;
+}
 
-    .success-icon-wrapper i {
-        font-size: 2.5rem;
-        color: white;
-    }
+.preview-details {
+    flex: 1;
+    min-width: 0;
+}
 
-    .success-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #065f46;
-        margin: 0 0 0.5rem;
-    }
+.preview-filename {
+    font-weight: 500;
+    color: var(--dark-color);
+    font-size: var(--font-xs);
+    margin-bottom: 0.15rem;
+    word-break: break-word;
+}
 
-    .success-text {
-        font-size: 0.95rem;
-        color: #6b7280;
-        margin: 0;
-    }
+.preview-filesize {
+    font-size: var(--font-xs);
+    font-weight: 400;
+    color: var(--gray-600);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
 
-    .upload-modal-compact.success .progress-track-small,
-    .upload-modal-compact.success #uploadStats {
-        display: none !important;
-    }
+.preview-filesize i {
+    color: var(--success-color);
+}
 
-    .upload-modal-compact.success .percentage-display-small {
-        display: none !important;
-    }
+.preview-remove-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--danger-color);
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all var(--transition-fast) ease;
+    border: none;
+    flex-shrink: 0;
+    font-size: var(--font-xs);
+}
 
-    .upload-icon-small.success {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-        animation: none !important;
-    }
+.preview-remove-btn:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
 
-    .upload-icon-small.success i::before {
-        content: "\f00c" !important;
-    }
+/* Thumbnail Image Preview */
+.thumbnail-image-preview {
+    display: none;
+    margin-top: 0.5rem;
+    width: 100%;
+    max-height: 100px;
+    object-fit: contain;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200);
+}
 
-    /* ============================================================================ */
-    /* MAIN LAYOUT */
-    /* ============================================================================ */
-    .page-container {
-        display: grid;
+.thumbnail-image-preview.active {
+    display: block;
+}
+
+/* TARGET AUDIENCE */
+.target-audience-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.target-section {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.target-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+.section-icon i {
+    font-size: 0.875rem;
+    color: white;
+}
+
+.section-title {
+    font-size: var(--font-sm);
+    font-weight: 500;
+    color: var(--dark-color);
+    margin: 0;
+}
+
+.section-subtitle {
+    font-size: var(--font-xs);
+    font-weight: 400;
+    color: var(--gray-600);
+    margin: 0;
+}
+
+/* Category Selection */
+.category-selection-wrapper {
+    padding: 0.75rem;
+    max-height: 320px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(8, 127, 194, 0.2) transparent;
+}
+
+.category-selection-wrapper::-webkit-scrollbar {
+    width: 4px;
+}
+
+.category-selection-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(8, 127, 194, 0.2);
+    border-radius: 10px;
+}
+
+.category-selection-wrapper.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    background: var(--gray-50);
+}
+
+.category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.category-group {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: white;
+    transition: all var(--transition-fast) ease;
+}
+
+.category-group:hover {
+    box-shadow: var(--shadow-sm);
+}
+
+.category-item {
+    overflow: hidden;
+}
+
+.category-header {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all var(--transition-fast) ease;
+}
+
+.category-header:hover {
+    background: var(--gray-100);
+}
+
+.category-checkbox {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.category-label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    cursor: pointer;
+    font-weight: 400;
+    color: var(--dark-color);
+    font-size: var(--font-xs);
+}
+
+.category-icon {
+    font-size: var(--font-sm);
+}
+
+.subcategory-count {
+    font-size: var(--font-xs);
+    padding: 0.15rem 0.4rem;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.btn-expand {
+    background: none;
+    border: none;
+    color: var(--gray-500);
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: all var(--transition-fast) ease;
+    display: flex;
+    align-items: center;
+    font-size: var(--font-xs);
+}
+
+.btn-expand:hover {
+    color: var(--primary-color);
+}
+
+.btn-expand.expanded i {
+    transform: rotate(180deg);
+}
+
+/* Subcategory List */
+.subcategory-list {
+    padding: 0.5rem 0.75rem 0.5rem 2rem;
+    background: white;
+    border-top: 1px solid var(--gray-200);
+}
+
+.subcategory-actions {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.btn-select-all-sub,
+.btn-deselect-all-sub {
+    background: white;
+    border: 1px solid var(--gray-300);
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-xs);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast) ease;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.btn-select-all-sub {
+    color: var(--success-color);
+}
+
+.btn-select-all-sub:hover {
+    background: var(--success-color);
+    color: white;
+    border-color: var(--success-color);
+}
+
+.btn-deselect-all-sub {
+    color: var(--danger-color);
+}
+
+.btn-deselect-all-sub:hover {
+    background: var(--danger-color);
+    color: white;
+    border-color: var(--danger-color);
+}
+
+.subcategory-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.5rem;
+    margin-bottom: 0.25rem;
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast) ease;
+}
+
+.subcategory-item:hover {
+    background: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.subcategory-checkbox {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.subcategory-label {
+    flex: 1;
+    margin: 0;
+    cursor: pointer;
+    font-size: var(--font-xs);
+    font-weight: 400;
+    color: var(--gray-700);
+}
+
+/* Selection Summary */
+.selection-summary {
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(6, 182, 212, 0.1);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    border-radius: var(--radius-sm);
+}
+
+.summary-content {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: var(--font-xs);
+    font-weight: 500;
+    color: var(--info-color);
+}
+
+.summary-content i {
+    font-size: var(--font-sm);
+}
+
+/* Search Box */
+.search-box {
+    margin-bottom: 0.5rem;
+    position: relative;
+}
+
+.search-box input {
+    padding-left: 2rem;
+    font-size: var(--font-xs);
+    font-weight: 400;
+    border: 1px solid var(--gray-300);
+    height: 32px;
+    border-radius: var(--radius-sm);
+}
+
+.search-box input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
+}
+
+.search-box i {
+    position: absolute;
+    left: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+    pointer-events: none;
+    font-size: var(--font-xs);
+}
+
+/* Customer Selection */
+.customer-selection-wrapper {
+    padding: 0.75rem;
+    max-height: 320px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(8, 127, 194, 0.2) transparent;
+}
+
+.customer-selection-wrapper::-webkit-scrollbar {
+    width: 4px;
+}
+
+.customer-selection-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(8, 127, 194, 0.2);
+    border-radius: 10px;
+}
+
+.customer-selection-wrapper.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    background: var(--gray-50);
+}
+
+.customer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.customer-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast) ease;
+}
+
+.customer-item:hover {
+    background: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.customer-label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    cursor: pointer;
+}
+
+.customer-avatar {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    font-size: var(--font-xs);
+    flex-shrink: 0;
+}
+
+.customer-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.customer-name {
+    font-weight: 400;
+    color: var(--dark-color);
+    font-size: var(--font-xs);
+}
+
+.customer-org {
+    color: var(--gray-600);
+    font-size: 0.65rem;
+    font-weight: 400;
+    margin-top: 0.1rem;
+}
+
+/* SETTINGS SWITCHES */
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.form-check-card {
+    padding: 0.75rem 1rem;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast) ease;
+}
+
+.form-check-card:hover {
+    border-color: var(--primary-color);
+    background: white;
+}
+
+.form-check-label {
+    font-size: var(--font-sm);
+    font-weight: 400;
+    color: var(--dark-color);
+}
+
+/* FORM ACTIONS */
+.form-actions {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-lg) calc(-1 * 1.5rem) calc(-1 * 1.5rem);
+    border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    font-size: var(--font-sm);
+    transition: all var(--transition-fast) ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-outline-secondary {
+    border: 1px solid var(--gray-300);
+    background: white;
+    color: var(--gray-700);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--gray-100);
+    border-color: var(--gray-400);
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn i {
+    margin-right: 0.25rem;
+}
+
+/* TABS */
+.nav-tabs {
+    border-bottom: 2px solid var(--gray-200);
+    margin-bottom: 0;
+    background: white;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: var(--shadow-sm);
+}
+
+.tab-content {
+    padding-top: 0;
+}
+
+.tab-pane {
+    padding-top: 0;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    color: var(--gray-600);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-weight: 500;
+    font-size: 0.95rem;
+    position: relative;
+    transition: all 0.3s ease;
+    border-radius: var(--radius-md);
+    margin-right: var(--spacing-sm);
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--primary-color);
+    background: var(--gray-50);
+    border: none;
+}
+
+.nav-tabs .nav-link.active {
+    color: white;
+    background: var(--gradient-primary);
+    border: none;
+    box-shadow: 0 2px 8px rgba(8, 127, 194, 0.3);
+}
+
+.nav-tabs .nav-link i {
+    margin-right: 0.5rem;
+    font-size: 1rem;
+}
+
+/* STAT CARDS */
+.stat-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: var(--spacing-lg);
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-card h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-sm);
+}
+
+.stat-card p {
+    color: var(--gray-600);
+    font-size: 0.9rem;
+    font-weight: 400;
+    margin: 0;
+}
+
+.info-table {
+    width: 100%;
+}
+
+.info-table th {
+    width: 200px;
+    padding: var(--spacing-sm);
+    background: var(--gray-50);
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.info-table td {
+    padding: var(--spacing-sm);
+    font-weight: 400;
+}
+
+.info-table tr {
+    border-bottom: 1px solid var(--gray-200);
+}
+
+/* UPLOAD MODAL */
+.upload-progress-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-progress-overlay.active {
+    display: flex;
+}
+
+.upload-modal-compact {
+    background: white;
+    border-radius: var(--radius-xl);
+    width: 90%;
+    max-width: 420px;
+    box-shadow: var(--shadow-xl);
+    animation: slideUp 0.3s ease;
+    overflow: hidden;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header-compact {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.upload-icon-small {
+    width: 44px;
+    height: 44px;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+}
+
+.upload-icon-small i {
+    font-size: var(--font-xl);
+    color: white;
+}
+
+.modal-title-small {
+    font-size: var(--font-lg);
+    font-weight: 500;
+    color: var(--dark-color);
+    margin: 0 0 0.15rem;
+}
+
+.modal-subtitle-small {
+    font-size: var(--font-xs);
+    font-weight: 400;
+    color: var(--gray-600);
+    margin: 0;
+}
+
+.modal-body-compact {
+    padding: 1.5rem;
+}
+
+.percentage-display-small {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.percentage-display-small span {
+    font-size: var(--font-5xl);
+    font-weight: 700;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.progress-track-small {
+    height: 6px;
+    background: var(--gray-200);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.progress-fill-small {
+    height: 100%;
+    background: var(--gradient-primary);
+    border-radius: 10px;
+    width: 0%;
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+.progress-fill-small::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.stats-row-small {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+}
+
+.stat-item-small {
+    background: var(--gray-50);
+    padding: 0.6rem 0.5rem;
+    border-radius: var(--radius-sm);
+    text-align: center;
+    border: 1px solid var(--gray-200);
+}
+
+.stat-item-small i {
+    display: block;
+    font-size: var(--font-md);
+    color: var(--primary-color);
+    margin-bottom: 0.25rem;
+}
+
+.stat-item-small span {
+    display: block;
+    font-size: var(--font-xs);
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.modal-footer-compact {
+    padding: 0.75rem 1.25rem;
+    background: #fef3c7;
+    border-top: 1px solid #fde68a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: var(--font-xs);
+    color: #92400e;
+    font-weight: 400;
+}
+
+.modal-footer-compact i {
+    color: #f59e0b;
+    font-size: var(--font-sm);
+}
+
+/* Success State */
+.success-message {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.success-icon-wrapper {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 1rem;
+    background: var(--gradient-success);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: successPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes successPop {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.success-icon-wrapper i {
+    font-size: var(--font-4xl);
+    color: white;
+}
+
+.success-title {
+    font-size: var(--font-2xl);
+    font-weight: 500;
+    color: #065f46;
+    margin: 0 0 0.5rem;
+}
+
+.success-text {
+    font-size: var(--font-sm);
+    font-weight: 400;
+    color: var(--gray-600);
+    margin: 0;
+}
+
+.upload-modal-compact.success .progress-track-small,
+.upload-modal-compact.success #uploadStats {
+    display: none !important;
+}
+
+.upload-modal-compact.success .percentage-display-small {
+    display: none !important;
+}
+
+.upload-icon-small.success {
+    background: var(--gradient-success) !important;
+}
+
+.upload-icon-small.success i::before {
+    content: "\f00c" !important;
+}
+
+/* RESPONSIVE */
+@media (max-width: 968px) {
+    .file-upload-row,
+    .target-audience-row {
         grid-template-columns: 1fr;
-        gap: var(--spacing-lg);
     }
+}
 
+@media (max-width: 768px) {
+    .form-grid,
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+    
     .compact-form {
-        background: white;
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-md);
-        padding: var(--spacing-lg);
+        padding: 1rem;
     }
-
-    .section-header {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--primary-color);
-        margin-bottom: var(--spacing-md);
-        padding-bottom: var(--spacing-sm);
-        border-bottom: 2px solid var(--gray-200);
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-sm);
-    }
-
-    .form-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--spacing-md);
-        margin-bottom: var(--spacing-lg);
-    }
-
-    .form-grid .full-width {
-        grid-column: 1 / -1;
-    }
-
-    /* FILE UPLOAD AREA */
+    
     .file-upload-area {
-        border: 2px dashed var(--gray-300);
-        border-radius: var(--radius-md);
-        padding: 1.5rem;
-        text-align: center;
-        background: var(--gray-50);
-        cursor: pointer;
-        transition: all 0.3s ease;
+        min-height: 120px;
+        padding: 1rem 0.75rem;
     }
-
-    .file-upload-area:hover {
-        border-color: var(--primary-color);
-        background: rgba(8, 127, 194, 0.05);
-    }
-
-    .file-upload-area.has-file {
-        border-color: var(--success-color);
-        background: rgba(16, 185, 129, 0.05);
-    }
-
+    
     .file-upload-icon {
-        font-size: 2rem;
-        color: var(--gray-400);
-        margin-bottom: 0.5rem;
+        font-size: 1.5rem;
     }
-
-    .file-upload-title {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--dark-color);
-        margin-bottom: 0.25rem;
+    
+    .category-selection-wrapper,
+    .customer-selection-wrapper {
+        max-height: 280px;
     }
-
-    .file-upload-hint {
-        font-size: 0.8rem;
-        color: var(--gray-600);
-    }
-
-    .file-preview {
-        display: none;
-        margin-top: var(--spacing-sm);
-        padding: var(--spacing-sm);
-        background: white;
-        border-radius: var(--radius-sm);
-        border: 1px solid var(--gray-200);
-    }
-
-    .file-preview.active {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-sm);
-    }
-
-    .file-preview-icon {
-        font-size: 1.25rem;
-        color: var(--success-color);
-    }
-
-    .file-preview-info {
-        flex: 1;
-        text-align: left;
-    }
-
-    .file-preview-name {
-        font-weight: 600;
-        color: var(--dark-color);
-        font-size: 0.85rem;
-        word-break: break-all;
-    }
-
-    .file-preview-size {
-        font-size: 0.75rem;
-        color: var(--gray-600);
-    }
-
-    .file-preview-remove {
-        color: var(--danger-color);
-        cursor: pointer;
-        padding: var(--spacing-xs);
-        font-size: 1.1rem;
-    }
-
-    .file-preview-remove:hover {
-        color: #c53030;
-    }
-
-    .current-file-badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        background: var(--gray-100);
-        border-radius: var(--radius-sm);
-        font-size: 0.8rem;
-        color: var(--gray-700);
-        margin-top: 0.5rem;
-    }
-
-    .current-file-badge i {
-        color: var(--success-color);
-        margin-right: 0.25rem;
-    }
-
-    .selection-box {
-        padding: var(--spacing-md);
-        background: var(--gray-50);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--gray-200);
-        max-height: 200px;
-        overflow-y: auto;
-    }
-
-    .selection-box.disabled {
-        opacity: 0.5;
-        pointer-events: none;
-    }
-
-    .checkbox-item {
-        padding: var(--spacing-xs) var(--spacing-sm);
-        margin-bottom: var(--spacing-xs);
-        background: white;
-        border-radius: var(--radius-sm);
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-sm);
-    }
-
-    .checkbox-item:hover {
-        background: var(--gray-100);
-    }
-
-    .checkbox-item input {
-        margin: 0;
-    }
-
-    .checkbox-item label {
-        margin: 0;
-        font-size: 0.9rem;
-        cursor: pointer;
-        flex: 1;
-    }
-
-    .subcategory-list {
-        margin-left: var(--spacing-lg);
-        margin-top: var(--spacing-xs);
-        padding-left: var(--spacing-sm);
-        border-left: 2px solid var(--gray-200);
-    }
-
-    .search-box {
-        margin-bottom: var(--spacing-sm);
-        position: relative;
-    }
-
-    .search-box input {
-        padding-left: 2rem;
-        font-size: 0.9rem;
-    }
-
-    .search-box i {
-        position: absolute;
-        left: 0.75rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--gray-400);
-    }
-
-    .form-actions {
-        position: sticky;
-        bottom: 0;
-        background: white;
-        padding: var(--spacing-md);
-        border-top: 1px solid var(--gray-200);
-        display: flex;
-        justify-content: flex-end;
-        gap: var(--spacing-md);
-        margin: var(--spacing-lg) calc(-1 * var(--spacing-lg)) calc(-1 * var(--spacing-lg));
-        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-    }
-
-    /* TABS */
-    .nav-tabs {
-        border-bottom: 2px solid var(--gray-200);
-        margin-bottom: 0;
-        background: white;
-        padding: var(--spacing-sm) var(--spacing-lg);
-        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-        box-shadow: var(--shadow-sm);
-    }
-
-    .tab-content {
-        padding-top: 0;
-    }
-
-    .tab-pane {
-        padding-top: 0;
-    }
-
-    .nav-tabs .nav-link {
-        border: none;
-        color: var(--gray-600);
-        padding: var(--spacing-sm) var(--spacing-lg);
-        font-weight: 600;
-        font-size: 0.95rem;
-        position: relative;
-        transition: all 0.3s ease;
-        border-radius: var(--radius-md);
-        margin-right: var(--spacing-sm);
-    }
-
-    .nav-tabs .nav-link:hover {
-        color: var(--primary-color);
-        background: var(--gray-50);
-        border: none;
-    }
-
-    .nav-tabs .nav-link.active {
-        color: white;
-        background: var(--gradient-primary);
-        border: none;
-        box-shadow: 0 2px 8px rgba(8, 127, 194, 0.3);
-    }
-
-    .nav-tabs .nav-link i {
-        margin-right: 0.5rem;
-        font-size: 1rem;
-    }
-
-    /* STAT CARDS */
-    .stat-card {
-        background: white;
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-md);
-        padding: var(--spacing-lg);
-        text-align: center;
-        transition: all 0.3s ease;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-    }
-
-    .stat-card h1 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: var(--spacing-sm);
-    }
-
-    .stat-card p {
-        color: var(--gray-600);
-        font-size: 0.9rem;
-        margin: 0;
-    }
-
-    .info-table {
-        width: 100%;
-    }
-
-    .info-table th {
-        width: 200px;
-        padding: var(--spacing-sm);
-        background: var(--gray-50);
-        font-weight: 600;
-        color: var(--gray-700);
-    }
-
-    .info-table td {
-        padding: var(--spacing-sm);
-    }
-
-    .info-table tr {
-        border-bottom: 1px solid var(--gray-200);
-    }
-
-    @media (max-width: 768px) {
-        .form-grid {
-            grid-template-columns: 1fr;
-        }
-    }
+}
 </style>
 {% endblock %}
 
 {% block admin_content %}
 
-<!-- UPLOAD PROGRESS MODAL -->
+<!-- UPLOAD MODAL -->
 <div class="upload-progress-overlay" id="uploadProgressOverlay">
     <div class="upload-modal-compact">
         <div class="modal-header-compact">
@@ -666,6 +1203,18 @@
                 {% csrf_token %}
 
                 <div class="compact-form">
+                    <!-- Display Errors -->
+                    {% if messages %}
+                    <div class="mb-3">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
                     <!-- Basic Information -->
                     <div class="section-header">
                         <i class="fas fa-info-circle"></i> Basic Information
@@ -685,155 +1234,268 @@
                     <div class="section-header">
                         <i class="fas fa-file-upload"></i> Update Files <small class="text-muted">(Optional - only upload to update)</small>
                     </div>
-                    <div class="form-grid">
-                        <div class="full-width">
-                            <label for="id_thumbnail" class="form-label">Thumbnail</label>
-                            <div class="file-upload-area" onclick="document.getElementById('id_thumbnail').click()">
+                    
+                    <!-- File Upload - 2 Columns -->
+                    <div class="file-upload-row">
+                        <!-- Demo File Upload -->
+                        <div class="upload-section">
+                            <label class="form-label">
+                                <i class="fas fa-file-upload me-2"></i>
+                                {% if demo.file_type == 'video' %}Video File{% elif demo.file_type == 'webgl' %}WebGL File{% else %}LMS File{% endif %}
+                                <small class="text-muted">(Optional)</small>
+                            </label>
+                            <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('id_{{ demo.file_type }}_file').click()">
+                                <i class="fas fa-{% if demo.file_type == 'video' %}video{% elif demo.file_type == 'webgl' %}cube{% else %}graduation-cap{% endif %} file-upload-icon" id="demoFileIcon"></i>
+                                <p class="file-upload-title" id="demoFileTitle">Click to update {{ demo.file_type }} file</p>
+                                <small class="file-upload-hint" id="fileTypeHint">
+                                    {% if demo.file_type == 'video' %}MP4, AVI, MOV (Max: 200 MB)
+                                    {% elif demo.file_type == 'webgl' %}HTML, ZIP, 3D (Max: 3 GB)
+                                    {% else %}ZIP, SCORM (Max: 4 GB){% endif %}
+                                </small>
+                                <span class="file-upload-badge" id="fileTypeBadge">{{ demo.file_type|upper }}</span>
+                                
+                                <!-- File Preview Inside Upload Area -->
+                                <div class="file-upload-preview" id="demoFilePreview">
+                                    <div class="preview-content-wrapper">
+                                        <div class="preview-icon-large">
+                                            <i class="fas fa-check-circle"></i>
+                                        </div>
+                                        <div class="preview-details">
+                                            <div class="preview-filename" id="demoFileName"></div>
+                                            <div class="preview-filesize">
+                                                <i class="fas fa-database"></i>
+                                                <span id="demoFileSize"></span>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="preview-remove-btn" onclick="removeDemoFile(event)">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if demo.file_type == 'video' and demo.video_file %}
+                                <div class="current-file-badge">
+                                    <i class="fas fa-check-circle"></i>Current: {{ demo.video_file.name|slice:"7:" }}
+                                </div>
+                            {% elif demo.file_type == 'webgl' and demo.webgl_file %}
+                                <div class="current-file-badge">
+                                    <i class="fas fa-check-circle"></i>Current: {{ demo.webgl_file.name|slice:"7:" }}
+                                </div>
+                            {% elif demo.file_type == 'lms' and demo.lms_file %}
+                                <div class="current-file-badge">
+                                    <i class="fas fa-check-circle"></i>Current: {{ demo.lms_file.name|slice:"4:" }}
+                                </div>
+                            {% endif %}
+                            
+                            <input type="file" name="video_file" id="id_video_file" class="d-none" accept="video/*" {% if demo.file_type != 'video' %}disabled{% endif %}>
+                            <input type="file" name="webgl_file" id="id_webgl_file" class="d-none" accept=".html,.zip,.gltf,.glb" {% if demo.file_type != 'webgl' %}disabled{% endif %}>
+                            <input type="file" name="lms_file" id="id_lms_file" class="d-none" accept=".zip,.scorm" {% if demo.file_type != 'lms' %}disabled{% endif %}>
+                        </div>
+
+                        <!-- Thumbnail Upload -->
+                        <div class="upload-section">
+                            <label class="form-label">
+                                <i class="fas fa-image me-2"></i>
+                                Thumbnail <small class="text-muted">(Optional)</small>
+                            </label>
+                            <div class="file-upload-area" id="thumbnailUploadArea" onclick="document.getElementById('id_thumbnail').click()">
                                 <i class="fas fa-image file-upload-icon"></i>
                                 <p class="file-upload-title">Click to update thumbnail</p>
-                                <small class="file-upload-hint">JPG, PNG (Max: 10 MB)</small>
+                                <small class="file-upload-hint">JPG, PNG, WebP (Max: 10 MB)</small>
+                                <span class="file-upload-badge" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">IMAGE</span>
+                                
+                                <!-- Thumbnail Preview Inside Upload Area -->
+                                <div class="file-upload-preview" id="thumbnailPreview">
+                                    <div class="preview-content-wrapper">
+                                        <div class="preview-icon-large" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                                            <i class="fas fa-check-circle"></i>
+                                        </div>
+                                        <div class="preview-details">
+                                            <div class="preview-filename" id="thumbnailName"></div>
+                                            <div class="preview-filesize">
+                                                <i class="fas fa-database"></i>
+                                                <span id="thumbnailSize"></span>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="preview-remove-btn" onclick="removeThumbnail(event)">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Thumbnail Image Preview -->
+                                <img id="thumbnailImagePreview" class="thumbnail-image-preview" alt="Thumbnail Preview">
                             </div>
+                            
                             {% if demo.thumbnail %}
                             <div class="current-file-badge">
-                                <i class="fas fa-check-circle"></i>Current: {{ demo.thumbnail.name|truncatechars:40 }}
+                                <i class="fas fa-check-circle"></i>Current: {{ demo.thumbnail.name|slice:"11:" }}
                             </div>
                             {% endif %}
                             <input type="file" name="thumbnail" id="id_thumbnail" class="d-none" accept="image/*">
-                            <div class="file-preview" id="thumbnailPreview">
-                                <i class="fas fa-image file-preview-icon"></i>
-                                <div class="file-preview-info">
-                                    <div class="file-preview-name" id="thumbnailName"></div>
-                                    <div class="file-preview-size" id="thumbnailSize"></div>
-                                </div>
-                                <i class="fas fa-times file-preview-remove" onclick="removeThumbnail(event)"></i>
-                            </div>
                         </div>
-                        
-                        {% if demo.file_type == 'video' %}
-                        <div class="full-width">
-                            <label for="id_video_file" class="form-label">Video File</label>
-                            <div class="file-upload-area" onclick="document.getElementById('id_video_file').click()">
-                                <i class="fas fa-video file-upload-icon"></i>
-                                <p class="file-upload-title">Click to update video</p>
-                                <small class="file-upload-hint">MP4, AVI, MOV (Max: 200 MB)</small>
-                            </div>
-                            {% if demo.video_file %}
-                            <div class="current-file-badge">
-                                <i class="fas fa-check-circle"></i>Current: {{ demo.video_file.name|truncatechars:40 }}
-                            </div>
-                            {% endif %}
-                            <input type="file" name="video_file" id="id_video_file" class="d-none" accept="video/*">
-                            <div class="file-preview" id="videoFilePreview">
-                                <i class="fas fa-video file-preview-icon"></i>
-                                <div class="file-preview-info">
-                                    <div class="file-preview-name" id="videoFileName"></div>
-                                    <div class="file-preview-size" id="videoFileSize"></div>
-                                </div>
-                                <i class="fas fa-times file-preview-remove" onclick="removeVideoFile(event)"></i>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        {% if demo.file_type == 'webgl' %}
-                        <div class="full-width">
-                            <label for="id_webgl_file" class="form-label">WebGL File</label>
-                            <div class="file-upload-area" onclick="document.getElementById('id_webgl_file').click()">
-                                <i class="fas fa-cube file-upload-icon"></i>
-                                <p class="file-upload-title">Click to update WebGL file</p>
-                                <small class="file-upload-hint">HTML, ZIP (Max: 3 GB)</small>
-                            </div>
-                            {% if demo.webgl_file %}
-                            <div class="current-file-badge">
-                                <i class="fas fa-check-circle"></i>Current: {{ demo.webgl_file.name|truncatechars:40 }}
-                            </div>
-                            {% endif %}
-                            <input type="file" name="webgl_file" id="id_webgl_file" class="d-none" accept=".html,.zip,.gltf,.glb">
-                            <div class="file-preview" id="webglFilePreview">
-                                <i class="fas fa-cube file-preview-icon"></i>
-                                <div class="file-preview-info">
-                                    <div class="file-preview-name" id="webglFileName"></div>
-                                    <div class="file-preview-size" id="webglFileSize"></div>
-                                </div>
-                                <i class="fas fa-times file-preview-remove" onclick="removeWebglFile(event)"></i>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        {% if demo.file_type == 'lms' %}
-                        <div class="full-width">
-                            <label for="id_lms_file" class="form-label">LMS File</label>
-                            <div class="file-upload-area" onclick="document.getElementById('id_lms_file').click()">
-                                <i class="fas fa-graduation-cap file-upload-icon"></i>
-                                <p class="file-upload-title">Click to update LMS file</p>
-                                <small class="file-upload-hint">ZIP, SCORM (Max: 4 GB)</small>
-                            </div>
-                            {% if demo.lms_file %}
-                            <div class="current-file-badge">
-                                <i class="fas fa-check-circle"></i>Current: {{ demo.lms_file.name|truncatechars:40 }}
-                            </div>
-                            {% endif %}
-                            <input type="file" name="lms_file" id="id_lms_file" class="d-none" accept=".zip,.scorm">
-                            <div class="file-preview" id="lmsFilePreview">
-                                <i class="fas fa-graduation-cap file-preview-icon"></i>
-                                <div class="file-preview-info">
-                                    <div class="file-preview-name" id="lmsFileName"></div>
-                                    <div class="file-preview-size" id="lmsFileSize"></div>
-                                </div>
-                                <i class="fas fa-times file-preview-remove" onclick="removeLmsFile(event)"></i>
-                            </div>
-                        </div>
-                        {% endif %}
                     </div>
 
                     <!-- Target Audience -->
                     <div class="section-header mt-4">
                         <i class="fas fa-bullseye"></i> Target Audience
                     </div>
-                    <div class="form-grid">
-                        <div>
-                            <div class="form-check form-switch mb-2">
-                                <input class="form-check-input" type="checkbox" id="allBusinessCategoriesCheckbox" name="allBusinessCategoriesCheckbox" {% if form_data.all_business_categories %}checked{% endif %}>
-                                <label class="form-check-label" for="allBusinessCategoriesCheckbox">
-                                    <strong>All Business Categories</strong>
-                                </label>
-                            </div>
-                            <div id="categorySelectionArea" class="selection-box">
-                                {% for category in business_categories %}
-                                <div class="checkbox-item">
-                                    <input type="checkbox" name="target_business_categories" value="{{ category.id }}" id="cat_{{ category.id }}" class="category-checkbox" {% if category.id|stringformat:"s" in form_data.selected_business_categories %}checked{% endif %}>
-                                    <label for="cat_{{ category.id }}">{{ category.name }}</label>
+                    
+                    <!-- Business Categories & Customers - 2 Columns -->
+                    <div class="target-audience-row">
+                        <!-- LEFT: Business Categories & Subcategories -->
+                        <div class="target-section">
+                            <div class="target-section-header">
+                                <div class="header-left">
+                                    <div class="section-icon">
+                                        <i class="fas fa-building"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="section-title">Business Categories</h6>
+                                        <p class="section-subtitle">Select target business types</p>
+                                    </div>
                                 </div>
-                                {% if category.subcategories.all %}
-                                <div class="subcategory-list" id="subcat_list_{{ category.id }}" style="display: none;">
-                                    {% for subcategory in category.subcategories.all %}
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" name="target_business_subcategories" value="{{ subcategory.id }}" id="subcat_{{ subcategory.id }}" class="subcategory-checkbox" data-parent="{{ category.id }}" {% if subcategory.id|stringformat:"s" in form_data.selected_business_subcategories %}checked{% endif %}>
-                                        <label for="subcat_{{ subcategory.id }}">{{ subcategory.name }}</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="allBusinessCategoriesCheckbox" 
+                                           {% if form_data.all_business_categories %}checked{% endif %}>
+                                    <label class="form-check-label" for="allBusinessCategoriesCheckbox">
+                                        <small>All</small>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="categorySelectionArea" class="category-selection-wrapper {% if form_data.all_business_categories %}disabled{% endif %}">
+                                <!-- Search Box -->
+                                <div class="search-box mb-2">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="categorySearch" class="form-control form-control-sm" 
+                                           placeholder="Search categories...">
+                                </div>
+                                
+                                <!-- Category List with Subcategories -->
+                                <div class="category-list" id="categoryList">
+                                    {% for category in business_categories %}
+                                    <div class="category-group" data-category-id="{{ category.id }}" 
+                                         data-search="{{ category.name|lower }}">
+                                        <!-- Parent Category -->
+                                        <div class="category-item">
+                                            <div class="category-header">
+                                                <input type="checkbox" 
+                                                       name="target_business_categories" 
+                                                       value="{{ category.id }}" 
+                                                       id="cat_{{ category.id }}" 
+                                                       class="category-checkbox form-check-input"
+                                                       data-category-id="{{ category.id }}"
+                                                       {% if category.id|stringformat:"s" in form_data.selected_business_categories %}checked{% endif %}>
+                                                <label for="cat_{{ category.id }}" class="category-label">
+                                                    {% if category.icon %}
+                                                    <span class="category-icon">{{ category.icon }}</span>
+                                                    {% endif %}
+                                                    <span class="category-name">{{ category.name }}</span>
+                                                    {% if category.subcategories.count > 0 %}
+                                                    <span class="subcategory-count badge bg-secondary">
+                                                        {{ category.subcategories.count }}
+                                                    </span>
+                                                    {% endif %}
+                                                </label>
+                                                {% if category.subcategories.exists %}
+                                                <button type="button" class="btn-expand" 
+                                                        onclick="toggleSubcategories({{ category.id }})">
+                                                    <i class="fas fa-chevron-down"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Subcategories (Hidden by default) -->
+                                            {% if category.subcategories.exists %}
+                                            <div class="subcategory-list" id="subcat_list_{{ category.id }}" style="display: none;">
+                                                <div class="subcategory-actions">
+                                                    <button type="button" class="btn-select-all-sub" 
+                                                            onclick="selectAllSubcategories({{ category.id }}, true)">
+                                                        <i class="fas fa-check-double"></i> All
+                                                    </button>
+                                                    <button type="button" class="btn-deselect-all-sub" 
+                                                            onclick="selectAllSubcategories({{ category.id }}, false)">
+                                                        <i class="fas fa-times"></i> Clear
+                                                    </button>
+                                                </div>
+                                                
+                                                {% for subcategory in category.subcategories.all %}
+                                                <div class="subcategory-item">
+                                                    <input type="checkbox" 
+                                                           name="target_business_subcategories" 
+                                                           value="{{ subcategory.id }}" 
+                                                           id="subcat_{{ subcategory.id }}" 
+                                                           class="subcategory-checkbox form-check-input"
+                                                           data-parent-category="{{ category.id }}"
+                                                           {% if subcategory.id|stringformat:"s" in form_data.selected_business_subcategories %}checked{% endif %}>
+                                                    <label for="subcat_{{ subcategory.id }}" class="subcategory-label">
+                                                        {{ subcategory.name }}
+                                                    </label>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                     {% endfor %}
                                 </div>
-                                {% endif %}
-                                {% endfor %}
+                                
+                                <!-- Selected Summary -->
+                                <div class="selection-summary" id="categorySelectionSummary" style="display: none;">
+                                    <div class="summary-content">
+                                        <i class="fas fa-info-circle"></i>
+                                        <span id="summaryText">0 categories, 0 subcategories selected</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div>
-                            <div class="form-check form-switch mb-2">
-                                <input class="form-check-input" type="checkbox" id="allCustomersCheckbox" {% if not form_data.selected_customers %}checked{% endif %}>
-                                <label class="form-check-label" for="allCustomersCheckbox">
-                                    <strong>All Customers</strong>
-                                </label>
+                        <!-- RIGHT: Customer Selection -->
+                        <div class="target-section">
+                            <div class="target-section-header">
+                                <div class="header-left">
+                                    <div class="section-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="section-title">Target Customers</h6>
+                                        <p class="section-subtitle">Select specific customers</p>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="allCustomersCheckbox" 
+                                           {% if not form_data.selected_customers %}checked{% endif %}>
+                                    <label class="form-check-label" for="allCustomersCheckbox">
+                                        <small>All</small>
+                                    </label>
+                                </div>
                             </div>
-                            <div id="customerSelectionArea" class="selection-box {% if not form_data.selected_customers %}disabled{% endif %}">
+                            
+                            <div id="customerSelectionArea" class="customer-selection-wrapper {% if not form_data.selected_customers %}disabled{% endif %}">
                                 <div class="search-box">
                                     <i class="fas fa-search"></i>
-                                    <input type="text" id="customerSearch" class="form-control form-control-sm" placeholder="Search customers...">
+                                    <input type="text" id="customerSearch" class="form-control form-control-sm" 
+                                           placeholder="Search customers...">
                                 </div>
-                                <div id="customerList">
+                                <div id="customerList" class="customer-list">
                                     {% for customer in customers %}
-                                    <div class="checkbox-item" data-search="{{ customer.get_full_name|lower }} {{ customer.email|lower }}">
-                                        <input type="checkbox" name="target_customers" value="{{ customer.id }}" id="cust_{{ customer.id }}" {% if customer.id|stringformat:"s" in form_data.selected_customers %}checked{% endif %}>
-                                        <label for="cust_{{ customer.id }}">{{ customer.get_full_name }}</label>
+                                    <div class="customer-item" data-search="{{ customer.full_name|lower }}">
+                                        <input type="checkbox" name="target_customers" value="{{ customer.id }}" 
+                                               id="cust_{{ customer.id }}" class="form-check-input"
+                                               {% if customer.id|stringformat:"s" in form_data.selected_customers %}checked{% endif %}>
+                                        <label for="cust_{{ customer.id }}" class="customer-label">
+                                            {% comment %} <div class="customer-avatar">
+                                                {{ customer.first_name|first }}{{ customer.last_name|first }}
+                                            </div> {% endcomment %}
+                                            <div class="customer-info">
+                                                <span class="customer-name">{{ customer.full_name }}</span>
+                                                {% if customer.organization %}
+                                                <small class="customer-org">{{ customer.organization }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </label>
                                     </div>
                                     {% endfor %}
                                 </div>
@@ -845,23 +1507,29 @@
                     <div class="section-header mt-4">
                         <i class="fas fa-cogs"></i> Settings
                     </div>
-                    <div class="form-grid">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="is_featured" id="id_is_featured" {% if form_data.is_featured %}checked{% endif %}>
-                            <label class="form-check-label" for="id_is_featured">Featured Demo</label>
+                    <div class="settings-grid">
+                        <div class="form-check form-switch form-check-card">
+                            <input class="form-check-input" type="checkbox" name="is_featured" id="id_is_featured" 
+                                   {% if form_data.is_featured %}checked{% endif %}>
+                            <label class="form-check-label" for="id_is_featured">
+                                <i class="fas fa-star me-2"></i>Featured Demo
+                            </label>
                         </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="is_active" id="id_is_active" {% if form_data.is_active %}checked{% endif %}>
-                            <label class="form-check-label" for="id_is_active">Active</label>
+                        <div class="form-check form-switch form-check-card">
+                            <input class="form-check-input" type="checkbox" name="is_active" id="id_is_active" 
+                                   {% if form_data.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="id_is_active">
+                                <i class="fas fa-check-circle me-2"></i>Active
+                            </label>
                         </div>
                     </div>
 
                     <!-- Form Actions -->
                     <div class="form-actions">
-                        <button type="button" class="btn btn-outline-secondary btn-sm btn-back">
+                        <button type="button" class="btn btn-outline-secondary btn-back">
                             <i class="fas fa-arrow-left me-1"></i>Back to List
                         </button>
-                        <button type="submit" class="btn btn-primary btn-sm" id="submitBtn">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
                             <i class="fas fa-save me-1"></i>Update Demo
                         </button>
                     </div>
@@ -870,116 +1538,203 @@
         </div>
 
         <!-- DETAILS & STATS TAB -->
-        <div class="tab-pane fade" id="details" role="tabpanel">
-            <div class="compact-form">
-                <!-- Statistics -->
-                <div class="section-header">
-                    <i class="fas fa-chart-bar"></i> Statistics
-                </div>
-                <div class="form-grid" style="grid-template-columns: repeat(4, 1fr);">
-                    <div class="stat-card">
-                        <h1 class="text-primary">{{ total_views }}</h1>
-                        <p>Total Views</p>
-                    </div>
-                    <div class="stat-card">
-                        <h1 class="text-success">{{ total_likes }}</h1>
-                        <p>Total Likes</p>
-                    </div>
-                    <div class="stat-card">
-                        <h1 class="text-warning">{{ total_requests }}</h1>
-                        <p>Demo Requests</p>
-                    </div>
-                    <div class="stat-card">
-                        <h1 class="text-info">{{ total_accessible_customers }}</h1>
-                        <p>Accessible To</p>
-                    </div>
-                </div>
+      <!-- DETAILS & STATS TAB -->
+<div class="tab-pane fade" id="details" role="tabpanel">
+    <div class="compact-form">
+        <!-- Statistics -->
+        <div class="section-header">
+            <i class="fas fa-chart-bar"></i> Statistics
+        </div>
+        <div class="form-grid" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="stat-card">
+                <h1 class="text-primary">{{ total_views }}</h1>
+                <p>Total Views</p>
+            </div>
+            <div class="stat-card">
+                <h1 class="text-success">{{ total_likes }}</h1>
+                <p>Total Likes</p>
+            </div>
+            <div class="stat-card">
+                <h1 class="text-warning">{{ total_requests }}</h1>
+                <p>Demo Requests</p>
+            </div>
+            <div class="stat-card">
+                <h1 class="text-info">{{ total_accessible_customers }}</h1>
+                <p>Accessible To</p>
+            </div>
+        </div>
 
-                <!-- Demo Information -->
-                <div class="section-header mt-4">
-                    <i class="fas fa-info-circle"></i> Demo Information
-                </div>
-                <table class="info-table">
-                    <tr>
-                        <th>Title:</th>
-                        <td>{{ demo.title }}</td>
-                    </tr>
-                    <tr>
-                        <th>Type:</th>
-                        <td>{{ demo.get_demo_type_display }}</td>
-                    </tr>
-                    <tr>
-                        <th>File Type:</th>
-                        <td>{{ demo.get_file_type_display }}</td>
-                    </tr>
-                    <tr>
-                        <th>Duration:</th>
-                        <td>{{ demo.duration|default:"Not specified" }} minutes</td>
-                    </tr>
-                    <tr>
-                        <th>Status:</th>
-                        <td>
-                            {% if demo.is_active %}
-                                <span class="badge bg-success">Active</span>
-                            {% else %}
-                                <span class="badge bg-secondary">Inactive</span>
-                            {% endif %}
-                            {% if demo.is_featured %}
-                                <span class="badge bg-warning">Featured</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Created:</th>
-                        <td>{{ demo.created_at|date:"d M Y, H:i" }}</td>
-                    </tr>
-                    <tr>
-                        <th>Last Updated:</th>
-                        <td>{{ demo.updated_at|date:"d M Y, H:i" }}</td>
-                    </tr>
-                </table>
+        <!-- Demo Information -->
+        <div class="section-header mt-4">
+            <i class="fas fa-info-circle"></i> Demo Information
+        </div>
+        <table class="info-table">
+            <tr>
+                <th>Title:</th>
+                <td>{{ demo.title }}</td>
+            </tr>
+            {% comment %} <tr>
+                <th>Type:</th>
+                <td>{{ demo.get_demo_type_display }}</td>
+            </tr> {% endcomment %}
+            <tr>
+                <th>File Type:</th>
+                <td>{{ demo.get_file_type_display }}</td>
+            </tr>
+            {% comment %} <tr>
+                <th>Duration:</th>
+                <td>{{ demo.duration|default:"Not specified" }} minutes</td>
+            </tr> {% endcomment %}
+            <tr>
+                <th>Status:</th>
+                <td>
+                    {% if demo.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                    {% if demo.is_featured %}
+                        <span class="badge bg-warning">Featured</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Created:</th>
+                <td>{{ demo.created_at|date:"d M Y, H:i" }}</td>
+            </tr>
+            <tr>
+                <th>Last Updated:</th>
+                <td>{{ demo.updated_at|date:"d M Y, H:i" }}</td>
+            </tr>
+        </table>
 
-                <!-- Recent Activity -->
-                {% if recent_views or recent_requests %}
-                <div class="section-header mt-4">
-                    <i class="fas fa-history"></i> Recent Activity
-                </div>
-                <div class="form-grid">
-                    {% if recent_views %}
-                    <div>
-                        <h6 class="mb-3">Recent Views</h6>
-                        <ul class="list-unstyled">
-                            {% for view in recent_views %}
-                            <li class="mb-2 pb-2 border-bottom">
-                                <strong>{{ view.user.get_full_name }}</strong><br>
-                                <small class="text-muted">{{ view.viewed_at|date:"d M Y, H:i" }}</small>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
-                    
-                    {% if recent_requests %}
-                    <div>
-                        <h6 class="mb-3">Recent Requests</h6>
-                        <ul class="list-unstyled">
-                            {% for req in recent_requests %}
-                            <li class="mb-2 pb-2 border-bottom">
-                                <strong>{{ req.user.get_full_name }}</strong><br>
-                                <small class="text-muted">{{ req.created_at|date:"d M Y, H:i" }}</small>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
-                </div>
+        <!-- ✅ TARGET AUDIENCE SECTION - NEW -->
+        <div class="section-header mt-4">
+            <i class="fas fa-bullseye"></i> Target Audience
+        </div>
+        
+        <div class="form-grid">
+            <!-- Business Categories -->
+            <div>
+                <h6 class="mb-3" style="font-weight: 500; font-size: var(--font-sm); color: var(--dark-color);">
+                    <i class="fas fa-building text-primary me-2"></i>Business Categories
+                </h6>
+                {% if demo.target_business_categories.exists %}
+                    <ul class="list-unstyled">
+                        {% for category in demo.target_business_categories.all %}
+                        <li class="mb-2 pb-2 border-bottom">
+                            <span style="font-weight: 400; color: var(--dark-color); font-size: var(--font-sm);">
+                                {% if category.icon %}{{ category.icon }} {% endif %}{{ category.name }}
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p style="font-size: var(--font-sm); color: var(--gray-600); font-weight: 400;">
+                        <i class="fas fa-globe text-success me-2"></i>Available to <strong>all business categories</strong>
+                    </p>
+                {% endif %}
+            </div>
+            
+            <!-- Business Subcategories -->
+            <div>
+                <h6 class="mb-3" style="font-weight: 500; font-size: var(--font-sm); color: var(--dark-color);">
+                    <i class="fas fa-sitemap text-info me-2"></i>Business Subcategories
+                </h6>
+                {% if demo.target_business_subcategories.exists %}
+                    <ul class="list-unstyled">
+                        {% for subcategory in demo.target_business_subcategories.all %}
+                        <li class="mb-2 pb-2 border-bottom">
+                            <span style="font-weight: 400; color: var(--dark-color); font-size: var(--font-sm);">
+                                {{ subcategory.name }}
+                            </span>
+                            <br>
+                            <small class="text-muted" style="font-size: var(--font-xs);">
+                                <i class="fas fa-arrow-right me-1"></i>{{ subcategory.category.name }}
+                            </small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p style="font-size: var(--font-sm); color: var(--gray-600); font-weight: 400;">
+                        <i class="fas fa-info-circle text-muted me-2"></i>No specific subcategories selected
+                    </p>
                 {% endif %}
             </div>
         </div>
+        
+        <!-- Target Customers -->
+        <div class="mt-3">
+            <h6 class="mb-3" style="font-weight: 500; font-size: var(--font-sm); color: var(--dark-color);">
+                <i class="fas fa-users text-success me-2"></i>Target Customers
+            </h6>
+            {% if demo.target_customers.exists %}
+                <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    {% for customer in demo.target_customers.all %}
+                    <div class="customer-item" style="margin-bottom: 0.5rem;">
+                        <div class="customer-avatar" style="width: 32px; height: 32px; font-size: var(--font-xs);">
+                            {{ customer.first_name|first }}{{ customer.last_name|first }}
+                        </div>
+                        <div class="customer-info">
+                            <span class="customer-name" style="font-size: var(--font-sm);">{{ customer.full_name }}</span>
+                            {% if customer.organization %}
+                            <small class="customer-org" style="font-size: 0.7rem;">{{ customer.organization }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="font-size: var(--font-sm); color: var(--gray-600); font-weight: 400;">
+                    <i class="fas fa-globe text-success me-2"></i>Available to <strong>all approved customers</strong>
+                </p>
+            {% endif %}
+        </div>
+
+        <!-- Recent Activity -->
+        {% if recent_views or recent_requests %}
+        <div class="section-header mt-4">
+            <i class="fas fa-history"></i> Recent Activity
+        </div>
+        <div class="form-grid">
+            {% if recent_views %}
+            <div>
+                <h6 class="mb-3" style="font-weight: 500;">Recent Views</h6>
+                <ul class="list-unstyled">
+                    {% for view in recent_views %}
+                    <li class="mb-2 pb-2 border-bottom">
+                        <strong style="font-weight: 500;">{{ view.user.get_full_name }}</strong><br>
+                        <small class="text-muted">{{ view.viewed_at|date:"d M Y, H:i" }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            {% if recent_requests %}
+            <div>
+                <h6 class="mb-3" style="font-weight: 500;">Recent Requests</h6>
+                <ul class="list-unstyled">
+                    {% for req in recent_requests %}
+                    <li class="mb-2 pb-2 border-bottom">
+                        <strong style="font-weight: 500;">{{ req.user.get_full_name }}</strong><br>
+                        <small class="text-muted">{{ req.created_at|date:"d M Y, H:i" }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
     </div>
 </div>
 
 <script>
+// ============================================================================
+// FILE SIZE LIMITS & UTILITY FUNCTIONS
+// ============================================================================
 const FILE_SIZE_LIMITS = {
     video: 200 * 1024 * 1024,
     webgl: 3 * 1024 * 1024 * 1024,
@@ -1004,115 +1759,217 @@ function formatTime(seconds) {
     return `${minutes}m ${secs}s`;
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    setupFileUpload();
-    setupCategorySelection();
-    setupCustomerSelection();
-    setupFormSubmission();
-    setupBackButton();
-});
-
-function setupFileUpload() {
-    // Thumbnail
-    document.getElementById('id_thumbnail')?.addEventListener('change', function() {
-        handleFileSelection(this, 'thumbnail', 'thumbnailPreview', 'thumbnailName', 'thumbnailSize');
-    });
+// ============================================================================
+// TOGGLE SUBCATEGORIES
+// ============================================================================
+function toggleSubcategories(categoryId) {
+    const subcatList = document.getElementById(`subcat_list_${categoryId}`);
+    const expandBtn = document.querySelector(`[onclick="toggleSubcategories(${categoryId})"]`);
     
-    // Video
-    document.getElementById('id_video_file')?.addEventListener('change', function() {
-        handleFileSelection(this, 'video', 'videoFilePreview', 'videoFileName', 'videoFileSize');
-    });
-    
-    // WebGL
-    document.getElementById('id_webgl_file')?.addEventListener('change', function() {
-        handleFileSelection(this, 'webgl', 'webglFilePreview', 'webglFileName', 'webglFileSize');
-    });
-    
-    // LMS
-    document.getElementById('id_lms_file')?.addEventListener('change', function() {
-        handleFileSelection(this, 'lms', 'lmsFilePreview', 'lmsFileName', 'lmsFileSize');
-    });
+    if (subcatList && expandBtn) {
+        if (subcatList.style.display === 'none') {
+            subcatList.style.display = 'block';
+            expandBtn.classList.add('expanded');
+        } else {
+            subcatList.style.display = 'none';
+            expandBtn.classList.remove('expanded');
+        }
+    }
 }
 
-function handleFileSelection(input, fileType, previewId, nameId, sizeId) {
-    const file = input.files[0];
-    if (!file) return;
+// ============================================================================
+// SELECT/DESELECT ALL SUBCATEGORIES
+// ============================================================================
+function selectAllSubcategories(categoryId, select) {
+    const checkboxes = document.querySelectorAll(`input[data-parent-category="${categoryId}"]`);
+    checkboxes.forEach(cb => {
+        cb.checked = select;
+    });
+    updateSelectionSummary();
+}
+
+// ============================================================================
+// UPDATE SELECTION SUMMARY
+// ============================================================================
+function updateSelectionSummary() {
+    const categoryCheckboxes = document.querySelectorAll('.category-checkbox:checked');
+    const subcategoryCheckboxes = document.querySelectorAll('.subcategory-checkbox:checked');
     
-    const maxSize = FILE_SIZE_LIMITS[fileType];
-    if (file.size > maxSize) {
-        alert(`File size exceeds limit (${formatFileSize(maxSize)})`);
-        input.value = '';
-        return;
+    const categoryCount = categoryCheckboxes.length;
+    const subcategoryCount = subcategoryCheckboxes.length;
+    
+    const summary = document.getElementById('categorySelectionSummary');
+    const summaryText = document.getElementById('summaryText');
+    
+    if (summary && summaryText) {
+        if (categoryCount > 0 || subcategoryCount > 0) {
+            summary.style.display = 'block';
+            summaryText.textContent = `${categoryCount} categories, ${subcategoryCount} subcategories selected`;
+        } else {
+            summary.style.display = 'none';
+        }
+    }
+}
+
+// ============================================================================
+// CATEGORY SEARCH
+// ============================================================================
+function setupCategorySearch() {
+    const searchInput = document.getElementById('categorySearch');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const categoryGroups = document.querySelectorAll('.category-group');
+            
+            categoryGroups.forEach(group => {
+                const searchData = group.getAttribute('data-search');
+                if (searchData && (searchData.includes(searchTerm) || searchTerm === '')) {
+                    group.style.display = 'block';
+                } else {
+                    group.style.display = 'none';
+                }
+            });
+        });
+    }
+}
+
+// ============================================================================
+// FILE UPLOAD HANDLERS
+// ============================================================================
+function setupFileUpload() {
+    const fileType = "{{ demo.file_type }}";
+    const fileInputId = `id_${fileType}_file`;
+    const fileInput = document.getElementById(fileInputId);
+    
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+            
+            const maxSize = FILE_SIZE_LIMITS[fileType];
+            
+            if (file.size > maxSize) {
+                alert(`File size exceeds limit (${formatFileSize(maxSize)})`);
+                this.value = '';
+                return;
+            }
+            
+            document.getElementById('demoFileName').textContent = file.name;
+            document.getElementById('demoFileSize').textContent = formatFileSize(file.size);
+            document.getElementById('demoFilePreview').classList.add('active');
+            document.getElementById('fileUploadArea').classList.add('has-file');
+        });
     }
     
-    document.getElementById(nameId).textContent = file.name;
-    document.getElementById(sizeId).textContent = formatFileSize(file.size);
-    document.getElementById(previewId).classList.add('active');
+    // Thumbnail upload
+    const thumbnailInput = document.getElementById('id_thumbnail');
+    if (thumbnailInput) {
+        thumbnailInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+            
+            if (file.size > FILE_SIZE_LIMITS.thumbnail) {
+                alert('Thumbnail too large (Max: 10 MB)');
+                this.value = '';
+                return;
+            }
+            
+            document.getElementById('thumbnailName').textContent = file.name;
+            document.getElementById('thumbnailSize').textContent = formatFileSize(file.size);
+            document.getElementById('thumbnailPreview').classList.add('active');
+            document.getElementById('thumbnailUploadArea').classList.add('has-file');
+            
+            // Show image preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgPreview = document.getElementById('thumbnailImagePreview');
+                if (imgPreview) {
+                    imgPreview.src = e.target.result;
+                    imgPreview.classList.add('active');
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+function removeDemoFile(event) {
+    event.stopPropagation();
+    const fileType = "{{ demo.file_type }}";
+    const fileInputId = `id_${fileType}_file`;
+    const fileInput = document.getElementById(fileInputId);
+    
+    if (fileInput) {
+        fileInput.value = '';
+        document.getElementById('demoFilePreview').classList.remove('active');
+        document.getElementById('fileUploadArea').classList.remove('has-file');
+    }
 }
 
 function removeThumbnail(event) {
     event.stopPropagation();
-    document.getElementById('id_thumbnail').value = '';
-    document.getElementById('thumbnailPreview').classList.remove('active');
+    const thumbnailInput = document.getElementById('id_thumbnail');
+    if (thumbnailInput) {
+        thumbnailInput.value = '';
+        document.getElementById('thumbnailPreview').classList.remove('active');
+        document.getElementById('thumbnailUploadArea').classList.remove('has-file');
+        
+        const imgPreview = document.getElementById('thumbnailImagePreview');
+        if (imgPreview) {
+            imgPreview.classList.remove('active');
+            imgPreview.src = '';
+        }
+    }
 }
 
-function removeVideoFile(event) {
-    event.stopPropagation();
-    document.getElementById('id_video_file').value = '';
-    document.getElementById('videoFilePreview').classList.remove('active');
-}
-
-function removeWebglFile(event) {
-    event.stopPropagation();
-    document.getElementById('id_webgl_file').value = '';
-    document.getElementById('webglFilePreview').classList.remove('active');
-}
-
-function removeLmsFile(event) {
-    event.stopPropagation();
-    document.getElementById('id_lms_file').value = '';
-    document.getElementById('lmsFilePreview').classList.remove('active');
-}
-
+// ============================================================================
+// CATEGORY SELECTION SETUP
+// ============================================================================
 function setupCategorySelection() {
     const allCategoriesCheckbox = document.getElementById('allBusinessCategoriesCheckbox');
     const categorySelectionArea = document.getElementById('categorySelectionArea');
-    const categoryCheckboxes = document.querySelectorAll('.category-checkbox');
     
-    allCategoriesCheckbox.addEventListener('change', function() {
-        if (this.checked) {
-            categorySelectionArea.classList.add('disabled');
-            categoryCheckboxes.forEach(function(cb) {
-                cb.checked = false;
-                const subcategoryList = document.getElementById('subcat_list_' + cb.value);
-                if (subcategoryList) {
-                    subcategoryList.style.display = 'none';
-                    subcategoryList.querySelectorAll('input').forEach(function(sub) {
-                        sub.checked = false;
-                    });
-                }
-            });
-        } else {
-            categorySelectionArea.classList.remove('disabled');
-        }
-    });
+    if (allCategoriesCheckbox) {
+        allCategoriesCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                categorySelectionArea.classList.add('disabled');
+                document.querySelectorAll('.category-checkbox').forEach(cb => {
+                    cb.checked = false;
+                    const subcategoryList = document.getElementById('subcat_list_' + cb.value);
+                    if (subcategoryList) {
+                        subcategoryList.style.display = 'none';
+                        subcategoryList.querySelectorAll('input').forEach(sub => {
+                            sub.checked = false;
+                        });
+                    }
+                });
+                updateSelectionSummary();
+            } else {
+                categorySelectionArea.classList.remove('disabled');
+            }
+        });
+    }
     
-    categoryCheckboxes.forEach(function(checkbox) {
+    // Category checkbox change handlers
+    document.querySelectorAll('.category-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', function() {
             const subcategoryList = document.getElementById('subcat_list_' + this.value);
             if (subcategoryList) {
                 subcategoryList.style.display = this.checked ? 'block' : 'none';
                 if (!this.checked) {
-                    subcategoryList.querySelectorAll('input').forEach(function(sub) {
+                    subcategoryList.querySelectorAll('input').forEach(sub => {
                         sub.checked = false;
                     });
                 }
             }
-            if (this.checked) {
+            if (this.checked && allCategoriesCheckbox) {
                 allCategoriesCheckbox.checked = false;
             }
+            updateSelectionSummary();
         });
         
+        // Show subcategories if parent is checked on page load
         if (checkbox.checked) {
             const subcategoryList = document.getElementById('subcat_list_' + checkbox.value);
             if (subcategoryList) {
@@ -1120,56 +1977,78 @@ function setupCategorySelection() {
             }
         }
     });
+    
+    // Subcategory checkbox change handlers
+    document.querySelectorAll('.subcategory-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateSelectionSummary);
+    });
+    
+    // Initial summary update
+    updateSelectionSummary();
 }
 
+// ============================================================================
+// CUSTOMER SELECTION SETUP
+// ============================================================================
 function setupCustomerSelection() {
     const allCustomersCheckbox = document.getElementById('allCustomersCheckbox');
     const customerSelectionArea = document.getElementById('customerSelectionArea');
     const customerSearch = document.getElementById('customerSearch');
     
-    allCustomersCheckbox.addEventListener('change', function() {
-        if (this.checked) {
-            customerSelectionArea.classList.add('disabled');
-            document.querySelectorAll('input[name="target_customers"]').forEach(function(cb) {
-                cb.checked = false;
-            });
-        } else {
-            customerSelectionArea.classList.remove('disabled');
-        }
-    });
-    
-    customerSearch.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        document.querySelectorAll('#customerList .checkbox-item').forEach(function(item) {
-            const searchData = item.getAttribute('data-search');
-            item.style.display = searchData.includes(searchTerm) ? 'flex' : 'none';
+    if (allCustomersCheckbox) {
+        allCustomersCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                customerSelectionArea.classList.add('disabled');
+                document.querySelectorAll('input[name="target_customers"]').forEach(cb => {
+                    cb.checked = false;
+                });
+            } else {
+                customerSelectionArea.classList.remove('disabled');
+            }
         });
-    });
+    }
+    
+    if (customerSearch) {
+        customerSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            document.querySelectorAll('#customerList .customer-item').forEach(item => {
+                const searchData = item.getAttribute('data-search');
+                if (searchData) {
+                    item.style.display = searchData.includes(searchTerm) ? 'flex' : 'none';
+                }
+            });
+        });
+    }
 }
 
+// ============================================================================
+// FORM SUBMISSION WITH UPLOAD PROGRESS
+// ============================================================================
 function setupFormSubmission() {
     const form = document.getElementById('demoForm');
     const submitBtn = document.getElementById('submitBtn');
     
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Preparing...';
-        
-        // Check if any files are being uploaded
-        const hasFiles = document.getElementById('id_thumbnail')?.files.length > 0 ||
-                        document.getElementById('id_video_file')?.files.length > 0 ||
-                        document.getElementById('id_webgl_file')?.files.length > 0 ||
-                        document.getElementById('id_lms_file')?.files.length > 0;
-        
-        if (hasFiles) {
-            uploadFormWithProgress(form);
-        } else {
-            // No files - simple submit
-            form.submit();
-        }
-    });
+    if (form && submitBtn) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Preparing...';
+            
+            // Check if any files are being uploaded
+            const hasFiles = document.getElementById('id_thumbnail')?.files.length > 0 ||
+                            document.getElementById('id_video_file')?.files.length > 0 ||
+                            document.getElementById('id_webgl_file')?.files.length > 0 ||
+                            document.getElementById('id_lms_file')?.files.length > 0;
+            
+            if (hasFiles) {
+                uploadFormWithProgress(form);
+            } else {
+                // No files - simple submit
+                form.submit();
+            }
+        });
+    }
 }
 
 function uploadFormWithProgress(form) {
@@ -1256,29 +2135,40 @@ function uploadFormWithProgress(form) {
     xhr.open('POST', form.action, true);
     xhr.timeout = 600000;
     xhr.setRequestHeader('X-CSRFToken', formData.get('csrfmiddlewaretoken'));
-    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     xhr.send(formData);
 }
 
 function showUploadError(message) {
     document.getElementById('uploadProgressOverlay').classList.remove('active');
     alert(message);
-    document.getElementById('submitBtn').disabled = false;
-    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save me-1"></i>Update Demo';
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Update Demo';
+    }
 }
 
+// ============================================================================
+// BACK BUTTON WITH UNSAVED CHANGES WARNING
+// ============================================================================
 function setupBackButton() {
     let formChanged = false;
     const demoForm = document.getElementById('demoForm');
     const backButtons = document.querySelectorAll('.btn-back');
     
-    demoForm.addEventListener('change', function() {
-        formChanged = true;
-    });
-    
-    demoForm.addEventListener('input', function() {
-        formChanged = true;
-    });
+    if (demoForm) {
+        demoForm.addEventListener('change', function() {
+            formChanged = true;
+        });
+        
+        demoForm.addEventListener('input', function() {
+            formChanged = true;
+        });
+        
+        demoForm.addEventListener('submit', function() {
+            formChanged = false;
+        });
+    }
     
     backButtons.forEach(button => {
         button.addEventListener('click', function(e) {
@@ -1286,7 +2176,7 @@ function setupBackButton() {
             
             if (formChanged) {
                 if (confirm('You have unsaved changes!\n\nClick OK to SAVE changes\nClick Cancel to DISCARD changes')) {
-                    demoForm.submit();
+                    if (demoForm) demoForm.submit();
                 } else {
                     if (confirm('Are you sure you want to DISCARD all changes?\n\nClick OK to leave without saving\nClick Cancel to stay')) {
                         formChanged = false;
@@ -1300,12 +2190,24 @@ function setupBackButton() {
             }
         });
     });
-    
-    demoForm.addEventListener('submit', function() {
-        formChanged = false;
-    });
 }
 
-console.log('✅ Demo Edit with Upload Progress - Ready');
+// ============================================================================
+// INITIALIZE ON PAGE LOAD
+// ============================================================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Demo Detail Page Initializing...');
+    
+    setupFileUpload();
+    setupCategorySelection();
+    setupCustomerSelection();
+    setupFormSubmission();
+    setupBackButton();
+    setupCategorySearch();
+    
+    console.log('✅ Demo Detail Page - Ready');
+});
+    
 </script>
+
 {% endblock %}
