@@ -230,15 +230,16 @@ class NotificationService:
         
         return notification
 
+
     @staticmethod
     def notify_demo_request_confirmed(demo_request, send_email=True):
         """Demo request confirmed - ✅ PROPERLY RENDERS TEMPLATE"""
         
-        # ✅ Pre-format all date/time values
+        # ✅ Pre-format all date/time values for notification text
         confirmed_date_str = demo_request.confirmed_date.strftime('%B %d, %Y')
         confirmed_time_str = f"{demo_request.confirmed_time_slot.start_time.strftime('%I:%M %p')} - {demo_request.confirmed_time_slot.end_time.strftime('%I:%M %p')}"
         
-        # ✅ Try to get and render template
+        # ✅ Try to get and render template for notification
         try:
             template = NotificationTemplate.objects.get(
                 notification_type='demo_confirmation',
@@ -268,15 +269,15 @@ class NotificationService:
             content_object=demo_request
         )
         
+        # ✅ FIXED: Pass the entire demo_request object to email template
         if send_email:
             NotificationService.send_email_notification(
                 user=demo_request.user,
                 subject=notification_title,
-                template_name='demo_confirmed',
+                template_name='demo_confirmed',  # ✅ FIXED: Just the name, no path or extension
                 context={
-                    'demo_title': demo_request.demo.title,
-                    'confirmed_date': confirmed_date_str,
-                    'confirmed_time': confirmed_time_str,
+                    'demo_request': demo_request,  # ✅ Pass entire object
+                    'year': 2025,  # ✅ For footer
                 }
             )
         

@@ -191,167 +191,6 @@
         color: white;
     }
 
-    /* ✅ ENHANCED: Employee Selection Styles */
-    .employee-card {
-        border: 2px solid #e5e7eb;
-        border-radius: 0.5rem;
-        padding: 0.75rem;
-        margin-bottom: 0.5rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        position: relative;
-    }
-
-    .employee-card:hover:not(.unavailable):not(.past-slot) {
-        border-color: #087fc2;
-        background-color: #f0f9ff;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    .employee-card.selected {
-        border-color: #087fc2;
-        background-color: #dbeafe;
-        box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.1);
-    }
-
-    .employee-card.unavailable,
-    .employee-card.past-slot {
-        border-color: #f3f4f6;
-        background-color: #f9fafb;
-        cursor: not-allowed;
-        opacity: 0.6;
-    }
-
-    .employee-card.booked {
-        border-color: #fef3c7;
-        background-color: #fffbeb;
-    }
-
-    .employee-card .employee-name {
-        font-weight: 600;
-        color: #1f2937;
-        font-size: 0.95rem;
-        margin-bottom: 0.25rem;
-    }
-
-    .employee-card .employee-email {
-        font-size: 0.8rem;
-        color: #6b7280;
-        margin-top: 0.25rem;
-    }
-
-    .employee-card .employee-status {
-        font-size: 0.75rem;
-        margin-top: 0.5rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        display: inline-block;
-        font-weight: 600;
-    }
-
-    .employee-card .status-available {
-        background-color: #d1fae5;
-        color: #065f46;
-    }
-
-    .employee-card .status-busy {
-        background-color: #fed7aa;
-        color: #92400e;
-    }
-
-    .employee-card .status-conflict {
-        background-color: #fecaca;
-        color: #991b1b;
-    }
-
-    .employee-card .workload-info {
-        font-size: 0.75rem;
-        color: #6b7280;
-        margin-top: 0.25rem;
-    }
-
-    .employee-card .conflict-badge {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-        background-color: #ef4444;
-        color: white;
-        font-size: 0.65rem;
-        padding: 0.2rem 0.5rem;
-        border-radius: 0.25rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        animation: pulse-red 2s ease-in-out infinite;
-        z-index: 10;
-    }
-
-    @keyframes pulse-red {
-        0%, 100% { 
-            opacity: 1;
-            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-        }
-        50% { 
-            opacity: 0.9;
-            box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
-        }
-    }
-
-    /* Alert for conflict details */
-    .alert-sm {
-        font-size: 0.8rem;
-        padding: 0.75rem;
-        margin-top: 0.5rem;
-        border-radius: 0.375rem;
-        border: 1px solid;
-    }
-
-    .employee-card .alert-danger {
-        background-color: #fee2e2;
-        border-color: #fecaca;
-        color: #991b1b;
-    }
-
-    .employee-card .alert-success {
-        background-color: #d1fae5;
-        border-color: #a7f3d0;
-        color: #065f46;
-    }
-
-    .employee-card .alert-warning {
-        background-color: #fef3c7;
-        border-color: #fde68a;
-        color: #92400e;
-    }
-
-    .employee-card .alert-info {
-        background-color: #dbeafe;
-        border-color: #bfdbfe;
-        color: #1e40af;
-    }
-
-    .employee-role {
-        font-size: 0.75rem;
-        color: #6b7280;
-        font-style: italic;
-    }
-
-    /* Enhanced status badges */
-    .employee-status {
-        white-space: nowrap;
-    }
-
-    /* Sorting indicator */
-    .employee-count-badge {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 1rem;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-
     /* Pagination */
     .pagination .page-link {
         color: #087fc2;
@@ -395,6 +234,169 @@
 
     .loading-pulse {
         animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    /* Time Slot Dropdown Styles */
+    .time-slot-select option.slot-available {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .time-slot-select option.slot-partial {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .time-slot-select option.slot-full {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .time-slot-select option:disabled {
+        background-color: #f3f4f6;
+        color: #9ca3af;
+    }
+
+    /* Date Input Enhancement */
+    #confirmDate {
+        cursor: pointer !important;
+        position: relative;
+    }
+
+    #confirmDate::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .input-group-text {
+        background-color: #f8f9fa;
+        border-right: 0;
+    }
+
+    #confirmDate:focus {
+        border-color: #087fc2;
+        box-shadow: 0 0 0 0.2rem rgba(8, 127, 194, 0.25);
+    }
+
+    .input-group:focus-within .input-group-text {
+        border-color: #087fc2;
+    }
+
+    /* Slot Details Card */
+    .slot-details-card {
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .slot-details-card .card {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.375rem;
+        background: #f9fafb;
+    }
+
+    .assigned-employee-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        margin: 0.125rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+    }
+
+    .no-assignment {
+        color: #9ca3af;
+        font-style: italic;
+    }
+
+    /* ✅ NEW: Conflict Warning Styles */
+    .conflict-warning .alert-danger {
+        background-color: #fee2e2;
+        border: 1px solid #ef4444;
+        border-left: 4px solid #dc2626;
+    }
+
+    .conflict-item {
+        padding: 0.5rem;
+        background: white;
+        border-radius: 0.25rem;
+        margin-bottom: 0.5rem;
+        border-left: 3px solid #dc2626;
+    }
+
+    .conflict-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .conflict-employee-name {
+        font-weight: 600;
+        color: #991b1b;
+        font-size: 0.875rem;
+    }
+
+    .conflict-detail {
+        color: #6b7280;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    .conflict-demo-info {
+        background: #fef3c7;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        display: inline-block;
+        margin-top: 0.25rem;
+        font-size: 0.75rem;
+        color: #92400e;
+    }
+
+    .conflict-customer-info {
+        color: #6b7280;
+        font-size: 0.75rem;
+    }
+
+    /* Employee Dropdown */
+    #confirmEmployee option.available {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    #confirmEmployee option.busy {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    #confirmEmployee option.conflict {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* Modal */
+    .modal-dialog-centered {
+        max-width: 600px;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #087fc2 0%, #0a5f8a 100%);
+        padding: 0.5rem 1rem;
+    }
+
+    .info-box {
+        background: #f8f9fa;
+        border-left: 3px solid #087fc2;
     }
 
     @media (max-width: 768px) {
@@ -664,113 +666,135 @@
     </div>
 {% endif %}
 
-<!-- ✅ ENHANCED: Confirm & Assign Modal -->
+<!-- ✅ UPDATED MODAL with Conflict Details -->
 <div class="modal fade" id="confirmAssignModal" tabindex="-1" aria-labelledby="confirmAssignModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="confirmAssignModalLabel">
+            <div class="modal-header bg-primary text-white py-2">
+                <h6 class="modal-title mb-0" id="confirmAssignModalLabel">
                     <i class="fas fa-check-circle me-2"></i>Confirm Demo & Assign Employee
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <!-- Demo Request Info -->
-                <div class="alert alert-light border mb-4">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-2">
-                                <strong><i class="fas fa-user me-1 text-primary"></i>Customer:</strong>
-                                <span id="modalCustomer" class="ms-1"></span>
-                            </div>
-                            <div>
-                                <strong><i class="fas fa-desktop me-1 text-primary"></i>Demo:</strong>
-                                <span id="modalDemo" class="ms-1"></span>
-                            </div>
+            
+            <div class="modal-body p-3">
+                <!-- Customer & Demo Info -->
+                <div class="info-box mb-3 p-2 bg-light rounded">
+                    <div class="row g-2 small">
+                        <div class="col-6">
+                            <i class="fas fa-user text-primary me-1"></i>
+                            <strong id="modalCustomer"></strong>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-2">
-                                <strong><i class="far fa-calendar me-1 text-primary"></i>Date:</strong>
-                                <span id="modalDate" class="ms-1"></span>
-                            </div>
-                            <div>
-                                <strong><i class="far fa-clock me-1 text-primary"></i>Time:</strong>
-                                <span id="modalTime" class="ms-1"></span>
-                            </div>
+                        <div class="col-6">
+                            <i class="fas fa-desktop text-primary me-1"></i>
+                            <strong id="modalDemo"></strong>
                         </div>
                     </div>
                 </div>
 
-                <!-- Loading State -->
-                <div id="employeeLoadingState" class="text-center py-5 loading-pulse">
-                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="visually-hidden">Loading...</span>
+                <!-- Date Selection -->
+                <div class="mb-3">
+                    <label class="form-label small mb-1" for="confirmDate" style="cursor: pointer;">
+                        <i class="far fa-calendar me-1"></i>Select Date
+                    </label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text" style="cursor: pointer;" onclick="document.getElementById('confirmDate').showPicker()">
+                            <i class="far fa-calendar"></i>
+                        </span>
+                        <input type="date" id="confirmDate" class="form-control" required style="cursor: pointer;">
                     </div>
-                    <p class="text-muted mb-0">Loading available employees...</p>
-                    <small class="text-muted">Please wait</small>
+                    <small class="text-muted">Current: <span id="currentDate"></span></small>
+                </div>
+
+                <!-- Time Slot Selection -->
+                <div class="mb-3">
+                    <label class="form-label small mb-1">
+                        <i class="far fa-clock me-1"></i>Select Time Slot
+                    </label>
+                    <select id="confirmTimeSlot" class="form-select form-select-sm time-slot-select" required>
+                        <option value="">Loading slots...</option>
+                    </select>
+                    <small class="text-muted">Current: <span id="currentTime"></span></small>
+                    
+                    <!-- ✅ UPDATED: Slot Details Card with Conflict Warning -->
+                    <div id="slotDetailsCard" class="slot-details-card mt-2" style="display: none;">
+                        <div class="card">
+                            <div class="card-body p-2">
+                                <h6 class="card-title mb-2 small">
+                                    <i class="fas fa-info-circle text-primary"></i>
+                                    Slot Details: <span id="slotDetailsTime"></span>
+                                </h6>
+                                <div id="slotDetailsContent" class="small"></div>
+                                
+                                <!-- ✅ NEW: Conflict Warning Section -->
+                                <div id="conflictWarning" class="conflict-warning mt-2" style="display: none;">
+                                    <div class="alert alert-danger py-2 px-2 mb-0">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                                            <div class="flex-grow-1">
+                                                <strong class="d-block mb-1">⚠️ Scheduling Conflicts</strong>
+                                                <div id="conflictDetails" class="small"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Employee Selection -->
-                <div id="employeeSelectionContainer" style="display: none;">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="mb-0">
-                            <i class="fas fa-users me-2 text-primary"></i>Available Employees
-                        </h6>
-                        <small class="text-muted" id="employeeCount"></small>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label small mb-1">
+                        <i class="fas fa-user-tie me-1"></i>Assign Employee
+                        <span class="badge bg-info ms-1" id="employeeCountBadge">Select slot first</span>
+                    </label>
+                    <select id="confirmEmployee" class="form-select form-select-sm">
+                        <option value="">First select date & time</option>
+                    </select>
                     
-                    <div id="employeeList" class="mb-3" style="max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
-                        <!-- Populated dynamically via JavaScript -->
-                    </div>
-
-                    <div id="selectedEmployeeInfo" class="alert alert-success border-success" style="display: none;">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-check-circle me-2 fs-5"></i>
-                            <div>
-                                <strong>Selected Employee:</strong>
-                                <div id="selectedEmployeeName" class="mt-1"></div>
-                            </div>
-                        </div>
+                    <div class="d-flex gap-2 mt-2 flex-wrap small">
+                        <span><span class="badge bg-success">●</span> Available</span>
+                        <span><span class="badge bg-warning">●</span> Busy</span>
+                        <span><span class="badge bg-danger">●</span> Conflict</span>
                     </div>
                 </div>
 
-                <!-- No Employees Available -->
-                <div id="noEmployeesMessage" class="alert alert-warning border-warning" style="display: none;">
-                    <div class="d-flex">
-                        <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
-                        <div>
-                            <strong>No employees available for this time slot</strong>
-                            <p class="mb-2 mt-2">All employees are busy or unavailable at the selected time.</p>
-                            <p class="mb-0"><strong>Options:</strong></p>
-                            <ul class="mb-0 mt-1">
-                                <li>Proceed without assignment (you can assign later)</li>
-                                <li>Cancel and reschedule to a different time</li>
-                            </ul>
-                        </div>
+                <!-- Selected Employee Info -->
+                <div id="selectedEmployeeInfo" class="alert alert-success py-2 mb-3" style="display: none;">
+                    <small>
+                        <i class="fas fa-check-circle me-1"></i>
+                        <strong>Selected:</strong> <span id="selectedEmployeeName"></span>
+                    </small>
+                </div>
+
+                <!-- Loading State -->
+                <div id="employeeLoadingState" class="text-center py-2" style="display: none;">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
                     </div>
+                    <small class="text-muted ms-2">Loading employees...</small>
                 </div>
 
                 <!-- Admin Notes -->
-                <div class="mt-4">
-                    <label for="confirmAdminNotes" class="form-label">
-                        <i class="far fa-sticky-note me-1"></i>Admin Notes <small class="text-muted">(Optional)</small>
+                <div class="mb-0">
+                    <label class="form-label small mb-1">
+                        <i class="far fa-sticky-note me-1"></i>Admin Notes <span class="text-muted">(Optional)</span>
                     </label>
-                    <textarea id="confirmAdminNotes" class="form-control" rows="3" 
-                              placeholder="Add any notes about this confirmation..."></textarea>
-                    <small class="text-muted">These notes will be visible to assigned employee and in request history.</small>
+                    <textarea id="confirmAdminNotes" class="form-control form-control-sm" rows="2" 
+                              placeholder="Add any notes..."></textarea>
                 </div>
             </div>
             
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>Cancel
                 </button>
-                <button type="button" id="proceedWithoutAssignBtn" class="btn btn-warning" 
-                        onclick="confirmWithoutAssignment()" style="display: none;">
-                    <i class="fas fa-forward me-1"></i>Confirm Without Assignment
+                <button type="button" id="proceedWithoutAssignBtn" class="btn btn-sm btn-warning" 
+                        style="display: none;">
+                    <i class="fas fa-forward me-1"></i>Without Employee
                 </button>
-                <button type="button" id="confirmAssignBtn" class="btn btn-success" 
-                        onclick="confirmWithAssignment()" disabled>
+                <button type="button" id="confirmAssignBtn" class="btn btn-sm btn-success">
                     <i class="fas fa-check-circle me-1"></i>Confirm & Assign
                 </button>
             </div>
@@ -778,82 +802,30 @@
     </div>
 </div>
 
-<!-- Toast Container -->
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
-
-{% endblock %}
-
-{% block admin_extra_js %}
 <script>
 // ============================================================================
-// CONFIGURATION & GLOBAL VARIABLES
+// ✅ UPDATED SCRIPT with Detailed Conflict Display
 // ============================================================================
 
-const csrfToken = '{{ csrf_token }}';
-const HAS_MANAGE_PERMISSION = {{ user|has_permission:'manage_demo_requests'|yesno:'true,false' }};
+if (typeof window.demoModalVars === 'undefined') {
+    window.demoModalVars = {
+        confirmAssignModal: null,
+        currentRequestId: null,
+        currentRequestData: null,
+        selectedEmployeeId: null,
+        availableEmployees: [],
+        availableSlots: [],
+        csrfToken: document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}'
+    };
+}
+
+const vars = window.demoModalVars;
 const HAS_APPROVE_PERMISSION = {{ user|has_permission:'approve_demo_request'|yesno:'true,false' }};
 const HAS_REJECT_PERMISSION = {{ user|has_permission:'reject_demo_request'|yesno:'true,false' }};
-
-let confirmAssignModal = null;
-let currentRequestId = null;
-let currentRequestData = null;
-let selectedEmployeeId = null;
-let availableEmployees = [];
 
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
-
-function showToast(type, message, duration = 5000) {
-    const container = document.querySelector('.toast-container');
-    if (!container) {
-        alert(message);
-        return;
-    }
-    
-    const toastId = `toast-${Date.now()}`;
-    const icons = {
-        success: 'fa-check-circle text-success',
-        error: 'fa-exclamation-circle text-danger',
-        warning: 'fa-exclamation-triangle text-warning',
-        info: 'fa-info-circle text-info'
-    };
-    
-    const titles = {
-        success: 'Success',
-        error: 'Error',
-        warning: 'Warning',
-        info: 'Information'
-    };
-    
-    const bgColors = {
-        success: 'bg-success',
-        error: 'bg-danger',
-        warning: 'bg-warning',
-        info: 'bg-info'
-    };
-    
-    const html = `
-        <div id="${toastId}" class="toast align-items-center text-white ${bgColors[type]} border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="fas ${icons[type]} me-2"></i>
-                    <strong>${titles[type]}:</strong> ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        </div>
-    `;
-    
-    container.insertAdjacentHTML('beforeend', html);
-    const toastElement = document.getElementById(toastId);
-    
-    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
-        const toast = new bootstrap.Toast(toastElement, { delay: duration });
-        toast.show();
-        toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
-    }
-}
 
 function getRowData(requestId) {
     const row = document.querySelector(`tr[data-request-id="${requestId}"]`);
@@ -871,532 +843,579 @@ function getRowData(requestId) {
     };
 }
 
+function showToast(type, message, duration = 5000) {
+    const container = document.querySelector('.toast-container');
+    if (!container) {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        return;
+    }
+    
+    const toastId = `toast-${Date.now()}`;
+    const icons = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    };
+    
+    const bgColors = {
+        success: 'bg-success',
+        error: 'bg-danger',
+        warning: 'bg-warning',
+        info: 'bg-info'
+    };
+    
+    const html = `
+        <div id="${toastId}" class="toast align-items-center text-white ${bgColors[type]} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas ${icons[type]} me-2"></i>${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', html);
+    const toastElement = document.getElementById(toastId);
+    
+    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+        const toast = new bootstrap.Toast(toastElement, { delay: duration });
+        toast.show();
+        toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
+    }
+}
+
 // ============================================================================
-// ✅ ENHANCED: CONFIRM & ASSIGN MODAL FUNCTIONS
+// OPEN MODAL
 // ============================================================================
 
 function openConfirmModal(requestId) {
     if (!HAS_APPROVE_PERMISSION) {
-        showToast('error', 'You do not have permission to confirm demo requests');
+        showToast('error', 'You do not have permission to confirm requests');
         return;
     }
 
-    console.log('🔵 Opening confirm modal for request:', requestId);
+    console.log('🔵 Opening modal for request:', requestId);
 
-    if (!confirmAssignModal) {
+    if (!vars.confirmAssignModal) {
         console.error('❌ Modal not initialized');
-        showToast('error', 'Modal not initialized. Please refresh the page.');
+        showToast('error', 'Modal not initialized');
         return;
     }
 
-    currentRequestId = requestId;
-    currentRequestData = getRowData(requestId);
-    selectedEmployeeId = null;
+    vars.currentRequestId = requestId;
+    vars.currentRequestData = getRowData(requestId);
+    vars.selectedEmployeeId = null;
 
-    if (!currentRequestData) {
-        showToast('error', 'Request data not found. Please refresh the page.');
+    if (!vars.currentRequestData) {
+        showToast('error', 'Request data not found');
         return;
     }
 
-    // Set modal data
     const modalCustomer = document.getElementById('modalCustomer');
     const modalDemo = document.getElementById('modalDemo');
-    const modalDate = document.getElementById('modalDate');
-    const modalTime = document.getElementById('modalTime');
+    const currentDate = document.getElementById('currentDate');
+    const currentTime = document.getElementById('currentTime');
+    const confirmDate = document.getElementById('confirmDate');
     const confirmAdminNotes = document.getElementById('confirmAdminNotes');
-
-    if (!modalCustomer || !modalDemo || !modalDate || !modalTime) {
-        console.error('❌ Modal elements not found');
-        showToast('error', 'Modal elements missing. Please refresh the page.');
-        return;
-    }
-
-    modalCustomer.textContent = currentRequestData.customer;
-    modalDemo.textContent = currentRequestData.demo;
-    modalDate.textContent = currentRequestData.date;
-    modalTime.textContent = currentRequestData.time;
-    
-    if (confirmAdminNotes) {
-        confirmAdminNotes.value = '';
-    }
-
-    // Reset UI
-    const employeeLoadingState = document.getElementById('employeeLoadingState');
-    const employeeSelectionContainer = document.getElementById('employeeSelectionContainer');
-    const noEmployeesMessage = document.getElementById('noEmployeesMessage');
+    const confirmEmployee = document.getElementById('confirmEmployee');
     const selectedEmployeeInfo = document.getElementById('selectedEmployeeInfo');
+    const slotDetailsCard = document.getElementById('slotDetailsCard');
+    const conflictWarning = document.getElementById('conflictWarning');
     const confirmAssignBtn = document.getElementById('confirmAssignBtn');
-    const proceedWithoutAssignBtn = document.getElementById('proceedWithoutAssignBtn');
 
-    if (employeeLoadingState) employeeLoadingState.style.display = 'block';
-    if (employeeSelectionContainer) employeeSelectionContainer.style.display = 'none';
-    if (noEmployeesMessage) noEmployeesMessage.style.display = 'none';
+    if (modalCustomer) modalCustomer.textContent = vars.currentRequestData.customer;
+    if (modalDemo) modalDemo.textContent = vars.currentRequestData.demo;
+    if (currentDate) currentDate.textContent = vars.currentRequestData.date;
+    if (currentTime) currentTime.textContent = vars.currentRequestData.time;
+    if (confirmDate) confirmDate.value = vars.currentRequestData.dateIso;
+    if (confirmAdminNotes) confirmAdminNotes.value = '';
+    if (confirmEmployee) confirmEmployee.innerHTML = '<option value="">First select time slot</option>';
     if (selectedEmployeeInfo) selectedEmployeeInfo.style.display = 'none';
-    if (confirmAssignBtn) confirmAssignBtn.disabled = true;
-    if (proceedWithoutAssignBtn) proceedWithoutAssignBtn.style.display = 'none';
+    if (slotDetailsCard) slotDetailsCard.style.display = 'none';
+    if (conflictWarning) conflictWarning.style.display = 'none';
+    if (confirmAssignBtn) confirmAssignBtn.disabled = false;
 
-    // Show modal
-    try {
-        confirmAssignModal.show();
-        console.log('✅ Modal opened successfully');
-    } catch (error) {
-        console.error('❌ Error opening modal:', error);
-        showToast('error', 'Failed to open modal: ' + error.message);
-        return;
-    }
-
-    // Load available employees
-    loadAvailableEmployees(currentRequestData.dateIso, currentRequestData.timeSlotId);
+    vars.confirmAssignModal.show();
+    loadTimeSlotsForDate(vars.currentRequestData.dateIso);
 }
 
-function loadAvailableEmployees(dateIso, timeSlotId) {
-    console.log('🔍 Loading employees for:', dateIso, timeSlotId);
+// ============================================================================
+// LOAD TIME SLOTS
+// ============================================================================
 
-    const loadingDiv = document.getElementById('employeeLoadingState');
-    const employeeSelect = document.getElementById('employeeSelectionContainer');
-    const noEmployeesDiv = document.getElementById('noEmployeesMessage');
+function loadTimeSlotsForDate(dateIso) {
+    console.log('🔍 Loading slots for:', dateIso);
     
-    if (loadingDiv) loadingDiv.style.display = 'block';
-    if (employeeSelect) employeeSelect.style.display = 'none';
-    if (noEmployeesDiv) noEmployeesDiv.style.display = 'none';
-
-    // First get available employees for this specific time slot
-    fetch(`/api/demo-requests/available-employees/?date=${dateIso}&time_slot_id=${timeSlotId}`)
+    const timeSlotSelect = document.getElementById('confirmTimeSlot');
+    const employeeSelect = document.getElementById('confirmEmployee');
+    
+    if (timeSlotSelect) timeSlotSelect.innerHTML = '<option value="">Loading...</option>';
+    if (employeeSelect) employeeSelect.innerHTML = '<option value="">First select time slot</option>';
+    
+    fetch(`/admin/demo-requests/ajax-check-slots/?date=${dateIso}`)
         .then(response => response.json())
         .then(data => {
-            console.log('✅ API Response:', data);
-
-            if (loadingDiv) loadingDiv.style.display = 'none';
-
-            if (data.success && data.employees) {
+            console.log('✅ Slots loaded:', data);
+            
+            if (!data.success || !data.slots || data.slots.length === 0) {
+                if (timeSlotSelect) timeSlotSelect.innerHTML = '<option value="">No slots available</option>';
+                return;
+            }
+            
+            vars.availableSlots = data.slots;
+            
+            let optionsHTML = '<option value="">-- Select Time Slot --</option>';
+            
+            data.slots.forEach(slot => {
+                let statusIcon = '';
+                let statusClass = '';
+                let disabled = '';
+                let assignedText = '';
                 
-                // Now check slot-specific availability
-                return fetch(`/admin/demo-requests/ajax-check-slots/?date=${dateIso}`)
-                    .then(r => r.json())
-                    .then(slotData => {
-                        console.log('📅 Slot data:', slotData);
-                        
-                        // Find current time slot data
-                        const currentSlot = slotData.slots?.find(s => s.id == timeSlotId);
-                        console.log('🎯 Current slot:', currentSlot);
-                        
-                        // Add slot-specific booking info to employees
-                        const enhancedEmployees = data.employees.map(emp => {
-                            // Check if employee has booking in this slot
-                            const hasBooking = currentSlot?.booking_details?.some(
-                                booking => booking.assigned_employee_id == emp.id
-                            );
-                            
-                            const bookedDemo = hasBooking ? currentSlot.booking_details.find(
-                                b => b.assigned_employee_id == emp.id
-                            ) : null;
-                            
-                            return {
-                                ...emp,
-                                slot_available: !hasBooking,
-                                slot_status: hasBooking ? 'booked_in_slot' : 'available_in_slot',
-                                booked_demo: bookedDemo
-                            };
-                        });
-
-                        availableEmployees = enhancedEmployees;
-                        
-                        console.log('\n📋 Enhanced employees:', enhancedEmployees);
-                        
-                        if (enhancedEmployees.length > 0) {
-                            displayEmployees(enhancedEmployees, dateIso, timeSlotId);
-                            
-                            if (employeeSelect) employeeSelect.style.display = 'block';
-                            
-                            const availableCount = enhancedEmployees.filter(e => e.slot_available).length;
-                            const busyCount = enhancedEmployees.length - availableCount;
-                            
-                            const countDiv = document.getElementById('employeeCount');
-                            if (countDiv) {
-                                countDiv.textContent = `${availableCount} available, ${busyCount} busy in this slot`;
-                            }
-                        } else {
-                            if (noEmployeesDiv) noEmployeesDiv.style.display = 'block';
-                            const proceedBtn = document.getElementById('proceedWithoutAssignBtn');
-                            if (proceedBtn) proceedBtn.style.display = 'inline-block';
-                        }
-                        
-                        return enhancedEmployees;
-                    })
-                    .catch(slotError => {
-                        console.error('❌ Error fetching slot data:', slotError);
-                        availableEmployees = data.employees;
-                        displayEmployees(data.employees, dateIso, timeSlotId);
-                        if (employeeSelect) employeeSelect.style.display = 'block';
-                    });
-            } else {
-                console.log('⚠️ No employees in API response');
-                if (noEmployeesDiv) noEmployeesDiv.style.display = 'block';
-                const proceedBtn = document.getElementById('proceedWithoutAssignBtn');
-                if (proceedBtn) proceedBtn.style.display = 'inline-block';
+                const assignedEmployees = slot.booking_details || [];
+                
+                if (assignedEmployees.length > 0) {
+                    const employeeNames = assignedEmployees
+                        .map(b => b.assigned_employee_name || 'Unassigned')
+                        .filter(name => name !== 'Not assigned' && name !== 'Unassigned')
+                        .join(', ');
+                    
+                    assignedText = employeeNames ? ` → ${employeeNames}` : ' → -';
+                } else {
+                    assignedText = ' → -';
+                }
+                
+                const assignedCount = assignedEmployees.filter(
+                    b => b.assigned_employee_name && b.assigned_employee_name !== 'Not assigned' && b.assigned_employee_name !== 'Unassigned'
+                ).length;
+                
+                const realAvailableSpots = slot.total_capacity - assignedCount;
+                
+                if (slot.is_past || slot.is_starting_soon) {
+                    statusIcon = '⏰';
+                    statusClass = 'slot-unavailable';
+                    disabled = 'disabled';
+                } else if (realAvailableSpots === 0) {
+                    statusIcon = '🔴';
+                    statusClass = 'slot-full';
+                    disabled = 'disabled';
+                } else if (assignedCount > 0 && realAvailableSpots > 0) {
+                    statusIcon = '🟡';
+                    statusClass = 'slot-partial';
+                } else {
+                    statusIcon = '🟢';
+                    statusClass = 'slot-available';
+                }
+                
+                const displayAvailableSpots = realAvailableSpots;
+                const isCurrentSlot = (slot.id == vars.currentRequestData.timeSlotId);
+                const selected = isCurrentSlot ? 'selected' : '';
+                
+                optionsHTML += `
+                    <option value="${slot.id}" ${disabled} ${selected} class="${statusClass}">
+                        ${statusIcon} ${slot.start_time} - ${slot.end_time} (${displayAvailableSpots} free)${assignedText}
+                    </option>
+                `;
+            });
+            
+            if (timeSlotSelect) timeSlotSelect.innerHTML = optionsHTML;
+            
+            if (timeSlotSelect && timeSlotSelect.value) {
+                const slot = vars.availableSlots.find(s => s.id == timeSlotSelect.value);
+                if (slot) displaySlotDetails(slot);
+                loadAvailableEmployees(dateIso, timeSlotSelect.value);
             }
         })
         .catch(error => {
-            console.error('❌ Error loading employees:', error);
-            if (loadingDiv) loadingDiv.style.display = 'none';
-            showToast('error', 'Failed to load employees: ' + error.message);
-            if (noEmployeesDiv) noEmployeesDiv.style.display = 'block';
-            const proceedBtn = document.getElementById('proceedWithoutAssignBtn');
-            if (proceedBtn) proceedBtn.style.display = 'inline-block';
+            console.error('❌ Error:', error);
+            if (timeSlotSelect) timeSlotSelect.innerHTML = '<option value="">Error loading slots</option>';
+            showToast('error', 'Failed to load time slots');
         });
 }
 
 // ============================================================================
-// FIXED: JavaScript for admin/demo_requests/list.html
+// ✅ UPDATED: DISPLAY SLOT DETAILS with CONFLICTS
+// ============================================================================
 
-
-function displayEmployees(employees, dateIso, timeSlotId) {
-    const container = document.getElementById('employeeList');
-    if (!container) {
-        console.error('❌ Employee list container not found');
-        return;
-    }
+function displaySlotDetails(slot) {
+    console.log('📋 Displaying slot details with conflicts');
     
-    container.innerHTML = '';
-
-    if (employees.length === 0) {
-        container.innerHTML = '<p class="text-muted text-center py-3">No employees available</p>';
-        return;
-    }
-
-    console.log(`\n📋 Displaying ${employees.length} employees with enhanced status`);
-
-    // Employees are already sorted by backend (available first, then by workload)
-
-    employees.forEach((emp, index) => {
-        console.log(`\n   ${index + 1}. ${emp.name}`);
-        console.log(`      - Status: ${emp.status}`);
-        console.log(`      - Available: ${emp.available}`);
-        console.log(`      - Total Demos: ${emp.current_demos || 0}`);
+    const detailsCard = document.getElementById('slotDetailsCard');
+    const detailsTime = document.getElementById('slotDetailsTime');
+    const detailsContent = document.getElementById('slotDetailsContent');
+    const conflictWarning = document.getElementById('conflictWarning');
+    const conflictDetails = document.getElementById('conflictDetails');
+    
+    if (!detailsCard || !detailsTime || !detailsContent) return;
+    
+    detailsTime.textContent = `${slot.start_time} - ${slot.end_time}`;
+    
+    const assignedEmployees = slot.booking_details || [];
+    const assignedCount = assignedEmployees.filter(
+        b => b.assigned_employee_name && 
+        b.assigned_employee_name !== 'Not assigned' && 
+        b.assigned_employee_name !== 'Unassigned'
+    ).length;
+    
+    let contentHTML = `
+        <div class="mb-2">
+            <strong>Capacity:</strong> 
+            ${assignedCount} assigned / ${slot.total_capacity} total
+            <span class="badge ${assignedCount < slot.total_capacity ? 'bg-success' : 'bg-danger'} ms-1">
+                ${slot.total_capacity - assignedCount} free
+            </span>
+        </div>
+    `;
+    
+    if (assignedEmployees.length > 0) {
+        contentHTML += '<div class="mb-2"><strong>Current Bookings:</strong></div>';
         
-        let cardClass = '';
-        let statusBadge = '';
-        let statusClass = '';
-        let canSelect = emp.available;
-        let availabilityHTML = '';
-        let conflictBadge = '';
-
-        // ✅ ENHANCED: Handle all status types properly
-        switch(emp.status) {
-            case 'CONFLICT':
-                // ❌ Conflicted at exact same time slot
-                cardClass = 'unavailable';
-                statusClass = 'status-conflict';
-                statusBadge = '<i class="fas fa-times-circle me-1"></i>Booked in This Slot';
-                canSelect = false;
-                conflictBadge = '<span class="conflict-badge">CONFLICT</span>';
+        // ✅ Group by employee to show conflicts
+        const employeeBookings = {};
+        
+        assignedEmployees.forEach(booking => {
+            const empName = booking.assigned_employee_name || 'Unassigned';
+            if (empName !== 'Not assigned' && empName !== 'Unassigned') {
+                if (!employeeBookings[empName]) {
+                    employeeBookings[empName] = [];
+                }
+                employeeBookings[empName].push(booking);
+            }
+        });
+        
+        // Display bookings
+        Object.entries(employeeBookings).forEach(([empName, bookings]) => {
+            contentHTML += `<div class="assigned-employee-badge"><i class="fas fa-user-check me-1"></i>${empName}</div>`;
+        });
+        
+        contentHTML += '<div class="mt-2"><small class="text-muted">Bookings:</small></div>';
+        
+        assignedEmployees.forEach(booking => {
+            contentHTML += `
+                <div class="small text-muted">
+                    • ${booking.customer_name} - ${booking.demo_title}
+                    ${booking.assigned_employee_name && booking.assigned_employee_name !== 'Not assigned' 
+                        ? `(${booking.assigned_employee_name})` 
+                        : '(Unassigned)'}
+                </div>
+            `;
+        });
+        
+        // ✅ Show conflicts if multiple bookings for same employee
+        let conflictsHTML = '';
+        let hasConflicts = false;
+        
+        Object.entries(employeeBookings).forEach(([empName, bookings]) => {
+            if (bookings.length > 1) {
+                hasConflicts = true;
+                conflictsHTML += `
+                    <div class="conflict-item">
+                        <div class="conflict-employee-name">
+                            <i class="fas fa-user-times me-1"></i>${empName}
+                        </div>
+                        <div class="conflict-detail">
+                            Has ${bookings.length} demos at same time:
+                        </div>
+                `;
                 
-                if (emp.slot_conflict) {
-                    const booking = emp.slot_conflict;
-                    const statusIcon = booking.status === 'confirmed' ? 'check-circle' : 'clock';
-                    const statusColor = booking.status === 'confirmed' ? 'success' : 'warning';
-                    
-                    availabilityHTML = `
-                        <div class="alert alert-danger alert-sm mt-2 mb-0 py-2">
-                            <div class="d-flex align-items-start">
-                                <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
-                                <div class="flex-grow-1">
-                                    <strong class="text-danger">❌ Conflict on ${dateIso}</strong>
-                                    <hr class="my-2" style="border-color: rgba(220, 53, 69, 0.3);">
-                                    <div class="mb-1">
-                                        <i class="fas fa-desktop me-1"></i>
-                                        <strong>Demo:</strong> ${booking.demo_title}
-                                    </div>
-                                    <div class="mb-1">
-                                        <i class="fas fa-user me-1"></i>
-                                        <strong>Customer:</strong> ${booking.customer_name}
-                                    </div>
-                                    ${booking.customer_email ? `
-                                    <div class="mb-1">
-                                        <i class="fas fa-envelope me-1"></i>
-                                        <small>${booking.customer_email}</small>
-                                    </div>
-                                    ` : ''}
-                                    <div>
-                                        <i class="fas fa-${statusIcon} me-1 text-${statusColor}"></i>
-                                        <strong>Status:</strong> 
-                                        <span class="badge bg-${statusColor} text-white">${booking.status.toUpperCase()}</span>
-                                    </div>
-                                </div>
-                            </div>
+                bookings.forEach((booking, idx) => {
+                    conflictsHTML += `
+                        <div class="conflict-demo-info mt-1">
+                            ${idx + 1}. <strong>${booking.demo_title}</strong> 
+                            <span class="conflict-customer-info">for ${booking.customer_name}</span>
                         </div>
                     `;
-                }
-                break;
-
-            case 'BUSY_OTHER_SLOTS':
-                // ⚠️ Busy at OTHER slots on SAME date, but FREE in target slot
-                cardClass = 'booked';
-                statusClass = 'status-busy';
-                statusBadge = `<i class="fas fa-clock me-1"></i>Free in This Slot`;
-                canSelect = true;
+                });
                 
-                if (emp.same_date_schedule && emp.same_date_schedule.length > 0) {
-                    const schedule = emp.same_date_schedule.map(s => 
-                        `<div class="small"><i class="fas fa-clock me-1"></i>${s.time}: ${s.demo} (${s.customer})</div>`
-                    ).join('');
-                    
-                    availabilityHTML = `
-                        <div class="alert alert-warning alert-sm mt-2 mb-0 py-2">
-                            <div class="d-flex align-items-start">
-                                <i class="fas fa-info-circle me-2 mt-1 text-warning"></i>
-                                <div class="flex-grow-1">
-                                    <strong class="text-warning">✅ Available in This Slot</strong>
-                                    <hr class="my-2" style="border-color: rgba(245, 158, 11, 0.3);">
-                                    <div class="mb-1">
-                                        <strong>Busy at other times on ${dateIso}:</strong>
-                                    </div>
-                                    <div class="ms-2">
-                                        ${schedule}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-                break;
-
-            case 'BUSY_OTHER_DATES':
-                // ℹ️ Has demos on OTHER dates, but completely FREE on this date
-                cardClass = 'available';
-                statusClass = 'status-available';
-                statusBadge = '<i class="fas fa-check-circle me-1"></i>Free on This Date';
-                canSelect = true;
-                
-                availabilityHTML = `
-                    <div class="alert alert-info alert-sm mt-2 mb-0 py-2">
-                        <div class="d-flex align-items-start">
-                            <i class="fas fa-calendar-check me-2 mt-1 text-info"></i>
-                            <div class="flex-grow-1">
-                                <strong class="text-info">✅ Fully Available on ${dateIso}</strong>
-                                <hr class="my-2" style="border-color: rgba(59, 130, 246, 0.3);">
-                                <div>
-                                    <i class="fas fa-tasks me-1"></i>
-                                    Has ${emp.current_demos} demo${emp.current_demos > 1 ? 's' : ''} on other dates
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                break;
-
-            case 'FULLY_AVAILABLE':
-            default:
-                // ✅ Completely free - no demos anywhere
-                cardClass = 'available';
-                statusClass = 'status-available';
-                statusBadge = '<i class="fas fa-check-circle me-1"></i>Fully Available';
-                canSelect = true;
-                
-                availabilityHTML = `
-                    <div class="alert alert-success alert-sm mt-2 mb-0 py-2">
-                        <div class="d-flex align-items-start">
-                            <i class="fas fa-calendar-check me-2 mt-1 text-success"></i>
-                            <div class="flex-grow-1">
-                                <strong class="text-success">✅ Fully Available</strong>
-                                <hr class="my-2" style="border-color: rgba(16, 185, 129, 0.3);">
-                                <div>
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    No demos scheduled
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                break;
-        }
-
-        const card = document.createElement('div');
-        card.className = `employee-card ${cardClass}`;
-        card.setAttribute('data-employee-id', emp.id);
+                conflictsHTML += `</div>`;
+            }
+        });
         
-        card.innerHTML = `
-            <div class="d-flex justify-content-between align-items-start position-relative">
-                ${!canSelect ? conflictBadge : ''}
-                <div class="flex-grow-1">
-                    <div class="employee-name">
-                        <i class="fas fa-user-circle me-2"></i>${emp.name || 'N/A'}
-                    </div>
-                    <div class="employee-email">
-                        <i class="fas fa-envelope me-1"></i>${emp.email || 'N/A'}
-                    </div>
-                    ${emp.role ? `<div class="employee-role mt-1"><small class="text-muted"><i class="fas fa-user-tag me-1"></i>${emp.role}</small></div>` : ''}
-                    <div class="workload-info mt-2">
-                        <i class="fas fa-tasks me-1"></i>
-                        <strong>Total Demos:</strong> ${emp.current_demos || 0}
-                    </div>
-                    ${availabilityHTML}
-                </div>
-                <div>
-                    <span class="employee-status ${statusClass}">
-                        ${statusBadge}
-                    </span>
-                </div>
-            </div>
-        `;
-
-        if (canSelect) {
-            card.onclick = () => selectEmployee(emp.id, emp.name);
-            card.style.cursor = 'pointer';
-            card.title = 'Click to select this employee';
-        } else {
-            card.style.cursor = 'not-allowed';
-            card.title = '⛔ Cannot assign - Employee already booked at this exact time';
+        if (hasConflicts && conflictWarning && conflictDetails) {
+            conflictDetails.innerHTML = conflictsHTML;
+            conflictWarning.style.display = 'block';
+        } else if (conflictWarning) {
+            conflictWarning.style.display = 'none';
         }
-
-        container.appendChild(card);
-    });
-
-    console.log(`✅ Displayed ${employees.length} employee cards with enhanced status\n`);
-}
-function selectEmployee(employeeId, employeeName) {
-    selectedEmployeeId = employeeId;
-
-    console.log('✅ Selected employee:', employeeId, employeeName);
-
-    // Update UI - remove previous selections
-    document.querySelectorAll('.employee-card').forEach(card => {
-        card.classList.remove('selected');
-    });
-
-    // Highlight selected card
-    const selectedCard = document.querySelector(`.employee-card[data-employee-id="${employeeId}"]`);
-    if (selectedCard) {
-        selectedCard.classList.add('selected');
-        selectedCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+    } else {
+        contentHTML += '<div class="no-assignment"><i class="fas fa-minus-circle me-1"></i>No employees assigned yet</div>';
+        if (conflictWarning) conflictWarning.style.display = 'none';
     }
-
-    // Show selected info
-    document.getElementById('selectedEmployeeName').textContent = employeeName;
-    document.getElementById('selectedEmployeeInfo').style.display = 'block';
     
-    // Enable confirm button
-    document.getElementById('confirmAssignBtn').disabled = false;
+    detailsContent.innerHTML = contentHTML;
+    detailsCard.style.display = 'block';
 }
+
+// ============================================================================
+// LOAD EMPLOYEES
+// ============================================================================
+
+function loadAvailableEmployees(dateIso, timeSlotId) {
+    console.log('🔍 Loading employees');
+    
+    const employeeSelect = document.getElementById('confirmEmployee');
+    const loadingState = document.getElementById('employeeLoadingState');
+    const selectedEmployeeInfo = document.getElementById('selectedEmployeeInfo');
+    const employeeCountBadge = document.getElementById('employeeCountBadge');
+    const proceedWithoutAssignBtn = document.getElementById('proceedWithoutAssignBtn');
+    
+    if (loadingState) loadingState.style.display = 'block';
+    if (employeeSelect) employeeSelect.innerHTML = '<option value="">Loading...</option>';
+    if (selectedEmployeeInfo) selectedEmployeeInfo.style.display = 'none';
+    
+    fetch(`/api/demo-requests/available-employees/?date=${dateIso}&time_slot_id=${timeSlotId}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('✅ Employees loaded');
+            
+            if (loadingState) loadingState.style.display = 'none';
+            
+            if (!data.success || !data.employees || data.employees.length === 0) {
+                if (employeeSelect) employeeSelect.innerHTML = '<option value="">No employees available</option>';
+                if (employeeCountBadge) employeeCountBadge.textContent = '0 available';
+                if (proceedWithoutAssignBtn) proceedWithoutAssignBtn.style.display = 'inline-block';
+                return;
+            }
+            
+            vars.availableEmployees = data.employees;
+            const availableCount = data.employees.filter(e => e.available).length;
+            if (employeeCountBadge) employeeCountBadge.textContent = `${availableCount} available`;
+            
+            let optionsHTML = '<option value="">-- Select Employee --</option>';
+            
+            data.employees.forEach(emp => {
+                let icon = '';
+                let statusText = '';
+                let className = '';
+                let disabled = '';
+                
+                switch(emp.status) {
+                    case 'CONFLICT':
+                        icon = '🔴';
+                        statusText = ` (Booked)`;
+                        className = 'conflict';
+                        disabled = 'disabled';
+                        break;
+                    case 'BUSY_OTHER_SLOTS':
+                        icon = '🟡';
+                        statusText = ` (${emp.current_demos} demos, free)`;
+                        className = 'busy';
+                        break;
+                    default:
+                        icon = '🟢';
+                        statusText = ' (Available)';
+                        className = 'available';
+                        break;
+                }
+                
+                optionsHTML += `
+                    <option value="${emp.id}" class="${className}" ${disabled} data-name="${emp.name}">
+                        ${icon} ${emp.name}${statusText}
+                    </option>
+                `;
+            });
+            
+            if (employeeSelect) {
+                employeeSelect.innerHTML = optionsHTML;
+                
+                employeeSelect.onchange = function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const selectedEmployeeInfo = document.getElementById('selectedEmployeeInfo');
+                    const selectedEmployeeName = document.getElementById('selectedEmployeeName');
+                    
+                    if (this.value) {
+                        vars.selectedEmployeeId = this.value;
+                        const employeeName = selectedOption.getAttribute('data-name');
+                        if (selectedEmployeeName) selectedEmployeeName.textContent = employeeName;
+                        if (selectedEmployeeInfo) selectedEmployeeInfo.style.display = 'block';
+                    } else {
+                        vars.selectedEmployeeId = null;
+                        if (selectedEmployeeInfo) selectedEmployeeInfo.style.display = 'none';
+                    }
+                };
+            }
+            
+            if (proceedWithoutAssignBtn) {
+                proceedWithoutAssignBtn.style.display = availableCount === 0 ? 'inline-block' : 'none';
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error:', error);
+            if (loadingState) loadingState.style.display = 'none';
+            if (employeeSelect) employeeSelect.innerHTML = '<option value="">Error loading</option>';
+            showToast('error', 'Failed to load employees');
+        });
+}
+
+// ============================================================================
+// ✅ UPDATED: CONFIRM WITH DETAILED CONFLICT ERROR
+// ============================================================================
 
 function confirmWithAssignment() {
-    if (!selectedEmployeeId) {
-        showToast('warning', 'Please select an employee to assign');
+    const selectedDate = document.getElementById('confirmDate')?.value;
+    const selectedTimeSlotId = document.getElementById('confirmTimeSlot')?.value;
+    const adminNotes = document.getElementById('confirmAdminNotes')?.value?.trim();
+    
+    if (!selectedDate || !selectedTimeSlotId) {
+        showToast('warning', 'Please select date and time slot');
         return;
     }
-
-    const adminNotes = document.getElementById('confirmAdminNotes').value.trim();
-
+    
     const btn = document.getElementById('confirmAssignBtn');
+    if (!btn) return;
+    
     const originalBtnHtml = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
 
-    console.log('🔄 Starting confirmation and assignment process...');
-
-    // Step 1: Confirm the demo request
-    fetch(`/admin/demo-requests/${currentRequestId}/confirm/`, {
+    // ✅ STEP 1: Confirm the demo request
+    fetch(`/admin/demo-requests/${vars.currentRequestId}/confirm/`, {
         method: 'POST',
         headers: {
-            'X-CSRFToken': csrfToken,
+            'X-CSRFToken': vars.csrfToken,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
             action: 'confirm',
-            confirmed_date: currentRequestData.dateIso,
-            confirmed_time_slot_id: currentRequestData.timeSlotId,
+            confirmed_date: selectedDate,
+            confirmed_time_slot_id: selectedTimeSlotId,
             admin_notes: adminNotes
         })
     })
     .then(response => response.json())
     .then(confirmResult => {
+        // ✅ Handle confirmation errors (including slot full)
         if (!confirmResult.success) {
-            throw new Error(confirmResult.error || 'Failed to confirm demo request');
+            if (confirmResult.conflict_details && confirmResult.conflict_details.length > 0) {
+                let detailedMessage = `⚠️ TIME SLOT CONFLICT\n\n`;
+                detailedMessage += `Date: ${confirmResult.date}\n`;
+                detailedMessage += `Time: ${confirmResult.time}\n\n`;
+                detailedMessage += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                detailedMessage += `Already Scheduled:\n\n`;
+                
+                confirmResult.conflict_details.forEach((conflict, index) => {
+                    detailedMessage += `${index + 1}. ${conflict.demo_title}\n`;
+                    detailedMessage += `   Customer: ${conflict.customer_name}\n`;
+                    detailedMessage += `   Email: ${conflict.customer_email}\n`;
+                    if (conflict.employee_name && conflict.employee_name !== 'Unassigned') {
+                        detailedMessage += `   Assigned to: ${conflict.employee_name}\n`;
+                    }
+                    detailedMessage += `\n`;
+                });
+                
+                detailedMessage += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                detailedMessage += `\nPlease select a different time slot or date.`;
+                
+                alert(detailedMessage);
+                console.error('⚠️ Conflict Details:', confirmResult.conflict_details);
+            } else {
+                alert(confirmResult.error || 'Failed to confirm request');
+            }
+            
+            throw new Error(confirmResult.error || 'Failed');
         }
 
-        console.log('✅ Demo confirmed, now assigning employee...');
+        // ✅ STEP 2: Assign employee if selected
+        if (vars.selectedEmployeeId) {
+            const formData = new FormData();
+            formData.append('employee_id', vars.selectedEmployeeId);
+            formData.append('send_notification', 'on');
+            if (adminNotes) formData.append('assignment_notes', adminNotes);
 
-        // Step 2: Assign employee
-        const formData = new FormData();
-        formData.append('employee_id', selectedEmployeeId);
-        formData.append('send_notification', 'on');
-        if (adminNotes) {
-            formData.append('assignment_notes', adminNotes);
-        }
-
-        return fetch(`/admin/demo-requests/${currentRequestId}/assign/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: formData
-        });
-    })
-    .then(response => response.json())
-    .then(assignResult => {
-        if (assignResult.success) {
-            console.log('✅ Employee assigned successfully!');
-            showToast('success', 'Demo confirmed and employee assigned successfully! Reloading page...');
-            
-            confirmAssignModal.hide();
-            
-            // Reload page after 1.5 seconds
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
+            return fetch(`/admin/demo-requests/${vars.currentRequestId}/assign/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': vars.csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
         } else {
-            throw new Error(assignResult.error || 'Failed to assign employee');
+            return Promise.resolve({ json: () => Promise.resolve({ success: true }) });
         }
+    })
+    .then(response => response.json ? response.json() : response)
+    .then(assignResult => {
+        // ✅ Handle assignment errors (employee conflict)
+        if (assignResult.success === false) {
+            // Check if it's an employee conflict
+            if (assignResult.conflict) {
+                let conflictMsg = `❌ EMPLOYEE SCHEDULING CONFLICT\n\n`;
+                conflictMsg += `Employee: Cannot assign this employee\n\n`;
+                conflictMsg += `Already Scheduled:\n`;
+                conflictMsg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                conflictMsg += `Demo: ${assignResult.conflict.demo_title}\n`;
+                conflictMsg += `Customer: ${assignResult.conflict.customer_name}\n`;
+                conflictMsg += `Date: ${assignResult.conflict.date}\n`;
+                conflictMsg += `Time: ${assignResult.conflict.time}\n`;
+                conflictMsg += `Status: ${assignResult.conflict.status}\n`;
+                conflictMsg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+                conflictMsg += `Please select a different employee or time slot.`;
+                
+                alert(conflictMsg);
+                console.error('⚠️ Employee Conflict:', assignResult.conflict);
+            } else {
+                alert(assignResult.error || 'Failed to assign employee');
+            }
+            
+            throw new Error(assignResult.error || 'Failed');
+        }
+        
+        // ✅ Success
+        showToast('success', 'Demo confirmed! Reloading...');
+        if (vars.confirmAssignModal) vars.confirmAssignModal.hide();
+        setTimeout(() => window.location.reload(), 1500);
     })
     .catch(error => {
         console.error('❌ Error:', error);
-        showToast('error', error.message);
         btn.disabled = false;
         btn.innerHTML = originalBtnHtml;
     });
 }
 
 function confirmWithoutAssignment() {
-    const adminNotes = document.getElementById('confirmAdminNotes').value.trim();
-
-    if (!confirm('Are you sure you want to confirm this demo WITHOUT assigning an employee?\n\nYou can assign an employee later from the details page.')) {
+    const selectedDate = document.getElementById('confirmDate')?.value;
+    const selectedTimeSlotId = document.getElementById('confirmTimeSlot')?.value;
+    const adminNotes = document.getElementById('confirmAdminNotes')?.value?.trim();
+    
+    if (!selectedDate || !selectedTimeSlotId) {
+        showToast('warning', 'Please select date and time');
         return;
     }
 
+    if (!confirm('Confirm without employee?')) return;
+
     const btn = document.getElementById('proceedWithoutAssignBtn');
+    if (!btn) return;
+    
     const originalBtnHtml = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Confirming...';
 
-    console.log('🔄 Confirming without assignment...');
-
-    fetch(`/admin/demo-requests/${currentRequestId}/confirm/`, {
+    fetch(`/admin/demo-requests/${vars.currentRequestId}/confirm/`, {
         method: 'POST',
         headers: {
-            'X-CSRFToken': csrfToken,
+            'X-CSRFToken': vars.csrfToken,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
             action: 'confirm',
-            confirmed_date: currentRequestData.dateIso,
-            confirmed_time_slot_id: currentRequestData.timeSlotId,
-            admin_notes: adminNotes || 'Confirmed without employee assignment - will assign later'
+            confirmed_date: selectedDate,
+            confirmed_time_slot_id: selectedTimeSlotId,
+            admin_notes: adminNotes || 'Confirmed without assignment'
         })
     })
     .then(response => response.json())
     .then(result => {
         if (result.success) {
-            console.log('✅ Demo confirmed without assignment');
-            showToast('success', 'Demo confirmed! You can assign an employee later. Reloading...');
-            
-            confirmAssignModal.hide();
-            
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
+            showToast('success', 'Confirmed! Reloading...');
+            if (vars.confirmAssignModal) vars.confirmAssignModal.hide();
+            setTimeout(() => window.location.reload(), 1500);
         } else {
-            throw new Error(result.error || 'Failed to confirm demo request');
+            throw new Error(result.error || 'Failed');
         }
     })
     .catch(error => {
@@ -1423,18 +1442,16 @@ function cancelRequest(requestId) {
         return;
     }
     
-    const reason = prompt(`Cancel demo request for ${data.customer}?\n\nPlease provide a reason for cancellation:`);
+    const reason = prompt(`Cancel demo request for ${data.customer}?\n\nPlease provide a reason:`);
     
-    if (!reason || !reason.trim()) {
-        return;
-    }
+    if (!reason || !reason.trim()) return;
     
     showToast('info', 'Cancelling request...', 2000);
     
     fetch(`/admin/demo-requests/${requestId}/confirm/`, {
         method: 'POST',
         headers: {
-            'X-CSRFToken': csrfToken,
+            'X-CSRFToken': vars.csrfToken,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -1445,10 +1462,10 @@ function cancelRequest(requestId) {
     .then(response => response.json())
     .then(result => {
         if (result.success) {
-            showToast('success', 'Request cancelled successfully! Reloading...');
+            showToast('success', 'Request cancelled! Reloading...');
             setTimeout(() => window.location.reload(), 1500);
         } else {
-            showToast('error', result.error || 'Failed to cancel request');
+            showToast('error', result.error || 'Failed to cancel');
         }
     })
     .catch(error => {
@@ -1465,17 +1482,12 @@ function deleteRequest(requestId) {
     
     const data = getRowData(requestId);
     
-    if (!data) {
-        showToast('error', 'Request not found');
+    if (!data || data.status !== 'cancelled') {
+        showToast('warning', 'Only cancelled requests can be deleted');
         return;
     }
     
-    if (data.status !== 'cancelled') {
-        showToast('warning', 'Only cancelled requests can be deleted permanently');
-        return;
-    }
-    
-    if (!confirm(`⚠️ DELETE PERMANENTLY?\n\nCustomer: ${data.customer}\nDemo: ${data.demo}\n\nThis action CANNOT be undone!\n\nAre you sure you want to proceed?`)) {
+    if (!confirm(`⚠️ DELETE PERMANENTLY?\n\nCustomer: ${data.customer}\nDemo: ${data.demo}\n\nThis CANNOT be undone!`)) {
         return;
     }
     
@@ -1484,17 +1496,17 @@ function deleteRequest(requestId) {
     fetch(`/admin/demo-requests/${requestId}/delete/`, {
         method: 'POST',
         headers: { 
-            'X-CSRFToken': csrfToken,
+            'X-CSRFToken': vars.csrfToken,
             'Content-Type': 'application/json'
         }
     })
     .then(response => response.json())
     .then(result => {
         if (result.success) {
-            showToast('success', 'Request deleted permanently! Reloading...');
+            showToast('success', 'Request deleted! Reloading...');
             setTimeout(() => window.location.reload(), 1500);
         } else {
-            showToast('error', result.error || 'Failed to delete request');
+            showToast('error', result.error || 'Failed to delete');
         }
     })
     .catch(error => {
@@ -1520,39 +1532,72 @@ function handleTimeRangeChange(value) {
 }
 
 // ============================================================================
-// INITIALIZATION
+// EVENT LISTENERS
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔵 Initializing demo requests management page...');
+    console.log('🔵 Initializing modal...');
     
-    // Check Bootstrap
     if (typeof bootstrap === 'undefined') {
-        console.error('❌ Bootstrap is not loaded!');
-        alert('Error: Bootstrap library not loaded. Please refresh the page.');
+        console.error('❌ Bootstrap not loaded');
         return;
     }
-    console.log('✅ Bootstrap loaded');
     
-    // Initialize confirm & assign modal
     const modalElement = document.getElementById('confirmAssignModal');
-    
-    if (!modalElement) {
-        console.error('❌ Confirm modal element not found');
-        return;
-    }
-    
-    try {
-        confirmAssignModal = new bootstrap.Modal(modalElement, {
+    if (modalElement && !vars.confirmAssignModal) {
+        vars.confirmAssignModal = new bootstrap.Modal(modalElement, {
             backdrop: 'static',
             keyboard: false
         });
-        console.log('✅ Confirm & Assign modal initialized successfully');
-    } catch (error) {
-        console.error('❌ Error initializing modal:', error);
+        console.log('✅ Modal initialized');
     }
     
-    console.log('✅ Page initialization complete');
+    const dateInput = document.getElementById('confirmDate');
+    if (dateInput) {
+        dateInput.addEventListener('change', function() {
+            const selectedDate = this.value;
+            if (selectedDate) {
+                const slotDetailsCard = document.getElementById('slotDetailsCard');
+                const conflictWarning = document.getElementById('conflictWarning');
+                if (slotDetailsCard) slotDetailsCard.style.display = 'none';
+                if (conflictWarning) conflictWarning.style.display = 'none';
+                loadTimeSlotsForDate(selectedDate);
+            }
+        });
+    }
+    
+    const timeSlotSelect = document.getElementById('confirmTimeSlot');
+    if (timeSlotSelect) {
+        timeSlotSelect.addEventListener('change', function() {
+            const selectedDate = document.getElementById('confirmDate')?.value;
+            const selectedSlotId = this.value;
+            
+            if (selectedDate && selectedSlotId) {
+                const slot = vars.availableSlots.find(s => s.id == selectedSlotId);
+                if (slot) displaySlotDetails(slot);
+                loadAvailableEmployees(selectedDate, selectedSlotId);
+            } else {
+                const slotDetailsCard = document.getElementById('slotDetailsCard');
+                const conflictWarning = document.getElementById('conflictWarning');
+                if (slotDetailsCard) slotDetailsCard.style.display = 'none';
+                if (conflictWarning) conflictWarning.style.display = 'none';
+            }
+        });
+    }
+    
+    const confirmAssignBtn = document.getElementById('confirmAssignBtn');
+    if (confirmAssignBtn) {
+        confirmAssignBtn.addEventListener('click', confirmWithAssignment);
+    }
+    
+    const proceedWithoutAssignBtn = document.getElementById('proceedWithoutAssignBtn');
+    if (proceedWithoutAssignBtn) {
+        proceedWithoutAssignBtn.addEventListener('click', confirmWithoutAssignment);
+    }
 });
 </script>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
+
 {% endblock %}

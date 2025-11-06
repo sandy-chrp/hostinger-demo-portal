@@ -1229,19 +1229,62 @@ def admin_confirm_demo_request_view(request, request_id):
                 else:
                     print(f"✅ STARTING SOON CHECK PASSED: {time_until_start:.2f} minutes until start")
             
-            # ✅ VALIDATION 3: Check for conflicts
-            conflicts = DemoRequest.objects.filter(
-                confirmed_date=confirmed_date,
-                confirmed_time_slot=confirmed_time_slot,
-                status='confirmed'
-            ).exclude(id=request_id)
+            # ✅ VALIDATION 3: Check for conflicts - UPDATED LOGIC
+            # Get all bookings (pending + confirmed) for this slot
+            slot_bookings = DemoRequest.objects.filter(
+                Q(confirmed_date=confirmed_date, confirmed_time_slot=confirmed_time_slot) |
+                Q(requested_date=confirmed_date, requested_time_slot=confirmed_time_slot, confirmed_date__isnull=True),
+                status__in=['pending', 'confirmed']
+            ).exclude(id=request_id).select_related('demo', 'user', 'assigned_to', 'confirmed_time_slot', 'requested_time_slot')
             
-            if conflicts.exists():
-                print(f"❌ VALIDATION FAILED: Time slot conflict")
+            # ✅ CRITICAL FIX: Count only bookings WITH assigned employees
+            assigned_bookings = slot_bookings.filter(assigned_to__isnull=False)
+            
+            # Get slot capacity (default 1, adjust as needed)
+            from core.models import SiteSettings
+            try:
+                site_settings = SiteSettings.load()
+                max_bookings_per_slot = getattr(site_settings, 'max_bookings_per_slot', 1)
+            except:
+                max_bookings_per_slot = 1
+            
+            print(f"\n🔍 CONFLICT CHECK:")
+            print(f"   Total bookings in slot: {slot_bookings.count()}")
+            print(f"   Assigned bookings: {assigned_bookings.count()}")
+            print(f"   Max capacity: {max_bookings_per_slot}")
+            
+            # ✅ Slot is FULL only if assigned bookings >= capacity
+            if assigned_bookings.count() >= max_bookings_per_slot:
+                print(f"❌ VALIDATION FAILED: Slot full")
+                
+                # Build detailed conflict message
+                conflict_details = []
+                for conflict in assigned_bookings:
+                    employee_name = conflict.assigned_to.get_full_name() if conflict.assigned_to else 'Unassigned'
+                    
+                    # Use confirmed values if available, otherwise requested
+                    conflict_date = conflict.confirmed_date or conflict.requested_date
+                    conflict_slot = conflict.confirmed_time_slot or conflict.requested_time_slot
+                    
+                    conflict_info = {
+                        'demo_title': conflict.demo.title,
+                        'customer_name': conflict.user.get_full_name(),
+                        'customer_email': conflict.user.email,
+                        'employee_name': employee_name,
+                        'date': conflict_date.strftime('%B %d, %Y'),
+                        'time': f"{conflict_slot.start_time.strftime('%I:%M %p')} - {conflict_slot.end_time.strftime('%I:%M %p')}",
+                    }
+                    conflict_details.append(conflict_info)
+                
                 return JsonResponse({
                     'success': False,
-                    'error': f'Time slot conflict: Another demo is already scheduled at this time'
+                    'error': f'Time slot full: All {max_bookings_per_slot} spot(s) are assigned',
+                    'conflict_details': conflict_details,
+                    'date': confirmed_date.strftime('%B %d, %Y'),
+                    'time': f"{confirmed_time_slot.start_time.strftime('%I:%M %p')} - {confirmed_time_slot.end_time.strftime('%I:%M %p')}",
                 })
+            
+            print(f"✅ CONFLICT CHECK PASSED: {assigned_bookings.count()}/{max_bookings_per_slot} spots filled")
             
             # ✅ All validations passed
             print(f"\n{'='*60}")
@@ -1255,9 +1298,6 @@ def admin_confirm_demo_request_view(request, request_id):
             demo_request.admin_notes = admin_notes
             demo_request.handled_by = request.user
             demo_request.save()
-            
-            # Send confirmation email
-            # send_demo_confirmation_email(demo_request)
             
             # Create notification
             create_demo_confirmation_notification(demo_request)
@@ -1331,16 +1371,25 @@ def admin_confirm_demo_request_view(request, request_id):
                     })
             
             # Check conflicts
-            conflicts = DemoRequest.objects.filter(
-                confirmed_date=new_date,
-                confirmed_time_slot=new_time_slot,
-                status='confirmed'
+            slot_bookings = DemoRequest.objects.filter(
+                Q(confirmed_date=new_date, confirmed_time_slot=new_time_slot) |
+                Q(requested_date=new_date, requested_time_slot=new_time_slot, confirmed_date__isnull=True),
+                status__in=['pending', 'confirmed']
             ).exclude(id=request_id)
             
-            if conflicts.exists():
+            assigned_bookings = slot_bookings.filter(assigned_to__isnull=False)
+            
+            from core.models import SiteSettings
+            try:
+                site_settings = SiteSettings.load()
+                max_bookings_per_slot = getattr(site_settings, 'max_bookings_per_slot', 1)
+            except:
+                max_bookings_per_slot = 1
+            
+            if assigned_bookings.count() >= max_bookings_per_slot:
                 return JsonResponse({
                     'success': False,
-                    'error': 'Time slot conflict with another demo'
+                    'error': 'Time slot is full'
                 })
             
             # Update request
@@ -1412,7 +1461,6 @@ def admin_confirm_demo_request_view(request, request_id):
             'success': False,
             'error': str(e)
         })
-
 
 @login_required
 @permission_required('manage_demo_requests')
@@ -1588,7 +1636,7 @@ def admin_demo_requests_calendar_view(request):
 def ajax_admin_check_slot_availability(request):
     """
     AJAX endpoint for admin to check time slot availability
-    ✅ ENHANCED: Now includes assigned employee information in booking details
+    ✅ FIXED: Now correctly calculates availability based on ASSIGNED employees only
     """
     try:
         requested_date = request.GET.get('date')
@@ -1635,7 +1683,7 @@ def ajax_admin_check_slot_availability(request):
         if not all_slots.exists():
             return JsonResponse({'success': False, 'message': 'No time slots configured'})
         
-        # ✅ ENHANCED: Get all confirmed bookings with assigned employees
+        # ✅ Get all confirmed bookings with assigned employees
         confirmed_bookings = DemoRequest.objects.filter(
             Q(confirmed_date=check_date) | 
             Q(requested_date=check_date, confirmed_date__isnull=True),
@@ -1677,8 +1725,17 @@ def ajax_admin_check_slot_availability(request):
                 Q(requested_time_slot=slot, confirmed_time_slot__isnull=True)
             )
             
-            confirmed_count = slot_bookings.count()
-            available_spots = max_bookings_per_slot - confirmed_count
+            # ✅ KEY FIX: Count only bookings with assigned employees
+            # This is what determines if a slot is "full" or not
+            confirmed_with_employee = slot_bookings.filter(
+                assigned_to__isnull=False
+            ).count()
+            
+            # Total bookings (for display purposes)
+            total_confirmed = slot_bookings.count()
+            
+            # Calculate available spots based on ASSIGNED employees only
+            available_spots = max_bookings_per_slot - confirmed_with_employee
             
             # Determine status
             if is_past_slot and not is_starting_soon:
@@ -1690,15 +1747,17 @@ def ajax_admin_check_slot_availability(request):
                 is_available = False
                 status_message = 'Starting Soon'
             elif available_spots <= 0:
+                # Slot is full ONLY if all spots have assigned employees
                 status = 'full'
                 is_available = False
                 status_message = 'Fully Booked'
             else:
+                # Slot is available if there's space for more assignments
                 status = 'available'
                 is_available = True
                 status_message = 'Available'
             
-            # ✅ ENHANCED: Get booking details with assigned employee info
+            # ✅ Get booking details with assigned employee info
             booking_details = []
             for booking in slot_bookings:
                 booking_details.append({
@@ -1718,15 +1777,20 @@ def ajax_admin_check_slot_availability(request):
                 'end_time': slot.end_time.strftime('%I:%M %p'),
                 'slot_type': slot.get_slot_type_display(),
                 'is_available': is_available,
-                'confirmed_bookings': confirmed_count,
-                'available_spots': max(0, available_spots),
+                'confirmed_bookings': total_confirmed,  # Total bookings (all)
+                'confirmed_with_employee': confirmed_with_employee,  # ✅ NEW: Only with employees
+                'available_spots': max(0, available_spots),  # Based on assigned employees
                 'total_capacity': max_bookings_per_slot,
                 'status': status,
                 'status_message': status_message,
                 'is_past': is_past_slot,
                 'is_starting_soon': is_starting_soon,
-                'booking_details': booking_details,  # ✅ Now includes assigned employee info
+                'booking_details': booking_details,
             }
+            
+            print(f"   📊 Slot {slot.start_time}-{slot.end_time}: "
+                  f"Total={total_confirmed}, With Employee={confirmed_with_employee}, "
+                  f"Available={available_spots}, Status={status}")
             
             slots_data.append(slot_info)
         
@@ -1752,53 +1816,73 @@ def ajax_admin_check_slot_availability(request):
             'details': str(e)
         }, status=500)
 
-
 @login_required
 @permission_required('manage_demo_requests')
 def assign_demo_request(request, request_id):
-    """Assign or reassign a demo request to an employee"""
+    """
+    Assign or reassign a demo request to an employee
+    ✅ UPDATED: Returns detailed conflict info
+    """
     from demos.models import DemoRequest
     from accounts.models import CustomUser
     from django.utils import timezone
+    from django.db.models import Q
     import json
     
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
     
-    # Get the demo request
     demo_request = get_object_or_404(DemoRequest, id=request_id)
     
-    # Prevent assigning completed or cancelled requests
     if demo_request.status in ['completed', 'cancelled']:
         return JsonResponse({
             'success': False, 
             'error': f'Cannot assign {demo_request.get_status_display()} requests'
         })
     
-    # Get employee ID from form data
     employee_id = request.POST.get('employee_id')
     if not employee_id:
         return JsonResponse({'success': False, 'error': 'Employee ID is required'})
     
-    # Validate employee exists and is active
     try:
         employee = CustomUser.objects.get(id=employee_id, is_staff=True, is_active=True)
     except CustomUser.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Invalid employee'})
     
-    # Check if employee has time slot conflict
-    has_conflict, conflict_demo = demo_request.has_conflict_with_employee(employee)
-    if has_conflict:
+    # ✅ Check for conflicts with detailed error
+    check_date = demo_request.confirmed_date or demo_request.requested_date
+    check_slot = demo_request.confirmed_time_slot or demo_request.requested_time_slot
+    
+    conflicting_demos = DemoRequest.objects.filter(
+        assigned_to=employee,
+        status__in=['pending', 'confirmed']
+    ).filter(
+        Q(requested_date=check_date, requested_time_slot=check_slot) |
+        Q(confirmed_date=check_date, confirmed_time_slot=check_slot)
+    ).exclude(id=request_id).select_related('demo', 'user', 'requested_time_slot', 'confirmed_time_slot')
+    
+    if conflicting_demos.exists():
+        conflict = conflicting_demos.first()
+        conflict_date = conflict.confirmed_date or conflict.requested_date
+        conflict_slot = conflict.confirmed_time_slot or conflict.requested_time_slot
+        
         return JsonResponse({
             'success': False, 
-            'error': f'Employee has a scheduling conflict with another demo at the same time'
+            'error': f'Employee has a scheduling conflict with another demo at the same time',
+            'conflict': {
+                'demo_title': conflict.demo.title,
+                'customer_name': conflict.user.get_full_name(),
+                'customer_email': conflict.user.email,
+                'date': conflict_date.strftime('%B %d, %Y'),
+                'time': f"{conflict_slot.start_time.strftime('%I:%M %p')} - {conflict_slot.end_time.strftime('%I:%M %p')}",
+                'status': conflict.get_status_display(),
+            }
         })
     
     # Get optional fields
     assignment_notes = request.POST.get('assignment_notes', '')
     send_notification = request.POST.get('send_notification') == 'on'
     
-    # If this is a reassignment, store the previous employee for notification
     previous_employee = demo_request.assigned_to
     
     # Update the demo request
@@ -1806,32 +1890,20 @@ def assign_demo_request(request, request_id):
     demo_request.assigned_at = timezone.now()
     demo_request.assigned_by = request.user
     
-    # Add assignment notes if provided
     if assignment_notes:
         if demo_request.admin_notes:
             demo_request.admin_notes += f"\n\n[{timezone.now().strftime('%Y-%m-%d %H:%M')}] Assignment Note: {assignment_notes}"
         else:
             demo_request.admin_notes = f"[{timezone.now().strftime('%Y-%m-%d %H:%M')}] Assignment Note: {assignment_notes}"
     
-    # Save the changes
     demo_request.save()
     
     # Send notification to new employee if requested
     if send_notification:
-        # This would be implemented in your notification system
-        # For example:
-        # send_email_notification(employee, 'new_demo_assignment', {'demo_request': demo_request})
-        pass
-    
-    # Send notification to previous employee if this was a reassignment
-    if previous_employee and previous_employee != employee:
-        # This would be implemented in your notification system
-        # For example:
-        # send_email_notification(previous_employee, 'demo_reassigned', {'demo_request': demo_request, 'new_employee': employee})
-        pass
+        from notifications.services import NotificationService
+        NotificationService.notify_employee_demo_assigned(demo_request, employee, send_email=True)
     
     return JsonResponse({'success': True})
-
 
 @login_required
 @permission_required('manage_demo_requests')
@@ -1886,6 +1958,7 @@ def unassign_demo_request(request, request_id):
 def check_employee_availability(request):
     """
     API endpoint to check if employee is available for given time slot
+    ✅ UPDATED: Returns detailed conflict information
     """
     try:
         employee_id = request.GET.get('employee_id')
@@ -1899,6 +1972,7 @@ def check_employee_availability(request):
         print(f"👤 Employee ID: {employee_id}")
         print(f"📅 Date: {date}")
         print(f"⏰ Time Slot ID: {time_slot_id}")
+        print(f"🆔 Demo Request ID: {demo_request_id}")
         print(f"{'='*60}\n")
         
         if not all([employee_id, date, time_slot_id]):
@@ -1909,34 +1983,65 @@ def check_employee_availability(request):
             }, status=400)
         
         from datetime import datetime as dt
+        from django.db.models import Q
+        
         employee = CustomUser.objects.get(id=employee_id, is_staff=True)
         requested_date = dt.strptime(date, '%Y-%m-%d').date()
         time_slot = TimeSlot.objects.get(id=time_slot_id)
         
-        # Check for conflicts
+        # ✅ Check for conflicts - Check both requested and confirmed dates/slots
         conflicting_demos = DemoRequest.objects.filter(
             assigned_to=employee,
-            requested_date=requested_date,
-            requested_time_slot=time_slot,
             status__in=['pending', 'confirmed']
-        )
+        ).filter(
+            Q(requested_date=requested_date, requested_time_slot=time_slot) |
+            Q(confirmed_date=requested_date, confirmed_time_slot=time_slot)
+        ).select_related('demo', 'user', 'requested_time_slot', 'confirmed_time_slot')
         
         # Exclude current demo if editing
         if demo_request_id:
             conflicting_demos = conflicting_demos.exclude(id=demo_request_id)
         
         if conflicting_demos.exists():
+            # ✅ Build detailed conflict information
+            conflicts = []
+            for conflict in conflicting_demos:
+                # Use confirmed values if available, otherwise requested
+                conflict_date = conflict.confirmed_date or conflict.requested_date
+                conflict_slot = conflict.confirmed_time_slot or conflict.requested_time_slot
+                
+                conflict_info = {
+                    'id': conflict.id,
+                    'demo_title': conflict.demo.title,
+                    'customer_name': conflict.user.get_full_name(),
+                    'customer_email': conflict.user.email,
+                    'date': conflict_date.strftime('%B %d, %Y'),
+                    'time': f"{conflict_slot.start_time.strftime('%I:%M %p')} - {conflict_slot.end_time.strftime('%I:%M %p')}",
+                    'status': conflict.get_status_display(),
+                }
+                conflicts.append(conflict_info)
+            
+            # ✅ Build detailed error message
             conflict = conflicting_demos.first()
+            conflict_date = conflict.confirmed_date or conflict.requested_date
+            conflict_slot = conflict.confirmed_time_slot or conflict.requested_time_slot
+            
+            print(f"❌ CONFLICT FOUND:")
+            print(f"   Employee: {employee.get_full_name()}")
+            print(f"   Conflict with: {conflict.demo.title}")
+            print(f"   Customer: {conflict.user.get_full_name()}")
+            print(f"   Date: {conflict_date}")
+            print(f"   Time: {conflict_slot.start_time} - {conflict_slot.end_time}")
+            
             return JsonResponse({
                 'available': False,
-                'message': f'{employee.get_full_name()} is already scheduled for another demo at this time',
-                'conflict': {
-                    'demo_title': conflict.demo.title,
-                    'customer': conflict.user.get_full_name(),
-                    'date': conflict.requested_date.strftime('%B %d, %Y'),
-                    'time': f"{conflict.requested_time_slot.start_time.strftime('%I:%M %p')} - {conflict.requested_time_slot.end_time.strftime('%I:%M %p')}"
-                }
+                'message': f'{employee.get_full_name()} has a scheduling conflict',
+                'conflict': conflicts[0],  # Primary conflict
+                'all_conflicts': conflicts,  # All conflicts
+                'conflict_count': len(conflicts),
             })
+        
+        print(f"✅ AVAILABLE: {employee.get_full_name()} is free")
         
         return JsonResponse({
             'available': True,
