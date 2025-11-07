@@ -397,9 +397,9 @@ class Demo(models.Model):
             import traceback
             traceback.print_exc()
             self.extracted_path = ''
-    
+
     def _extract_lms_zip(self):
-        """✅ IMPROVED: Extract LMS/SCORM ZIP package with better detection"""
+        """✅ IMPROVED: Extract LMS/SCORM ZIP package with immediate DB save"""
         if not self.lms_file or not self.lms_file.name.endswith('.zip'):
             print("⚠️ No LMS ZIP file to extract")
             return False
@@ -446,11 +446,8 @@ class Demo(models.Model):
             # Extract ZIP
             print(f"📤 Extracting ZIP contents...")
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                # Get list of files
                 file_list = zip_ref.namelist()
                 print(f"📄 Files in ZIP: {len(file_list)}")
-                
-                # Extract all files
                 zip_ref.extractall(extract_dir)
             
             # Clean up temp file if S3
@@ -473,44 +470,27 @@ class Demo(models.Model):
             print(f"   📊 Total files: {file_count}")
             print(f"   📄 HTML files found: {len(html_files)}")
             
-            # Show HTML files for debugging
             if html_files:
                 print(f"   📋 HTML files:")
-                for html_file in html_files[:5]:  # Show first 5
+                for html_file in html_files[:5]:
                     print(f"      - {html_file}")
                 if len(html_files) > 5:
                     print(f"      ... and {len(html_files) - 5} more")
             
-            # Set extracted path
+            # ✅ CRITICAL FIX: Set and SAVE extracted_path immediately
             self.extracted_path = f'lms_extracted/demo_{self.slug}'
             
-            # Try to find the main entry point
-            entry_points = [
-                'index.html',
-                'index_lms.html',
-                'story.html',
-                'scormdriver/indexAPI.html',
-                'res/index.html',
-                'launch.html',
-                'start.html',
-                'index_scorm.html',
-            ]
-            
-            found_entry = None
-            for entry in entry_points:
-                test_path = os.path.join(extract_dir, entry)
-                if os.path.exists(test_path):
-                    found_entry = entry
-                    break
-            
-            if found_entry:
-                print(f"   ✅ Entry point found: {found_entry}")
-            else:
-                print(f"   ⚠️  No standard entry point found")
-                print(f"   💡 Will use first HTML file: {html_files[0] if html_files else 'None'}")
+            # Save to database RIGHT NOW
+            try:
+                Demo.objects.filter(pk=self.pk).update(
+                    extracted_path=self.extracted_path
+                )
+                print(f"   ✅ Saved to DB: {self.extracted_path}")
+            except Exception as db_error:
+                print(f"   ❌ DB save failed: {db_error}")
+                return False
             
             print(f"{'='*60}\n")
-            
             return True
             
         except zipfile.BadZipFile:

@@ -573,10 +573,11 @@
             
             {% if demo.file_type == 'video' and demo.video_file %}
                 <!-- VIDEO PLAYER -->
-                <video id="demoVideo" 
-                       controlslist="nodownload" 
-                       disablepictureinpicture 
-                       oncontextmenu="return false;">
+               <video id="demoVideo" 
+       controlslist="nodownload" 
+       disablepictureinpicture 
+       oncontextmenu="return false;"
+       preload="auto">
                     <source src="{{ demo.video_file.url }}" type="video/mp4">
                     Your browser does not support video playback.
                 </video>
@@ -591,13 +592,14 @@
                         loading="eager"></iframe>
                 
             {% elif demo.file_type == 'lms' and content_url %}
-                <!-- ✅ LMS/SCORM CONTENT - FIXED SANDBOX ATTRIBUTES -->
-                <iframe id="demoContent" 
-                        src="{{ content_url }}" 
-                        class="lms-content"
-                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-top-navigation-by-user-activation" 
-                        allowfullscreen
-                        loading="eager"></iframe>
+        <!-- ✅ SCORM-Compatible iframe (Articulate Storyline) -->
+         <iframe id="demoContent" 
+            src="{{ content_url }}" 
+            class="lms-content"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-downloads" 
+            allowfullscreen
+            allow="fullscreen; autoplay; clipboard-write; encrypted-media"
+            loading="eager"></iframe>
                 
             {% else %}
                 <!-- ERROR STATE -->
@@ -628,12 +630,12 @@
             <div class="timestamp" id="timestamp"></div>
             
             <!-- ✅ FILE BADGE - IMPROVED -->
-            <div class="file-badge {{ demo.file_type }}">
+            {% comment %} <div class="file-badge {{ demo.file_type }}">
                 {% if demo.file_type == 'video' %}VIDEO
                 {% elif demo.file_type == 'webgl' %}WEBGL 3D
                 {% elif demo.file_type == 'lms' %}LMS COURSE
                 {% else %}DEMO{% endif %}
-            </div>
+            </div> {% endcomment %}
         </div>
         
         <!-- ✅ IMPROVED: Controls Bar -->
@@ -828,62 +830,130 @@ updateTimestamp();
 setInterval(updateTimestamp, 1000);
 
 // ==========================================
-// ✅ CONTENT LOADING HANDLER
+// ✅ CONTENT LOADING HANDLER - COMPLETE FIX
 // ==========================================
 const loadingOverlay = document.getElementById('loadingOverlay');
 const errorOverlay = document.getElementById('errorOverlay');
 const demoContent = document.getElementById('demoContent');
 const demoVideo = document.getElementById('demoVideo');
 
-// Hide loading after content loads
+console.log('🔍 Checking elements:');
+console.log('   Loading overlay:', loadingOverlay ? '✅ FOUND' : '❌ NOT FOUND');
+console.log('   Error overlay:', errorOverlay ? '✅ FOUND' : '❌ NOT FOUND');
+console.log('   Demo iframe:', demoContent ? '✅ FOUND' : '❌ NOT FOUND');
+console.log('   Demo video:', demoVideo ? '✅ FOUND' : '❌ NOT FOUND');
+
+// ✅ CRITICAL FIX: Hide loading if no content elements
+if (!demoContent && !demoVideo) {
+    console.warn('⚠️ NO CONTENT ELEMENTS - Hiding loading immediately');
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+    }
+}
+
+// ✅ HANDLE IFRAME (WebGL)
 if (demoContent) {
-    console.log('📱 iframe detected: {{ demo.get_file_type_display }}');
+    console.log('📱 IFRAME DETECTED (WebGL content)');
     
-    // Show loading initially
-    if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+    // Show loading
+    if (loadingOverlay) {
+        loadingOverlay.classList.remove('hidden');
+        console.log('   ⏳ Loading overlay shown');
+    }
     
+    // iframe load success
     demoContent.addEventListener('load', function() {
-        console.log('✅ iframe loaded successfully');
-        if (loadingOverlay) loadingOverlay.classList.add('hidden');
+        console.log('✅ iframe LOADED successfully');
+        if (loadingOverlay) {
+            loadingOverlay.classList.add('hidden');
+            console.log('   ✅ Loading overlay HIDDEN');
+        }
     });
     
+    // iframe load error
     demoContent.addEventListener('error', function() {
-        console.error('❌ iframe failed to load');
+        console.error('❌ iframe FAILED to load');
         if (loadingOverlay) loadingOverlay.classList.add('hidden');
         if (errorOverlay) {
             errorOverlay.classList.add('show');
             document.getElementById('errorMessage').textContent = 
-                'Failed to load {{ demo.get_file_type_display }} content. Please try refreshing the page.';
+                'Failed to load WebGL content. Please refresh.';
         }
     });
     
-    // Timeout fallback (hide loading after 10 seconds)
+    // Timeout fallback
     setTimeout(() => {
         if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
-            console.log('⏱️ Loading timeout - hiding overlay');
+            console.log('⏱️ iframe timeout (10s) - force hiding loading');
             loadingOverlay.classList.add('hidden');
         }
     }, 10000);
 }
 
+// ✅ HANDLE VIDEO
 if (demoVideo) {
-    console.log('🎥 Video player detected');
+    console.log('🎥 VIDEO DETECTED');
     
+    // Show loading
+    if (loadingOverlay) {
+        loadingOverlay.classList.remove('hidden');
+        console.log('   ⏳ Loading overlay shown');
+    }
+    
+    // Video ready to play
     demoVideo.addEventListener('loadeddata', function() {
-        console.log('✅ Video loaded successfully');
-        if (loadingOverlay) loadingOverlay.classList.add('hidden');
+        console.log('✅ VIDEO LOADED (loadeddata event)');
+        if (loadingOverlay) {
+            loadingOverlay.classList.add('hidden');
+            console.log('   ✅ Loading overlay HIDDEN');
+        }
     });
     
+    // Video can start playing
+    demoVideo.addEventListener('canplay', function() {
+        console.log('✅ VIDEO CAN PLAY (canplay event)');
+        if (loadingOverlay) {
+            loadingOverlay.classList.add('hidden');
+            console.log('   ✅ Loading overlay HIDDEN');
+        }
+    });
+    
+    // Video metadata loaded
+    demoVideo.addEventListener('loadedmetadata', function() {
+        console.log('✅ VIDEO METADATA LOADED');
+        // Hide loading after metadata is ready
+        setTimeout(() => {
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('hidden');
+                console.log('   ✅ Loading overlay HIDDEN (after metadata)');
+            }
+        }, 500);
+    });
+    
+    // Video error
     demoVideo.addEventListener('error', function() {
-        console.error('❌ Video failed to load');
+        console.error('❌ VIDEO FAILED to load');
+        console.error('   Error code:', demoVideo.error ? demoVideo.error.code : 'unknown');
+        console.error('   Error message:', demoVideo.error ? demoVideo.error.message : 'unknown');
+        
         if (loadingOverlay) loadingOverlay.classList.add('hidden');
         if (errorOverlay) {
             errorOverlay.classList.add('show');
             document.getElementById('errorMessage').textContent = 
-                'Failed to load video. Please check your connection and try again.';
+                'Failed to load video. Check connection.';
         }
     });
+    
+    // Timeout fallback
+    setTimeout(() => {
+        if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
+            console.log('⏱️ Video timeout (8s) - force hiding loading');
+            loadingOverlay.classList.add('hidden');
+        }
+    }, 8000);
 }
+
+console.log('✅ Content loading handlers initialized');
 
 // ==========================================
 // ✅ VIDEO CONTROLS
@@ -909,7 +979,6 @@ if (playBtn && video) {
         }
     });
     
-    // Auto-update play button on video state change
     video.addEventListener('play', () => {
         playBtn.innerHTML = '<i class="fas fa-pause"></i>';
     });
@@ -974,8 +1043,183 @@ function formatTime(seconds) {
 console.log('✅ Video controls initialized');
 {% endif %}
 
+
 // ==========================================
-// ✅ RELOAD BUTTON (WebGL/LMS)
+// ✅ AUTOPLAY FUNCTIONALITY
+// ==========================================
+{% if demo.file_type == 'video' %}
+(function() {
+    console.log('🎬 Checking for autoplay...');
+    
+    // Check URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldAutoplay = urlParams.get('autoplay') === '1';
+    
+    console.log('   Autoplay param:', shouldAutoplay);
+    
+    if (shouldAutoplay && video) {
+        console.log('   ▶️ Autoplay requested');
+        
+        // Function to start autoplay
+        const startAutoplay = function() {
+            console.log('   📹 Video ready, attempting autoplay...');
+            
+            // Mute first for better browser compatibility
+            video.muted = true;
+            
+            // Try to play
+            const playPromise = video.play();
+            
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(function() {
+                        console.log('   ✅ Autoplay SUCCESS');
+                        
+                        // Update play button
+                        if (playBtn) {
+                            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                        }
+                        
+                        // Unmute after 500ms
+                        setTimeout(function() {
+                            video.muted = false;
+                            if (volumeBtn) {
+                                volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                            }
+                            if (volumeSlider) {
+                                volumeSlider.value = video.volume * 100;
+                            }
+                            console.log('   🔊 Unmuted');
+                        }, 500);
+                        
+                        showToast('▶️ Video playing automatically', 'success');
+                    })
+                    .catch(function(error) {
+                        console.warn('   ⚠️ Autoplay BLOCKED by browser:', error.message);
+                        
+                        // Show notification to user
+                        showAutoplayNotification();
+                    });
+            }
+        };
+        
+        // Wait for video to be ready
+        if (video.readyState >= 2) {
+            // Already loaded
+            console.log('   ✅ Video already loaded');
+            setTimeout(startAutoplay, 300);
+        } else {
+            // Wait for load
+            console.log('   ⏳ Waiting for video to load...');
+            video.addEventListener('loadedmetadata', function() {
+                setTimeout(startAutoplay, 300);
+            }, { once: true });
+        }
+    }
+    
+    // Show click-to-play notification if autoplay is blocked
+    function showAutoplayNotification() {
+        const player = document.querySelector('.content-wrapper');
+        if (!player) {
+            console.warn('   ⚠️ Content wrapper not found for notification');
+            return;
+        }
+        
+        // Check if notification already exists
+        if (player.querySelector('.autoplay-notification')) {
+            console.log('   ℹ️ Notification already exists');
+            return;
+        }
+        
+        const notification = document.createElement('div');
+        notification.className = 'autoplay-notification';
+        notification.innerHTML = `
+            <i class="fas fa-play-circle"></i>
+            <span>Click to play video</span>
+        `;
+        notification.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            animation: autoplayPulse 2s infinite;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+        `;
+        
+        player.appendChild(notification);
+        console.log('   📢 Autoplay notification shown');
+        
+        // Click to play
+        notification.addEventListener('click', function() {
+            console.log('   👆 User clicked notification');
+            video.play()
+                .then(() => {
+                    console.log('   ✅ Video playing after user interaction');
+                    if (playBtn) {
+                        playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                    }
+                    showToast('Video playing', 'success');
+                })
+                .catch(err => {
+                    console.error('   ❌ Play failed:', err);
+                    showToast('Failed to play video', 'error');
+                });
+            notification.remove();
+        });
+        
+        // Auto-remove after 5 seconds
+        setTimeout(function() {
+            if (notification.parentElement) {
+                console.log('   ⏱️ Auto-removing notification');
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, 5000);
+    }
+    
+    // Add pulse animation style (only once)
+    if (!document.getElementById('autoplayAnimationStyle')) {
+        const style = document.createElement('style');
+        style.id = 'autoplayAnimationStyle';
+        style.textContent = `
+            @keyframes autoplayPulse {
+                0%, 100% { 
+                    transform: translate(-50%, -50%) scale(1); 
+                    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+                }
+                50% { 
+                    transform: translate(-50%, -50%) scale(1.05); 
+                    box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+                }
+            }
+            .autoplay-notification:hover {
+                transform: translate(-50%, -50%) scale(1.1) !important;
+                background: rgba(8, 127, 194, 0.95) !important;
+            }
+        `;
+        document.head.appendChild(style);
+        console.log('   🎨 Autoplay animation styles added');
+    }
+    
+    console.log('✅ Autoplay logic initialized');
+})();
+{% endif %}
+
+// ==========================================
+// ✅ RELOAD BUTTON (WebGL)
 // ==========================================
 const reloadBtn = document.getElementById('reloadBtn');
 if (reloadBtn) {
@@ -984,7 +1228,7 @@ if (reloadBtn) {
         const iframe = document.getElementById('demoContent');
         if (iframe) {
             if (loadingOverlay) loadingOverlay.classList.remove('hidden');
-            iframe.src = iframe.src; // Force reload
+            iframe.src = iframe.src;
             showToast('Content reloading...', 'success');
         }
     });
@@ -1015,7 +1259,6 @@ if (fullscreenBtn) {
         }
     });
     
-    // Listen for fullscreen changes
     document.addEventListener('fullscreenchange', () => {
         if (!document.fullscreenElement) {
             fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
@@ -1025,7 +1268,6 @@ if (fullscreenBtn) {
     console.log('✅ Fullscreen controls initialized');
 }
 
-// Keyboard shortcut for fullscreen
 document.addEventListener('keydown', (e) => {
     if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
@@ -1080,9 +1322,7 @@ if (likeBtn) {
     const demoId = likeBtn.dataset.demoId;
     const likeUrl = `/customer/demos/${demoId}/like/`;
     
-    console.log('💖 Like button initialized');
-    console.log('📍 Demo ID:', demoId);
-    console.log('🔗 Like URL:', likeUrl);
+    console.log('💖 Like button initialized for demo #' + demoId);
     
     likeBtn.addEventListener('click', function() {
         console.log('🔄 Like button clicked');
@@ -1161,6 +1401,8 @@ if (feedbackForm) {
         const feedback = document.getElementById('feedbackText').value.trim();
         const csrfToken = getCsrfToken();
         
+        console.log('📝 Submitting feedback:', { rating, feedback });
+        
         if (!rating) {
             showToast('Please select a rating', 'error');
             return;
@@ -1195,8 +1437,21 @@ if (feedbackForm) {
                 feedback: feedback
             })
         })
-        .then(r => r.json())
+        .then(response => {
+            console.log('📥 Response status:', response.status);
+            
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.error('❌ Response error:', text);
+                    throw new Error(`HTTP ${response.status}`);
+                });
+            }
+            
+            return response.json();
+        })
         .then(data => {
+            console.log('✅ Success:', data);
+            
             if (data.success) {
                 showToast(data.message || 'Feedback submitted successfully!', 'success');
                 setTimeout(() => location.reload(), 1500);
@@ -1209,8 +1464,8 @@ if (feedbackForm) {
             }
         })
         .catch(err => {
-            console.error('Feedback error:', err);
-            showToast('Failed to submit. Please try again.', 'error');
+            console.error('❌ Feedback error:', err);
+            showToast(`Failed to submit: ${err.message}`, 'error');
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Feedback';
@@ -1252,7 +1507,6 @@ function showToast(message, type = 'success') {
 document.addEventListener('contextmenu', e => e.preventDefault());
 
 document.addEventListener('keydown', e => {
-    // Prevent F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
     if (e.key === 'F12' || 
         (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key))) {
         e.preventDefault();
@@ -1262,5 +1516,16 @@ document.addEventListener('keydown', e => {
 
 console.log('✅ Security measures active');
 console.log('✅ Demo viewer fully initialized');
+
+// ==========================================
+// 🔥 EMERGENCY FAILSAFE: Force hide after 5s
+// ==========================================
+setTimeout(function() {
+    const loading = document.getElementById('loadingOverlay');
+    if (loading && !loading.classList.contains('hidden')) {
+        console.log('🔥 EMERGENCY: Force hiding loading after 5 seconds');
+        loading.classList.add('hidden');
+    }
+}, 5000);
 </script>
 {% endblock %}

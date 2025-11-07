@@ -117,52 +117,62 @@
         <div class="demos-grid">
             {% for demo in page_obj %}
                 <div class="demo-card">
-                    <!-- Demo Thumbnail -->
-                    <div class="demo-thumbnail">
-                        {% if demo.thumbnail %}
-                            <img src="{{ demo.thumbnail.url }}" alt="{{ demo.title }}" class="demo-thumbnail-img">
-                        {% else %}
-                            <div class="demo-thumbnail-placeholder">
-                                {% if demo.file_type == 'webgl' %}
-                                    <i class="fas fa-cube"></i>
-                                {% elif demo.file_type == 'lms' %}
-                                    <i class="fas fa-graduation-cap"></i>
-                                {% else %}
-                                    <i class="fas fa-video"></i>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                        
-                        <!-- Demo Type Badge -->
-                        {% comment %} <div class="demo-type-badge">
-                            {% if demo.file_type == 'video' %}
-                                <span class="badge bg-primary">
-                                    <i class="fas fa-play-circle me-1"></i>Video
-                                </span>
-                            {% elif demo.file_type == 'webgl' %}
-                                <span class="badge bg-success">
-                                    <i class="fas fa-cube me-1"></i>WebGL
-                                </span>
-                            {% elif demo.file_type == 'lms' %}
-                                <span class="badge bg-info">
-                                    <i class="fas fa-graduation-cap me-1"></i>LMS
-                                </span>
+                    <!-- ✅ UPDATED: Demo Thumbnail - Now Clickable -->
+                    <a href="{% url 'customers:demo_detail' demo.slug %}{% if demo.file_type == 'video' %}?autoplay=1{% endif %}" class="demo-thumbnail-link">
+                        <div class="demo-thumbnail">
+                            {% if demo.thumbnail %}
+                                <img src="{{ demo.thumbnail.url }}" alt="{{ demo.title }}" class="demo-thumbnail-img">
+                            {% elif demo.file_type == 'video' and demo.video_file %}
+                                <!-- ✅ Show video preview when thumbnail is missing for video type -->
+                                <video class="demo-thumbnail-img video-preview" muted loop playsinline preload="metadata">
+                                    <source src="{{ demo.video_file.url }}" type="video/mp4">
+                                </video>
+                                <div class="video-preview-overlay">
+                                    <i class="fas fa-play-circle"></i>
+                                </div>
                             {% else %}
-                                <span class="badge bg-secondary">
-                                    <i class="fas fa-file me-1"></i>Demo
-                                </span>
+                                <div class="demo-thumbnail-placeholder">
+                                    {% if demo.file_type == 'webgl' %}
+                                        <i class="fas fa-cube"></i>
+                                    {% elif demo.file_type == 'lms' %}
+                                        <i class="fas fa-graduation-cap"></i>
+                                    {% else %}
+                                        <i class="fas fa-video"></i>
+                                    {% endif %}
+                                </div>
                             {% endif %}
-                        </div> {% endcomment %}
-                        
-                        <!-- New Badge -->
-                        {% if demo.is_new %}
-                            <div class="new-badge">
-                                <span class="badge bg-danger">
-                                    <i class="fas fa-star me-1"></i>New
-                                </span>
-                            </div>
-                        {% endif %}
-                    </div>
+                            
+                            <!-- Demo Type Badge -->
+                            {% comment %} <div class="demo-type-badge">
+                                {% if demo.file_type == 'video' %}
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-play-circle me-1"></i>Video
+                                    </span>
+                                {% elif demo.file_type == 'webgl' %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-cube me-1"></i>WebGL
+                                    </span>
+                                {% elif demo.file_type == 'lms' %}
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-graduation-cap me-1"></i>LMS
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-file me-1"></i>Demo
+                                    </span>
+                                {% endif %}
+                            </div> {% endcomment %}
+                            
+                            <!-- New Badge -->
+                            {% if demo.is_new %}
+                                <div class="new-badge">
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-star me-1"></i>New
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </a>
                     
                     <!-- Demo Info -->
                     <div class="demo-card-body">
@@ -191,7 +201,8 @@
                         <!-- Demo Actions -->
                         <div class="demo-actions">
                             {# ✅ UNIFIED: All file types go to demo_detail (no separate webgl_viewer) #}
-                            <a href="{% url 'customers:demo_detail' demo.slug %}" class="btn btn-primary btn-sm w-100">
+                            {# ✅ NEW: Add autoplay parameter for video demos #}
+                            <a href="{% url 'customers:demo_detail' demo.slug %}{% if demo.file_type == 'video' %}?autoplay=1{% endif %}" class="btn btn-primary btn-sm w-100">
                                 {% if demo.file_type == 'webgl' %}
                                     <i class="fas fa-cube me-1"></i>View Demo
                                 {% elif demo.file_type == 'lms' %}
@@ -391,6 +402,12 @@
     }
 
     /* Demo Thumbnail */
+    .demo-thumbnail-link {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+    }
+
     .demo-thumbnail {
         position: relative;
         width: 100%;
@@ -406,6 +423,58 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+    }
+
+    /* ✅ NEW: Video Preview Styles */
+    .demo-thumbnail video.video-preview {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #000;
+    }
+
+    .video-preview-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.3);
+        pointer-events: none;
+        transition: all 0.3s ease;
+        z-index: 2;
+    }
+
+    .video-preview-overlay i {
+        font-size: 3.5rem;
+        color: white;
+        opacity: 0.9;
+        transition: all 0.3s ease;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    .demo-thumbnail-link:hover .video-preview-overlay {
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    .demo-thumbnail-link:hover .video-preview-overlay i {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    /* ✅ NEW: Cursor pointer for clickable area */
+    .demo-thumbnail-link {
+        cursor: pointer;
+    }
+
+    .demo-thumbnail-link:hover .demo-thumbnail {
+        opacity: 0.95;
     }
 
     .demo-thumbnail-placeholder {
@@ -675,6 +744,11 @@
             padding: 0.4rem 0.6rem;
             font-size: var(--font-xs);
         }
+
+        /* ✅ Smaller play icon on mobile */
+        .video-preview-overlay i {
+            font-size: 2.5rem;
+        }
     }
 
     @media (max-width: 576px) {
@@ -696,6 +770,11 @@
         
         .page-item {
             margin: 0.15rem;
+        }
+
+        /* ✅ Even smaller play icon on very small screens */
+        .video-preview-overlay i {
+            font-size: 2rem;
         }
     }
 </style>
@@ -740,6 +819,50 @@
         link.addEventListener('click', function() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
+    });
+
+    // ✅ UPDATED: Video Preview Hover Effects (with clickable thumbnail support)
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🎬 Initializing video preview hover effects...');
+        
+        const videoCards = document.querySelectorAll('.demo-card');
+        
+        videoCards.forEach(card => {
+            const video = card.querySelector('video.video-preview');
+            const thumbnailLink = card.querySelector('.demo-thumbnail-link');
+            
+            if (video && thumbnailLink) {
+                console.log('📹 Video preview found in card');
+                
+                // Play on hover (but not when clicking)
+                let isHovering = false;
+                
+                thumbnailLink.addEventListener('mouseenter', function() {
+                    console.log('▶️ Playing video preview on hover');
+                    isHovering = true;
+                    video.play().catch(err => {
+                        console.warn('⚠️ Video preview autoplay blocked:', err);
+                    });
+                });
+                
+                // Pause on hover out
+                thumbnailLink.addEventListener('mouseleave', function() {
+                    console.log('⏸️ Pausing video preview');
+                    isHovering = false;
+                    video.pause();
+                    video.currentTime = 0; // Reset to start
+                });
+                
+                // Prevent video interference when clicking to navigate
+                thumbnailLink.addEventListener('click', function(e) {
+                    console.log('👆 Thumbnail clicked - navigating to demo detail');
+                    // Let the link work normally
+                    // Video will stop when page navigates
+                });
+            }
+        });
+        
+        console.log('✅ Video preview effects initialized');
     });
 </script>
 {% endblock %}

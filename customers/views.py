@@ -253,33 +253,41 @@ def serve_webgl_file(request, slug, filepath):
     # ==========================================
     # LOGGING & DIAGNOSTICS
     # ==========================================
+    # ==========================================
+    # 🔥 DEBUG: FUNCTION ENTRY
+    # ==========================================
+    print(f"\n{'='*80}")
+    print(f"🔥 SERVE_WEBGL_FILE FUNCTION CALLED")
+    print(f"{'='*80}")
+    print(f"📍 Slug: '{slug}'")
+    print(f"📄 Filepath: '{filepath}'")
+    print(f"👤 User: {request.user.email if hasattr(request.user, 'email') else 'AnonymousUser'}")
+    print(f"🔐 Authenticated: {request.user.is_authenticated}")
+    print(f"{'='*80}\n")
+    
+    # ==========================================
+    # LOGGING & DIAGNOSTICS
+    # ==========================================
     print(f"\n{'='*70}")
     print(f"🎯 SERVE CONTENT FILE")
-    print(f"{'='*70}")
-    print(f"📍 Slug: {slug}")
-    print(f"📄 File: {filepath}")
-    print(f"👤 User: {request.user.email if request.user.is_authenticated else 'Anonymous'}")
-    print(f"🌐 IP: {get_client_ip(request)}")
     
     # ==========================================
     # GET DEMO
     # ==========================================
     try:
-        demo = Demo.objects.get(slug=slug)
-        print(f"\n✅ DEMO FOUND")
-        print(f"   Title: {demo.title}")
-        print(f"   Type: {demo.file_type.upper()}")
-        print(f"   Active: {demo.is_active}")
-        print(f"   Extracted: {demo.extracted_path if hasattr(demo, 'extracted_path') and demo.extracted_path else 'Not set'}")
+        demo = Demo.objects.get(slug=slug, is_active=True)
+        print(f"✅ Demo found: {demo.title} (ID: {demo.id})")
     except Demo.DoesNotExist:
-        print(f"\n❌ ERROR: Demo not found")
-        print(f"   Available slugs: {list(Demo.objects.values_list('slug', flat=True)[:10])}")
-        print(f"{'='*70}\n")
+        print(f"❌ Demo not found with slug: '{slug}'")
+        print(f"   Available LMS demos:")
+        for d in Demo.objects.filter(file_type='lms', is_active=True)[:5]:
+            print(f"      - {d.slug}")
         raise Http404(f"Demo not found: {slug}")
     except Exception as e:
-        print(f"\n❌ DATABASE ERROR: {e}")
-        print(f"{'='*70}\n")
-        raise Http404("Database error")
+        print(f"❌ Unexpected error looking up demo: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
     
     # ==========================================
     # ACCESS CONTROL
@@ -659,21 +667,26 @@ def serve_webgl_file(request, slug, filepath):
         print(f"{'='*70}\n")
         raise Http404("Error serving file")
 
-
 @login_required
 def demo_detail(request, slug):
     """
-    ✅ COMPLETE FIX: Unified demo viewer with proper feedback handling
-    Works for VIDEO, WEBGL, and LMS
+    ✅ COMPLETE FIXED: Unified demo viewer
+    - Video → MP4 playback with controls
+    - WebGL → 3D viewer in iframe
+    - LMS → SCORM wrapper with API
     """
     demo = get_object_or_404(Demo, slug=slug, is_active=True)
     
-    # Check access
+    # ==========================================
+    # ACCESS CHECK
+    # ==========================================
     if not demo.can_customer_access(request.user):
         messages.error(request, "You don't have permission to access this demo.")
         return redirect('customers:browse_demos')
     
-    # Record view
+    # ==========================================
+    # RECORD VIEW
+    # ==========================================
     DemoView.objects.update_or_create(
         demo=demo,
         user=request.user,
@@ -685,66 +698,132 @@ def demo_detail(request, slug):
     demo.save(update_fields=['views_count'])
     demo.refresh_from_db()
     
-    # User interactions
+    # ==========================================
+    # GET USER INTERACTIONS (ALL TYPES)
+    # ==========================================
     user_liked = DemoLike.objects.filter(demo=demo, user=request.user).exists()
     user_feedback = DemoFeedback.objects.filter(demo=demo, user=request.user).first()
     
-    # Approved feedbacks
+    # Get approved feedbacks
     approved_feedbacks = DemoFeedback.objects.filter(
         demo=demo,
         is_approved=True
     ).select_related('user').order_by('-created_at')[:10]
     
-    # Latest demos
-    latest_video_demos_qs = Demo.objects.filter(is_active=True).exclude(id=demo.id)
+    # ==========================================
+    # ✅ LMS: SEPARATE WRAPPER
+    # ==========================================
+    if demo.file_type == 'lms':
+        lms_content_url = demo.get_lms_index_url()
+        
+        if not lms_content_url:
+            print(f"❌ LMS: No content URL for {demo.title}")
+            messages.error(request, "LMS content not available.")
+            return redirect('customers:browse_demos')
+        
+        print(f"\n{'='*60}")
+        print(f"🎓 LMS DEMO RENDERING")
+        print(f"{'='*60}")
+        print(f"Demo: {demo.title}")
+        print(f"Slug: {demo.slug}")
+        print(f"Content URL: {lms_content_url}")
+        print(f"User Liked: {user_liked}")
+        print(f"Has Feedback: {user_feedback is not None}")
+        print(f"Approved Feedbacks: {approved_feedbacks.count()}")
+        print(f"Template: lms_wrapper.html")
+        print(f"{'='*60}\n")
+        
+        context = {
+            'demo': demo,
+            'content_url': lms_content_url,
+            'user_liked': user_liked,
+            'user_feedback': user_feedback,
+            'approved_feedbacks': approved_feedbacks,
+            'user_email': request.user.email,
+        }
+        
+        return render(request, 'customers/lms_wrapper.html', context)
     
-    if hasattr(request.user, 'business_category') and request.user.business_category:
-        latest_video_demos_qs = latest_video_demos_qs.filter(
-            target_business_categories=request.user.business_category
-        )
+    # ==========================================
+    # ✅ VIDEO: DIRECT FILE URL
+    # ==========================================
+    elif demo.file_type == 'video':
+        if not demo.video_file:
+            print(f"❌ VIDEO: No video file for {demo.title}")
+            messages.error(request, "Video file not available.")
+            return redirect('customers:browse_demos')
+        
+        content_url = demo.video_file.url
+        
+        print(f"\n{'='*60}")
+        print(f"🎥 VIDEO DEMO RENDERING")
+        print(f"{'='*60}")
+        print(f"Demo: {demo.title}")
+        print(f"Slug: {demo.slug}")
+        print(f"Video File: {demo.video_file.name}")
+        print(f"Content URL: {content_url}")
+        print(f"Duration: {demo.formatted_duration}")
+        print(f"User Liked: {user_liked}")
+        print(f"Has Feedback: {user_feedback is not None}")
+        print(f"Template: demo_detail.html")
+        print(f"{'='*60}\n")
+        
+        # Latest demos
+        latest_video_demos_qs = Demo.objects.filter(is_active=True).exclude(id=demo.id)
+        
+        if hasattr(request.user, 'business_category') and request.user.business_category:
+            latest_video_demos_qs = latest_video_demos_qs.filter(
+                target_business_categories=request.user.business_category
+            )
+        
+        latest_video_demos = latest_video_demos_qs.order_by('-created_at')[:10]
+        
+        context = {
+            'demo': demo,
+            'content_url': content_url,
+            'user_liked': user_liked,
+            'user_feedback': user_feedback,
+            'approved_feedbacks': approved_feedbacks,
+            'latest_video_demos': latest_video_demos,
+            'user_email': request.user.email,
+        }
+        
+        return render(request, 'customers/demo_detail.html', context)
     
-    latest_video_demos = latest_video_demos_qs.order_by('-created_at')[:10]
-    
-    # ========================================
-    # 🔥 CRITICAL: Get content_url for all file types
-    # ========================================
-    
-    content_url = None
-    
-    if demo.file_type == 'video':
-        # ✅ VIDEO: Direct file URL
-        if demo.video_file:
-            content_url = demo.video_file.url
-            print(f"✅ Video URL: {content_url}")
-    
+    # ==========================================
+    # ✅ WEBGL: EXTRACTED INDEX.HTML
+    # ==========================================
     elif demo.file_type == 'webgl':
-        # ✅ WEBGL: Use model method first, then fallback
+        content_url = None
+        
+        # Try model method first
         if hasattr(demo, 'get_webgl_index_url'):
             try:
                 content_url = demo.get_webgl_index_url()
                 if content_url:
-                    print(f"✅ WebGL URL (model method): {content_url}")
+                    print(f"✅ WEBGL: Got URL from model method: {content_url}")
             except Exception as e:
-                print(f"⚠️ WebGL model method error: {e}")
+                print(f"⚠️ WEBGL: Model method error: {e}")
         
-        # Fallback: Manual search for index.html
+        # Fallback: Manual search
         if not content_url and demo.extracted_path:
             extracted_dir = os.path.join(settings.MEDIA_ROOT, demo.extracted_path)
             
+            print(f"🔍 WEBGL: Searching in {extracted_dir}")
+            
             if os.path.exists(extracted_dir):
-                # Try common WebGL entry points
                 possible_entries = [
                     'index.html',
                     'Index.html',
                     'build/index.html',
                     'Build/index.html',
                     'dist/index.html',
+                    'Dist/index.html',
                 ]
                 
                 for entry in possible_entries:
                     test_path = os.path.join(extracted_dir, entry)
                     if os.path.exists(test_path):
-                        # Build URL using reverse
                         try:
                             from django.urls import reverse
                             url_path = entry.replace('\\', '/')
@@ -752,83 +831,20 @@ def demo_detail(request, slug):
                                 'slug': demo.slug,
                                 'filepath': url_path
                             })
-                            print(f"✅ WebGL URL (fallback): {content_url}")
+                            print(f"✅ WEBGL: Found entry point: {entry}")
+                            print(f"✅ WEBGL: Generated URL: {content_url}")
                             break
                         except Exception as e:
-                            print(f"❌ Error generating WebGL URL: {e}")
+                            print(f"❌ WEBGL: URL generation error: {e}")
                 
-                # Last resort: Search recursively for any HTML file
+                # Last resort: Recursive search
                 if not content_url:
-                    import glob
-                    html_files = glob.glob(os.path.join(extracted_dir, '**/*.html'), recursive=True)
-                    if html_files:
-                        # Use first HTML file found
-                        rel_path = os.path.relpath(html_files[0], extracted_dir)
-                        url_path = rel_path.replace('\\', '/')
-                        try:
-                            from django.urls import reverse
-                            content_url = reverse('customers:serve_webgl_file', kwargs={
-                                'slug': demo.slug,
-                                'filepath': url_path
-                            })
-                            print(f"✅ WebGL URL (recursive search): {content_url}")
-                        except Exception as e:
-                            print(f"❌ Error generating WebGL URL: {e}")
-    
-    elif demo.file_type == 'lms':
-        # ✅ LMS/SCORM: Use model method first, then fallback
-        if hasattr(demo, 'get_lms_index_url'):
-            try:
-                content_url = demo.get_lms_index_url()
-                if content_url:
-                    print(f"✅ LMS URL (model method): {content_url}")
-            except Exception as e:
-                print(f"⚠️ LMS model method error: {e}")
-        
-        # Fallback: Manual search for LMS entry points
-        if not content_url and demo.extracted_path:
-            extracted_dir = os.path.join(settings.MEDIA_ROOT, demo.extracted_path)
-            
-            if os.path.exists(extracted_dir):
-                # Try common LMS/SCORM entry points (in priority order)
-                possible_entries = [
-                    'index.html',
-                    'index_lms.html',
-                    'story.html',
-                    'scormdriver/indexAPI.html',
-                    'res/index.html',
-                    'launch.html',
-                    'start.html',
-                    'index_scorm.html',
-                ]
-                
-                for entry in possible_entries:
-                    test_path = os.path.join(extracted_dir, entry)
-                    if os.path.exists(test_path):
-                        # Build URL using reverse
-                        try:
-                            from django.urls import reverse
-                            url_path = entry.replace('\\', '/')
-                            content_url = reverse('customers:serve_webgl_file', kwargs={
-                                'slug': demo.slug,
-                                'filepath': url_path
-                            })
-                            print(f"✅ LMS URL (fallback): {content_url} [{entry}]")
-                            break
-                        except Exception as e:
-                            print(f"❌ Error generating LMS URL: {e}")
-                
-                # Last resort: Search recursively for HTML files
-                if not content_url:
+                    print(f"🔍 WEBGL: Doing recursive search for HTML files...")
                     import glob
                     html_files = glob.glob(os.path.join(extracted_dir, '**/*.html'), recursive=True)
                     
                     if html_files:
-                        # Prioritize files with "index" in name
-                        index_files = [f for f in html_files if 'index' in os.path.basename(f).lower()]
-                        target_file = index_files[0] if index_files else html_files[0]
-                        
-                        rel_path = os.path.relpath(target_file, extracted_dir)
+                        rel_path = os.path.relpath(html_files[0], extracted_dir)
                         url_path = rel_path.replace('\\', '/')
                         
                         try:
@@ -837,40 +853,58 @@ def demo_detail(request, slug):
                                 'slug': demo.slug,
                                 'filepath': url_path
                             })
-                            print(f"✅ LMS URL (recursive search): {content_url}")
+                            print(f"✅ WEBGL: Found HTML via recursive search: {url_path}")
                         except Exception as e:
-                            print(f"❌ Error generating LMS URL: {e}")
+                            print(f"❌ WEBGL: Recursive URL error: {e}")
+            else:
+                print(f"❌ WEBGL: Extracted directory doesn't exist: {extracted_dir}")
+        
+        if not content_url:
+            print(f"❌ WEBGL: No content URL generated for {demo.title}")
+            messages.error(request, "WebGL content not available.")
+            return redirect('customers:browse_demos')
+        
+        print(f"\n{'='*60}")
+        print(f"🎮 WEBGL DEMO RENDERING")
+        print(f"{'='*60}")
+        print(f"Demo: {demo.title}")
+        print(f"Slug: {demo.slug}")
+        print(f"Extracted Path: {demo.extracted_path}")
+        print(f"Content URL: {content_url}")
+        print(f"User Liked: {user_liked}")
+        print(f"Has Feedback: {user_feedback is not None}")
+        print(f"Template: demo_detail.html")
+        print(f"{'='*60}\n")
+        
+        # Latest demos
+        latest_video_demos_qs = Demo.objects.filter(is_active=True).exclude(id=demo.id)
+        
+        if hasattr(request.user, 'business_category') and request.user.business_category:
+            latest_video_demos_qs = latest_video_demos_qs.filter(
+                target_business_categories=request.user.business_category
+            )
+        
+        latest_video_demos = latest_video_demos_qs.order_by('-created_at')[:10]
+        
+        context = {
+            'demo': demo,
+            'content_url': content_url,
+            'user_liked': user_liked,
+            'user_feedback': user_feedback,
+            'approved_feedbacks': approved_feedbacks,
+            'latest_video_demos': latest_video_demos,
+            'user_email': request.user.email,
+        }
+        
+        return render(request, 'customers/demo_detail.html', context)
     
-    # Base context
-    context = {
-        'demo': demo,
-        'content_url': content_url,
-        'user_liked': user_liked,
-        'user_feedback': user_feedback,
-        'approved_feedbacks': approved_feedbacks,
-        'latest_video_demos': latest_video_demos,
-        'user_email': request.user.email,
-    }
-    
-    # Debug output
-    print(f"\n{'='*60}")
-    print(f"📊 Demo Detail Context")
-    print(f"{'='*60}")
-    print(f"Demo: {demo.title}")
-    print(f"Type: {demo.file_type}")
-    print(f"Slug: {demo.slug}")
-    print(f"Extracted Path: {demo.extracted_path if hasattr(demo, 'extracted_path') else 'N/A'}")
-    print(f"Content URL: {content_url}")
-    print(f"User Liked: {user_liked}")
-    print(f"User Feedback: {'Yes' if user_feedback else 'No'}")
-    print(f"{'='*60}\n")
-    
-    # Warning if no content URL found
-    if not content_url:
-        print(f"⚠️ WARNING: No content URL generated for {demo.file_type} demo: {demo.title}")
-        messages.warning(request, f"Content may not be available for this demo.")
-    
-    return render(request, 'customers/demo_detail.html', context)
+    # ==========================================
+    # ❌ UNKNOWN FILE TYPE
+    # ==========================================
+    else:
+        print(f"❌ UNKNOWN FILE TYPE: {demo.file_type} for {demo.title}")
+        messages.error(request, f"Unsupported demo type: {demo.get_file_type_display()}")
+        return redirect('customers:browse_demos')
 
 @login_required
 @require_http_methods(["POST"])
@@ -1736,6 +1770,90 @@ def cancel_demo_request(request, request_id):
         return JsonResponse({
             'success': False,
             'error': 'An error occurred while cancelling the request'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def lms_tracking(request):
+    """
+    Receive and store SCORM/LMS tracking data
+    """
+    try:
+        data = json.loads(request.body)
+        
+        demo_id = data.get('demo_id')
+        lesson_status = data.get('lesson_status', 'unknown')
+        score_raw = data.get('score_raw', '')
+        session_time = data.get('session_time', '0000:00:00')
+        lesson_location = data.get('lesson_location', '')
+        
+        # Log tracking data
+        print(f"\n{'='*60}")
+        print(f"📊 LMS TRACKING DATA RECEIVED")
+        print(f"{'='*60}")
+        print(f"User: {request.user.email}")
+        print(f"Demo ID: {demo_id}")
+        print(f"Status: {lesson_status}")
+        print(f"Score: {score_raw}")
+        print(f"Session Time: {session_time}")
+        print(f"Location: {lesson_location}")
+        print(f"{'='*60}\n")
+        
+        # ✅ Optional: Store in database
+        # If you want persistent tracking, create a model like:
+        # LMSProgress.objects.update_or_create(
+        #     user=request.user,
+        #     demo_id=demo_id,
+        #     defaults={
+        #         'lesson_status': lesson_status,
+        #         'score': score_raw,
+        #         'session_time': session_time,
+        #         'last_location': lesson_location,
+        #         'last_updated': timezone.now()
+        #     }
+        # )
+        
+        # ✅ Log to CustomerActivity for now
+        try:
+            from customers.models import CustomerActivity
+            CustomerActivity.objects.create(
+                user=request.user,
+                activity_type='lms_progress',
+                description=f'LMS Progress: {lesson_status}',
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                metadata={
+                    'demo_id': demo_id,
+                    'lesson_status': lesson_status,
+                    'score': score_raw,
+                    'session_time': session_time,
+                    'location': lesson_location,
+                }
+            )
+            print(f"✅ Logged to CustomerActivity")
+        except Exception as log_error:
+            print(f"⚠️ Activity logging error: {log_error}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Tracking data received'
+        })
+        
+    except json.JSONDecodeError:
+        print(f"❌ Invalid JSON in LMS tracking request")
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON data'
+        }, status=400)
+        
+    except Exception as e:
+        print(f"❌ LMS tracking error: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': 'Server error occurred'
         }, status=500)
 
 @login_required

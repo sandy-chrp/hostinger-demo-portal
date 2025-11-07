@@ -74,7 +74,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'customers.middleware.CustomerSecurityMiddleware',
     'customers.middleware.ContentProtectionMiddleware',
-    'customers.middleware.WebGLFileMiddleware',
+    # 'customers.middleware.WebGLFileMiddleware',
     'customers.middleware.CheckUserStatusMiddleware',
     'customers.middleware.BrotliContentEncodingMiddleware',
 ]
