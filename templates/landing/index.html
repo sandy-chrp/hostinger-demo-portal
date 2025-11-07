@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+        {% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHRP India - Train Smarter. Work Better.</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+       <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'images/fav.png' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/fav.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/fav.png' %}">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f9ff 100%);
+        }
+        
+        /* Full Screen Banner */
+        .landing-container {
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+        }
+        
+        /* Social Media Icons - Top Right */
+        .social-media {
+            position: fixed;
+            right: 2rem;
+            top: 2rem;
+            display: flex;
+            flex-direction: row;
+            gap: 0.75rem;
+            z-index: 1000;
+            animation: slideInRight 1s ease-out 0.5s both;
+        }
+        
+        .social-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .social-icon:hover {
+            transform: scale(1.15);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .social-icon.linkedin {
+            background: #0077b5;
+        }
+        
+        .social-icon.youtube {
+            background: #ff0000;
+        }
+        
+        .social-icon.facebook {
+            background: #1877f2;
+        }
+        
+        .social-icon.instagram {
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        }
+        
+        .social-icon.twitter {
+            background: #000000;
+        }
+        
+        .social-icon svg {
+            width: 55%;
+            height: 55%;
+            fill: currentColor;
+        }
+        
+        /* Main Content */
+        .content-wrapper {
+            max-width: 1200px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        /* Logo Section */
+        .logo-section {
+            margin-bottom: 2.5rem;
+            animation: fadeInDown 1s ease-out;
+        }
+        
+        .logo-section img {
+            max-width: 380px;
+            width: 100%;
+            height: auto;
+            filter: drop-shadow(0 10px 30px rgba(8, 127, 194, 0.2));
+        }
+        
+        /* Main Heading */
+        .main-heading {
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: 900;
+            color: #0284c7;
+            line-height: 1.1;
+            margin-bottom: 1.25rem;
+            letter-spacing: -0.02em;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+        
+        /* Subheading */
+        .subheading {
+            font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp 1s ease-out 0.4s both;
+        }
+        
+        /* Buttons Container */
+        .buttons-container {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 1s ease-out 0.6s both;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 0.875rem 2.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 50px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-login {
+            background: #0284c7;
+            color: white;
+        }
+        
+        .btn-login:hover {
+            background: #0369a1;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(2, 132, 199, 0.4);
+        }
+        
+        .btn-signup {
+            background: white;
+            color: #0284c7;
+            border: 2px solid #0284c7;
+        }
+        
+        .btn-signup:hover {
+            background: #0284c7;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(2, 132, 199, 0.3);
+        }
+        
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* Responsive Design */
+        
+        /* Tablets (768px and below) */
+        @media (max-width: 768px) {
+            .landing-container {
+                padding: 1.5rem;
+                padding-top: 5rem;
+            }
+            
+            .logo-section {
+                margin-bottom: 1.75rem;
+            }
+            
+            .logo-section img {
+                max-width: 280px;
+            }
+            
+            .main-heading {
+                margin-bottom: 1rem;
+            }
+            
+            .subheading {
+                margin-bottom: 1.75rem;
+            }
+            
+            .buttons-container {
+                gap: 1rem;
+            }
+            
+            .btn {
+                padding: 0.75rem 2rem;
+                font-size: 0.9375rem;
+            }
+            
+            /* Social Media Icons - Stay at Top */
+            .social-media {
+                right: 1.5rem;
+                top: 1.5rem;
+                gap: 0.625rem;
+            }
+            
+            .social-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+        
+        /* Mobile (576px and below) */
+        @media (max-width: 576px) {
+            .landing-container {
+                padding: 1rem;
+                padding-top: 4.5rem;
+                justify-content: flex-start;
+            }
+            
+            .logo-section {
+                margin-bottom: 1.25rem;
+            }
+            
+            .logo-section img {
+                max-width: 220px;
+            }
+            
+            .main-heading {
+                margin-bottom: 0.875rem;
+                font-size: 1.75rem;
+            }
+            
+            .subheading {
+                margin-bottom: 1.5rem;
+                padding: 0 0.5rem;
+                font-size: 0.8125rem;
+            }
+            
+            .buttons-container {
+                flex-direction: column;
+                gap: 0.75rem;
+                width: 100%;
+                max-width: 280px;
+                margin: 0 auto;
+            }
+            
+            .btn {
+                width: 100%;
+                padding: 0.75rem 1.5rem;
+                justify-content: center;
+                font-size: 0.875rem;
+            }
+            
+            /* Social Media - Stay at Top */
+            .social-media {
+                right: 1rem;
+                top: 1rem;
+                gap: 0.5rem;
+            }
+            
+            .social-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 0.875rem;
+            }
+        }
+        
+        /* Extra Small Mobile (400px and below) */
+        @media (max-width: 400px) {
+            .landing-container {
+                padding-top: 4rem;
+            }
+            
+            .logo-section img {
+                max-width: 180px;
+            }
+            
+            .main-heading {
+                font-size: 1.5rem;
+            }
+            
+            .subheading {
+                font-size: 0.75rem;
+                padding: 0;
+            }
+            
+            .btn {
+                font-size: 0.8125rem;
+                padding: 0.625rem 1.25rem;
+            }
+            
+            .social-media {
+                right: 0.75rem;
+                top: 0.75rem;
+                gap: 0.375rem;
+            }
+            
+            .social-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 0.75rem;
+            }
+        }
+        
+        /* Large Desktop (1440px and above) */
+        @media (min-width: 1440px) {
+            .logo-section img {
+                max-width: 420px;
+            }
+            
+            .main-heading {
+                font-size: 4.5rem;
+            }
+            
+            .subheading {
+                font-size: 1.25rem;
+            }
+            
+            .btn {
+                padding: 1rem 3rem;
+                font-size: 1.125rem;
+            }
+            
+            .social-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.25rem;
+            }
+        }
+        
+        /* Landscape Mobile */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .landing-container {
+                padding: 0.75rem;
+                padding-top: 3.5rem;
+                min-height: auto;
+            }
+            
+            .logo-section {
+                margin-bottom: 0.75rem;
+            }
+            
+            .logo-section img {
+                max-width: 160px;
+            }
+            
+            .main-heading {
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .subheading {
+                font-size: 0.75rem;
+                margin-bottom: 0.875rem;
+            }
+            
+            .buttons-container {
+                gap: 0.75rem;
+            }
+            
+            .btn {
+                padding: 0.5rem 1.25rem;
+                font-size: 0.8125rem;
+            }
+            
+            .social-media {
+                right: 0.75rem;
+                top: 0.75rem;
+                gap: 0.375rem;
+            }
+            
+            .social-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="landing-container">
+        <!-- Main Content -->
+        <div class="content-wrapper">
+            <!-- Logo -->
+            <div class="logo-section">
+                <img src="{% static 'images/logo.webp' %}" alt="CHRP India Logo">
+            </div>
+            
+            <!-- Main Heading -->
+            <h1 class="main-heading">Train Smarter. Work Better.</h1>
+            
+            <!-- Subheading -->
+            <p class="subheading">
+                Experience how CHRP-INDIA delivers immersive eLearning and XR Solutions that empower global businesses
+            </p>
+            
+            <!-- Buttons -->
+            <div class="buttons-container">
+                <a href="{% url 'accounts:signin' %}" class="btn btn-login">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </a>
+                <a href="{% url 'accounts:signup' %}"class="btn btn-signup">
+                    <i class="fas fa-user-plus"></i>
+                    Sign Up
+                </a>
+            </div>
+        </div>
+        
+        <!-- Social Media Icons - Right Side -->
+        <div class="social-media">
+            <a href="https://in.linkedin.com/company/chrp-india-pvt-ltd-" target="_blank" class="social-icon linkedin" title="LinkedIn">
+                <i class="fab fa-linkedin-in"></i>
+            </a>
+            <a href="https://www.youtube.com/@CHRPINDIA-XR-SOLUTIONS" target="_blank" class="social-icon youtube" title="YouTube">
+                <i class="fab fa-youtube"></i>
+            </a>
+            <a href="https://www.facebook.com/CHRPINDIA/" target="_blank" class="social-icon facebook" title="Facebook">
+                <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="https://www.instagram.com/chrp_india/" target="_blank" class="social-icon instagram" title="Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="https://x.com/chrp_india" target="_blank" class="social-icon twitter" title="Twitter/X">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        // Smooth scroll effect (if needed for future sections)
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('CHRP India Landing Page Loaded');
+            
+            // Add click animation to buttons
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // Add ripple effect
+                    const ripple = document.createElement('span');
+                    ripple.style.position = 'absolute';
+                    ripple.style.borderRadius = '50%';
+                    ripple.style.background = 'rgba(255,255,255,0.6)';
+                    ripple.style.width = '20px';
+                    ripple.style.height = '20px';
+                    ripple.style.animation = 'ripple 0.6s ease-out';
+                    
+                    this.style.position = 'relative';
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => ripple.remove(), 600);
+                });
+            });
+            
+            // Social media icon hover effect
+            const socialIcons = document.querySelectorAll('.social-icon');
+            socialIcons.forEach(icon => {
+                icon.addEventListener('mouseenter', function() {
+                    this.style.animation = 'none';
+                    setTimeout(() => {
+                        this.style.animation = '';
+                    }, 10);
+                });
+            });
+        });
+        
+        // Add ripple animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                0% {
+                    transform: scale(0);
+                    opacity: 1;
+                }
+                100% {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

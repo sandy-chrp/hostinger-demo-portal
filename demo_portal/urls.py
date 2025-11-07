@@ -12,11 +12,12 @@ urlpatterns = [
     path('django-admin/', admin.site.urls),
     
     # Customer Portal URLs (Landing page, dashboard, contact)
-    path('', include('core.urls')),
+    path('admin/', include('core.urls')),
     
     # Authentication URLs
     path('auth/', include('accounts.urls')),
-    
+    path('', include('landing.urls')),  # Root URL
+
     # Feature URLs  
     path('demos/', include('demos.urls')),
     path('enquiries/', include('enquiries.urls')),
