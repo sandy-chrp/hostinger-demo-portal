@@ -1,27 +1,34 @@
-# accounts/views/user_management_views.py (NEW FILE)
+# accounts/views/user_management_views.py (FIXED VERSION - NO WRONG EMAILS)
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.core.paginator import Paginator
 from django.contrib.auth.hashers import make_password
 from django.http import JsonResponse
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+import re
 
 from accounts.decorators import permission_required
 from accounts.models import CustomUser, Role, BusinessCategory, BusinessSubCategory
-
+from accounts.signals import send_employee_welcome_with_password
 
 @login_required
 @permission_required('view_customers')
 def user_list(request):
-    """List all users (employees + customers)"""
+    """List all employees (NOT customers)"""
     
     query = request.GET.get('q', '')
     user_type = request.GET.get('type', '')
     role_filter = request.GET.get('role', '')
     status_filter = request.GET.get('status', '')
     
-    users = CustomUser.objects.all().select_related('role', 'business_category')
+    # ✅ FIX: Default to showing ONLY employees
+    users = CustomUser.objects.filter(
+        user_type='employee',  # Only employees
+        is_staff=True          # Only staff members
+    ).select_related('role', 'business_category')
     
     # Search
     if query:
@@ -32,10 +39,6 @@ def user_list(request):
             Q(employee_id__icontains=query) |
             Q(mobile__icontains=query)
         )
-    
-    # Filter by user type
-    if user_type:
-        users = users.filter(user_type=user_type)
     
     # Filter by role
     if role_filter:
@@ -68,34 +71,116 @@ def user_list(request):
     return render(request, 'admin/users/user_list.html', context)
 
 
+def get_next_employee_id():
+    """Generate next employee ID in format EMP00001"""
+    last_employee = CustomUser.objects.filter(
+        employee_id__isnull=False
+    ).order_by('-employee_id').first()
+    
+    if last_employee and last_employee.employee_id:
+        # Extract number from EMP00001
+        try:
+            last_number = int(last_employee.employee_id[3:])
+            next_number = last_number + 1
+            return f"EMP{next_number:05d}"
+        except (ValueError, IndexError):
+            return "EMP00001"
+    
+    return "EMP00001"
+
 @login_required
 @permission_required('add_customer')
 def user_add(request):
-    """Add new user (employee/customer)"""
+    """Add new user (employee only) - ✅ FIXED: No wrong emails sent"""
     
     if request.method == 'POST':
         try:
             # Validate passwords match
-            password = request.POST.get('password')
-            confirm_password = request.POST.get('confirm_password')
+            password = request.POST.get('password', '').strip()
+            confirm_password = request.POST.get('confirm_password', '').strip()
             
             if password != confirm_password:
                 messages.error(request, 'Passwords do not match!')
-                return redirect('accounts:user_add')
+                # Preserve form data
+                context = {
+                    'form_data': request.POST,
+                    'roles': Role.objects.filter(is_active=True),
+                    'categories': BusinessCategory.objects.filter(is_active=True),
+                    'next_employee_id': get_next_employee_id(),
+                }
+                return render(request, 'admin/users/user_add.html', context)
             
-            # Create user
+            # Validate email
+            email = request.POST.get('email', '').strip()
+            try:
+                validate_email(email)
+            except ValidationError:
+                messages.error(request, 'Invalid email address!')
+                context = {
+                    'form_data': request.POST,
+                    'roles': Role.objects.filter(is_active=True),
+                    'categories': BusinessCategory.objects.filter(is_active=True),
+                    'next_employee_id': get_next_employee_id(),
+                }
+                return render(request, 'admin/users/user_add.html', context)
+            
+            # Check if email already exists
+            if CustomUser.objects.filter(email=email).exists():
+                messages.error(request, 'This email is already registered!')
+                context = {
+                    'form_data': request.POST,
+                    'roles': Role.objects.filter(is_active=True),
+                    'categories': BusinessCategory.objects.filter(is_active=True),
+                    'next_employee_id': get_next_employee_id(),
+                }
+                return render(request, 'admin/users/user_add.html', context)
+            
+            # Validate employee ID format if provided
+            employee_id = request.POST.get('employee_id', '').strip().upper()
+            if employee_id:
+                pattern = r'^EMP\d{5}$'
+                if not re.match(pattern, employee_id):
+                    messages.error(request, 'Employee ID must be in format EMP00001 (EMP followed by 5 digits)')
+                    context = {
+                        'form_data': request.POST,
+                        'roles': Role.objects.filter(is_active=True),
+                        'categories': BusinessCategory.objects.filter(is_active=True),
+                        'next_employee_id': get_next_employee_id(),
+                    }
+                    return render(request, 'admin/users/user_add.html', context)
+                
+                # Check if employee ID already exists
+                if CustomUser.objects.filter(employee_id=employee_id).exists():
+                    messages.error(request, f'Employee ID {employee_id} is already in use!')
+                    context = {
+                        'form_data': request.POST,
+                        'roles': Role.objects.filter(is_active=True),
+                        'categories': BusinessCategory.objects.filter(is_active=True),
+                        'next_employee_id': get_next_employee_id(),
+                    }
+                    return render(request, 'admin/users/user_add.html', context)
+            
+            # Get country code and mobile
+            country_code = request.POST.get('country_code', '+91')
+            mobile = request.POST.get('mobile', '').strip()
+            
+            # ✅ CRITICAL FIX: Create user with is_approved=True and is_email_verified=True
+            # This prevents any "account approved" notifications from being triggered
             user = CustomUser.objects.create(
-                username=request.POST.get('email'),  # Use email as username
-                email=request.POST.get('email'),
-                first_name=request.POST.get('first_name'),
-                last_name=request.POST.get('last_name'),
-                mobile=request.POST.get('mobile'),
-                employee_id=request.POST.get('employee_id') or None,
-                system_mac_id=request.POST.get('system_mac_id') or None,
-                system_ip_address=request.POST.get('system_ip_address') or None,
-                user_type=request.POST.get('user_type', 'customer'),
+                username=email,  # Use email as username
+                email=email,
+                first_name=request.POST.get('first_name', '').strip(),
+                last_name=request.POST.get('last_name', '').strip(),
+                country_code=country_code,
+                mobile=mobile,
+                employee_id=employee_id if employee_id else None,
+                system_mac_address=request.POST.get('system_mac_id', '').strip() or None,
+                last_login_ip=request.POST.get('system_ip_address', '').strip() or None,
+                user_type='employee',  # ✅ Always employee
                 is_active=request.POST.get('is_active') == 'on',
-                is_staff=request.POST.get('user_type') == 'employee',
+                is_staff=True,  # ✅ Employees are staff
+                is_approved=True,  # ✅ CRITICAL: Set to True to prevent approval notifications
+                is_email_verified=True,  # ✅ CRITICAL: Set to True to prevent verification emails
                 password=make_password(password)
             )
             
@@ -113,14 +198,54 @@ def user_add(request):
             if subcategory_id:
                 user.business_subcategory_id = subcategory_id
             
+            # Save user first
             user.save()
             
-            messages.success(request, f'User "{user.full_name}" created successfully!')
+            # ✅ Handle email sending based on admin's choice
+            email_verification = request.POST.get('email_verification', 'verify_now')
+            
+            if email_verification == 'send_verification_email':
+                # ✅ Send welcome email with password ONLY if admin chooses to
+                try:
+                    email_sent = send_employee_welcome_with_password(user, password)
+                    
+                    if email_sent:
+                        messages.success(
+                            request, 
+                            f'✅ Employee "{user.full_name}" created successfully with ID {user.employee_id}! '
+                            f'Welcome email with login credentials sent to {user.email}'
+                        )
+                    else:
+                        messages.warning(
+                            request, 
+                            f'⚠️ Employee "{user.full_name}" created successfully with ID {user.employee_id}, '
+                            f'but email sending failed. Please send credentials manually.'
+                        )
+                        
+                except Exception as e:
+                    messages.warning(
+                        request, 
+                        f'⚠️ Employee "{user.full_name}" created successfully with ID {user.employee_id}, '
+                        f'but email error: {str(e)}'
+                    )
+            else:
+                # ✅ Don't send any email
+                messages.success(
+                    request, 
+                    f'✅ Employee "{user.full_name}" created successfully with ID {user.employee_id}!'
+                )
+            
             return redirect('accounts:user_detail', user_id=user.id)
         
         except Exception as e:
-            messages.error(request, f'Error: {str(e)}')
-            return redirect('accounts:user_add')
+            messages.error(request, f'Error creating user: {str(e)}')
+            context = {
+                'form_data': request.POST,
+                'roles': Role.objects.filter(is_active=True),
+                'categories': BusinessCategory.objects.filter(is_active=True),
+                'next_employee_id': get_next_employee_id(),
+            }
+            return render(request, 'admin/users/user_add.html', context)
     
     # GET request - show form
     roles = Role.objects.filter(is_active=True)
@@ -129,10 +254,10 @@ def user_add(request):
     context = {
         'roles': roles,
         'categories': categories,
+        'next_employee_id': get_next_employee_id(),
     }
     
     return render(request, 'admin/users/user_add.html', context)
-
 
 @login_required
 @permission_required('view_customers')
@@ -157,14 +282,15 @@ def user_edit(request, user_id):
     
     if request.method == 'POST':
         try:
-            user.first_name = request.POST.get('first_name')
-            user.last_name = request.POST.get('last_name')
-            user.email = request.POST.get('email')
-            user.mobile = request.POST.get('mobile')
-            user.employee_id = request.POST.get('employee_id') or None
-            user.system_mac_id = request.POST.get('system_mac_id') or None
-            user.system_ip_address = request.POST.get('system_ip_address') or None
-            user.user_type = request.POST.get('user_type')
+            user.first_name = request.POST.get('first_name', '').strip()
+            user.last_name = request.POST.get('last_name', '').strip()
+            user.email = request.POST.get('email', '').strip()
+            user.country_code = request.POST.get('country_code', '+91')
+            user.mobile = request.POST.get('mobile', '').strip()
+            user.employee_id = request.POST.get('employee_id', '').strip().upper() or None
+            user.system_mac_address = request.POST.get('system_mac_id', '').strip() or None
+            user.last_login_ip = request.POST.get('system_ip_address', '').strip() or None
+            user.user_type = request.POST.get('user_type', 'employee')
             user.is_active = request.POST.get('is_active') == 'on'
             user.is_staff = request.POST.get('user_type') == 'employee'
             
@@ -180,9 +306,9 @@ def user_edit(request, user_id):
             user.business_subcategory_id = subcategory_id if subcategory_id else None
             
             # Update password if provided
-            new_password = request.POST.get('new_password')
+            new_password = request.POST.get('new_password', '').strip()
             if new_password:
-                confirm_password = request.POST.get('confirm_password')
+                confirm_password = request.POST.get('confirm_password', '').strip()
                 if new_password == confirm_password:
                     user.password = make_password(new_password)
                 else:
@@ -195,7 +321,7 @@ def user_edit(request, user_id):
             return redirect('accounts:user_detail', user_id=user.id)
         
         except Exception as e:
-            messages.error(request, f'Error: {str(e)}')
+            messages.error(request, f'Error updating user: {str(e)}')
     
     roles = Role.objects.filter(is_active=True)
     categories = BusinessCategory.objects.filter(is_active=True)
@@ -234,3 +360,90 @@ def user_delete(request, user_id):
     }
     
     return render(request, 'admin/users/user_delete.html', context)
+
+
+# ==========================================
+# AJAX ENDPOINTS
+# ==========================================
+
+def check_employee_email(request):
+    """AJAX endpoint to check if employee email is available"""
+    email = request.GET.get('email', '').strip().lower()
+    
+    if not email:
+        return JsonResponse({
+            'available': False,
+            'message': 'Email is required'
+        })
+    
+    # Validate email format
+    try:
+        validate_email(email)
+    except ValidationError:
+        return JsonResponse({
+            'available': False,
+            'message': 'Invalid email format'
+        })
+    
+    # Check blocked domains
+    blocked_domains = [
+        'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com',
+        'live.com', 'ymail.com', 'aol.com', 'icloud.com',
+        'rediffmail.com', 'protonmail.com'
+    ]
+    
+    try:
+        domain = email.split('@')[1].lower()
+        if domain in blocked_domains:
+            return JsonResponse({
+                'available': False,
+                'message': 'Personal email domains not allowed. Use business email.'
+            })
+    except IndexError:
+        return JsonResponse({
+            'available': False,
+            'message': 'Invalid email format'
+        })
+    
+    # Check if email already exists
+    if CustomUser.objects.filter(email=email).exists():
+        return JsonResponse({
+            'available': False,
+            'message': 'This email is already registered'
+        })
+    
+    return JsonResponse({
+        'available': True,
+        'message': 'Email is available'
+    })
+
+
+def check_employee_id(request):
+    """AJAX endpoint to check if employee ID is available"""
+    employee_id = request.GET.get('employee_id', '').strip().upper()
+    
+    if not employee_id:
+        return JsonResponse({
+            'available': False,
+            'message': 'Employee ID is required'
+        })
+    
+    # Validate format
+    pattern = r'^EMP\d{5}$'
+    if not re.match(pattern, employee_id):
+        return JsonResponse({
+            'available': False,
+            'message': 'Format must be EMP followed by 5 digits (e.g., EMP00001)'
+        })
+    
+    # Check if exists
+    if CustomUser.objects.filter(employee_id=employee_id).exists():
+        return JsonResponse({
+            'available': False,
+            'message': f'Employee ID {employee_id} is already in use'
+        })
+    
+    return JsonResponse({
+        'available': True,
+        'message': 'Employee ID is available'
+    })

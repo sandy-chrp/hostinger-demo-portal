@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHRP India - Train Smarter. Work Better.</title>
+    <title>CHRP-India Train Smarter. Work Better.</title>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -192,6 +192,86 @@
             box-shadow: 0 8px 30px rgba(2, 132, 199, 0.3);
         }
         
+        /* Client Logos Section */
+        .clients-section {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp 1s ease-out 0.8s both;
+        }
+
+        .clients-section h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: #0284c7;
+            letter-spacing: -0.01em;
+        }
+
+        /* Slider Container */
+        .client-logos-slider {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 80px;
+            background: white;
+        }
+
+        .client-logos-track {
+            display: flex;
+            gap: 2rem;
+            animation: slide 25s linear infinite;
+            width: max-content;
+            will-change: transform;
+        }
+
+        .client-logos-track:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes slide {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .client-logo-item {
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 140px;
+            height: 70px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            flex-shrink: 0;
+            border: 1px solid #e5e7eb;
+        }
+
+        .client-logo-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .client-logo-item img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }
+        
         /* Animations */
         @keyframes fadeInDown {
             from {
@@ -272,6 +352,24 @@
                 height: 40px;
                 font-size: 1rem;
             }
+            
+            .clients-section {
+                margin-top: 2rem;
+                padding: 1.5rem;
+            }
+            
+            .clients-section h3 {
+                font-size: 1.125rem;
+            }
+            
+            .client-logos-slider {
+                height: 70px;
+            }
+            
+            .client-logo-item {
+                min-width: 130px;
+                height: 65px;
+            }
         }
         
         /* Mobile (576px and below) */
@@ -328,6 +426,25 @@
                 height: 36px;
                 font-size: 0.875rem;
             }
+            
+            .clients-section {
+                margin-top: 1.5rem;
+                padding: 1rem;
+            }
+            
+            .clients-section h3 {
+                font-size: 1rem;
+                margin-bottom: 1rem;
+            }
+            
+            .client-logos-slider {
+                height: 60px;
+            }
+            
+            .client-logo-item {
+                min-width: 120px;
+                height: 55px;
+            }
         }
         
         /* Extra Small Mobile (400px and below) */
@@ -365,6 +482,19 @@
                 height: 32px;
                 font-size: 0.75rem;
             }
+            
+            .clients-section {
+                padding: 0.875rem;
+            }
+            
+            .client-logo-item {
+                min-width: 110px;
+                height: 50px;
+            }
+            
+            .client-logos-slider {
+                height: 55px;
+            }
         }
         
         /* Large Desktop (1440px and above) */
@@ -390,6 +520,23 @@
                 width: 50px;
                 height: 50px;
                 font-size: 1.25rem;
+            }
+            
+            .clients-section {
+                padding: 2.5rem;
+            }
+            
+            .clients-section h3 {
+                font-size: 1.5rem;
+            }
+            
+            .client-logos-slider {
+                height: 90px;
+            }
+            
+            .client-logo-item {
+                min-width: 160px;
+                height: 80px;
             }
         }
         
@@ -439,6 +586,20 @@
                 height: 32px;
                 font-size: 0.75rem;
             }
+            
+            .clients-section {
+                margin-top: 1rem;
+                padding: 0.75rem;
+            }
+            
+            .client-logos-slider {
+                height: 50px;
+            }
+            
+            .client-logo-item {
+                min-width: 100px;
+                height: 45px;
+            }
         }
     </style>
 </head>
@@ -469,6 +630,66 @@
                     <i class="fas fa-user-plus"></i>
                     Sign Up
                 </a>
+            </div>
+            
+            <!-- Trusted by Leading Companies Section -->
+            <div class="clients-section">
+                <h3>Trusted by Leading Companies</h3>
+                <div class="client-logos-slider">
+                    <div class="client-logos-track">
+                        <!-- First set of logos -->
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/epiroc.png' %}" alt="Epiroc">
+                        </div>
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/hero.png' %}" alt="Hero">
+                        </div>
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/jcb.png' %}" alt="JCB">
+                        </div>
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/lennox.png' %}" alt="Lennox">
+                        </div>
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/mcl.png' %}" alt="MCL">
+                        </div>
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/schneider.png' %}" alt="Schneider">
+                        </div>
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/tata.png' %}" alt="Tata">
+                        </div>
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/vedanta.png' %}" alt="Vedanta">
+                        </div>
+                        
+                        <!-- Duplicate set for seamless loop -->
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/epiroc.png' %}" alt="Epiroc">
+                        </div>
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/hero.png' %}" alt="Hero">
+                        </div>
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/jcb.png' %}" alt="JCB">
+                        </div>
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/lennox.png' %}" alt="Lennox">
+                        </div>
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/mcl.png' %}" alt="MCL">
+                        </div>
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/schneider.png' %}" alt="Schneider">
+                        </div>
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/tata.png' %}" alt="Tata">
+                        </div>
+                        <div class="client-logo-item">
+                            <img src="{% static 'images/client_logos/vedanta.png' %}" alt="Vedanta">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
