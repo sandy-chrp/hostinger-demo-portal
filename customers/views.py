@@ -136,12 +136,12 @@ def customer_dashboard(request):
 @login_required
 def browse_demos(request):
     """
-    ✅ CORRECTED: Browse demos with STRICT category filtering
+    ✅ FIXED: Browse demos with PROPER category filtering
     
     FILTERING LOGIC:
-    1. If category filter selected → Only show demos with THAT category
-    2. If "All Categories" → Show all accessible demos (mixed + no category)
-    3. Business category targeting still applies for user access
+    1. User must have business access to the demo (based on their category)
+    2. If category filter selected → Show demos with THAT category OR no category restrictions
+    3. If "All Categories" → Show all accessible demos
     """
     if not request.user.is_approved:
         return redirect('accounts:pending_approval')
@@ -157,7 +157,7 @@ def browse_demos(request):
     sort_by = request.GET.get('sort', 'newest')
     
     print(f"\n{'='*80}")
-    print(f"🔍 BROWSE DEMOS - STRICT FILTERING")
+    print(f"🔍 BROWSE DEMOS - FIXED FILTERING")
     print(f"{'='*80}")
     print(f"User: {request.user.get_full_name()}")
     print(f"User Business Category: {user_business_category}")
@@ -176,7 +176,7 @@ def browse_demos(request):
     accessible_demo_ids = []
     
     for demo in demos_query:
-        # Check business category access (user's category vs demo's target)
+        # Check business category access
         has_business_access = demo.is_available_for_business(
             user_business_category, 
             user_business_subcategory
@@ -189,33 +189,75 @@ def browse_demos(request):
         if has_business_access and has_customer_access:
             accessible_demo_ids.append(demo.id)
     
-    print(f"📊 User has access to {len(accessible_demo_ids)} demos\n")
+    print(f"📊 User has access to {len(accessible_demo_ids)} demos total\n")
     
     # ✅ STEP 3: Start with accessible demos
     demos = Demo.objects.filter(id__in=accessible_demo_ids)
     
-    # ✅ STEP 4: Apply STRICT category filter (if selected)
+    # ✅ STEP 4: Apply category filter (if selected)
     if business_category_id:
-        # ✅ STRICT: Only show demos that have THIS specific category
-        demos = demos.filter(
-            target_business_categories__id=business_category_id
-        ).distinct()
-        
-        print(f"🔍 STRICT Category Filter Applied: ID={business_category_id}")
-        print(f"   Result: {demos.count()} demos with this category\n")
+        try:
+            selected_category = BusinessCategory.objects.get(id=business_category_id)
+            
+            # ✅ FIXED LOGIC: Show demos that either:
+            # 1. Have the selected category assigned, OR
+            # 2. Have NO categories (available to all)
+            
+            # Get demos with the selected category
+            demos_with_category = demos.filter(
+                target_business_categories__id=business_category_id
+            ).distinct()
+            
+            # Get demos with NO categories (available to all)
+            demos_with_no_categories = demos.filter(
+                target_business_categories__isnull=True
+            ).distinct()
+            
+            # Combine both using union
+            demos = demos_with_category | demos_with_no_categories
+            demos = demos.distinct()
+            
+            print(f"🔍 Category Filter Applied: {selected_category.name}")
+            print(f"   Demos with this category: {demos_with_category.count()}")
+            print(f"   Demos with no category (all): {demos_with_no_categories.count()}")
+            print(f"   Total result: {demos.count()} demos\n")
+            
+        except BusinessCategory.DoesNotExist:
+            print(f"❌ Category ID {business_category_id} not found\n")
     else:
         # ✅ "All Categories" selected - show everything user has access to
-        print(f"🌍 All Categories - showing all accessible demos\n")
+        print(f"🌍 All Categories - showing all {demos.count()} accessible demos\n")
     
-    # ✅ STEP 5: Apply STRICT subcategory filter (if selected)
+    # ✅ STEP 5: Apply subcategory filter (if selected)
     if business_subcategory_id:
-        # ✅ STRICT: Only show demos that have THIS specific subcategory
-        demos = demos.filter(
-            target_business_subcategories__id=business_subcategory_id
-        ).distinct()
-        
-        print(f"🔍 STRICT Subcategory Filter Applied: ID={business_subcategory_id}")
-        print(f"   Result: {demos.count()} demos with this subcategory\n")
+        try:
+            selected_subcategory = BusinessSubCategory.objects.get(id=business_subcategory_id)
+            
+            # ✅ FIXED LOGIC: Show demos that either:
+            # 1. Have the selected subcategory assigned, OR
+            # 2. Have NO subcategories (available to all)
+            
+            # Get demos with the selected subcategory
+            demos_with_subcategory = demos.filter(
+                target_business_subcategories__id=business_subcategory_id
+            ).distinct()
+            
+            # Get demos with NO subcategories (available to all)
+            demos_with_no_subcategories = demos.filter(
+                target_business_subcategories__isnull=True
+            ).distinct()
+            
+            # Combine both
+            demos = demos_with_subcategory | demos_with_no_subcategories
+            demos = demos.distinct()
+            
+            print(f"🔍 Subcategory Filter Applied: {selected_subcategory.name}")
+            print(f"   Demos with this subcategory: {demos_with_subcategory.count()}")
+            print(f"   Demos with no subcategory (all): {demos_with_no_subcategories.count()}")
+            print(f"   Total result: {demos.count()} demos\n")
+            
+        except BusinessSubCategory.DoesNotExist:
+            print(f"❌ Subcategory ID {business_subcategory_id} not found\n")
     
     # ✅ STEP 6: Apply search filter
     if search_query:
@@ -241,6 +283,15 @@ def browse_demos(request):
         demos = demos.order_by('-created_at')
     
     print(f"📊 Final Results: {demos.count()} demos")
+    
+    # ✅ DEBUG: Show which demos are being returned
+    print(f"\n📋 Demos being shown:")
+    for demo in demos[:5]:  # Show first 5
+        categories = demo.target_business_categories.all()
+        cat_names = [c.name for c in categories] if categories else ['All Categories']
+        print(f"   - {demo.title}: {', '.join(cat_names)}")
+    if demos.count() > 5:
+        print(f"   ... and {demos.count() - 5} more")
     print(f"{'='*80}\n")
     
     # Pagination
@@ -276,7 +327,6 @@ def browse_demos(request):
     })
     
     return render(request, 'customers/browse_demos.html', context)
-
 
 @login_required
 @xframe_options_exempt
