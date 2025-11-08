@@ -94,7 +94,7 @@
         </div>
     </div>
 
-    <!-- ✅ Active Filters Display (Simplified - No custom filter needed) -->
+    <!-- Active Filters Display -->
     {% if search_query or current_business_category or current_business_subcategory or sort_by != 'newest' %}
     <div class="active-filters-section mb-3">
         <div class="active-filters-header">
@@ -197,16 +197,22 @@
                                 </div>
                             {% endif %}
                             
-                            <!-- ✅ Business Category Badge -->
-                            {% if demo.target_business_categories.all %}
-                                <div class="demo-category-badge">
+                            <!-- ✅ ENHANCED: ALWAYS SHOW CATEGORY BADGES -->
+                            <div class="demo-category-badge">
+                                {% if demo.target_business_categories.all %}
+                                    <!-- Show assigned categories -->
                                     {% for category in demo.target_business_categories.all %}
-                                        <span class="badge bg-primary">
+                                        <span class="badge bg-primary category-badge-item">
                                             <i class="fas fa-building me-1"></i>{{ category.name }}
                                         </span>
                                     {% endfor %}
-                                </div>
-                            {% endif %}
+                                {% else %}
+                                    <!-- Show "All Categories" badge for demos with no restrictions -->
+                                    <span class="badge bg-success category-badge-item">
+                                        <i class="fas fa-globe me-1"></i>All Categories
+                                    </span>
+                                {% endif %}
+                            </div>
                         </div>
                     </a>
                     
@@ -347,7 +353,7 @@
 </div>
 
 <style>
-    /* [Previous CSS remains exactly the same - keeping all styles] */
+    /* All existing CSS remains the same */
     .browse-demos-container {
         width: 100%;
         max-width: 100%;
@@ -597,6 +603,7 @@
         color: var(--gray-400);
     }
 
+    /* ✅ ENHANCED: Category Badge Styles */
     .demo-category-badge {
         position: absolute;
         top: 0.5rem;
@@ -611,10 +618,20 @@
     .demo-category-badge .badge {
         font-size: 10px;
         font-weight: 600;
-        padding: 0.25rem 0.5rem;
-        background: rgba(13, 110, 253, 0.9);
+        padding: 0.3rem 0.6rem;
         backdrop-filter: blur(4px);
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        border-radius: 4px;
+    }
+
+    /* ✅ Primary badge for specific categories */
+    .demo-category-badge .bg-primary {
+        background: rgba(13, 110, 253, 0.95) !important;
+    }
+
+    /* ✅ Success badge for "All Categories" */
+    .demo-category-badge .bg-success {
+        background: rgba(25, 135, 84, 0.95) !important;
     }
 
     .demo-category-badge .badge i {
@@ -910,7 +927,7 @@
         });
     });
     
-    // ✅ Update filter tag names dynamically from select options
+    // Update filter tag names dynamically
     document.addEventListener('DOMContentLoaded', function() {
         // Get selected category name
         const categorySelect = document.getElementById('business_category');

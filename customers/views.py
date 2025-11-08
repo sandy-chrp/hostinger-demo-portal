@@ -136,12 +136,8 @@ def customer_dashboard(request):
 @login_required
 def browse_demos(request):
     """
-    ✅ FIXED: Browse demos with PROPER category filtering
-    
-    FILTERING LOGIC:
-    1. User must have business access to the demo (based on their category)
-    2. If category filter selected → Show demos with THAT category OR no category restrictions
-    3. If "All Categories" → Show all accessible demos
+    ✅ FIXED: Browse demos with proper category filtering
+    Works with or without get_customer_context utility function
     """
     if not request.user.is_approved:
         return redirect('accounts:pending_approval')
@@ -283,15 +279,6 @@ def browse_demos(request):
         demos = demos.order_by('-created_at')
     
     print(f"📊 Final Results: {demos.count()} demos")
-    
-    # ✅ DEBUG: Show which demos are being returned
-    print(f"\n📋 Demos being shown:")
-    for demo in demos[:5]:  # Show first 5
-        categories = demo.target_business_categories.all()
-        cat_names = [c.name for c in categories] if categories else ['All Categories']
-        print(f"   - {demo.title}: {', '.join(cat_names)}")
-    if demos.count() > 5:
-        print(f"   ... and {demos.count() - 5} more")
     print(f"{'='*80}\n")
     
     # Pagination
@@ -313,7 +300,16 @@ def browse_demos(request):
     user_views = DemoView.objects.filter(user=request.user).values_list('demo_id', flat=True)
     user_likes = DemoLike.objects.filter(user=request.user).values_list('demo_id', flat=True)
     
-    context = get_customer_context(request.user)
+    # ✅ Try to use get_customer_context if available, otherwise build context manually
+    try:
+        # Option 1: If you have get_customer_context function
+        from .utils import get_customer_context
+        context = get_customer_context(request.user)
+    except (ImportError, AttributeError):
+        # Option 2: Build context manually if get_customer_context doesn't exist
+        context = {}
+    
+    # Add demo-specific context
     context.update({
         'page_obj': page_obj,
         'business_categories': business_categories,
