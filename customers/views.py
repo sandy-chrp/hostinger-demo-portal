@@ -138,60 +138,78 @@ def customer_dashboard(request):
 @login_required
 def browse_demos(request):
     """
-    ✅ UPDATED: Any user can filter and see any category
+    ✅ FIXED: All customers can browse and filter any category
+    No business category restrictions - only customer-specific blocking applies
     """
     if not request.user.is_approved:
         return redirect('accounts:pending_approval')
     
-    user_business_category = request.user.business_category
-    user_business_subcategory = request.user.business_subcategory
-    
+    # Get filter parameters
     business_category_id = request.GET.get('business_category')
     business_subcategory_id = request.GET.get('business_subcategory')
     search_query = request.GET.get('search', '').strip()
     sort_by = request.GET.get('sort', 'newest')
     
-    # Get all active demos
+    print(f"\n{'='*80}")
+    print(f"🔍 BROWSE DEMOS - NO CATEGORY RESTRICTIONS")
+    print(f"{'='*80}")
+    print(f"User: {request.user.get_full_name()}")
+    print(f"Filter Category ID: {business_category_id}")
+    print(f"Filter Subcategory ID: {business_subcategory_id}")
+    print(f"{'='*80}\n")
+    
+    # ✅ STEP 1: Get all active demos
     demos_query = Demo.objects.filter(is_active=True).prefetch_related(
         'target_business_categories',
         'target_business_subcategories',
         'target_customers'
     )
     
-    # ✅ CHANGED: Only check customer-specific access
-    # Remove business category restriction for browsing
+    # ✅ STEP 2: Filter ONLY by customer-specific blocking
     accessible_demo_ids = []
     
     for demo in demos_query:
-        # Skip business category check
         # Only check if user is specifically blocked
         has_customer_access = demo.can_customer_access(request.user)
         
         if has_customer_access:
             accessible_demo_ids.append(demo.id)
     
+    print(f"📊 User has access to {len(accessible_demo_ids)} demos\n")
+    
+    # ✅ STEP 3: Start with accessible demos
     demos = Demo.objects.filter(id__in=accessible_demo_ids)
     
-    # Apply category filter (STRICT - only selected category)
+    # ✅ STEP 4: Apply category filter (if selected)
     if business_category_id:
         demos = demos.filter(
             target_business_categories__id=business_category_id
         ).distinct()
+        
+        print(f"🔍 Category Filter Applied: ID={business_category_id}")
+        print(f"   Result: {demos.count()} demos with this category\n")
+    else:
+        print(f"🌍 All Categories - showing all accessible demos\n")
     
-    # Apply subcategory filter
+    # ✅ STEP 5: Apply subcategory filter (if selected)
     if business_subcategory_id:
         demos = demos.filter(
             target_business_subcategories__id=business_subcategory_id
         ).distinct()
+        
+        print(f"🔍 Subcategory Filter Applied: ID={business_subcategory_id}")
+        print(f"   Result: {demos.count()} demos with this subcategory\n")
     
-    # Apply search
+    # ✅ STEP 6: Apply search filter
     if search_query:
         demos = demos.filter(
             Q(title__icontains=search_query) |
             Q(description__icontains=search_query)
         )
+        print(f"🔍 Search Filter Applied: '{search_query}'")
+        print(f"   Result: {demos.count()} demos matching search\n")
     
-    # Apply sorting
+    # ✅ STEP 7: Apply sorting
     if sort_by == 'newest':
         demos = demos.order_by('-created_at')
     elif sort_by == 'oldest':
@@ -205,37 +223,216 @@ def browse_demos(request):
     else:
         demos = demos.order_by('-created_at')
     
+    print(f"📊 Final Results: {demos.count()} demos")
+    print(f"{'='*80}\n")
+    
     # Pagination
     paginator = Paginator(demos, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Rest of the code remains same...
+    # Get ALL business categories for filter dropdown
     business_categories = BusinessCategory.objects.filter(
         is_active=True
     ).order_by('sort_order', 'name')
     
+    # Get ALL subcategories for dynamic JavaScript filtering
     business_subcategories = BusinessSubCategory.objects.filter(
         is_active=True
     ).select_related('category').order_by('category__sort_order', 'sort_order', 'name')
     
+    # ✅ NEW: Get selected category and subcategory names for display
+    selected_category_name = None
+    selected_subcategory_name = None
+    
+    if business_category_id:
+        try:
+            selected_category = BusinessCategory.objects.get(id=business_category_id)
+            selected_category_name = selected_category.name
+        except BusinessCategory.DoesNotExist:
+            pass
+    
+    if business_subcategory_id:
+        try:
+            selected_subcategory = BusinessSubCategory.objects.get(id=business_subcategory_id)
+            selected_subcategory_name = selected_subcategory.name
+        except BusinessSubCategory.DoesNotExist:
+            pass
+    
+    # Add user interaction data
     user_views = DemoView.objects.filter(user=request.user).values_list('demo_id', flat=True)
     user_likes = DemoLike.objects.filter(user=request.user).values_list('demo_id', flat=True)
     
-    context = {
+    context = get_customer_context(request.user)
+    context.update({
         'page_obj': page_obj,
         'business_categories': business_categories,
         'business_subcategories': business_subcategories,
         'current_business_category': int(business_category_id) if business_category_id else None,
         'current_business_subcategory': int(business_subcategory_id) if business_subcategory_id else None,
+        'selected_category_name': selected_category_name,  # ✅ NEW
+        'selected_subcategory_name': selected_subcategory_name,  # ✅ NEW
         'search_query': search_query,
         'sort_by': sort_by,
         'user_views': list(user_views),
         'user_likes': list(user_likes),
-    }
+    })
     
     return render(request, 'customers/browse_demos.html', context)
 
+@login_required
+def demo_detail(request, slug):
+    """
+    ✅ FIXED: Only check customer-specific access, no business category restrictions
+    All customers can view any demo unless specifically blocked
+    """
+    if not request.user.is_approved:
+        return redirect('accounts:pending_approval')
+    
+    # Get demo
+    demo = get_object_or_404(Demo, slug=slug, is_active=True)
+    
+    # ✅ ONLY CHECK: Customer-Specific Access (no business category restriction)
+    has_customer_access = demo.can_customer_access(request.user)
+    
+    print(f"\n{'='*80}")
+    print(f"🎬 DEMO DETAIL ACCESS CHECK")
+    print(f"{'='*80}")
+    print(f"User: {request.user.get_full_name()}")
+    print(f"Demo: {demo.title}")
+    print(f"File Type: {demo.file_type}")
+    print(f"Customer Access: {has_customer_access}")
+    print(f"{'='*80}\n")
+    
+    # ✅ Block access if customer is specifically restricted
+    if not has_customer_access:
+        messages.error(request, "You don't have permission to access this demo.")
+        return redirect('customers:browse_demos')
+    
+    # ✅ Record view (user has access)
+    demo_view, created = DemoView.objects.get_or_create(
+        demo=demo,
+        user=request.user,
+        defaults={'ip_address': get_client_ip(request)}
+    )
+    
+    # Update view count only if new view
+    if created:
+        Demo.objects.filter(id=demo.id).update(views_count=F('views_count') + 1)
+        demo.refresh_from_db()
+        
+        # Log activity
+        try:
+            log_customer_activity(
+                user=request.user,
+                activity_type='demo_view',
+                description=f'Viewed demo: {demo.title}',
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                metadata={
+                    'demo_id': demo.id,
+                    'demo_slug': demo.slug,
+                    'demo_title': demo.title,
+                    'file_type': demo.file_type,
+                }
+            )
+        except Exception as e:
+            print(f"⚠️ Activity logging error: {e}")
+    
+    # Check if user has liked
+    user_liked = DemoLike.objects.filter(
+        demo=demo,
+        user=request.user
+    ).exists()
+    
+    # Get content URL based on file type
+    content_url = None
+    if demo.file_type == 'video':
+        content_url = demo.video_file.url if demo.video_file else None
+    elif demo.file_type == 'webgl':
+        content_url = demo.get_webgl_index_url()
+    elif demo.file_type == 'lms':
+        content_url = demo.get_lms_index_url()
+    
+    # Check for existing user feedback
+    user_feedback = DemoFeedback.objects.filter(
+        demo=demo,
+        user=request.user
+    ).first()
+    
+    # Get approved feedbacks for display
+    approved_feedbacks = DemoFeedback.objects.filter(
+        demo=demo,
+        is_approved=True
+    ).select_related('user').order_by('-created_at')[:10]
+    
+    # Check for autoplay parameter
+    autoplay = request.GET.get('autoplay') == '1'
+    
+    context = get_customer_context(request.user)
+    context.update({
+        'demo': demo,
+        'content_url': content_url,
+        'user_liked': user_liked,
+        'user_feedback': user_feedback,
+        'approved_feedbacks': approved_feedbacks,
+        'autoplay': autoplay,
+    })
+    
+    # ✅ IMPORTANT: Use different templates for different file types
+    if demo.file_type == 'lms':
+        print(f"📄 Rendering: lms_wrapper.html")
+        return render(request, 'customers/lms_wrapper.html', context)
+    else:
+        print(f"📄 Rendering: demo_detail.html")
+        return render(request, 'customers/demo_detail.html', context)
+# ============================================================================
+# OPTIONAL: Add like/unlike functionality
+# ============================================================================
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
+@login_required
+@require_POST
+def toggle_like(request, demo_id):
+    """Toggle like/unlike for a demo"""
+    demo = get_object_or_404(Demo, id=demo_id, is_active=True)
+    
+    # Check access
+    has_business_access = demo.is_available_for_business(
+        request.user.business_category,
+        request.user.business_subcategory
+    )
+    has_customer_access = demo.can_customer_access(request.user)
+    
+    if not (has_business_access and has_customer_access):
+        return JsonResponse({
+            'error': 'You do not have access to this demo'
+        }, status=403)
+    
+    # Toggle like
+    demo_like, created = DemoLike.objects.get_or_create(
+        demo=demo,
+        user=request.user
+    )
+    
+    if not created:
+        # Unlike
+        demo_like.delete()
+        demo.likes_count = max(0, demo.likes_count - 1)
+        demo.save(update_fields=['likes_count'])
+        liked = False
+    else:
+        # Like
+        demo.likes_count += 1
+        demo.save(update_fields=['likes_count'])
+        liked = True
+    
+    return JsonResponse({
+        'liked': liked,
+        'likes_count': demo.likes_count
+    })
 
 
 @login_required
@@ -668,245 +865,6 @@ def serve_webgl_file(request, slug, filepath):
         traceback.print_exc()
         print(f"{'='*70}\n")
         raise Http404("Error serving file")
-
-@login_required
-def demo_detail(request, slug):
-    """
-    ✅ COMPLETE FIXED: Unified demo viewer
-    - Video → MP4 playback with controls
-    - WebGL → 3D viewer in iframe
-    - LMS → SCORM wrapper with API
-    """
-    demo = get_object_or_404(Demo, slug=slug, is_active=True)
-    
-    # ==========================================
-    # ACCESS CHECK
-    # ==========================================
-    if not demo.can_customer_access(request.user):
-        messages.error(request, "You don't have permission to access this demo.")
-        return redirect('customers:browse_demos')
-    
-    # ==========================================
-    # RECORD VIEW
-    # ==========================================
-    DemoView.objects.update_or_create(
-        demo=demo,
-        user=request.user,
-        defaults={'ip_address': get_client_ip(request)}
-    )
-    
-    # Increment view count
-    demo.views_count = F('views_count') + 1
-    demo.save(update_fields=['views_count'])
-    demo.refresh_from_db()
-    
-    # ==========================================
-    # GET USER INTERACTIONS (ALL TYPES)
-    # ==========================================
-    user_liked = DemoLike.objects.filter(demo=demo, user=request.user).exists()
-    user_feedback = DemoFeedback.objects.filter(demo=demo, user=request.user).first()
-    
-    # Get approved feedbacks
-    approved_feedbacks = DemoFeedback.objects.filter(
-        demo=demo,
-        is_approved=True
-    ).select_related('user').order_by('-created_at')[:10]
-    
-    # ==========================================
-    # ✅ LMS: SEPARATE WRAPPER
-    # ==========================================
-    if demo.file_type == 'lms':
-        lms_content_url = demo.get_lms_index_url()
-        
-        if not lms_content_url:
-            print(f"❌ LMS: No content URL for {demo.title}")
-            messages.error(request, "LMS content not available.")
-            return redirect('customers:browse_demos')
-        
-        print(f"\n{'='*60}")
-        print(f"🎓 LMS DEMO RENDERING")
-        print(f"{'='*60}")
-        print(f"Demo: {demo.title}")
-        print(f"Slug: {demo.slug}")
-        print(f"Content URL: {lms_content_url}")
-        print(f"User Liked: {user_liked}")
-        print(f"Has Feedback: {user_feedback is not None}")
-        print(f"Approved Feedbacks: {approved_feedbacks.count()}")
-        print(f"Template: lms_wrapper.html")
-        print(f"{'='*60}\n")
-        
-        context = {
-            'demo': demo,
-            'content_url': lms_content_url,
-            'user_liked': user_liked,
-            'user_feedback': user_feedback,
-            'approved_feedbacks': approved_feedbacks,
-            'user_email': request.user.email,
-        }
-        
-        return render(request, 'customers/lms_wrapper.html', context)
-    
-    # ==========================================
-    # ✅ VIDEO: DIRECT FILE URL
-    # ==========================================
-    elif demo.file_type == 'video':
-        if not demo.video_file:
-            print(f"❌ VIDEO: No video file for {demo.title}")
-            messages.error(request, "Video file not available.")
-            return redirect('customers:browse_demos')
-        
-        content_url = demo.video_file.url
-        
-        print(f"\n{'='*60}")
-        print(f"🎥 VIDEO DEMO RENDERING")
-        print(f"{'='*60}")
-        print(f"Demo: {demo.title}")
-        print(f"Slug: {demo.slug}")
-        print(f"Video File: {demo.video_file.name}")
-        print(f"Content URL: {content_url}")
-        print(f"Duration: {demo.formatted_duration}")
-        print(f"User Liked: {user_liked}")
-        print(f"Has Feedback: {user_feedback is not None}")
-        print(f"Template: demo_detail.html")
-        print(f"{'='*60}\n")
-        
-        # Latest demos
-        latest_video_demos_qs = Demo.objects.filter(is_active=True).exclude(id=demo.id)
-        
-        if hasattr(request.user, 'business_category') and request.user.business_category:
-            latest_video_demos_qs = latest_video_demos_qs.filter(
-                target_business_categories=request.user.business_category
-            )
-        
-        latest_video_demos = latest_video_demos_qs.order_by('-created_at')[:10]
-        
-        context = {
-            'demo': demo,
-            'content_url': content_url,
-            'user_liked': user_liked,
-            'user_feedback': user_feedback,
-            'approved_feedbacks': approved_feedbacks,
-            'latest_video_demos': latest_video_demos,
-            'user_email': request.user.email,
-        }
-        
-        return render(request, 'customers/demo_detail.html', context)
-    
-    # ==========================================
-    # ✅ WEBGL: EXTRACTED INDEX.HTML
-    # ==========================================
-    elif demo.file_type == 'webgl':
-        content_url = None
-        
-        # Try model method first
-        if hasattr(demo, 'get_webgl_index_url'):
-            try:
-                content_url = demo.get_webgl_index_url()
-                if content_url:
-                    print(f"✅ WEBGL: Got URL from model method: {content_url}")
-            except Exception as e:
-                print(f"⚠️ WEBGL: Model method error: {e}")
-        
-        # Fallback: Manual search
-        if not content_url and demo.extracted_path:
-            extracted_dir = os.path.join(settings.MEDIA_ROOT, demo.extracted_path)
-            
-            print(f"🔍 WEBGL: Searching in {extracted_dir}")
-            
-            if os.path.exists(extracted_dir):
-                possible_entries = [
-                    'index.html',
-                    'Index.html',
-                    'build/index.html',
-                    'Build/index.html',
-                    'dist/index.html',
-                    'Dist/index.html',
-                ]
-                
-                for entry in possible_entries:
-                    test_path = os.path.join(extracted_dir, entry)
-                    if os.path.exists(test_path):
-                        try:
-                            from django.urls import reverse
-                            url_path = entry.replace('\\', '/')
-                            content_url = reverse('customers:serve_webgl_file', kwargs={
-                                'slug': demo.slug,
-                                'filepath': url_path
-                            })
-                            print(f"✅ WEBGL: Found entry point: {entry}")
-                            print(f"✅ WEBGL: Generated URL: {content_url}")
-                            break
-                        except Exception as e:
-                            print(f"❌ WEBGL: URL generation error: {e}")
-                
-                # Last resort: Recursive search
-                if not content_url:
-                    print(f"🔍 WEBGL: Doing recursive search for HTML files...")
-                    import glob
-                    html_files = glob.glob(os.path.join(extracted_dir, '**/*.html'), recursive=True)
-                    
-                    if html_files:
-                        rel_path = os.path.relpath(html_files[0], extracted_dir)
-                        url_path = rel_path.replace('\\', '/')
-                        
-                        try:
-                            from django.urls import reverse
-                            content_url = reverse('customers:serve_webgl_file', kwargs={
-                                'slug': demo.slug,
-                                'filepath': url_path
-                            })
-                            print(f"✅ WEBGL: Found HTML via recursive search: {url_path}")
-                        except Exception as e:
-                            print(f"❌ WEBGL: Recursive URL error: {e}")
-            else:
-                print(f"❌ WEBGL: Extracted directory doesn't exist: {extracted_dir}")
-        
-        if not content_url:
-            print(f"❌ WEBGL: No content URL generated for {demo.title}")
-            messages.error(request, "WebGL content not available.")
-            return redirect('customers:browse_demos')
-        
-        print(f"\n{'='*60}")
-        print(f"🎮 WEBGL DEMO RENDERING")
-        print(f"{'='*60}")
-        print(f"Demo: {demo.title}")
-        print(f"Slug: {demo.slug}")
-        print(f"Extracted Path: {demo.extracted_path}")
-        print(f"Content URL: {content_url}")
-        print(f"User Liked: {user_liked}")
-        print(f"Has Feedback: {user_feedback is not None}")
-        print(f"Template: demo_detail.html")
-        print(f"{'='*60}\n")
-        
-        # Latest demos
-        latest_video_demos_qs = Demo.objects.filter(is_active=True).exclude(id=demo.id)
-        
-        if hasattr(request.user, 'business_category') and request.user.business_category:
-            latest_video_demos_qs = latest_video_demos_qs.filter(
-                target_business_categories=request.user.business_category
-            )
-        
-        latest_video_demos = latest_video_demos_qs.order_by('-created_at')[:10]
-        
-        context = {
-            'demo': demo,
-            'content_url': content_url,
-            'user_liked': user_liked,
-            'user_feedback': user_feedback,
-            'approved_feedbacks': approved_feedbacks,
-            'latest_video_demos': latest_video_demos,
-            'user_email': request.user.email,
-        }
-        
-        return render(request, 'customers/demo_detail.html', context)
-    
-    # ==========================================
-    # ❌ UNKNOWN FILE TYPE
-    # ==========================================
-    else:
-        print(f"❌ UNKNOWN FILE TYPE: {demo.file_type} for {demo.title}")
-        messages.error(request, f"Unsupported demo type: {demo.get_file_type_display()}")
-        return redirect('customers:browse_demos')
 
 @login_required
 @require_http_methods(["POST"])

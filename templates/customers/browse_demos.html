@@ -94,7 +94,7 @@
         </div>
     </div>
 
-    <!-- Active Filters Display -->
+    <!-- ✅ FIXED: Active Filters Display with Category Names -->
     {% if search_query or current_business_category or current_business_subcategory or sort_by != 'newest' %}
     <div class="active-filters-section mb-3">
         <div class="active-filters-header">
@@ -115,7 +115,7 @@
                 {% if current_business_category %}
                     <span class="filter-tag filter-category-tag">
                         <i class="fas fa-building me-1"></i>
-                        <span class="filter-category-name">Category</span>
+                        Category: {{ selected_category_name|default:"Selected" }}
                         <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}" class="filter-remove">
                             <i class="fas fa-times"></i>
                         </a>
@@ -125,7 +125,7 @@
                 {% if current_business_subcategory %}
                     <span class="filter-tag filter-subcategory-tag">
                         <i class="fas fa-tags me-1"></i>
-                        <span class="filter-subcategory-name">Subcategory</span>
+                        Subcategory: {{ selected_subcategory_name|default:"Selected" }}
                         <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}" class="filter-remove">
                             <i class="fas fa-times"></i>
                         </a>
@@ -197,7 +197,7 @@
                                 </div>
                             {% endif %}
                             
-                            <!-- ✅ ENHANCED: ALWAYS SHOW CATEGORY BADGES -->
+                            <!-- ✅ FIXED: Category Badges with "All Categories" option -->
                             <div class="demo-category-badge">
                                 {% if demo.target_business_categories.all %}
                                     <!-- Show assigned categories -->
@@ -353,7 +353,7 @@
 </div>
 
 <style>
-    /* All existing CSS remains the same */
+    /* Existing CSS remains same... */
     .browse-demos-container {
         width: 100%;
         max-width: 100%;
@@ -430,6 +430,18 @@
         font-size: var(--font-xs);
         font-weight: 500;
         white-space: nowrap;
+    }
+
+    /* ✅ Category tag styling */
+    .filter-tag.filter-category-tag {
+        background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
+        box-shadow: 0 2px 4px rgba(8, 127, 194, 0.3);
+    }
+
+    /* ✅ Subcategory tag styling */
+    .filter-tag.filter-subcategory-tag {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
     }
 
     .filter-tag i {
@@ -603,7 +615,7 @@
         color: var(--gray-400);
     }
 
-    /* ✅ ENHANCED: Category Badge Styles */
+    /* ✅ Category Badge Styles */
     .demo-category-badge {
         position: absolute;
         top: 0.5rem;
@@ -925,33 +937,6 @@
                 }
             }
         });
-    });
-    
-    // Update filter tag names dynamically
-    document.addEventListener('DOMContentLoaded', function() {
-        // Get selected category name
-        const categorySelect = document.getElementById('business_category');
-        const selectedCategoryOption = categorySelect.options[categorySelect.selectedIndex];
-        const categoryName = selectedCategoryOption.getAttribute('data-name');
-        
-        if (categoryName) {
-            const categoryNameSpan = document.querySelector('.filter-category-name');
-            if (categoryNameSpan) {
-                categoryNameSpan.textContent = 'Category: ' + categoryName;
-            }
-        }
-        
-        // Get selected subcategory name
-        const subcategorySelect = document.getElementById('business_subcategory');
-        const selectedSubcategoryOption = subcategorySelect.options[subcategorySelect.selectedIndex];
-        const subcategoryName = selectedSubcategoryOption.getAttribute('data-name');
-        
-        if (subcategoryName) {
-            const subcategoryNameSpan = document.querySelector('.filter-subcategory-name');
-            if (subcategoryNameSpan) {
-                subcategoryNameSpan.textContent = 'Subcategory: ' + subcategoryName;
-            }
-        }
     });
     
     // Pagination smooth scroll
