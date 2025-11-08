@@ -94,7 +94,7 @@
         </div>
     </div>
 
-    <!-- ✅ FIXED: Active Filters Display with Category Names -->
+    <!-- Active Filters Display -->
     {% if search_query or current_business_category or current_business_subcategory or sort_by != 'newest' %}
     <div class="active-filters-section mb-3">
         <div class="active-filters-header">
@@ -197,22 +197,23 @@
                                 </div>
                             {% endif %}
                             
-                            <!-- ✅ FIXED: Category Badges with "All Categories" option -->
+                            <!-- Category Badges -->
                             <div class="demo-category-badge">
                                 {% if demo.target_business_categories.all %}
-                                    <!-- Show assigned categories -->
                                     {% for category in demo.target_business_categories.all %}
                                         <span class="badge bg-primary category-badge-item">
                                             <i class="fas fa-building me-1"></i>{{ category.name }}
                                         </span>
                                     {% endfor %}
                                 {% else %}
-                                    <!-- Show "All Categories" badge for demos with no restrictions -->
                                     <span class="badge bg-success category-badge-item">
                                         <i class="fas fa-globe me-1"></i>All Categories
                                     </span>
                                 {% endif %}
                             </div>
+
+                            <!-- Watermark -->
+                            <div class="demo-watermark">{{ user.email }}</div>
                         </div>
                     </a>
                     
@@ -229,7 +230,7 @@
                                     <span>{{ demo.views_count }}</span>
                                 </span>
                                 <span class="demo-stat-item" title="Likes">
-                                    <i class="fas fa-thumbs-up"></i>
+                                    <i class="fas fa-heart"></i>
                                     <span>{{ demo.likes_count }}</span>
                                 </span>
                             </div>
@@ -240,15 +241,17 @@
                             </div>
                         </div>
                         
-                        <!-- Demo Actions -->
+                        <!-- ✅ FIXED: Demo Actions - Same as Dashboard -->
                         <div class="demo-actions">
                             <a href="{% url 'customers:demo_detail' demo.slug %}{% if demo.file_type == 'video' %}?autoplay=1{% endif %}" class="btn btn-primary btn-sm w-100">
-                                {% if demo.file_type == 'webgl' %}
+                                {% if demo.file_type == 'video' %}
+                                    <i class="fas fa-play me-1"></i>View Demo
+                                {% elif demo.file_type == 'webgl' %}
                                     <i class="fas fa-cube me-1"></i>View Demo
                                 {% elif demo.file_type == 'lms' %}
                                     <i class="fas fa-graduation-cap me-1"></i>View Demo
                                 {% else %}
-                                    <i class="fas fa-play me-1"></i>View Demo
+                                    <i class="fas fa-eye me-1"></i>View Demo
                                 {% endif %}
                             </a>
                         </div>
@@ -353,12 +356,13 @@
 </div>
 
 <style>
-    /* Existing CSS remains same... */
+    /* Browse Demos Container */
     .browse-demos-container {
         width: 100%;
         max-width: 100%;
     }
 
+    /* Filter Form */
     .filter-form {
         font-size: var(--font-sm);
     }
@@ -389,6 +393,7 @@
         padding: 0.5rem 1.25rem;
     }
 
+    /* Active Filters */
     .active-filters-section {
         background: white;
         padding: 0.875rem 1rem;
@@ -432,20 +437,14 @@
         white-space: nowrap;
     }
 
-    /* ✅ Category tag styling */
     .filter-tag.filter-category-tag {
         background: linear-gradient(135deg, #087fc2 0%, #0669a0 100%);
         box-shadow: 0 2px 4px rgba(8, 127, 194, 0.3);
     }
 
-    /* ✅ Subcategory tag styling */
     .filter-tag.filter-subcategory-tag {
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
-    }
-
-    .filter-tag i {
-        font-size: var(--font-xs);
     }
 
     .filter-remove {
@@ -467,10 +466,6 @@
         transform: scale(1.1);
     }
 
-    .filter-remove i {
-        font-size: 10px;
-    }
-
     .clear-all-filters {
         display: inline-flex;
         align-items: center;
@@ -486,9 +481,9 @@
 
     .clear-all-filters:hover {
         background: var(--danger-light);
-        color: var(--danger-color);
     }
 
+    /* Results Summary */
     .results-summary {
         background: white;
         padding: 0.75rem 1rem;
@@ -501,10 +496,7 @@
         color: var(--gray-700);
     }
 
-    .results-text {
-        font-size: var(--font-sm);
-    }
-
+    /* Demos Grid - Same as Dashboard */
     .demos-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -521,6 +513,7 @@
         display: flex;
         flex-direction: column;
         height: 100%;
+        border: 1px solid var(--gray-200);
     }
 
     .demo-card:hover {
@@ -550,6 +543,11 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .demo-thumbnail-link:hover .demo-thumbnail-img {
+        transform: scale(1.05);
     }
 
     .demo-thumbnail video.video-preview {
@@ -594,10 +592,6 @@
         opacity: 1;
     }
 
-    .demo-thumbnail-link:hover .demo-thumbnail {
-        opacity: 0.95;
-    }
-
     .demo-thumbnail-placeholder {
         position: absolute;
         top: 0;
@@ -615,7 +609,6 @@
         color: var(--gray-400);
     }
 
-    /* ✅ Category Badge Styles */
     .demo-category-badge {
         position: absolute;
         top: 0.5rem;
@@ -636,18 +629,19 @@
         border-radius: 4px;
     }
 
-    /* ✅ Primary badge for specific categories */
-    .demo-category-badge .bg-primary {
-        background: rgba(13, 110, 253, 0.95) !important;
-    }
-
-    /* ✅ Success badge for "All Categories" */
-    .demo-category-badge .bg-success {
-        background: rgba(25, 135, 84, 0.95) !important;
-    }
-
-    .demo-category-badge .badge i {
-        font-size: 9px;
+    .demo-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.15);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        pointer-events: none;
+        z-index: 5;
+        white-space: nowrap;
     }
 
     .demo-card-body {
@@ -667,13 +661,18 @@
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+        min-height: 2.6em;
     }
 
     .demo-description {
         font-size: var(--font-sm);
         color: var(--gray-600);
-        margin: 0 0 0.75rem 0;
         line-height: 1.5;
+        margin-bottom: 0.75rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
         flex-grow: 1;
     }
 
@@ -681,9 +680,9 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.75rem;
-        padding-top: 0.75rem;
+        padding: 0.75rem 0;
         border-top: 1px solid var(--gray-200);
+        margin-bottom: 0.75rem;
     }
 
     .demo-stats {
@@ -700,8 +699,8 @@
     }
 
     .demo-stat-item i {
-        font-size: var(--font-sm);
         color: var(--primary-color);
+        font-size: var(--font-sm);
     }
 
     .demo-date {
@@ -712,18 +711,15 @@
         color: var(--gray-500);
     }
 
-    .demo-date i {
-        font-size: var(--font-xs);
-    }
-
     .demo-actions {
+        margin-top: auto;
         margin-bottom: 0.5rem;
     }
 
     .demo-actions .btn {
         font-size: var(--font-sm);
-        font-weight: 600;
         padding: 0.5rem 1rem;
+        font-weight: 600;
     }
 
     .demo-indicators {
@@ -746,30 +742,15 @@
     .indicator-badge.viewed {
         background: var(--success-color);
         color: white;
-        order: -1;
     }
 
     .indicator-badge.liked {
         background: var(--primary-color);
         color: white;
-        order: 1;
-    }
-
-    .indicator-badge i {
-        font-size: var(--font-xs);
     }
 
     .no-demos-message {
         padding: 2rem;
-    }
-
-    .no-demos-message h3 {
-        font-size: var(--font-2xl);
-        margin-bottom: 0.5rem;
-    }
-
-    .no-demos-message p {
-        font-size: var(--font-base);
     }
 
     .pagination-container {
@@ -779,37 +760,19 @@
         box-shadow: var(--shadow-sm);
     }
 
-    .pagination {
-        margin-bottom: 0;
-    }
-
-    .page-link {
+    .pagination .page-link {
         font-size: var(--font-sm);
-        font-weight: 500;
-        color: var(--primary-color);
         padding: 0.5rem 0.75rem;
+        color: var(--primary-color);
         border: 1px solid var(--gray-300);
         margin: 0 0.15rem;
         border-radius: var(--radius-sm);
     }
 
-    .page-link:hover {
-        background-color: var(--gray-100);
-        border-color: var(--primary-color);
-        color: var(--primary-color);
-    }
-
-    .page-item.active .page-link {
+    .pagination .page-item.active .page-link {
         background-color: var(--primary-color);
         border-color: var(--primary-color);
         color: white;
-        font-weight: 600;
-    }
-
-    .page-item.disabled .page-link {
-        color: var(--gray-400);
-        background-color: var(--gray-100);
-        border-color: var(--gray-300);
     }
 
     .page-info-text {
@@ -817,99 +780,29 @@
         color: var(--gray-600);
     }
 
-    @media (max-width: 1200px) {
-        .demos-grid {
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1rem;
-        }
-    }
-
+    /* Responsive */
     @media (max-width: 992px) {
         .demos-grid {
             grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        }
-        
-        .demo-title {
-            font-size: var(--font-md);
+            gap: 1rem;
         }
     }
 
     @media (max-width: 768px) {
         .demos-grid {
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 0.875rem;
         }
         
-        .demo-card-body {
-            padding: 0.875rem;
-        }
-        
-        .demo-title {
-            font-size: var(--font-md);
-        }
-        
-        .demo-description {
-            font-size: var(--font-xs);
-        }
-        
-        .filter-actions {
-            flex-direction: column;
-        }
-        
-        .filter-actions .btn {
-            width: 100%;
-        }
-        
-        .results-summary {
-            font-size: var(--font-xs);
-        }
-        
-        .page-link {
-            padding: 0.4rem 0.6rem;
-            font-size: var(--font-xs);
-        }
-
         .video-preview-overlay i {
             font-size: 2.5rem;
-        }
-
-        .active-filters-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.75rem;
-        }
-
-        .active-filters-list {
-            width: 100%;
-        }
-
-        .demo-category-badge .badge {
-            font-size: 9px;
-            padding: 0.2rem 0.4rem;
         }
     }
 
     @media (max-width: 576px) {
         .demos-grid {
             grid-template-columns: 1fr;
-            gap: 0.75rem;
         }
         
-        .demo-meta {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.5rem;
-        }
-        
-        .pagination {
-            flex-wrap: wrap;
-            gap: 0.25rem;
-        }
-        
-        .page-item {
-            margin: 0.15rem;
-        }
-
         .video-preview-overlay i {
             font-size: 2rem;
         }
@@ -939,13 +832,6 @@
         });
     });
     
-    // Pagination smooth scroll
-    document.querySelectorAll('.pagination .page-link').forEach(link => {
-        link.addEventListener('click', function() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    });
-
     // Video Preview Hover
     document.addEventListener('DOMContentLoaded', function() {
         const videoCards = document.querySelectorAll('.demo-card');
