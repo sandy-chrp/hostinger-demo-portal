@@ -39,6 +39,7 @@
                             <option value="">All Categories</option>
                             {% for category in business_categories %}
                                 <option value="{{ category.id }}" 
+                                        data-name="{{ category.name }}"
                                         {% if current_business_category == category.id %}selected{% endif %}>
                                     {{ category.name }}
                                 </option>
@@ -56,6 +57,7 @@
                             {% for subcategory in business_subcategories %}
                                 <option value="{{ subcategory.id }}" 
                                         data-category="{{ subcategory.category.id }}"
+                                        data-name="{{ subcategory.name }}"
                                         {% if current_business_subcategory == subcategory.id %}selected{% endif %}
                                         style="display: {% if current_business_category and current_business_category != subcategory.category.id %}none{% else %}block{% endif %}">
                                     {{ subcategory.name }}
@@ -92,6 +94,67 @@
         </div>
     </div>
 
+    <!-- ✅ Active Filters Display (Simplified - No custom filter needed) -->
+    {% if search_query or current_business_category or current_business_subcategory or sort_by != 'newest' %}
+    <div class="active-filters-section mb-3">
+        <div class="active-filters-header">
+            <span class="active-filters-label">
+                <i class="fas fa-filter me-2"></i>Active Filters:
+            </span>
+            <div class="active-filters-list">
+                {% if search_query %}
+                    <span class="filter-tag">
+                        <i class="fas fa-search me-1"></i>
+                        Search: "{{ search_query }}"
+                        <a href="?{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}" class="filter-remove">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </span>
+                {% endif %}
+                
+                {% if current_business_category %}
+                    <span class="filter-tag filter-category-tag">
+                        <i class="fas fa-building me-1"></i>
+                        <span class="filter-category-name">Category</span>
+                        <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}" class="filter-remove">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </span>
+                {% endif %}
+                
+                {% if current_business_subcategory %}
+                    <span class="filter-tag filter-subcategory-tag">
+                        <i class="fas fa-tags me-1"></i>
+                        <span class="filter-subcategory-name">Subcategory</span>
+                        <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}" class="filter-remove">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </span>
+                {% endif %}
+                
+                {% if sort_by and sort_by != 'newest' %}
+                    <span class="filter-tag">
+                        <i class="fas fa-sort me-1"></i>
+                        Sort: 
+                        {% if sort_by == 'oldest' %}Oldest First
+                        {% elif sort_by == 'popular' %}Most Viewed
+                        {% elif sort_by == 'liked' %}Most Liked
+                        {% elif sort_by == 'title' %}Title (A-Z)
+                        {% endif %}
+                        <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}{% endif %}" class="filter-remove">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </span>
+                {% endif %}
+                
+                <a href="{% url 'customers:browse_demos' %}" class="clear-all-filters">
+                    <i class="fas fa-times-circle me-1"></i>Clear All
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Results Summary -->
     <div class="results-summary mb-3">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -102,13 +165,6 @@
                     of <strong>{{ page_obj.paginator.count }}</strong> demos
                 </span>
             </div>
-            {% if search_query %}
-                <div class="search-indicator">
-                    <span class="badge bg-info">
-                        <i class="fas fa-search me-1"></i>Searching: "{{ search_query }}"
-                    </span>
-                </div>
-            {% endif %}
         </div>
     </div>
 
@@ -117,13 +173,12 @@
         <div class="demos-grid">
             {% for demo in page_obj %}
                 <div class="demo-card">
-                    <!-- ✅ UPDATED: Demo Thumbnail - Now Clickable -->
+                    <!-- Demo Thumbnail -->
                     <a href="{% url 'customers:demo_detail' demo.slug %}{% if demo.file_type == 'video' %}?autoplay=1{% endif %}" class="demo-thumbnail-link">
                         <div class="demo-thumbnail">
                             {% if demo.thumbnail %}
                                 <img src="{{ demo.thumbnail.url }}" alt="{{ demo.title }}" class="demo-thumbnail-img">
                             {% elif demo.file_type == 'video' and demo.video_file %}
-                                <!-- ✅ Show video preview when thumbnail is missing for video type -->
                                 <video class="demo-thumbnail-img video-preview" muted loop playsinline preload="metadata">
                                     <source src="{{ demo.video_file.url }}" type="video/mp4">
                                 </video>
@@ -142,33 +197,14 @@
                                 </div>
                             {% endif %}
                             
-                            <!-- Demo Type Badge -->
-                            {% comment %} <div class="demo-type-badge">
-                                {% if demo.file_type == 'video' %}
-                                    <span class="badge bg-primary">
-                                        <i class="fas fa-play-circle me-1"></i>Video
-                                    </span>
-                                {% elif demo.file_type == 'webgl' %}
-                                    <span class="badge bg-success">
-                                        <i class="fas fa-cube me-1"></i>WebGL
-                                    </span>
-                                {% elif demo.file_type == 'lms' %}
-                                    <span class="badge bg-info">
-                                        <i class="fas fa-graduation-cap me-1"></i>LMS
-                                    </span>
-                                {% else %}
-                                    <span class="badge bg-secondary">
-                                        <i class="fas fa-file me-1"></i>Demo
-                                    </span>
-                                {% endif %}
-                            </div> {% endcomment %}
-                            
-                            <!-- New Badge -->
-                            {% if demo.is_new %}
-                                <div class="new-badge">
-                                    <span class="badge bg-danger">
-                                        <i class="fas fa-star me-1"></i>New
-                                    </span>
+                            <!-- ✅ Business Category Badge -->
+                            {% if demo.target_business_categories.all %}
+                                <div class="demo-category-badge">
+                                    {% for category in demo.target_business_categories.all %}
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-building me-1"></i>{{ category.name }}
+                                        </span>
+                                    {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
@@ -200,8 +236,6 @@
                         
                         <!-- Demo Actions -->
                         <div class="demo-actions">
-                            {# ✅ UNIFIED: All file types go to demo_detail (no separate webgl_viewer) #}
-                            {# ✅ NEW: Add autoplay parameter for video demos #}
                             <a href="{% url 'customers:demo_detail' demo.slug %}{% if demo.file_type == 'video' %}?autoplay=1{% endif %}" class="btn btn-primary btn-sm w-100">
                                 {% if demo.file_type == 'webgl' %}
                                     <i class="fas fa-cube me-1"></i>View Demo
@@ -249,15 +283,14 @@
         <div class="pagination-container mt-4">
             <nav aria-label="Demo pagination">
                 <ul class="pagination justify-content-center flex-wrap">
-                    <!-- First Page -->
                     {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page=1" title="First page">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page=1">
                                 <i class="fas fa-angle-double-left"></i>
                             </a>
                         </li>
                         <li class="page-item">
-                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ page_obj.previous_page_number }}" title="Previous page">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ page_obj.previous_page_number }}">
                                 <i class="fas fa-angle-left"></i>
                             </a>
                         </li>
@@ -270,7 +303,6 @@
                         </li>
                     {% endif %}
                     
-                    <!-- Page Numbers -->
                     {% for num in page_obj.paginator.page_range %}
                         {% if page_obj.number == num %}
                             <li class="page-item active">
@@ -283,15 +315,14 @@
                         {% endif %}
                     {% endfor %}
                     
-                    <!-- Last Page -->
                     {% if page_obj.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ page_obj.next_page_number }}" title="Next page">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ page_obj.next_page_number }}">
                                 <i class="fas fa-angle-right"></i>
                             </a>
                         </li>
                         <li class="page-item">
-                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ page_obj.paginator.num_pages }}" title="Last page">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_business_category %}business_category={{ current_business_category }}&{% endif %}{% if current_business_subcategory %}business_subcategory={{ current_business_subcategory }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ page_obj.paginator.num_pages }}">
                                 <i class="fas fa-angle-double-right"></i>
                             </a>
                         </li>
@@ -306,7 +337,6 @@
                 </ul>
             </nav>
             
-            <!-- Page Info -->
             <div class="page-info text-center mt-2">
                 <span class="page-info-text">
                     Page <strong>{{ page_obj.number }}</strong> of <strong>{{ page_obj.paginator.num_pages }}</strong>
@@ -317,13 +347,12 @@
 </div>
 
 <style>
-    /* Browse Demos Container */
+    /* [Previous CSS remains exactly the same - keeping all styles] */
     .browse-demos-container {
         width: 100%;
         max-width: 100%;
     }
 
-    /* Filter Form */
     .filter-form {
         font-size: var(--font-sm);
     }
@@ -354,7 +383,94 @@
         padding: 0.5rem 1.25rem;
     }
 
-    /* Results Summary */
+    .active-filters-section {
+        background: white;
+        padding: 0.875rem 1rem;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .active-filters-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .active-filters-label {
+        font-size: var(--font-sm);
+        font-weight: 600;
+        color: var(--gray-700);
+        white-space: nowrap;
+    }
+
+    .active-filters-list {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        flex: 1;
+    }
+
+    .filter-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: var(--primary-color);
+        color: white;
+        padding: 0.35rem 0.75rem;
+        border-radius: var(--radius-full);
+        font-size: var(--font-xs);
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .filter-tag i {
+        font-size: var(--font-xs);
+    }
+
+    .filter-remove {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        color: white;
+        text-decoration: none;
+        margin-left: 0.25rem;
+        transition: all 0.2s ease;
+    }
+
+    .filter-remove:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+    }
+
+    .filter-remove i {
+        font-size: 10px;
+    }
+
+    .clear-all-filters {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: var(--danger-color);
+        text-decoration: none;
+        font-size: var(--font-xs);
+        font-weight: 600;
+        padding: 0.35rem 0.75rem;
+        border-radius: var(--radius-md);
+        transition: all 0.2s ease;
+    }
+
+    .clear-all-filters:hover {
+        background: var(--danger-light);
+        color: var(--danger-color);
+    }
+
     .results-summary {
         background: white;
         padding: 0.75rem 1rem;
@@ -371,12 +487,6 @@
         font-size: var(--font-sm);
     }
 
-    .search-indicator .badge {
-        font-size: var(--font-xs);
-        padding: 0.35rem 0.75rem;
-    }
-
-    /* Demos Grid - Responsive */
     .demos-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -384,7 +494,6 @@
         margin-bottom: 2rem;
     }
 
-    /* Demo Card */
     .demo-card {
         background: white;
         border-radius: var(--radius-lg);
@@ -401,17 +510,17 @@
         box-shadow: var(--shadow-md);
     }
 
-    /* Demo Thumbnail */
     .demo-thumbnail-link {
         display: block;
         text-decoration: none;
         color: inherit;
+        cursor: pointer;
     }
 
     .demo-thumbnail {
         position: relative;
         width: 100%;
-        padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        padding-top: 56.25%;
         background: var(--gray-200);
         overflow: hidden;
     }
@@ -425,7 +534,6 @@
         object-fit: cover;
     }
 
-    /* ✅ NEW: Video Preview Styles */
     .demo-thumbnail video.video-preview {
         position: absolute;
         top: 0;
@@ -468,11 +576,6 @@
         opacity: 1;
     }
 
-    /* ✅ NEW: Cursor pointer for clickable area */
-    .demo-thumbnail-link {
-        cursor: pointer;
-    }
-
     .demo-thumbnail-link:hover .demo-thumbnail {
         opacity: 0.95;
     }
@@ -494,32 +597,30 @@
         color: var(--gray-400);
     }
 
-    /* Badges on Thumbnail */
-    .demo-type-badge {
+    .demo-category-badge {
         position: absolute;
         top: 0.5rem;
         left: 0.5rem;
+        z-index: 3;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        max-width: calc(100% - 1rem);
     }
 
-    .demo-type-badge .badge {
-        font-size: var(--font-xs);
+    .demo-category-badge .badge {
+        font-size: 10px;
         font-weight: 600;
-        padding: 0.3rem 0.6rem;
+        padding: 0.25rem 0.5rem;
+        background: rgba(13, 110, 253, 0.9);
+        backdrop-filter: blur(4px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
-    .new-badge {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
+    .demo-category-badge .badge i {
+        font-size: 9px;
     }
 
-    .new-badge .badge {
-        font-size: var(--font-xs);
-        font-weight: 600;
-        padding: 0.3rem 0.6rem;
-    }
-
-    /* Demo Card Body */
     .demo-card-body {
         padding: 1rem;
         display: flex;
@@ -547,7 +648,6 @@
         flex-grow: 1;
     }
 
-    /* Demo Meta */
     .demo-meta {
         display: flex;
         justify-content: space-between;
@@ -587,7 +687,6 @@
         font-size: var(--font-xs);
     }
 
-    /* Demo Actions */
     .demo-actions {
         margin-bottom: 0.5rem;
     }
@@ -598,7 +697,6 @@
         padding: 0.5rem 1rem;
     }
 
-    /* Demo Indicators */
     .demo-indicators {
         display: flex;
         gap: 0.5rem;
@@ -632,7 +730,6 @@
         font-size: var(--font-xs);
     }
 
-    /* No Demos Message */
     .no-demos-message {
         padding: 2rem;
     }
@@ -646,7 +743,6 @@
         font-size: var(--font-base);
     }
 
-    /* Pagination */
     .pagination-container {
         background: white;
         padding: 1.25rem;
@@ -692,7 +788,6 @@
         color: var(--gray-600);
     }
 
-    /* Responsive Design */
     @media (max-width: 1200px) {
         .demos-grid {
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -745,9 +840,23 @@
             font-size: var(--font-xs);
         }
 
-        /* ✅ Smaller play icon on mobile */
         .video-preview-overlay i {
             font-size: 2.5rem;
+        }
+
+        .active-filters-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .active-filters-list {
+            width: 100%;
+        }
+
+        .demo-category-badge .badge {
+            font-size: 9px;
+            padding: 0.2rem 0.4rem;
         }
     }
 
@@ -772,7 +881,6 @@
             margin: 0.15rem;
         }
 
-        /* ✅ Even smaller play icon on very small screens */
         .video-preview-overlay i {
             font-size: 2rem;
         }
@@ -780,16 +888,14 @@
 </style>
 
 <script>
-    // Dynamic subcategory filtering based on selected category
+    // Dynamic subcategory filtering
     document.getElementById('business_category').addEventListener('change', function() {
         const selectedCategory = this.value;
         const subcategorySelect = document.getElementById('business_subcategory');
         const subcategoryOptions = subcategorySelect.querySelectorAll('option');
         
-        // Reset subcategory selection
         subcategorySelect.value = '';
         
-        // Show/hide subcategories based on selected category
         subcategoryOptions.forEach(option => {
             if (option.value === '') {
                 option.style.display = 'block';
@@ -804,27 +910,42 @@
         });
     });
     
-    // Trigger filter on change
-    document.querySelectorAll('.filter-form select, .filter-form input').forEach(element => {
-        if (element.id !== 'search') {
-            element.addEventListener('change', function() {
-                // Auto-submit form on select change (optional)
-                // this.form.submit();
-            });
+    // ✅ Update filter tag names dynamically from select options
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get selected category name
+        const categorySelect = document.getElementById('business_category');
+        const selectedCategoryOption = categorySelect.options[categorySelect.selectedIndex];
+        const categoryName = selectedCategoryOption.getAttribute('data-name');
+        
+        if (categoryName) {
+            const categoryNameSpan = document.querySelector('.filter-category-name');
+            if (categoryNameSpan) {
+                categoryNameSpan.textContent = 'Category: ' + categoryName;
+            }
+        }
+        
+        // Get selected subcategory name
+        const subcategorySelect = document.getElementById('business_subcategory');
+        const selectedSubcategoryOption = subcategorySelect.options[subcategorySelect.selectedIndex];
+        const subcategoryName = selectedSubcategoryOption.getAttribute('data-name');
+        
+        if (subcategoryName) {
+            const subcategoryNameSpan = document.querySelector('.filter-subcategory-name');
+            if (subcategoryNameSpan) {
+                subcategoryNameSpan.textContent = 'Subcategory: ' + subcategoryName;
+            }
         }
     });
     
-    // Add smooth scroll to top after pagination
+    // Pagination smooth scroll
     document.querySelectorAll('.pagination .page-link').forEach(link => {
         link.addEventListener('click', function() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     });
 
-    // ✅ UPDATED: Video Preview Hover Effects (with clickable thumbnail support)
+    // Video Preview Hover
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('🎬 Initializing video preview hover effects...');
-        
         const videoCards = document.querySelectorAll('.demo-card');
         
         videoCards.forEach(card => {
@@ -832,37 +953,16 @@
             const thumbnailLink = card.querySelector('.demo-thumbnail-link');
             
             if (video && thumbnailLink) {
-                console.log('📹 Video preview found in card');
-                
-                // Play on hover (but not when clicking)
-                let isHovering = false;
-                
                 thumbnailLink.addEventListener('mouseenter', function() {
-                    console.log('▶️ Playing video preview on hover');
-                    isHovering = true;
-                    video.play().catch(err => {
-                        console.warn('⚠️ Video preview autoplay blocked:', err);
-                    });
+                    video.play().catch(err => console.warn('Video autoplay blocked'));
                 });
                 
-                // Pause on hover out
                 thumbnailLink.addEventListener('mouseleave', function() {
-                    console.log('⏸️ Pausing video preview');
-                    isHovering = false;
                     video.pause();
-                    video.currentTime = 0; // Reset to start
-                });
-                
-                // Prevent video interference when clicking to navigate
-                thumbnailLink.addEventListener('click', function(e) {
-                    console.log('👆 Thumbnail clicked - navigating to demo detail');
-                    // Let the link work normally
-                    // Video will stop when page navigates
+                    video.currentTime = 0;
                 });
             }
         });
-        
-        console.log('✅ Video preview effects initialized');
     });
 </script>
 {% endblock %}
