@@ -136,8 +136,10 @@ def customer_dashboard(request):
 @login_required
 def browse_demos(request):
     """
-    ✅ FIXED: Browse demos with proper category filtering
-    Works with or without get_customer_context utility function
+    ✅ STRICT FILTERING: Only show demos with EXACT category selected
+    - If "eLearning" selected → ONLY eLearning demos
+    - If "XR" selected → ONLY XR demos
+    - If "All Categories" → Show everything user has access to
     """
     if not request.user.is_approved:
         return redirect('accounts:pending_approval')
@@ -153,7 +155,7 @@ def browse_demos(request):
     sort_by = request.GET.get('sort', 'newest')
     
     print(f"\n{'='*80}")
-    print(f"🔍 BROWSE DEMOS - FIXED FILTERING")
+    print(f"🔍 BROWSE DEMOS - STRICT FILTERING")
     print(f"{'='*80}")
     print(f"User: {request.user.get_full_name()}")
     print(f"User Business Category: {user_business_category}")
@@ -190,33 +192,19 @@ def browse_demos(request):
     # ✅ STEP 3: Start with accessible demos
     demos = Demo.objects.filter(id__in=accessible_demo_ids)
     
-    # ✅ STEP 4: Apply category filter (if selected)
+    # ✅ STEP 4: Apply STRICT category filter (if selected)
     if business_category_id:
         try:
             selected_category = BusinessCategory.objects.get(id=business_category_id)
             
-            # ✅ FIXED LOGIC: Show demos that either:
-            # 1. Have the selected category assigned, OR
-            # 2. Have NO categories (available to all)
-            
-            # Get demos with the selected category
-            demos_with_category = demos.filter(
+            # ✅ STRICT LOGIC: ONLY show demos that have THIS specific category
+            # NO "All Categories" demos
+            demos = demos.filter(
                 target_business_categories__id=business_category_id
             ).distinct()
             
-            # Get demos with NO categories (available to all)
-            demos_with_no_categories = demos.filter(
-                target_business_categories__isnull=True
-            ).distinct()
-            
-            # Combine both using union
-            demos = demos_with_category | demos_with_no_categories
-            demos = demos.distinct()
-            
-            print(f"🔍 Category Filter Applied: {selected_category.name}")
-            print(f"   Demos with this category: {demos_with_category.count()}")
-            print(f"   Demos with no category (all): {demos_with_no_categories.count()}")
-            print(f"   Total result: {demos.count()} demos\n")
+            print(f"🔍 STRICT Category Filter Applied: {selected_category.name}")
+            print(f"   Result: {demos.count()} demos with ONLY this category\n")
             
         except BusinessCategory.DoesNotExist:
             print(f"❌ Category ID {business_category_id} not found\n")
@@ -224,33 +212,18 @@ def browse_demos(request):
         # ✅ "All Categories" selected - show everything user has access to
         print(f"🌍 All Categories - showing all {demos.count()} accessible demos\n")
     
-    # ✅ STEP 5: Apply subcategory filter (if selected)
+    # ✅ STEP 5: Apply STRICT subcategory filter (if selected)
     if business_subcategory_id:
         try:
             selected_subcategory = BusinessSubCategory.objects.get(id=business_subcategory_id)
             
-            # ✅ FIXED LOGIC: Show demos that either:
-            # 1. Have the selected subcategory assigned, OR
-            # 2. Have NO subcategories (available to all)
-            
-            # Get demos with the selected subcategory
-            demos_with_subcategory = demos.filter(
+            # ✅ STRICT LOGIC: ONLY show demos that have THIS specific subcategory
+            demos = demos.filter(
                 target_business_subcategories__id=business_subcategory_id
             ).distinct()
             
-            # Get demos with NO subcategories (available to all)
-            demos_with_no_subcategories = demos.filter(
-                target_business_subcategories__isnull=True
-            ).distinct()
-            
-            # Combine both
-            demos = demos_with_subcategory | demos_with_no_subcategories
-            demos = demos.distinct()
-            
-            print(f"🔍 Subcategory Filter Applied: {selected_subcategory.name}")
-            print(f"   Demos with this subcategory: {demos_with_subcategory.count()}")
-            print(f"   Demos with no subcategory (all): {demos_with_no_subcategories.count()}")
-            print(f"   Total result: {demos.count()} demos\n")
+            print(f"🔍 STRICT Subcategory Filter Applied: {selected_subcategory.name}")
+            print(f"   Result: {demos.count()} demos with ONLY this subcategory\n")
             
         except BusinessSubCategory.DoesNotExist:
             print(f"❌ Subcategory ID {business_subcategory_id} not found\n")
@@ -279,6 +252,18 @@ def browse_demos(request):
         demos = demos.order_by('-created_at')
     
     print(f"📊 Final Results: {demos.count()} demos")
+    
+    # ✅ DEBUG: Show which demos are being returned
+    print(f"\n📋 Demos being shown:")
+    for idx, demo in enumerate(demos[:5], 1):  # Show first 5
+        categories = demo.target_business_categories.all()
+        if categories.exists():
+            cat_names = ', '.join([c.name for c in categories])
+        else:
+            cat_names = '[No categories assigned]'
+        print(f"   {idx}. {demo.title}: {cat_names}")
+    if demos.count() > 5:
+        print(f"   ... and {demos.count() - 5} more")
     print(f"{'='*80}\n")
     
     # Pagination
@@ -300,17 +285,8 @@ def browse_demos(request):
     user_views = DemoView.objects.filter(user=request.user).values_list('demo_id', flat=True)
     user_likes = DemoLike.objects.filter(user=request.user).values_list('demo_id', flat=True)
     
-    # ✅ Try to use get_customer_context if available, otherwise build context manually
-    try:
-        # Option 1: If you have get_customer_context function
-        from .utils import get_customer_context
-        context = get_customer_context(request.user)
-    except (ImportError, AttributeError):
-        # Option 2: Build context manually if get_customer_context doesn't exist
-        context = {}
-    
-    # Add demo-specific context
-    context.update({
+    # Build context
+    context = {
         'page_obj': page_obj,
         'business_categories': business_categories,
         'business_subcategories': business_subcategories,
@@ -320,7 +296,7 @@ def browse_demos(request):
         'sort_by': sort_by,
         'user_views': list(user_views),
         'user_likes': list(user_likes),
-    })
+    }
     
     return render(request, 'customers/browse_demos.html', context)
 
