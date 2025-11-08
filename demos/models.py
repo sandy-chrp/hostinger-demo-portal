@@ -763,14 +763,41 @@ class Demo(models.Model):
         return False
     
     def is_available_for_business(self, category=None, subcategory=None):
-        """Check if demo is available for given business category/subcategory combination"""
-        if self.is_for_all_business_categories and self.is_for_all_business_subcategories:
-            return True
+        """
+        ✅ IMPROVED: Check if demo is available for given business category/subcategory
         
-        category_match = self.is_available_for_business_category(category)
-        subcategory_match = self.is_available_for_business_subcategory(subcategory)
+        LOGIC:
+        1. If NO target categories/subcategories set → Available to ALL
+        2. If target categories set → Must match user's category
+        3. If target subcategories set → Must match user's subcategory
+        """
         
-        return category_match or subcategory_match
+        # Check category access
+        if self.target_business_categories.count() == 0:
+            # No restrictions on category
+            category_match = True
+        else:
+            # Must match one of the target categories
+            if category:
+                category_match = self.target_business_categories.filter(id=category.id).exists()
+            else:
+                category_match = False
+        
+        # Check subcategory access
+        if self.target_business_subcategories.count() == 0:
+            # No restrictions on subcategory
+            subcategory_match = True
+        else:
+            # Must match one of the target subcategories
+            if subcategory:
+                subcategory_match = self.target_business_subcategories.filter(id=subcategory.id).exists()
+            else:
+                # User has no subcategory but demo requires one
+                # In this case, grant access if category matches
+                subcategory_match = category_match
+        
+        # Both must be true for access
+        return category_match and subcategory_match
     
     @property
     def is_for_all_customers(self):

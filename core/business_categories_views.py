@@ -28,10 +28,10 @@ def admin_business_categories(request):
     # Status filter
     status_filter = request.GET.get('status', '')
     
-    # Filter categories
+    # ✅ FIX: Filter categories and count ONLY customers (user_type='customer')
     categories = BusinessCategory.objects.annotate(
         subcategory_count=Count('subcategories'),
-        customer_count=Count('customers')
+        customer_count=Count('customers', filter=Q(customers__user_type='customer'))  # ✅ Added filter
     ).order_by('sort_order', 'name')
     
     # Apply search filter if provided

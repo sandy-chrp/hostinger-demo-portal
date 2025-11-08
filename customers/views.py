@@ -135,7 +135,14 @@ def customer_dashboard(request):
 
 @login_required
 def browse_demos(request):
-    """Browse available demo videos with customer access control - WITH WEBGL SUPPORT"""
+    """
+    ✅ FIXED: Browse available demo videos with proper customer access control
+    
+    ISSUE IDENTIFIED:
+    - Demos with target_business_categories were being filtered incorrectly
+    - The is_available_for_business() method was too restrictive
+    - Need to check if categories are empty (available to all) OR match user's category
+    """
     if not request.user.is_approved:
         return redirect('accounts:pending_approval')
     
@@ -143,43 +150,134 @@ def browse_demos(request):
     user_business_category = request.user.business_category
     user_business_subcategory = request.user.business_subcategory
     
+    print(f"\n{'='*80}")
+    print(f"🔍 BROWSE DEMOS - USER INFO")
+    print(f"{'='*80}")
+    print(f"User: {request.user.get_full_name()}")
+    print(f"Business Category: {user_business_category}")
+    print(f"Business Subcategory: {user_business_subcategory}")
+    print(f"{'='*80}\n")
+    
     # Get filter parameters
     business_category_id = request.GET.get('business_category')
     business_subcategory_id = request.GET.get('business_subcategory')
     search_query = request.GET.get('search', '').strip()
     sort_by = request.GET.get('sort', 'newest')
     
-    # Base queryset - get all active demos
-    demos_query = Demo.objects.filter(is_active=True).prefetch_related(
+    # ✅ FIX 1: Start with base query - ALL active demos
+    demos_query = Demo.objects.filter(
+        is_active=True
+    ).prefetch_related(
         'target_business_categories',
         'target_business_subcategories',
         'target_customers'
     )
     
-    # Filter demos based on business category access and customer access
-    accessible_demos = []
+    print(f"📊 Total Active Demos: {demos_query.count()}")
+    
+    # ✅ FIX 2: Filter for accessible demos with CORRECTED logic
+    accessible_demo_ids = []
+    
     for demo in demos_query:
-        # Check business category access
-        if demo.is_available_for_business(user_business_category, user_business_subcategory):
-            # Check customer access
-            if demo.can_customer_access(request.user):
-                accessible_demos.append(demo.id)
+        print(f"\n📦 Checking Demo: {demo.title}")
+        print(f"   File Type: {demo.file_type}")
+        print(f"   Created: {demo.created_at}")
+        
+        # Check 1: Business Category Access
+        has_category_access = False
+        
+        # If no target categories specified, available to ALL
+        if demo.target_business_categories.count() == 0:
+            print(f"   ✅ Category Access: OPEN TO ALL (no restrictions)")
+            has_category_access = True
+        else:
+            # Check if user's category matches any target category
+            if user_business_category:
+                if demo.target_business_categories.filter(id=user_business_category.id).exists():
+                    print(f"   ✅ Category Access: MATCHED ({user_business_category.name})")
+                    has_category_access = True
+                else:
+                    target_cats = [cat.name for cat in demo.target_business_categories.all()]
+                    print(f"   ❌ Category Access: NO MATCH")
+                    print(f"      User Category: {user_business_category.name}")
+                    print(f"      Target Categories: {target_cats}")
+            else:
+                print(f"   ❌ Category Access: User has NO category assigned")
+        
+        # Check 2: Business Subcategory Access (if has category access)
+        has_subcategory_access = False
+        
+        if has_category_access:
+            # If no target subcategories specified, available to ALL
+            if demo.target_business_subcategories.count() == 0:
+                print(f"   ✅ Subcategory Access: OPEN TO ALL (no restrictions)")
+                has_subcategory_access = True
+            else:
+                # Check if user's subcategory matches any target subcategory
+                if user_business_subcategory:
+                    if demo.target_business_subcategories.filter(id=user_business_subcategory.id).exists():
+                        print(f"   ✅ Subcategory Access: MATCHED ({user_business_subcategory.name})")
+                        has_subcategory_access = True
+                    else:
+                        target_subcats = [subcat.name for subcat in demo.target_business_subcategories.all()]
+                        print(f"   ❌ Subcategory Access: NO MATCH")
+                        print(f"      User Subcategory: {user_business_subcategory.name}")
+                        print(f"      Target Subcategories: {target_subcats}")
+                else:
+                    # User has no subcategory - grant access if has category access
+                    print(f"   ⚠️  Subcategory Access: User has NO subcategory (granting access)")
+                    has_subcategory_access = True
+        
+        # Check 3: Customer-Specific Access
+        has_customer_access = False
+        
+        # If no target customers specified, available to ALL
+        if demo.target_customers.count() == 0:
+            print(f"   ✅ Customer Access: OPEN TO ALL (no restrictions)")
+            has_customer_access = True
+        else:
+            # Check if user is in target customers
+            if demo.target_customers.filter(id=request.user.id).exists():
+                print(f"   ✅ Customer Access: MATCHED (user in target list)")
+                has_customer_access = True
+            else:
+                print(f"   ❌ Customer Access: NO MATCH (user NOT in target list)")
+        
+        # ✅ FINAL DECISION: User needs BOTH business access AND customer access
+        if (has_category_access and has_subcategory_access) and has_customer_access:
+            print(f"   ✅✅ DEMO ACCESSIBLE TO USER")
+            accessible_demo_ids.append(demo.id)
+        else:
+            print(f"   ❌❌ DEMO NOT ACCESSIBLE TO USER")
+            if not (has_category_access and has_subcategory_access):
+                print(f"      Reason: Business category/subcategory mismatch")
+            if not has_customer_access:
+                print(f"      Reason: Customer access restricted")
     
-    # Filter by accessible demo IDs
-    demos = Demo.objects.filter(id__in=accessible_demos)
+    print(f"\n{'='*80}")
+    print(f"📊 FILTERING RESULTS")
+    print(f"{'='*80}")
+    print(f"Total Active Demos: {demos_query.count()}")
+    print(f"Accessible to User: {len(accessible_demo_ids)}")
+    print(f"{'='*80}\n")
     
-    # Apply additional filters
+    # ✅ FIX 3: Filter by accessible demo IDs
+    demos = Demo.objects.filter(id__in=accessible_demo_ids)
+    
+    # Apply additional filters from user input
     if business_category_id:
         demos = demos.filter(
             Q(target_business_categories__id=business_category_id) |
             Q(target_business_categories__isnull=True)
         ).distinct()
+        print(f"🔍 Applied Category Filter: {business_category_id}")
     
     if business_subcategory_id:
         demos = demos.filter(
             Q(target_business_subcategories__id=business_subcategory_id) |
             Q(target_business_subcategories__isnull=True)
         ).distinct()
+        print(f"🔍 Applied Subcategory Filter: {business_subcategory_id}")
     
     # Apply search filter
     if search_query:
@@ -187,6 +285,7 @@ def browse_demos(request):
             Q(title__icontains=search_query) |
             Q(description__icontains=search_query)
         )
+        print(f"🔍 Applied Search Filter: '{search_query}'")
     
     # Apply sorting
     if sort_by == 'newest':
@@ -201,6 +300,8 @@ def browse_demos(request):
         demos = demos.order_by('title')
     else:
         demos = demos.order_by('-created_at')
+    
+    print(f"📊 Final Demo Count after filters: {demos.count()}\n")
     
     # Pagination
     paginator = Paginator(demos, 12)

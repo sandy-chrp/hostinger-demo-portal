@@ -199,24 +199,27 @@ STATICFILES_DIRS = [
 # Demo File Upload Settings
 DEMO_FILE_SETTINGS = {
     # Video settings
-    'VIDEO_MAX_SIZE': 100 * 1024 * 1024,  # 100MB
+    'VIDEO_MAX_SIZE': 1 * 1024 * 1024 * 1024,  # ✅ 1 GB (Changed from 100 MB)
     'VIDEO_ALLOWED_EXTENSIONS': ['.mp4', '.avi', '.mov', '.wmv'],
     
     # WebGL settings
-    'WEBGL_MAX_SIZE': 100 * 1024 * 1024,  # 100MB
+    'WEBGL_MAX_SIZE': 3 * 1024 * 1024 * 1024,  # 3 GB
     'WEBGL_ALLOWED_EXTENSIONS': ['.html', '.zip', '.gltf', '.glb'],
     
+    # LMS settings (Add this if missing)
+    'LMS_MAX_SIZE': 4 * 1024 * 1024 * 1024,  # 4 GB
+    'LMS_ALLOWED_EXTENSIONS': ['.zip', '.scorm'],
+    
     # Thumbnail settings
-    'THUMBNAIL_MAX_SIZE': 5 * 1024 * 1024,  # 5MB
+    'THUMBNAIL_MAX_SIZE': 10 * 1024 * 1024,  # 10 MB
     'THUMBNAIL_ALLOWED_EXTENSIONS': ['.jpg', '.jpeg', '.png', '.webp'],
 }
 
 # =====================================
 # FILE UPLOAD SETTINGS
 # =====================================
-FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100MB
-
+FILE_UPLOAD_MAX_MEMORY_SIZE = 1 * 1024 * 1024 * 1024  # ✅ 1 GB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1 * 1024 * 1024 * 1024  # ✅ 1 GB
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

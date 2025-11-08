@@ -1171,7 +1171,7 @@
                     <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('actualFileInput').click()">
                         <i class="fas fa-cloud-upload-alt file-upload-icon" id="demoFileIcon"></i>
                         <p class="file-upload-title" id="demoFileTitle">Click to upload demo file</p>
-                        <small class="file-upload-hint" id="fileTypeHint">MP4, AVI, MOV (Max: 200 MB)</small>
+                        <small class="file-upload-hint" id="fileTypeHint">MP4, AVI, MOV (Max: 1 GB)</small>
                         <span class="file-upload-badge" id="fileTypeBadge">VIDEO</span>
                         
                         <!-- File Preview Inside Upload Area -->
@@ -1436,14 +1436,14 @@
 {% block admin_extra_js %}
 <script>
 const FILE_SIZE_LIMITS = {
-    video: 200 * 1024 * 1024,
+    video: 1 * 1024 * 1024 * 1024, 
     webgl: 3 * 1024 * 1024 * 1024,
     lms: 4 * 1024 * 1024 * 1024,
     thumbnail: 10 * 1024 * 1024
 };
 
 const FILE_TYPE_CONFIG = {
-    video: { accept: 'video/*', hint: 'MP4, AVI, MOV (Max: 200 MB)', icon: 'fa-video', iconClass: 'video' },
+    video: { accept: 'video/*', hint: 'MP4, AVI, MOV (Max: 1 GB)', icon: 'fa-video', iconClass: 'video' },
     webgl: { accept: '.html,.zip,.gltf,.glb', hint: 'HTML, ZIP, 3D (Max: 3 GB)', icon: 'fa-cube', iconClass: 'webgl' },
     lms: { accept: '.zip,.scorm', hint: 'ZIP, SCORM (Max: 4 GB)', icon: 'fa-graduation-cap', iconClass: 'lms' }
 };
