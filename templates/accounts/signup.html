@@ -883,22 +883,34 @@
                             </div>
 
                             <!-- Mobile -->
-                            <div class="mb-3">
-                                <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <select class="form-select" name="country_code" id="countryCode" style="max-width: 150px;">
-                                        {% for code, label in form.fields.country_code.choices %}
-                                            <option value="{{ code }}" {% if code == '+91' %}selected{% endif %}>
-                                                {{ label }}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
-                                    <input type="tel" class="form-control" name="mobile" id="mobileField" 
-                                           required pattern="[0-9]{10}" maxlength="10" 
-                                           value="{{ form.mobile.value|default:'' }}">
-                                </div>
-                                <div class="invalid-feedback">Please enter a valid 10-digit mobile number</div>
-                            </div>
+<!-- Mobile -->
+<div class="mb-3">
+    <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
+    <div class="input-group">
+        <select class="form-select" name="country_code" id="countryCode" style="max-width: 150px;">
+            {% for code, label in form.fields.country_code.choices %}
+                <option value="{{ code }}" {% if code == '+91' %}selected{% endif %}>
+                    {{ label }}
+                </option>
+            {% endfor %}
+        </select>
+        <input type="tel" 
+               class="form-control" 
+               name="mobile" 
+               id="mobileField" 
+               required 
+               placeholder="9876543210"
+               maxlength="15"
+               inputmode="numeric"
+               autocomplete="tel"
+               value="{{ form.mobile.value|default:'' }}">
+    </div>
+    <div class="invalid-feedback" id="mobileError">Please enter a valid mobile number</div>
+    <small class="form-text text-muted">
+        <i class="fas fa-info-circle me-1"></i>
+        <span id="mobileHint">Indian mobile must be 10 digits starting with 6-9</span>
+    </small>
+</div>
 
                             <!-- Job & Organization -->
                             <div class="row">
@@ -1032,6 +1044,7 @@
 
 {% block extra_js %}
 <script>
+// ✅ Password Toggle Function (outside DOMContentLoaded)
 function togglePassword(fieldId, iconElement) {
     const passwordField = document.getElementById(fieldId);
     const icon = iconElement.querySelector('i');
@@ -1047,7 +1060,11 @@ function togglePassword(fieldId, iconElement) {
     }
 }
 
+// ✅ Main Application Logic
 document.addEventListener('DOMContentLoaded', function() {
+    // ========================================
+    // ELEMENT REFERENCES
+    // ========================================
     const form = document.getElementById('signupForm');
     const submitBtn = document.getElementById('submitBtn');
     const categorySelect = document.getElementById('categorySelect');
@@ -1058,10 +1075,113 @@ document.addEventListener('DOMContentLoaded', function() {
     const strengthText = document.getElementById('strengthText');
     const emailField = document.getElementById('emailField');
     const mobileField = document.getElementById('mobileField');
+    const countryCode = document.getElementById('countryCode');
     const termsCheckbox = document.getElementById('terms');
     
-    const blockedDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'ymail.com', 'aol.com', 'icloud.com', 'live.com', 'rediffmail.com', 'protonmail.com'];
+    // ========================================
+    // CONFIGURATION
+    // ========================================
+    const blockedDomains = [
+        'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 
+        'ymail.com', 'aol.com', 'icloud.com', 'live.com', 
+        'rediffmail.com', 'protonmail.com'
+    ];
     
+    // ✅ Country-specific mobile validation rules
+    const mobileRules = {
+        '+91': { 
+            minLength: 10, 
+            maxLength: 10, 
+            pattern: /^[6-9]\d{9}$/, 
+            placeholder: '9876543210',
+            message: 'Indian mobile must be 10 digits starting with 6-9'
+        },
+        '+1': { 
+            minLength: 10, 
+            maxLength: 10, 
+            pattern: /^\d{10}$/, 
+            placeholder: '2025551234',
+            message: 'US/Canada mobile must be 10 digits'
+        },
+        '+44': { 
+            minLength: 10, 
+            maxLength: 10, 
+            pattern: /^[1-9]\d{9}$/, 
+            placeholder: '7400123456',
+            message: 'UK mobile must be 10 digits'
+        },
+        '+86': { 
+            minLength: 11, 
+            maxLength: 11, 
+            pattern: /^1[3-9]\d{9}$/, 
+            placeholder: '13800138000',
+            message: 'Chinese mobile must be 11 digits starting with 1'
+        },
+        '+61': { 
+            minLength: 9, 
+            maxLength: 9, 
+            pattern: /^4\d{8}$/, 
+            placeholder: '412345678',
+            message: 'Australian mobile must be 9 digits starting with 4'
+        },
+        '+971': { 
+            minLength: 9, 
+            maxLength: 9, 
+            pattern: /^5\d{8}$/, 
+            placeholder: '501234567',
+            message: 'UAE mobile must be 9 digits starting with 5'
+        },
+        '+966': { 
+            minLength: 9, 
+            maxLength: 9, 
+            pattern: /^5\d{8}$/, 
+            placeholder: '501234567',
+            message: 'Saudi mobile must be 9 digits starting with 5'
+        },
+        '+65': { 
+            minLength: 8, 
+            maxLength: 8, 
+            pattern: /^[89]\d{7}$/, 
+            placeholder: '81234567',
+            message: 'Singapore mobile must be 8 digits starting with 8/9'
+        },
+        '+81': { 
+            minLength: 10, 
+            maxLength: 10, 
+            pattern: /^[7-9]\d{8,9}$/, 
+            placeholder: '9012345678',
+            message: 'Japanese mobile must be 9-10 digits'
+        },
+        '+92': { 
+            minLength: 10, 
+            maxLength: 10, 
+            pattern: /^3\d{9}$/, 
+            placeholder: '3001234567',
+            message: 'Pakistani mobile must be 10 digits starting with 3'
+        },
+        // Default for other countries
+        'default': { 
+            minLength: 7, 
+            maxLength: 15, 
+            pattern: /^\d{7,15}$/, 
+            placeholder: '1234567890',
+            message: 'Mobile must be 7-15 digits'
+        }
+    };
+    
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+    
+    // Get current country mobile rule
+    function getCurrentMobileRule() {
+        const selected = countryCode.value;
+        return mobileRules[selected] || mobileRules['default'];
+    }
+    
+    // ========================================
+    // SALES BANNER DISMISS
+    // ========================================
     const closeSalesBannerBtn = document.getElementById('closeSalesBanner');
     const salesBanner = document.getElementById('salesBanner');
     
@@ -1074,11 +1194,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         });
         
+        // Check if already dismissed
         if (localStorage.getItem('salesBannerDismissed') === 'true') {
             salesBanner.classList.add('dismissed');
         }
     }
     
+    // ========================================
+    // FORM SUBMIT HANDLER
+    // ========================================
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -1086,6 +1210,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return false;
     });
     
+    // ========================================
+    // TEXT INPUT VALIDATION
+    // ========================================
     const textInputs = form.querySelectorAll('input[type="text"]');
     textInputs.forEach(input => {
         input.addEventListener('blur', function() {
@@ -1108,6 +1235,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // ========================================
+    // EMAIL VALIDATION
+    // ========================================
     function validateEmail() {
         const email = emailField.value.trim();
         const emailError = document.getElementById('emailError');
@@ -1147,54 +1277,132 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    mobileField.addEventListener('input', function() {
-        this.value = this.value.replace(/\D/g, '').slice(0, 10);
-    });
+    // ========================================
+    // MOBILE NUMBER VALIDATION
+    // ========================================
     
-    mobileField.addEventListener('blur', function() {
-        if (this.value.length === 10) {
-            this.classList.remove('is-invalid');
-            this.classList.add('is-valid');
-        } else if (this.value.length > 0) {
-            this.classList.add('is-invalid');
-            this.classList.remove('is-valid');
+    // Update placeholder and hints when country changes
+    countryCode.addEventListener('change', function() {
+        const rule = getCurrentMobileRule();
+        
+        // Update input attributes
+        mobileField.placeholder = rule.placeholder;
+        mobileField.maxLength = rule.maxLength;
+        
+        // Update hint text
+        const hintElement = document.getElementById('mobileHint');
+        if (hintElement) {
+            hintElement.textContent = rule.message;
+        }
+        
+        // Clear validation state
+        mobileField.classList.remove('is-valid', 'is-invalid');
+        
+        // Re-validate if field has value
+        if (mobileField.value.trim()) {
+            validateMobile();
         }
     });
     
+    // Validate mobile number
+    function validateMobile() {
+        const mobile = mobileField.value.replace(/\D/g, ''); // Remove non-digits
+        const rule = getCurrentMobileRule();
+        const errorDiv = document.getElementById('mobileError');
+        
+        if (!mobile) {
+            mobileField.classList.remove('is-valid', 'is-invalid');
+            if (errorDiv) errorDiv.textContent = 'Mobile number is required';
+            return false;
+        }
+        
+        // Check length
+        if (mobile.length < rule.minLength || mobile.length > rule.maxLength) {
+            mobileField.classList.add('is-invalid');
+            mobileField.classList.remove('is-valid');
+            if (errorDiv) errorDiv.textContent = rule.message;
+            return false;
+        }
+        
+        // Check pattern
+        if (!rule.pattern.test(mobile)) {
+            mobileField.classList.add('is-invalid');
+            mobileField.classList.remove('is-valid');
+            if (errorDiv) errorDiv.textContent = rule.message;
+            return false;
+        }
+        
+        // Valid
+        mobileField.classList.remove('is-invalid');
+        mobileField.classList.add('is-valid');
+        if (errorDiv) errorDiv.textContent = '';
+        return true;
+    }
     
+    // Restrict input to digits only
+    mobileField.addEventListener('input', function() {
+        const rule = getCurrentMobileRule();
+        
+        // Remove non-digits
+        this.value = this.value.replace(/\D/g, '');
+        
+        // Enforce max length
+        if (this.value.length > rule.maxLength) {
+            this.value = this.value.slice(0, rule.maxLength);
+        }
+        
+        // Auto-validate when reaching minimum length
+        if (this.value.length >= rule.minLength) {
+            validateMobile();
+        } else if (this.classList.contains('is-invalid') || this.classList.contains('is-valid')) {
+            this.classList.remove('is-valid', 'is-invalid');
+        }
+    });
+    
+    // Validate on blur
+    mobileField.addEventListener('blur', function() {
+        if (this.value.trim()) {
+            validateMobile();
+        }
+    });
+    
+    // ========================================
+    // PASSWORD STRENGTH CHECKER
+    // ========================================
     password1.addEventListener('input', function() {
-    const password = this.value;
-    let strength = 0;
+        const password = this.value;
+        let strength = 0;
+        
+        strengthBar.className = 'password-strength-bar';
+        
+        if (password.length >= 8) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+        
+        if (password.length === 0) {
+            strengthText.textContent = 'Min 8 characters. Use uppercase, lowercase, numbers & special characters for a strong password';
+            strengthText.className = 'text-muted';
+        } else if (strength <= 1) {
+            strengthBar.classList.add('strength-weak');
+            strengthText.textContent = 'Weak password - Add uppercase letters, numbers & special characters';
+            strengthText.className = 'text-danger';
+        } else if (strength === 2) {
+            strengthBar.classList.add('strength-medium');
+            strengthText.textContent = 'Medium password - Add more variety for better security';
+            strengthText.className = 'text-warning';
+        } else {
+            strengthBar.classList.add('strength-strong');
+            strengthText.textContent = 'Strong password ✓';
+            strengthText.className = 'text-success';
+        }
+        
+        // Re-validate password match if password2 has value
+        if (password2.value) {
+            validatePasswordMatch();
+        }
+    });
     
-    strengthBar.className = 'password-strength-bar';
-    
-    if (password.length >= 8) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/[0-9]/.test(password)) strength++;
-    if (/[^A-Za-z0-9]/.test(password)) strength++;
-    
-    if (password.length === 0) {
-        strengthText.textContent = 'Min 8 characters. Use uppercase, lowercase, numbers & special characters for a strong password';
-        strengthText.className = 'text-muted';
-    } else if (strength <= 1) {
-        strengthBar.classList.add('strength-weak');
-        strengthText.textContent = 'Weak password - Add uppercase letters, numbers & special characters';
-        strengthText.className = 'text-danger';
-    } else if (strength === 2) {
-        strengthBar.classList.add('strength-medium');
-        strengthText.textContent = 'Medium password - Add more variety for better security';
-        strengthText.className = 'text-warning';
-    } else {
-        strengthBar.classList.add('strength-strong');
-        strengthText.textContent = 'Strong password ✓';
-        strengthText.className = 'text-success';
-    }
-    
-    if (password2.value) {
-        validatePasswordMatch();
-    }
-});
-
     password1.addEventListener('blur', function() {
         if (this.value.length > 0 && this.value.length < 8) {
             this.classList.add('is-invalid');
@@ -1205,6 +1413,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // ========================================
+    // PASSWORD MATCH VALIDATION
+    // ========================================
     function validatePasswordMatch() {
         const pass1 = password1.value;
         const pass2 = password2.value;
@@ -1237,44 +1448,57 @@ document.addEventListener('DOMContentLoaded', function() {
     password2.addEventListener('input', validatePasswordMatch);
     password2.addEventListener('blur', validatePasswordMatch);
     
-    categorySelect.addEventListener('change', function() {
-        const categoryId = this.value;
-        
-        if (!categoryId) {
-            this.classList.add('is-invalid');
-            this.classList.remove('is-valid');
-            subcategorySelect.innerHTML = '<option value="">Select category first...</option>';
-            subcategorySelect.disabled = true;
-            return;
-        }
-        
-        this.classList.remove('is-invalid');
-        this.classList.add('is-valid');
-        
-        subcategorySelect.disabled = true;
-        const loader = document.getElementById('subcategoryLoader');
-        if (loader) loader.style.display = 'block';
-        
-        fetch(`/auth/ajax/get-subcategories/?category_id=${categoryId}`)
-            .then(res => res.json())
-            .then(data => {
-                subcategorySelect.innerHTML = '<option value="">Select subcategory</option>';
-                
-                if (data.success && data.subcategories && data.subcategories.length > 0) {
-                    data.subcategories.forEach(sub => {
-                        subcategorySelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
-                    });
-                }
-                
-                subcategorySelect.disabled = false;
-                if (loader) loader.style.display = 'none';
-            })
-            .catch(() => {
-                subcategorySelect.innerHTML = '<option value="">Error loading subcategories</option>';
-                if (loader) loader.style.display = 'none';
-            });
-    });
+    // ========================================
+    // BUSINESS CATEGORY & SUBCATEGORY
+    // ========================================
+    // ========================================
+// BUSINESS CATEGORY & SUBCATEGORY
+// ========================================
+categorySelect.addEventListener('change', function() {
+    const categoryId = this.value;
     
+    if (!categoryId) {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+        subcategorySelect.innerHTML = '<option value="">Select category first...</option>';
+        subcategorySelect.disabled = true;
+        return;
+    }
+    
+    this.classList.remove('is-invalid');
+    this.classList.add('is-valid');
+    
+    subcategorySelect.disabled = true;
+    const loader = document.getElementById('subcategoryLoader');
+    if (loader) loader.style.display = 'block';
+    
+    // ✅ FIXED: Use Django URL template tag for correct path
+    const subcategoryUrl = "{% url 'accounts:get_subcategories' %}";
+    
+    fetch(`${subcategoryUrl}?category_id=${categoryId}`)
+        .then(res => res.json())
+        .then(data => {
+            subcategorySelect.innerHTML = '<option value="">Select subcategory</option>';
+            
+            if (data.success && data.subcategories && data.subcategories.length > 0) {
+                data.subcategories.forEach(sub => {
+                    subcategorySelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+                });
+            }
+            
+            subcategorySelect.disabled = false;
+            if (loader) loader.style.display = 'none';
+        })
+        .catch((error) => {
+            console.error('Subcategory loading error:', error);
+            subcategorySelect.innerHTML = '<option value="">Error loading subcategories</option>';
+            if (loader) loader.style.display = 'none';
+        });
+});
+    
+    // ========================================
+    // TERMS CHECKBOX VALIDATION
+    // ========================================
     termsCheckbox.addEventListener('change', function() {
         if (this.checked) {
             this.classList.remove('is-invalid');
@@ -1283,10 +1507,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // ========================================
+    // FORM SUBMISSION HANDLER
+    // ========================================
     function handleFormSubmit() {
         let isValid = true;
         let errors = [];
         
+        // First name validation
         const firstName = form.querySelector('[name="first_name"]');
         if (!firstName.value.trim()) {
             firstName.classList.add('is-invalid');
@@ -1294,6 +1522,7 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid = false;
         }
         
+        // Last name validation
         const lastName = form.querySelector('[name="last_name"]');
         if (!lastName.value.trim()) {
             lastName.classList.add('is-invalid');
@@ -1301,17 +1530,20 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid = false;
         }
         
+        // Email validation
         if (!validateEmail()) {
             errors.push('Valid business email is required');
             isValid = false;
         }
         
-        if (mobileField.value.length !== 10) {
-            mobileField.classList.add('is-invalid');
-            errors.push('Valid 10-digit mobile number is required');
+        // Mobile validation
+        if (!validateMobile()) {
+            const rule = getCurrentMobileRule();
+            errors.push(rule.message);
             isValid = false;
         }
         
+        // Job title validation
         const jobTitle = form.querySelector('[name="job_title"]');
         if (!jobTitle.value.trim()) {
             jobTitle.classList.add('is-invalid');
@@ -1319,6 +1551,7 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid = false;
         }
         
+        // Organization validation
         const organization = form.querySelector('[name="organization"]');
         if (!organization.value.trim()) {
             organization.classList.add('is-invalid');
@@ -1326,23 +1559,27 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid = false;
         }
         
+        // Category validation
         if (!categorySelect.value) {
             categorySelect.classList.add('is-invalid');
             errors.push('Business category is required');
             isValid = false;
         }
         
+        // Password validation
         if (password1.value.length < 8) {
             password1.classList.add('is-invalid');
             errors.push('Password must be at least 8 characters');
             isValid = false;
         }
         
+        // Password match validation
         if (!validatePasswordMatch()) {
             errors.push('Passwords must match');
             isValid = false;
         }
         
+        // Terms checkbox validation
         if (!termsCheckbox.checked) {
             termsCheckbox.classList.add('is-invalid');
             const errorMsg = termsCheckbox.closest('.form-check').querySelector('.invalid-feedback');
@@ -1361,7 +1598,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Create Account';
+            submitBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Sign Up';
             return;
         }
         
