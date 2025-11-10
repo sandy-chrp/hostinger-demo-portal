@@ -190,7 +190,7 @@
                                     {% if demo.file_type == 'webgl' %}
                                         <i class="fas fa-cube"></i>
                                     {% elif demo.file_type == 'lms' %}
-                                        <i class="fas fa-graduation-cap"></i>
+                                        <i class="fas fa-cube"></i>
                                     {% else %}
                                         <i class="fas fa-video"></i>
                                     {% endif %}
@@ -245,13 +245,13 @@
                         <div class="demo-actions">
                             <a href="{% url 'customers:demo_detail' demo.slug %}{% if demo.file_type == 'video' %}?autoplay=1{% endif %}" class="btn btn-primary btn-sm w-100">
                                 {% if demo.file_type == 'video' %}
-                                    <i class="fas fa-play me-1"></i>View Demo
+                                 View Demo
                                 {% elif demo.file_type == 'webgl' %}
-                                    <i class="fas fa-cube me-1"></i>View Demo
+                                    View Demo
                                 {% elif demo.file_type == 'lms' %}
-                                    <i class="fas fa-graduation-cap me-1"></i>View Demo
+                             View Demo
                                 {% else %}
-                                    <i class="fas fa-eye me-1"></i>View Demo
+                                  View Demo
                                 {% endif %}
                             </a>
                         </div>

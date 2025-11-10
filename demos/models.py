@@ -46,24 +46,32 @@ class DemoCategory(models.Model):
 
 
 def demo_video_path(instance, filename):
-    """Generate upload path for video files"""
-    return f'demos/videos/{instance.slug}/{filename}'
-
+    """Generate upload path for video files - AUTO CREATE DIRECTORY"""
+    upload_dir = f'demos/videos/{instance.slug}'
+    full_path = os.path.join(settings.MEDIA_ROOT, upload_dir)
+    os.makedirs(full_path, exist_ok=True)  # ✅ AUTO CREATE
+    return os.path.join(upload_dir, filename)
 
 def demo_webgl_path(instance, filename):
-    """Generate upload path for WebGL files"""
-    return f'demos/webgl/{instance.slug}/{filename}'
-
+    """Generate upload path for WebGL files - AUTO CREATE DIRECTORY"""
+    upload_dir = f'demos/webgl/{instance.slug}'
+    full_path = os.path.join(settings.MEDIA_ROOT, upload_dir)
+    os.makedirs(full_path, exist_ok=True)  # ✅ AUTO CREATE
+    return os.path.join(upload_dir, filename)
 
 def demo_lms_path(instance, filename):
-    """Generate upload path for LMS/SCORM files"""
-    return f'demos/lms/{instance.slug}/{filename}'
-
+    """Generate upload path for LMS/SCORM files - AUTO CREATE DIRECTORY"""
+    upload_dir = f'demos/lms/{instance.slug}'
+    full_path = os.path.join(settings.MEDIA_ROOT, upload_dir)
+    os.makedirs(full_path, exist_ok=True)  # ✅ AUTO CREATE
+    return os.path.join(upload_dir, filename)
 
 def demo_thumbnail_path(instance, filename):
-    """Generate upload path for thumbnail images"""
-    return f'demos/thumbnails/{instance.slug}/{filename}'
-
+    """Generate upload path for thumbnail images - AUTO CREATE DIRECTORY"""
+    upload_dir = f'demos/thumbnails/{instance.slug}'
+    full_path = os.path.join(settings.MEDIA_ROOT, upload_dir)
+    os.makedirs(full_path, exist_ok=True)  # ✅ AUTO CREATE
+    return os.path.join(upload_dir, filename)
 
 # ============================================================================
 # COMPLETE DEMO MODEL CLASS - CORRECTED VERSION
@@ -257,6 +265,9 @@ class Demo(models.Model):
                 counter += 1
             self.slug = slug
         
+        # ✅ NEW: Create extraction directories BEFORE save
+        self._ensure_extraction_directories()
+        
         # Check if file changed
         is_new = self.pk is None
         old_instance = None
@@ -285,7 +296,6 @@ class Demo(models.Model):
                 if self.webgl_file.name.endswith('.zip'):
                     try:
                         self._extract_webgl_zip()
-                        # ✅ Save extracted_path to database
                         Demo.objects.filter(pk=self.pk).update(
                             extracted_path=self.extracted_path
                         )
@@ -293,13 +303,12 @@ class Demo(models.Model):
                     except Exception as e:
                         print(f"❌ Error extracting WebGL: {e}")
             
-            # ✅ IMPROVED: LMS extraction with path saving
+            # LMS extraction
             elif self.file_type == 'lms' and self.lms_file:
                 if self.lms_file.name.endswith('.zip'):
                     try:
                         success = self._extract_lms_zip()
                         if success:
-                            # ✅ Save extracted_path to database
                             Demo.objects.filter(pk=self.pk).update(
                                 extracted_path=self.extracted_path
                             )
@@ -310,6 +319,28 @@ class Demo(models.Model):
                         print(f"❌ Error extracting LMS: {e}")
                         import traceback
                         traceback.print_exc()
+
+    def _ensure_extraction_directories(self):
+        """✅ NEW: Create extraction directories before file operations"""
+        if not self.slug:
+            return
+        
+        # Create extraction directories based on file type
+        if self.file_type == 'webgl':
+            extract_dir = os.path.join(
+                settings.MEDIA_ROOT,
+                'webgl_extracted',
+                f'demo_{self.slug}'
+            )
+            os.makedirs(extract_dir, exist_ok=True)
+            
+        elif self.file_type == 'lms':
+            extract_dir = os.path.join(
+                settings.MEDIA_ROOT,
+                'lms_extracted',
+                f'demo_{self.slug}'
+            )
+            os.makedirs(extract_dir, exist_ok=True)                        
 
     def _calculate_file_size(self):
         """Auto-calculate file size based on file type"""
