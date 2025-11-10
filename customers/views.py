@@ -58,51 +58,39 @@ def get_customer_context(user):
 
 @login_required
 def customer_dashboard(request):
-    """Customer main dashboard - WITH CATEGORY FILTER AND PAGINATION"""
+    """✅ FIXED: Customer main dashboard - Shows ALL featured demos to ALL customers"""
     if not request.user.is_approved:
         return redirect('accounts:pending_approval')
     
     context = get_customer_context(request.user)
     
-    # Get user's business category and subcategory
-    user_business_category = request.user.business_category
-    user_business_subcategory = request.user.business_subcategory
-    
-    # Get selected category from request
+    # Get selected category from request (for optional dropdown filtering)
     selected_category_id = request.GET.get('category', None)
     
     # Get all active business categories for the dropdown
     all_business_categories = BusinessCategory.objects.filter(is_active=True).order_by('name')
     
-    # Get featured demos with business category filtering
+    # ✅ Get ALL featured demos - NO restrictions
     featured_demos_query = Demo.objects.filter(
         is_active=True,
         is_featured=True
     ).prefetch_related(
         'target_business_categories',
-        'target_business_subcategories',
-        'target_customers'
+        'target_business_subcategories'
     ).order_by('-created_at')  # Latest first
     
-    # Filter by selected category if provided
+    # ✅ OPTIONAL: Filter by category only if user selects from dropdown
     if selected_category_id:
         try:
             selected_category = BusinessCategory.objects.get(id=selected_category_id)
-            # ✅ FIXED: Only filter by target_business_categories (removed primary_business_category)
             featured_demos_query = featured_demos_query.filter(
                 target_business_categories=selected_category
             ).distinct()
         except BusinessCategory.DoesNotExist:
             pass  # Ignore invalid category ID
     
-    # Filter by business categories and customer access
-    featured_demos = []
-    for demo in featured_demos_query:
-        # Check business category access
-        if demo.is_available_for_business(user_business_category, user_business_subcategory):
-            # Check customer access
-            if demo.can_customer_access(request.user):
-                featured_demos.append(demo)
+    # ✅ NO FILTERING - Convert queryset to list, all demos visible
+    featured_demos = list(featured_demos_query)
     
     # Pagination for featured demos
     paginator = Paginator(featured_demos, 12)  # 12 demos per page
@@ -132,8 +120,6 @@ def customer_dashboard(request):
     })
     
     return render(request, 'customers/dashboard.html', context)
-
-
 
 @login_required
 def browse_demos(request):
