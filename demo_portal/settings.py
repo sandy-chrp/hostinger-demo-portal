@@ -141,7 +141,7 @@ elif DATABASE_ENGINE == 'postgresql':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('POSTGRES_DB', 'demoportal'),
+            'NAME': os.getenv('POSTGRES_DB', 'local_demoportal'),
             'USER': os.getenv('POSTGRES_USER', 'demoportal_user'),
             'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
             'HOST': os.getenv('POSTGRES_HOST', 'db'),

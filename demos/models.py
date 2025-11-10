@@ -14,7 +14,6 @@ import shutil
 User = get_user_model()
 
 
-
 class DemoCategory(models.Model):
     """Categories for organizing demos"""
     
@@ -521,8 +520,9 @@ class Demo(models.Model):
         
         return default_icons.get(self.file_type, '/static/images/icons/default-icon.png')
 
+
     def get_webgl_index_url(self):
-        """Get URL to WebGL index.html or file"""
+        """✅ FIXED: Get URL to WebGL index.html or file"""
         from django.urls import reverse
         
         if self.file_type != 'webgl' or not self.webgl_file:
@@ -530,6 +530,7 @@ class Demo(models.Model):
         
         file_ext = os.path.splitext(self.webgl_file.name)[1].lower()
         
+        # If ZIP was extracted
         if file_ext == '.zip' and self.extracted_path:
             possible_index_files = [
                 'index.html',
@@ -540,6 +541,7 @@ class Demo(models.Model):
                 'Dist/index.html',
             ]
             
+            # Try known index file locations first
             for rel_path in possible_index_files:
                 full_path = os.path.join(
                     settings.MEDIA_ROOT, 
@@ -557,8 +559,9 @@ class Demo(models.Model):
                         })
                     except Exception as e:
                         print(f"❌ Error generating URL for {url_path}: {e}")
-                        return None
+                        continue
             
+            # Fallback: Search for ANY HTML file
             extracted_dir = os.path.join(settings.MEDIA_ROOT, self.extracted_path)
             
             if os.path.exists(extracted_dir):
@@ -568,28 +571,33 @@ class Demo(models.Model):
                             rel_path = os.path.relpath(
                                 os.path.join(root, file),
                                 extracted_dir
-                            )
-                            url_path = rel_path.replace('\\', '/')
+                            ).replace('\\', '/')
                             
                             try:
                                 return reverse('customers:serve_webgl_file', kwargs={
                                     'slug': self.slug,
-                                    'filepath': url_path
+                                    'filepath': rel_path
                                 })
                             except Exception as e:
                                 print(f"❌ Error generating URL: {e}")
-                                return None
+                                continue
+            
+            # ✅ NEW: Return None instead of empty string
+            print(f"⚠️ No HTML files found for WebGL demo: {self.title}")
+            return None
         
+        # Direct HTML file (not zipped)
         elif file_ext == '.html':
             return self.webgl_file.url
         
+        # 3D model files (.glb, .gltf)
         elif file_ext in ['.glb', '.gltf']:
             return self.webgl_file.url
         
         return None
-    
+
     def get_lms_index_url(self):
-        """✅ IMPROVED: Get URL to LMS/SCORM index.html with better detection"""
+        """✅ FIXED: Get URL to LMS/SCORM index.html"""
         from django.urls import reverse
         
         if self.file_type != 'lms' or not self.lms_file:
@@ -608,6 +616,7 @@ class Demo(models.Model):
                 'index_scorm.html',
             ]
             
+            # Try known index file locations first
             for rel_path in possible_index_files:
                 full_path = os.path.join(
                     settings.MEDIA_ROOT, 
@@ -619,15 +628,15 @@ class Demo(models.Model):
                     url_path = rel_path.replace('\\', '/')
                     
                     try:
-                        # Use the same serve function as WebGL
                         return reverse('customers:serve_webgl_file', kwargs={
                             'slug': self.slug,
                             'filepath': url_path
                         })
                     except Exception as e:
                         print(f"❌ Error generating LMS URL for {url_path}: {e}")
+                        continue
             
-            # Fallback: Search for any HTML file
+            # Fallback: Search for ANY HTML file
             extracted_dir = os.path.join(settings.MEDIA_ROOT, self.extracted_path)
             
             if os.path.exists(extracted_dir):
@@ -637,22 +646,20 @@ class Demo(models.Model):
                             rel_path = os.path.relpath(
                                 os.path.join(root, file),
                                 extracted_dir
-                            )
-                            url_path = rel_path.replace('\\', '/')
+                            ).replace('\\', '/')
                             
                             try:
                                 return reverse('customers:serve_webgl_file', kwargs={
                                     'slug': self.slug,
-                                    'filepath': url_path
+                                    'filepath': rel_path
                                 })
                             except Exception as e:
                                 print(f"❌ Error generating URL: {e}")
-                                
-                            # Return first HTML found
-                            break
-                    # Break outer loop too
-                    if url_path:
-                        break
+                                continue
+            
+            # ✅ NEW: Return None instead of empty string
+            print(f"⚠️ No HTML files found for LMS demo: {self.title}")
+            return None
         
         # Direct HTML file (not zipped)
         elif self.lms_file.name.endswith(('.html', '.htm')):

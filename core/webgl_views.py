@@ -410,7 +410,7 @@ def extract_webgl_zip(demo):
 @xframe_options_exempt
 def webgl_preview(request, demo_id):
     """
-    EXISTING: Admin WebGL preview with iframe embedding allowed
+    ✅ FIXED: Admin WebGL preview with correct URL generation
     """
     demo = get_object_or_404(Demo, id=demo_id, file_type='webgl')
     
@@ -456,12 +456,17 @@ def webgl_preview(request, demo_id):
     index_path = index_files[0]
     rel_path = index_path.relative_to(extract_path)
     
-    # Build serve URL
-    serve_url = f"/demo/webgl/{demo.slug}/{rel_path}"
+    # ✅ CRITICAL FIX: Use reverse() to generate correct URL
+    from django.urls import reverse
+    
+    serve_url = reverse('customers:serve_webgl_file', kwargs={
+        'slug': demo.slug,
+        'filepath': str(rel_path).replace('\\', '/')
+    })
     
     print(f"✅ Preview ready")
     print(f"   Index: {rel_path}")
-    print(f"   URL: {serve_url}")
+    print(f"   Serve URL: {serve_url}")
     print(f"{'='*60}\n")
     
     context = {
@@ -471,8 +476,6 @@ def webgl_preview(request, demo_id):
     }
     
     return render(request, 'admin/demos/webgl_preview.html', context)
-
-
 # ============================================================================
 # EXISTING FUNCTION: admin_universal_preview
 # ============================================================================

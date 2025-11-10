@@ -29,7 +29,8 @@ urlpatterns = [
     
     # ✅ 3. Demo feedback (specific route)
     path('demos/<slug:slug>/feedback/', views.demo_feedback_view, name='demo_feedback'),
-    
+    path('ajax/lms-tracking/', views.lms_tracking, name='lms_tracking'),
+
     # ✅ 4. Demo detail (LEAST SPECIFIC - must be last among demo routes)
     path('demos/<slug:slug>/', views.demo_detail, name='demo_detail'),
     

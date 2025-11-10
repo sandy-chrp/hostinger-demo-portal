@@ -77,7 +77,7 @@ def find_lms_entry_point(extract_dir):
 
 @login_required
 def lms_preview(request, demo_id):
-    """Admin LMS preview (matches video watch view structure)"""
+    """✅ FIXED: Admin LMS preview"""
     demo = get_object_or_404(Demo, id=demo_id, file_type='lms')
     
     if not demo.extracted_path or not os.path.exists(
@@ -99,7 +99,13 @@ def lms_preview(request, demo_id):
             'error': "No valid LMS entry point found"
         })
     
-    lms_url = f"/demo/lms/{demo.slug}/{entry_file}"
+    # ✅ CRITICAL FIX: Use reverse() for correct URL
+    from django.urls import reverse
+    
+    lms_url = reverse('customers:serve_webgl_file', kwargs={
+        'slug': demo.slug,
+        'filepath': entry_file
+    })
     
     context = {
         'demo': demo,
@@ -111,7 +117,6 @@ def lms_preview(request, demo_id):
     }
     
     return render(request, 'admin/demos/lms_preview.html', context)
-
 
 @login_required
 def lms_extraction_progress(request, demo_id):
