@@ -47,26 +47,30 @@ static_cdn/
 .env.staging
 
 # ============================================
-# DOCKER - LOCAL DEVELOPMENT
+# DOCKER & NGINX - SERVER CONFIGS
 # ============================================
+# Main configuration files (server-specific)
+docker-compose.yml
+nginx.conf
+
+# Override and local configs
 docker-compose.override.yml
 docker-compose.local.yml
+nginx.conf.backup
+nginx.conf.local
+nginx.conf.bak
 *.dockerignore
 
-# Docker volumes data (if any)
+# But allow example/template files
+!docker-compose.example.yml
+!nginx.example.conf
+
+# Docker volumes data
 postgres_data/
 redis_data/
 docker_volumes/
 
-# ============================================
-# NGINX - LOCAL CONFIGURATION
-# ============================================
-nginx.conf.backup
-nginx.conf.local
-nginx.conf.bak
-*.conf.bak
-
-# Nginx logs if mounted locally
+# Nginx logs
 nginx_logs/
 logs/nginx/
 
