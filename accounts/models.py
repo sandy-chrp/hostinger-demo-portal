@@ -237,9 +237,9 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True, validators=[validate_business_email], verbose_name="Office Email")
     
     # Contact Information
-    phone_validator = RegexValidator(regex=r'^\d{10}$', message="Phone number must be exactly 10 digits.")
+    phone_validator = RegexValidator(regex=r'^\d{7,15}$', message="Phone number must be between 7-15 digits.")  
     mobile = models.CharField(validators=[phone_validator], max_length=15, verbose_name="Contact Number")
-    
+        
     COUNTRY_CHOICES = [
         ('+93', '🇦🇫 Afghanistan (+93)'),
         ('+355', '🇦🇱 Albania (+355)'),

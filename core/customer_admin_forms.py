@@ -60,7 +60,7 @@ def validate_mobile_for_country(mobile, country_code):
             )
     
     return clean_mobile
-
+    
 class CustomerCreateForm(forms.ModelForm):
     """Form for admin to create new customers"""
     

@@ -4,6 +4,9 @@
 {% block page_title %}Create Customer{% endblock %}
 
 {% block extra_css %}
+<!-- jQuery (Required for Select2) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
 <!-- Select2 CSS -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
@@ -212,27 +215,28 @@
     </h6>
 </div>
 <div class="row">
-<div class="col-md-3 mb-2">
-    <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">
-        Country Code <span style="color: #dc3545; font-weight: 600;">*</span>
-    </label>
-    {{ form.country_code }}
-    <small class="text-muted d-block mt-1" style="font-size: 0.675rem; font-weight: 400;">
-        <i class="fas fa-globe"></i> Search or select country code
-    </small>
-    <div id="countryCodeMsg" style="font-size: 0.675rem; margin-top: 0.25rem; display: none; font-weight: 500;"></div>
-</div>
+    <div class="col-md-3 mb-2">
+        <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">
+            Country Code <span style="color: #dc3545; font-weight: 600;">*</span>
+        </label>
+        {{ form.country_code }}
+        <small class="text-muted d-block mt-1" style="font-size: 0.675rem; font-weight: 400;">
+            <i class="fas fa-globe"></i> Search or select country code
+        </small>
+        <div id="countryCodeMsg" style="font-size: 0.675rem; margin-top: 0.25rem; display: none; font-weight: 500;"></div>
+    </div>
     <div class="col-md-9 mb-2">
         <label class="form-label" style="font-weight: 500; color: #495057; margin-bottom: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', 'Inter', sans-serif;">
             Mobile Number <span style="color: #dc3545; font-weight: 600;">*</span>
         </label>
         {{ form.mobile }}
-        <small class="text-muted d-block mt-1" style="font-size: 0.675rem; font-weight: 400;">
+        <small class="text-muted d-block mt-1" style="font-size: 0.675rem; font-weight: 400;" id="mobileHintText">
             <i class="fas fa-info-circle"></i> Enter mobile number (without country code)
         </small>
         <div id="mobileMsg" style="font-size: 0.675rem; margin-top: 0.25rem; display: none; font-weight: 500;"></div>
     </div>
 </div>
+
             <!-- Password -->
             <div style="padding: 0.25rem 0; margin: 0.5rem 0 0.25rem 0; border-bottom: 1.5px solid #e9ecef;">
                 <h6 style="font-size: 0.75rem; font-weight: 600; color: #087fc2; margin: 0; display: flex; align-items: center; gap: 0.375rem; font-family: 'Poppins', 'Inter', sans-serif;">
@@ -303,6 +307,7 @@
         </form>
     </div>
 </div>
+
 <style>
 /* Minimal CSS - only for dynamic states */
 .validation-msg.show { display: block !important; }
@@ -801,7 +806,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             
-            fetch('/admin/customers/send-otp/', {
+            fetch('{% url "core:admin_send_otp" %}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -861,7 +866,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             
-            fetch('/admin/customers/verify-otp/', {
+            fetch('{% url "core:admin_verify_otp" %}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -958,6 +963,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // ✅ MOBILE VALIDATION (COUNTRY-AWARE)
     // ========================================
     if (mobile && countryCode) {
+        // ✅ Update hint text when country changes
+        const updateMobileHint = function() {
+            const selectedCountry = (typeof $ !== 'undefined' && $(countryCode).data('select2')) 
+                ? $(countryCode).val() 
+                : countryCode.value || '+91';
+            
+            const format = getMobileFormat(selectedCountry);
+            const hintElement = document.getElementById('mobileHintText');
+            
+            if (hintElement) {
+                if (format.min === format.max) {
+                    hintElement.innerHTML = `<i class="fas fa-info-circle"></i> Enter ${format.min}-digit mobile number for ${format.name}`;
+                } else {
+                    hintElement.innerHTML = `<i class="fas fa-info-circle"></i> Enter ${format.min}-${format.max} digit mobile number for ${format.name}`;
+                }
+            }
+        };
+        
         // ✅ Input handler - Dynamic max length based on country
         mobile.addEventListener('input', function() {
             const selectedCountry = (typeof $ !== 'undefined' && $(countryCode).data('select2')) 
@@ -1000,35 +1023,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // ✅ Update validation when country code changes
-        const updateMobileValidation = function() {
+        if (typeof $ !== 'undefined') {
+            $(countryCode).on('select2:select', function() {
+                updateMobileHint();
+                if (mobile.value.trim()) {
+                    mobile.dispatchEvent(new Event('blur'));
+                }
+            });
+        }
+        
+        countryCode.addEventListener('change', function() {
+            updateMobileHint();
             if (mobile.value.trim()) {
                 mobile.dispatchEvent(new Event('blur'));
             }
-            updateMobileHint();
-        };
-        
-        if (typeof $ !== 'undefined') {
-            $(countryCode).on('select2:select', updateMobileValidation);
-        }
-        countryCode.addEventListener('change', updateMobileValidation);
-        
-        // ✅ Update mobile hint text dynamically
-        const updateMobileHint = function() {
-            const selectedCountry = (typeof $ !== 'undefined' && $(countryCode).data('select2')) 
-                ? $(countryCode).val() 
-                : countryCode.value || '+91';
-            
-            const format = getMobileFormat(selectedCountry);
-            const hintElement = document.querySelector('#id_mobile').nextElementSibling;
-            
-            if (hintElement && hintElement.tagName === 'SMALL') {
-                if (format.min === format.max) {
-                    hintElement.innerHTML = `<i class="fas fa-info-circle"></i> Enter ${format.min}-digit mobile number for ${format.name}`;
-                } else {
-                    hintElement.innerHTML = `<i class="fas fa-info-circle"></i> Enter ${format.min}-${format.max} digit mobile number for ${format.name}`;
-                }
-            }
-        };
+        });
         
         // Set initial hint
         updateMobileHint();
@@ -1159,6 +1168,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // ========================================
     // CATEGORY/SUBCATEGORY
     // ========================================
+        // ========================================
+    // CATEGORY/SUBCATEGORY
+    // ========================================
     if (category && subcategory) {
         console.log('🔧 Category/Subcategory: Initializing');
         
@@ -1177,7 +1189,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const loader = document.getElementById('subcategoryLoader');
             if (loader) loader.style.display = 'inline-block';
             
-            const url = '/auth/ajax/get-subcategories/?category_id=' + categoryId;
+            const url = '{% url "core:get_subcategories" %}?category_id=' + categoryId;
             console.log('🌐 Fetching from:', url);
             
             fetch(url)

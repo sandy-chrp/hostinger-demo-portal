@@ -613,15 +613,15 @@ small.text-muted {
                         <label for="id_country_code" class="form-label">Country Code <span class="text-danger">*</span></label>
                         {{ form.country_code }}
                         <small class="text-muted d-block mt-1" style="font-size: 0.675rem; font-weight: 400;">
-                            <i class="fas fa-globe"></i> Default: +91 (India)
+                            <i class="fas fa-globe"></i> Search or select
                         </small>
                         <div id="countryCodeMsg" class="validation-msg"></div>
                     </div>
                     <div class="col-md-9 mb-2">
                         <label for="id_mobile" class="form-label">Mobile Number <span class="text-danger">*</span></label>
                         {{ form.mobile }}
-                        <small class="text-muted d-block mt-1" style="font-size: 0.675rem; font-weight: 400;">
-                            <i class="fas fa-info-circle"></i> 10-digit mobile number (without country code)
+                        <small class="text-muted d-block mt-1" style="font-size: 0.675rem; font-weight: 400;" id="mobileHintText">
+                            <i class="fas fa-info-circle"></i> Enter mobile number (without country code)
                         </small>
                         <div id="mobileMsg" class="validation-msg"></div>
                     </div>
@@ -1078,6 +1078,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // ✅ MOBILE VALIDATION (COUNTRY-AWARE)
     // ========================================
     if (mobile && countryCode) {
+        // ✅ Update hint text when country changes
+        const updateMobileHint = function() {
+            const selectedCountry = (typeof $ !== 'undefined' && $(countryCode).data('select2')) 
+                ? $(countryCode).val() 
+                : countryCode.value || '+91';
+            
+            const format = getMobileFormat(selectedCountry);
+            const hintElement = document.getElementById('mobileHintText');
+            
+            if (hintElement) {
+                if (format.min === format.max) {
+                    hintElement.innerHTML = `<i class="fas fa-info-circle"></i> Enter ${format.min}-digit mobile number for ${format.name}`;
+                } else {
+                    hintElement.innerHTML = `<i class="fas fa-info-circle"></i> Enter ${format.min}-${format.max} digit mobile number for ${format.name}`;
+                }
+            }
+        };
+        
         // ✅ Input handler - Dynamic max length based on country
         mobile.addEventListener('input', function() {
             const selectedCountry = (typeof $ !== 'undefined' && $(countryCode).data('select2')) 
@@ -1120,35 +1138,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // ✅ Update validation when country code changes
-        const updateMobileValidation = function() {
+        if (typeof $ !== 'undefined') {
+            $(countryCode).on('select2:select', function() {
+                updateMobileHint();
+                if (mobile.value.trim()) {
+                    mobile.dispatchEvent(new Event('blur'));
+                }
+            });
+        }
+        
+        countryCode.addEventListener('change', function() {
+            updateMobileHint();
             if (mobile.value.trim()) {
                 mobile.dispatchEvent(new Event('blur'));
             }
-            updateMobileHint();
-        };
-        
-        if (typeof $ !== 'undefined') {
-            $(countryCode).on('select2:select', updateMobileValidation);
-        }
-        countryCode.addEventListener('change', updateMobileValidation);
-        
-        // ✅ Update mobile hint text dynamically
-        const updateMobileHint = function() {
-            const selectedCountry = (typeof $ !== 'undefined' && $(countryCode).data('select2')) 
-                ? $(countryCode).val() 
-                : countryCode.value || '+91';
-            
-            const format = getMobileFormat(selectedCountry);
-            const hintElement = document.querySelector('#id_mobile').nextElementSibling;
-            
-            if (hintElement && hintElement.tagName === 'SMALL') {
-                if (format.min === format.max) {
-                    hintElement.innerHTML = `<i class="fas fa-info-circle"></i> Enter ${format.min}-digit mobile number for ${format.name}`;
-                } else {
-                    hintElement.innerHTML = `<i class="fas fa-info-circle"></i> Enter ${format.min}-${format.max} digit mobile number for ${format.name}`;
-                }
-            }
-        };
+        });
         
         // Set initial hint
         updateMobileHint();
@@ -1172,7 +1176,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const loader = document.getElementById('subcategoryLoader');
             if (loader) loader.style.display = 'inline-block';
             
-            fetch(`/auth/ajax/get-subcategories/?category_id=${categoryId}`)
+            fetch('{% url "core:get_subcategories" %}?category_id=' + categoryId)
                 .then(res => res.json())
                 .then(data => {
                     subcategory.innerHTML = '<option value="">Select subcategory</option>';
