@@ -2,7 +2,7 @@
 
 {% block title %}Welcome to Demo Portal{% endblock %}
 
-{% block preheader %}Your account has been created. Set your password to get started.{% endblock %}
+{% block preheader %}Your account has been created. Login credentials included.{% endblock %}
 
 {% block content %}
 <!-- Welcome Icon -->
@@ -57,18 +57,43 @@
                 </tr>
                 <tr>
                     <td style="color: #1e3a8a !important; font-size: 14px; padding: 5px 0; width: 35%; mso-line-height-rule: exactly; line-height: 20px;"><strong style="color: #1e3a8a !important;">Organization:</strong></td>
-                    <td style="color: #1e3a8a !important; font-size: 14px; padding: 5px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ user.organization }}</td>
+                    <td style="color: #1e3a8a !important; font-size: 14px; padding: 5px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ user.organization|default:"Not specified" }}</td>
                 </tr>
                 <tr>
                     <td style="color: #1e3a8a !important; font-size: 14px; padding: 5px 0; width: 35%; mso-line-height-rule: exactly; line-height: 20px;"><strong style="color: #1e3a8a !important;">Job Title:</strong></td>
-                    <td style="color: #1e3a8a !important; font-size: 14px; padding: 5px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ user.job_title }}</td>
+                    <td style="color: #1e3a8a !important; font-size: 14px; padding: 5px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ user.job_title|default:"Not specified" }}</td>
                 </tr>
             </table>
         </td>
     </tr>
 </table>
 
-<!-- Important Notice -->
+<!-- ✅ LOGIN CREDENTIALS BOX (NEW) -->
+{% if plain_password %}
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ecfdf5" style="background-color: #ecfdf5; border-left: 5px solid #10b981; border-radius: 6px; margin: 0 0 25px 0;">
+    <tr>
+        <td style="padding: 20px;">
+            <p style="color: #065f46 !important; font-size: 14px; margin: 0 0 15px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 20px;">
+                🔐 Your Login Credentials:
+            </p>
+            <table width="100%" cellpadding="5" cellspacing="0" border="0">
+                <tr>
+                    <td style="color: #065f46 !important; font-size: 14px; padding: 5px 0; width: 35%; mso-line-height-rule: exactly; line-height: 20px;"><strong style="color: #065f46 !important;">Email:</strong></td>
+                    <td style="color: #065f46 !important; font-size: 14px; padding: 5px 0; mso-line-height-rule: exactly; line-height: 20px;">{{ user.email }}</td>
+                </tr>
+                <tr>
+                    <td style="color: #065f46 !important; font-size: 14px; padding: 5px 0; width: 35%; mso-line-height-rule: exactly; line-height: 20px;"><strong style="color: #065f46 !important;">Password:</strong></td>
+                    <td style="color: #065f46 !important; font-size: 14px; padding: 5px 0; font-family: 'Courier New', monospace; font-weight: 600; mso-line-height-rule: exactly; line-height: 20px;">{{ plain_password }}</td>
+                </tr>
+            </table>
+            <p style="color: #047857 !important; font-size: 12px; margin: 15px 0 0 0; font-weight: 500; mso-line-height-rule: exactly; line-height: 18px;">
+                ⚠️ <strong>Security Tip:</strong> Change your password after first login for security.
+            </p>
+        </td>
+    </tr>
+</table>
+{% else %}
+<!-- Important Notice (If no password provided) -->
 <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#fff3cd" style="background-color: #fff3cd; border-left: 5px solid #f59e0b; border-radius: 6px; margin: 0 0 25px 0;">
     <tr>
         <td style="padding: 18px 20px;">
@@ -78,12 +103,13 @@
         </td>
     </tr>
 </table>
+{% endif %}
 
 <!-- Next Steps -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ecfdf5" style="background-color: #ecfdf5; border-radius: 10px; margin: 0 0 25px 0;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f0f9ff" style="background-color: #f0f9ff; border-radius: 10px; margin: 0 0 25px 0;">
     <tr>
         <td style="padding: 20px;">
-            <p style="color: #065f46 !important; font-size: 15px; margin: 0 0 15px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 22px;">
+            <p style="color: #1e3a8a !important; font-size: 15px; margin: 0 0 15px 0; font-weight: 600; mso-line-height-rule: exactly; line-height: 22px;">
                 🚀 Getting Started:
             </p>
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -92,10 +118,10 @@
                         <table cellpadding="0" cellspacing="0" border="0">
                             <tr>
                                 <td style="padding-right: 10px; vertical-align: top; width: 30px;">
-                                    <span style="color: #10b981 !important; font-size: 18px; font-weight: 600;">1.</span>
+                                    <span style="color: #087fc2 !important; font-size: 18px; font-weight: 600;">1.</span>
                                 </td>
                                 <td>
-                                    <span style="color: #065f46 !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">Visit the login page</span>
+                                    <span style="color: #1e3a8a !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">Click the login button below</span>
                                 </td>
                             </tr>
                         </table>
@@ -106,10 +132,10 @@
                         <table cellpadding="0" cellspacing="0" border="0">
                             <tr>
                                 <td style="padding-right: 10px; vertical-align: top; width: 30px;">
-                                    <span style="color: #10b981 !important; font-size: 18px; font-weight: 600;">2.</span>
+                                    <span style="color: #087fc2 !important; font-size: 18px; font-weight: 600;">2.</span>
                                 </td>
                                 <td>
-                                    <span style="color: #065f46 !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">Click "Forgot Password" to set your password</span>
+                                    <span style="color: #1e3a8a !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">Enter your email and password</span>
                                 </td>
                             </tr>
                         </table>
@@ -120,24 +146,10 @@
                         <table cellpadding="0" cellspacing="0" border="0">
                             <tr>
                                 <td style="padding-right: 10px; vertical-align: top; width: 30px;">
-                                    <span style="color: #10b981 !important; font-size: 18px; font-weight: 600;">3.</span>
+                                    <span style="color: #087fc2 !important; font-size: 18px; font-weight: 600;">3.</span>
                                 </td>
                                 <td>
-                                    <span style="color: #065f46 !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">Check your email for password reset link</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px 0;">
-                        <table cellpadding="0" cellspacing="0" border="0">
-                            <tr>
-                                <td style="padding-right: 10px; vertical-align: top; width: 30px;">
-                                    <span style="color: #10b981 !important; font-size: 18px; font-weight: 600;">4.</span>
-                                </td>
-                                <td>
-                                    <span style="color: #065f46 !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">Set your password and sign in</span>
+                                    <span style="color: #1e3a8a !important; font-size: 14px; mso-line-height-rule: exactly; line-height: 20px;">Explore demos and request live sessions</span>
                                 </td>
                             </tr>
                         </table>
@@ -155,7 +167,7 @@
             <!--[if mso]>
             <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ login_url }}" style="height:50px;v-text-anchor:middle;width:220px;" arcsize="20%" strokecolor="#087fc2" fillcolor="#087fc2">
             <w:anchorlock/>
-            <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:600;">🔐 Go to Login Page</center>
+            <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:600;">🔐 Sign In Now</center>
             </v:roundrect>
             <![endif]-->
             <!--[if !mso]><!-->
@@ -163,7 +175,7 @@
                 <tr>
                     <td>
                         <a href="{{ login_url }}" style="display: inline-block; color: #ffffff !important; text-decoration: none; padding: 16px 40px; font-size: 16px; font-weight: 600; mso-line-height-rule: exactly; line-height: 24px;">
-                            🔐 Go to Login Page
+                            🔐 Sign In Now
                         </a>
                     </td>
                 </tr>

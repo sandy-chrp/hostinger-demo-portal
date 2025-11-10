@@ -274,31 +274,21 @@ def save_column_preferences(request):
 @permission_required('add_customer')
 @user_passes_test(is_admin)
 def admin_create_customer(request):
-    """Admin view for creating new customer - FIXED WITH OTP EMAIL"""
+    """Admin view for creating new customer - WITH PASSWORD IN EMAIL"""
     
     if request.method == 'POST':
         form = CustomerCreateForm(request.POST)
-        
-        # ✅ DEBUG: Log form data
-        print(f"\n{'='*60}")
-        print(f"📝 FORM SUBMISSION")
-        print(f"   Email: {request.POST.get('email')}")
-        print(f"   Skip Validation: {request.POST.get('skip_email_validation')}")
-        print(f"   Form is valid: {form.is_valid()}")
-        
-        if not form.is_valid():
-            print(f"❌ FORM ERRORS:")
-            for field, errors in form.errors.items():
-                print(f"   {field}: {errors}")
-        print(f"{'='*60}\n")
         
         if form.is_valid():
             try:
                 email = form.cleaned_data['email']
                 
+                # ✅ GET PLAIN PASSWORD BEFORE HASHING
+                plain_password = form.cleaned_data['password']
+                
                 # Create customer
                 customer = form.save(commit=False)
-                customer.is_email_verified = True  # Admin creates, so auto-verify
+                customer.is_email_verified = True
                 customer.is_approved = form.cleaned_data.get('is_approved', True)
                 customer.is_active = True
                 customer.save()
@@ -307,6 +297,7 @@ def admin_create_customer(request):
                 print(f"✅ CUSTOMER CREATED")
                 print(f"   Email: {customer.email}")
                 print(f"   Name: {customer.full_name}")
+                print(f"   Plain Password: {plain_password}")  # ✅ For debugging
                 print(f"{'='*60}\n")
                 
                 # Send welcome email if enabled
@@ -314,30 +305,24 @@ def admin_create_customer(request):
                 
                 if send_welcome_email:
                     try:
+                        # ✅ PASS PLAIN PASSWORD TO EMAIL FUNCTION
                         result = send_customer_welcome_email_with_validation(
                             customer, 
                             request.user,
-                            request
+                            request,
+                            plain_password=plain_password  # ✅ NEW PARAMETER
                         )
                         
                         if result['success']:
                             messages.success(
                                 request, 
-                                f'✅ Customer created! Welcome email sent to {customer.email}'
+                                f'✅ Customer created! Welcome email with login credentials sent to {customer.email}'
                             )
                         else:
-                            if result['error'] == 'invalid_recipient':
-                                messages.warning(
-                                    request,
-                                    f'⚠️ Customer created but email "{customer.email}" does not exist. '
-                                    f'Please verify the email address with customer.'
-                                )
-                            else:
-                                messages.warning(
-                                    request,
-                                    f'⚠️ Customer created but welcome email failed to send. '
-                                    f'Error: {result.get("error", "Unknown")}'
-                                )
+                            messages.warning(
+                                request,
+                                f'⚠️ Customer created but email failed. Error: {result.get("error", "Unknown")}'
+                            )
                     except Exception as e:
                         print(f"❌ Email error: {e}")
                         messages.warning(
@@ -358,7 +343,6 @@ def admin_create_customer(request):
                 traceback.print_exc()
                 messages.error(request, f'Error creating customer: {str(e)}')
         else:
-            # ✅ IMPROVED: Show specific errors to user
             error_messages = []
             for field, errors in form.errors.items():
                 for error in errors:
@@ -375,7 +359,6 @@ def admin_create_customer(request):
         'form': form,
         'title': 'Create New Customer'
     })
-
 
 @login_required
 @user_passes_test(is_admin)
@@ -1580,8 +1563,7 @@ Need Help?
         print(f"❌ Error: {e}\n")
         return False
 
-
-def send_customer_welcome_email_with_validation(customer, created_by, request=None):
+def send_customer_welcome_email_with_validation(customer, created_by, request=None, plain_password=None):
     """
     Send welcome email to admin-created customer using HTML template
     
@@ -1589,6 +1571,7 @@ def send_customer_welcome_email_with_validation(customer, created_by, request=No
         customer: User instance
         created_by: Admin user who created the account
         request: HttpRequest instance (optional)
+        plain_password: Plain text password (optional) - ✅ NEW PARAMETER
     """
     try:
         # Build login URL
@@ -1600,10 +1583,11 @@ def send_customer_welcome_email_with_validation(customer, created_by, request=No
         
         subject = "Welcome to Demo Portal - CHRP India"
         
-        # Context for template
+        # ✅ Context with plain password
         context = {
             'user': customer,
             'login_url': login_url,
+            'plain_password': plain_password,  # ✅ NEW FIELD
             'year': timezone.now().year,
         }
         
@@ -1615,6 +1599,8 @@ def send_customer_welcome_email_with_validation(customer, created_by, request=No
             html_content = None
         
         # Plain text fallback
+        password_text = f"\nPassword: {plain_password}\n" if plain_password else "\nPlease use 'Forgot Password' to set your password.\n"
+        
         text_content = f"""
 CHRP India - Demo Portal
 Welcome!
@@ -1629,11 +1615,12 @@ Account Details:
 • Organization: {customer.organization}
 • Job Title: {customer.job_title}
 
+Login Credentials:
+• Email: {customer.email}{password_text}
 Getting Started:
 1. Visit the login page: {login_url}
-2. Click "Forgot Password" to set your password
-3. Check your email for password reset link
-4. Set your password and sign in
+2. Enter your email and password
+3. Explore demos and request live sessions
 
 Need Help?
 📧 reach@chrp-india.com
@@ -1643,9 +1630,10 @@ Need Help?
 """
         
         print("\n" + "="*60)
-        print("📧 WELCOME EMAIL")
+        print("📧 WELCOME EMAIL WITH CREDENTIALS")
         print(f"To: {customer.email}")
         print(f"Name: {customer.full_name}")
+        print(f"Password Included: {'Yes' if plain_password else 'No'}")
         print("="*60 + "\n")
         
         # Send email
@@ -1661,7 +1649,7 @@ Need Help?
         
         email_msg.send(fail_silently=False)
         
-        print(f"✅ Welcome email sent\n")
+        print(f"✅ Welcome email with credentials sent\n")
         return {'success': True, 'error': None}
         
     except SMTPException as e:
@@ -1670,8 +1658,6 @@ Need Help?
         
         if "550" in error_msg or "recipient" in error_msg.lower():
             return {'success': False, 'error': 'invalid_recipient'}
-        elif "authentication" in error_msg.lower():
-            return {'success': False, 'error': 'auth_failed'}
         else:
             return {'success': False, 'error': 'smtp_error'}
     

@@ -79,7 +79,9 @@ class SignInForm(forms.Form):
         """Validate email format"""
         email = self.cleaned_data.get('email')
         if email:
-            domain = email.split('@')[1].lower()
+            # Convert to lowercase for case-insensitive login
+            email = email.lower().strip()
+            domain = email.split('@')[1]
             blocked_domains = getattr(settings, 'BLOCKED_EMAIL_DOMAINS', [])
             
             if domain in blocked_domains:
