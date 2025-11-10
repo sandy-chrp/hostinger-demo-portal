@@ -238,7 +238,7 @@ class CustomUser(AbstractUser):
     
     # Contact Information
     phone_validator = RegexValidator(regex=r'^\d{10}$', message="Phone number must be exactly 10 digits.")
-    mobile = models.CharField(validators=[phone_validator], max_length=10, verbose_name="Contact Number")
+    mobile = models.CharField(validators=[phone_validator], max_length=15, verbose_name="Contact Number")
     
     COUNTRY_CHOICES = [
         ('+93', '🇦🇫 Afghanistan (+93)'),
@@ -686,6 +686,17 @@ class CustomUser(AbstractUser):
             raise ValidationError({
                 'role': 'Employees must be assigned a role.'
             })
+
+        if self.mobile:
+            clean_mobile = re.sub(r'[^\d]', '', self.mobile)
+            if not clean_mobile.isdigit():
+                raise ValidationError({'mobile': 'Mobile number must contain only digits'})
+            
+            if len(clean_mobile) < 7 or len(clean_mobile) > 15:
+                raise ValidationError({'mobile': 'Mobile number must be between 7-15 digits'})
+            
+            self.mobile = clean_mobile
+            
     # ==========================================
     # RBAC METHODS
     # ==========================================

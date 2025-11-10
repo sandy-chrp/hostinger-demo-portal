@@ -10,7 +10,56 @@ User = get_user_model()
 # Add these imports at top
 from accounts.models import BusinessCategory, BusinessSubCategory
 
-# Update CustomerCreateForm class
+COUNTRY_MOBILE_FORMATS = {
+    '+1': {'min': 10, 'max': 10, 'name': 'USA/Canada'},
+    '+44': {'min': 10, 'max': 10, 'name': 'UK'},
+    '+91': {'min': 10, 'max': 10, 'name': 'India'},
+    '+86': {'min': 11, 'max': 11, 'name': 'China'},
+    '+61': {'min': 9, 'max': 9, 'name': 'Australia'},
+    '+971': {'min': 9, 'max': 9, 'name': 'UAE'},
+    '+65': {'min': 8, 'max': 8, 'name': 'Singapore'},
+    '+81': {'min': 10, 'max': 10, 'name': 'Japan'},
+    '+49': {'min': 10, 'max': 11, 'name': 'Germany'},
+    '+33': {'min': 9, 'max': 9, 'name': 'France'},
+    '+92': {'min': 10, 'max': 10, 'name': 'Pakistan'},
+    '+880': {'min': 10, 'max': 10, 'name': 'Bangladesh'},
+    '+94': {'min': 9, 'max': 9, 'name': 'Sri Lanka'},
+}
+
+def validate_mobile_for_country(mobile, country_code):
+    """Validate mobile number based on country code"""
+    # Remove any spaces, dashes, or special characters
+    clean_mobile = re.sub(r'[^\d]', '', mobile)
+    
+    # Get country format requirements
+    country_format = COUNTRY_MOBILE_FORMATS.get(
+        country_code, 
+        {'min': 7, 'max': 15, 'name': 'International'}
+    )
+    
+    min_length = country_format['min']
+    max_length = country_format['max']
+    country_name = country_format['name']
+    
+    # Check if only digits
+    if not clean_mobile:
+        raise ValidationError('Mobile number is required.')
+    
+    if not clean_mobile.isdigit():
+        raise ValidationError('Mobile number must contain only digits.')
+    
+    # Check length
+    if len(clean_mobile) < min_length or len(clean_mobile) > max_length:
+        if min_length == max_length:
+            raise ValidationError(
+                f'Mobile number for {country_name} ({country_code}) must be exactly {min_length} digits.'
+            )
+        else:
+            raise ValidationError(
+                f'Mobile number for {country_name} ({country_code}) must be between {min_length}-{max_length} digits.'
+            )
+    
+    return clean_mobile
 
 class CustomerCreateForm(forms.ModelForm):
     """Form for admin to create new customers"""
@@ -110,8 +159,8 @@ class CustomerCreateForm(forms.ModelForm):
             }),
             'mobile': forms.TextInput(attrs={
                 'class': 'form-control',
-                'pattern': '[0-9]{10}',
-                'maxlength': '10',
+                'pattern': '[0-9]{7,15}',
+                'maxlength': '15',
                 'required': True,
                 'id': 'id_mobile',
                 'placeholder': '9876543210'
@@ -218,19 +267,19 @@ class CustomerCreateForm(forms.ModelForm):
         return email
     
     def clean_mobile(self):
-        """Validate mobile number"""
+        """Validate mobile number based on country code"""
         mobile = self.cleaned_data.get('mobile', '').strip()
+        country_code = self.data.get('country_code', '+91')
         
         if not mobile:
             raise ValidationError('Mobile number is required.')
         
-        # Remove any non-digit characters
-        mobile = re.sub(r'\D', '', mobile)
-        
-        if len(mobile) != 10:
-            raise ValidationError('Mobile number must be exactly 10 digits.')
-        
-        return mobile
+        # Validate using country-specific rules
+        try:
+            clean_mobile = validate_mobile_for_country(mobile, country_code)
+            return clean_mobile
+        except ValidationError as e:
+            raise e
     
     def clean_country_code(self):
         """Validate country code"""
@@ -382,8 +431,8 @@ class CustomerEditForm(forms.ModelForm):
             }),
             'mobile': forms.TextInput(attrs={
                 'class': 'form-control',
-                'pattern': '[0-9]{10}',
-                'maxlength': '10',
+                'pattern': '[0-9]{7,15}',
+                'maxlength': '15',
                 'id': 'id_mobile',
                 'placeholder': '9876543210'
             }),
@@ -501,18 +550,19 @@ class CustomerEditForm(forms.ModelForm):
         return email
     
     def clean_mobile(self):
-        """Validate mobile number"""
+        """Validate mobile number based on country code"""
         mobile = self.cleaned_data.get('mobile', '').strip()
+        country_code = self.data.get('country_code') or self.instance.country_code or '+91'
         
         if not mobile:
             raise ValidationError('Mobile number is required.')
         
-        mobile = re.sub(r'\D', '', mobile)
-        
-        if len(mobile) != 10:
-            raise ValidationError('Mobile number must be exactly 10 digits.')
-        
-        return mobile
+        # Validate using country-specific rules
+        try:
+            clean_mobile = validate_mobile_for_country(mobile, country_code)
+            return clean_mobile
+        except ValidationError as e:
+            raise e
     
     def clean_country_code(self):
         """Validate country code"""

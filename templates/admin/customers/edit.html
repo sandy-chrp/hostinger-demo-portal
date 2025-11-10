@@ -770,6 +770,48 @@ document.addEventListener('DOMContentLoaded', function() {
     const commonPasswords = ['password', '12345678', 'qwerty', 'abc123', 'password123'];
     
     // ========================================
+    // ✅ COUNTRY-SPECIFIC MOBILE FORMATS
+    // ========================================
+    const COUNTRY_MOBILE_FORMATS = {
+        '+1': { min: 10, max: 10, name: 'USA/Canada' },
+        '+44': { min: 10, max: 10, name: 'UK' },
+        '+91': { min: 10, max: 10, name: 'India' },
+        '+86': { min: 11, max: 11, name: 'China' },
+        '+61': { min: 9, max: 9, name: 'Australia' },
+        '+971': { min: 9, max: 9, name: 'UAE' },
+        '+65': { min: 8, max: 8, name: 'Singapore' },
+        '+81': { min: 10, max: 10, name: 'Japan' },
+        '+49': { min: 10, max: 11, name: 'Germany' },
+        '+33': { min: 9, max: 9, name: 'France' },
+        '+92': { min: 10, max: 10, name: 'Pakistan' },
+        '+880': { min: 10, max: 10, name: 'Bangladesh' },
+        '+94': { min: 9, max: 9, name: 'Sri Lanka' },
+        '+234': { min: 10, max: 10, name: 'Nigeria' },
+        '+27': { min: 9, max: 9, name: 'South Africa' },
+        '+20': { min: 10, max: 10, name: 'Egypt' },
+        '+254': { min: 9, max: 10, name: 'Kenya' },
+        '+55': { min: 10, max: 11, name: 'Brazil' },
+        '+52': { min: 10, max: 10, name: 'Mexico' },
+        '+54': { min: 10, max: 10, name: 'Argentina' },
+        '+82': { min: 9, max: 10, name: 'South Korea' },
+        '+66': { min: 9, max: 9, name: 'Thailand' },
+        '+60': { min: 9, max: 10, name: 'Malaysia' },
+        '+63': { min: 10, max: 10, name: 'Philippines' },
+        '+62': { min: 10, max: 13, name: 'Indonesia' },
+        '+84': { min: 9, max: 10, name: 'Vietnam' },
+        '+90': { min: 10, max: 10, name: 'Turkey' },
+        '+966': { min: 9, max: 9, name: 'Saudi Arabia' },
+        '+98': { min: 10, max: 10, name: 'Iran' },
+        '+964': { min: 10, max: 10, name: 'Iraq' },
+        '+972': { min: 9, max: 9, name: 'Israel' },
+        '+7': { min: 10, max: 10, name: 'Russia/Kazakhstan' }
+    };
+    
+    function getMobileFormat(countryCodeValue) {
+        return COUNTRY_MOBILE_FORMATS[countryCodeValue] || { min: 7, max: 15, name: 'International' };
+    }
+    
+    // ========================================
     // INITIALIZE SELECT2 FOR COUNTRY CODE
     // ========================================
     if (countryCode && typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {
@@ -1033,20 +1075,83 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ========================================
-    // MOBILE VALIDATION
+    // ✅ MOBILE VALIDATION (COUNTRY-AWARE)
     // ========================================
-    if (mobile) {
+    if (mobile && countryCode) {
+        // ✅ Input handler - Dynamic max length based on country
         mobile.addEventListener('input', function() {
-            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+            const selectedCountry = (typeof $ !== 'undefined' && $(countryCode).data('select2')) 
+                ? $(countryCode).val() 
+                : countryCode.value || '+91';
+            
+            const format = getMobileFormat(selectedCountry);
+            
+            // Only allow digits and limit to max length
+            this.value = this.value.replace(/\D/g, '').slice(0, format.max);
         });
         
+        // ✅ Blur validation - Dynamic validation based on country
         mobile.addEventListener('blur', function() {
-            if (this.value.length === 10) {
-                showValidation(this, 'mobileMsg', true, '✓ Valid');
-            } else if (this.value) {
-                showValidation(this, 'mobileMsg', false, 'Must be 10 digits');
+            const selectedCountry = (typeof $ !== 'undefined' && $(countryCode).data('select2')) 
+                ? $(countryCode).val() 
+                : countryCode.value || '+91';
+            
+            const format = getMobileFormat(selectedCountry);
+            const mobileValue = this.value.trim();
+            
+            if (!mobileValue) {
+                clearValidation(this, 'mobileMsg');
+                return;
+            }
+            
+            const length = mobileValue.length;
+            
+            if (length < format.min || length > format.max) {
+                if (format.min === format.max) {
+                    showValidation(this, 'mobileMsg', false, 
+                        `Mobile number for ${format.name} must be exactly ${format.min} digits`);
+                } else {
+                    showValidation(this, 'mobileMsg', false, 
+                        `Mobile number for ${format.name} must be ${format.min}-${format.max} digits`);
+                }
+            } else {
+                showValidation(this, 'mobileMsg', true, '✓ Valid mobile number');
             }
         });
+        
+        // ✅ Update validation when country code changes
+        const updateMobileValidation = function() {
+            if (mobile.value.trim()) {
+                mobile.dispatchEvent(new Event('blur'));
+            }
+            updateMobileHint();
+        };
+        
+        if (typeof $ !== 'undefined') {
+            $(countryCode).on('select2:select', updateMobileValidation);
+        }
+        countryCode.addEventListener('change', updateMobileValidation);
+        
+        // ✅ Update mobile hint text dynamically
+        const updateMobileHint = function() {
+            const selectedCountry = (typeof $ !== 'undefined' && $(countryCode).data('select2')) 
+                ? $(countryCode).val() 
+                : countryCode.value || '+91';
+            
+            const format = getMobileFormat(selectedCountry);
+            const hintElement = document.querySelector('#id_mobile').nextElementSibling;
+            
+            if (hintElement && hintElement.tagName === 'SMALL') {
+                if (format.min === format.max) {
+                    hintElement.innerHTML = `<i class="fas fa-info-circle"></i> Enter ${format.min}-digit mobile number for ${format.name}`;
+                } else {
+                    hintElement.innerHTML = `<i class="fas fa-info-circle"></i> Enter ${format.min}-${format.max} digit mobile number for ${format.name}`;
+                }
+            }
+        };
+        
+        // Set initial hint
+        updateMobileHint();
     }
     
     // ========================================
@@ -1091,11 +1196,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             let isValid = true;
             
+            // Validate first name
             if (firstName && !firstName.value.trim()) {
                 showValidation(firstName, 'firstNameMsg', false, 'Required');
                 isValid = false;
             }
             
+            // Validate last name
             if (lastName && !lastName.value.trim()) {
                 showValidation(lastName, 'lastNameMsg', false, 'Required');
                 isValid = false;
@@ -1123,9 +1230,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 isValid = false;
             }
             
-            if (mobile && mobile.value.length !== 10) {
-                showValidation(mobile, 'mobileMsg', false, '10 digits required');
-                isValid = false;
+            // ✅ Validate mobile with country-aware logic
+            if (mobile && countryCode) {
+                const selectedCountry = (typeof $ !== 'undefined' && $(countryCode).data('select2')) 
+                    ? $(countryCode).val() 
+                    : countryCode.value || '+91';
+                
+                const format = getMobileFormat(selectedCountry);
+                const mobileValue = mobile.value.trim();
+                const length = mobileValue.length;
+                
+                if (!mobileValue) {
+                    showValidation(mobile, 'mobileMsg', false, 'Mobile number is required');
+                    isValid = false;
+                } else if (length < format.min || length > format.max) {
+                    if (format.min === format.max) {
+                        showValidation(mobile, 'mobileMsg', false, 
+                            `Mobile number for ${format.name} must be exactly ${format.min} digits`);
+                    } else {
+                        showValidation(mobile, 'mobileMsg', false, 
+                            `Mobile number for ${format.name} must be ${format.min}-${format.max} digits`);
+                    }
+                    isValid = false;
+                }
             }
             
             // Password validation (optional)
@@ -1140,6 +1267,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
+            // Scroll to first error
             if (!isValid) {
                 const firstInvalid = form.querySelector('.is-invalid');
                 if (firstInvalid) {
@@ -1153,11 +1281,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
+            // Submit form
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Updating...';
             form.submit();
         });
     }
+    
+    console.log('✅ Edit customer form JavaScript initialized with country-aware mobile validation');
 });
 </script>
 {% endblock %}
