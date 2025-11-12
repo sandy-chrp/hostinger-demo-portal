@@ -91,7 +91,7 @@ def get_next_employee_id():
 @login_required
 @permission_required('add_customer')
 def user_add(request):
-    """Add new user (employee only) - ✅ FIXED: No wrong emails sent"""
+    """Add new user (employee only) - ✅ FIXED: Email sending with password"""
     
     if request.method == 'POST':
         try:
@@ -101,7 +101,6 @@ def user_add(request):
             
             if password != confirm_password:
                 messages.error(request, 'Passwords do not match!')
-                # Preserve form data
                 context = {
                     'form_data': request.POST,
                     'roles': Role.objects.filter(is_active=True),
@@ -164,10 +163,9 @@ def user_add(request):
             country_code = request.POST.get('country_code', '+91')
             mobile = request.POST.get('mobile', '').strip()
             
-            # ✅ CRITICAL FIX: Create user with is_approved=True and is_email_verified=True
-            # This prevents any "account approved" notifications from being triggered
+            # Create user
             user = CustomUser.objects.create(
-                username=email,  # Use email as username
+                username=email,
                 email=email,
                 first_name=request.POST.get('first_name', '').strip(),
                 last_name=request.POST.get('last_name', '').strip(),
@@ -176,11 +174,11 @@ def user_add(request):
                 employee_id=employee_id if employee_id else None,
                 system_mac_address=request.POST.get('system_mac_id', '').strip() or None,
                 last_login_ip=request.POST.get('system_ip_address', '').strip() or None,
-                user_type='employee',  # ✅ Always employee
+                user_type='employee',
                 is_active=request.POST.get('is_active') == 'on',
-                is_staff=True,  # ✅ Employees are staff
-                is_approved=True,  # ✅ CRITICAL: Set to True to prevent approval notifications
-                is_email_verified=True,  # ✅ CRITICAL: Set to True to prevent verification emails
+                is_staff=True,
+                is_approved=True,
+                is_email_verified=True,
                 password=make_password(password)
             )
             
@@ -198,47 +196,53 @@ def user_add(request):
             if subcategory_id:
                 user.business_subcategory_id = subcategory_id
             
-            # Save user first
+            # Save user
             user.save()
             
-            # ✅ Handle email sending based on admin's choice
+            # ✅ EMAIL SENDING WITH DEBUGGING
             email_verification = request.POST.get('email_verification', 'verify_now')
             
+            # Print to console
+            print("\n" + "="*80)
+            print(f"DEBUG: FORM SUBMIT - USER ADD")
+            print(f"Email Choice: {email_verification}")
+            print(f"User Email: {user.email}")
+            print(f"Password: {password}")
+            print("="*80 + "\n")
+            
             if email_verification == 'send_verification_email':
-                # ✅ Send welcome email with password ONLY if admin chooses to
+                print(">>> Sending email now...")
+                
                 try:
+                    from accounts.signals import send_employee_welcome_with_password
                     email_sent = send_employee_welcome_with_password(user, password)
                     
                     if email_sent:
                         messages.success(
                             request, 
-                            f'✅ Employee "{user.full_name}" created successfully with ID {user.employee_id}! '
-                            f'Welcome email with login credentials sent to {user.email}'
+                            f'Employee created! Email sent to {user.email}'
                         )
                     else:
                         messages.warning(
                             request, 
-                            f'⚠️ Employee "{user.full_name}" created successfully with ID {user.employee_id}, '
-                            f'but email sending failed. Please send credentials manually.'
+                            f'Employee created but email failed!'
                         )
                         
                 except Exception as e:
-                    messages.warning(
-                        request, 
-                        f'⚠️ Employee "{user.full_name}" created successfully with ID {user.employee_id}, '
-                        f'but email error: {str(e)}'
-                    )
+                    print(f"ERROR: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    messages.warning(request, f'Email error: {str(e)}')
             else:
-                # ✅ Don't send any email
-                messages.success(
-                    request, 
-                    f'✅ Employee "{user.full_name}" created successfully with ID {user.employee_id}!'
-                )
+                messages.success(request, f'Employee created: {user.full_name}')
             
             return redirect('accounts:user_detail', user_id=user.id)
         
         except Exception as e:
-            messages.error(request, f'Error creating user: {str(e)}')
+            print(f"ERROR creating user: {e}")
+            import traceback
+            traceback.print_exc()
+            messages.error(request, f'Error: {str(e)}')
             context = {
                 'form_data': request.POST,
                 'roles': Role.objects.filter(is_active=True),
@@ -247,7 +251,7 @@ def user_add(request):
             }
             return render(request, 'admin/users/user_add.html', context)
     
-    # GET request - show form
+    # GET request
     roles = Role.objects.filter(is_active=True)
     categories = BusinessCategory.objects.filter(is_active=True)
     
