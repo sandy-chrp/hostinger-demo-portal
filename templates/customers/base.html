@@ -264,11 +264,25 @@
             padding: 0.35rem 0.5rem;
             border-radius: 0.4rem;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            display: block;
+        }
+        .sidebar-logo-small {
+            display: none;
+            height: auto;
+            width: 100%;
+            max-width: 35px;
+            object-fit: contain;
+            transition: all var(--transition-normal) ease;
+            background: white;
+            padding: 0.2rem;
+            border-radius: 0.4rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
         .customer-sidebar.collapsed .sidebar-logo {
-            max-width: 35px;
-            margin-bottom: 0;
-            padding: 0.2rem;
+            display: none;
+        }
+        .customer-sidebar.collapsed .sidebar-logo-small {
+            display: block;
         }
         .sidebar-brand .brand-text {
             transition: all var(--transition-normal) ease;
@@ -978,6 +992,7 @@
             <div class="sidebar-header">
                 <a href="{% url 'customers:dashboard' %}" class="sidebar-brand">
                     <img src="{% static 'images/logo.webp' %}" alt="CHRP INDIA Logo" class="sidebar-logo">
+                    <img src="{% static 'images/small_logo.png' %}" alt="CHRP INDIA" class="sidebar-logo-small">
                 </a>
                 <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
                     <i class="fas fa-chevron-left"></i>
