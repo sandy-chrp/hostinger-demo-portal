@@ -1415,7 +1415,8 @@ function loadAvailableEmployees(dateIso, timeSlotId, modalType = 'confirm') {
     if (employeeSelect) employeeSelect.innerHTML = '<option value="">Loading...</option>';
     if (selectedEmployeeInfo) selectedEmployeeInfo.style.display = 'none';
     
-    fetch(`/api/demo-requests/available-employees/?date=${dateIso}&time_slot_id=${timeSlotId}`)
+    const baseUrl = window.location.origin;
+    fetch(`${baseUrl}/admin/api/demo-requests/available-employees/?date=${dateIso}&time_slot_id=${timeSlotId}`)
         .then(response => response.json())
         .then(data => {
             if (loadingState) loadingState.style.display = 'none';
