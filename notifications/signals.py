@@ -67,15 +67,17 @@ def store_old_demo_request_status(sender, instance, **kwargs):
 @receiver(post_save, sender='demos.DemoRequest')
 def notify_demo_request_changes(sender, instance, created, **kwargs):
     """
-    Notify on demo request status changes
-    ✅ FIXED: Confirmation email sent from view, not signal
+    Notify on demo request status changes ONLY
+    ✅ FIXED: New requests handled by demos/signals.py
+    ✅ FIXED: Confirmation handled by view
+    ✅ This only handles reschedule
     """
     NotificationService = get_notification_service()
     
-    # Notify admin on new request
+    # ✅ REMOVED: New request notification (handled by demos/signals.py)
+    # Only handle status changes for existing requests
     if created:
-        NotificationService.notify_admin_new_demo_request(instance)
-        return
+        return  # Skip new requests - handled by demos app signal
     
     # Notify customer on status change
     if hasattr(instance, '_old_status'):
@@ -83,18 +85,12 @@ def notify_demo_request_changes(sender, instance, created, **kwargs):
         new_status = instance.status
         
         if old_status != new_status:
-            if new_status == 'confirmed':
-                # ✅ CRITICAL FIX: send_email=False
-                # Email is sent from view via create_demo_confirmation_notification()
-                # Signal only creates notification, no email
-                NotificationService.notify_demo_request_confirmed(
-                    instance, 
-                    send_email=False  # ✅ NO EMAIL FROM SIGNAL
-                )
-                logger.info(f"✅ Confirmation notification created (email sent from view)")
-            elif new_status == 'cancelled':
-                NotificationService.notify_demo_request_cancelled(instance)
-            elif new_status == 'rescheduled':
+            # ✅ REMOVED: Confirmation notification
+            # Handled by view via create_demo_confirmation_notification()
+            # View sends both email AND in-app notification
+            
+            # Only handle reschedule in signal
+            if new_status == 'rescheduled':
                 NotificationService.notify_demo_request_rescheduled(
                     instance,
                     instance._old_date,
@@ -121,20 +117,17 @@ def store_old_enquiry_status(sender, instance, **kwargs):
 def notify_enquiry_changes(sender, instance, created, **kwargs):
     """Notify on enquiry changes"""
     NotificationService = get_notification_service()
-    
+
     # Confirmation on new enquiry
     if created:
         NotificationService.notify_enquiry_received(instance)
         NotificationService.notify_admin_new_enquiry(instance)
         return
-    
-    # Notify on status change to answered
-    if hasattr(instance, '_old_status'):
-        old_status = instance._old_status
-        new_status = instance.status
-        
-        if old_status != new_status and new_status == 'answered':
-            NotificationService.notify_enquiry_response(instance)
+
+    # ✅ REMOVED: notify_enquiry_response on status='answered'
+    # Response notifications now handled by EnquiryResponse signal
+    # which fires when admin actually adds a response (better UX)
+    # This prevents duplicate notifications
 
 
 # ============================================
@@ -168,7 +161,7 @@ def notify_block_status_change(sender, instance, created, **kwargs):
         if hasattr(instance, '_old_is_blocked'):
             old_blocked = instance._old_is_blocked
             new_blocked = instance.is_blocked if hasattr(instance, 'is_blocked') else False
-            
+
             if old_blocked != new_blocked:
                 from notifications.services import NotificationService
                 if new_blocked:
@@ -188,7 +181,7 @@ def notify_demo_rejection(sender, instance, created, **kwargs):
         if hasattr(instance, '_old_status'):
             old_status = instance._old_status
             new_status = instance.status
-            
+
             if old_status != new_status and new_status == 'rejected':
                 from notifications.services import NotificationService
                 reason = instance.admin_notes or 'Not available for requested date'
@@ -206,38 +199,56 @@ def notify_enquiry_status_change(sender, instance, created, **kwargs):
         if hasattr(instance, '_old_status'):
             old_status = instance._old_status
             new_status = instance.status
-            
+
             if old_status != new_status:
                 from notifications.services import NotificationService
-                
+
                 # Send notification for any status change
                 if new_status in ['in_progress', 'pending']:
                     NotificationService.notify_enquiry_status_change(
                         instance, old_status, new_status
-                    )        
-
-
-@receiver(post_save, sender='demos.DemoRequest')
-def notify_admin_on_customer_cancellation(sender, instance, created, **kwargs):
-    """
-    Notify admins when customer cancels a demo request
-    This is a backup in case the view doesn't trigger the notification
-    """
-    if not created and hasattr(instance, '_old_status'):
-        old_status = instance._old_status
-        new_status = instance.status
-        
-        # Check if status changed to cancelled
-        if old_status != 'cancelled' and new_status == 'cancelled':
-            # Check if cancelled by customer (has cancellation_reason)
-            if instance.cancellation_reason:
-                from notifications.services import NotificationService
-                try:
-                    NotificationService.notify_admin_demo_request_cancelled(
-                        demo_request=instance,
-                        cancelled_by_customer=True,
-                        send_email=True
                     )
-                    logger.info(f"✅ Admin notified of customer cancellation for request #{instance.id}")
-                except Exception as e:
-                    logger.error(f"❌ Error notifying admin of cancellation: {e}")
+
+
+# ============================================
+# Enquiry Response Signal (NEW)
+# ============================================
+
+@receiver(post_save, sender='enquiries.EnquiryResponse')
+def notify_customer_on_enquiry_response(sender, instance, created, **kwargs):
+    """
+    ✅ NEW: Notify customer when admin responds to their enquiry
+    """
+    if not created:
+        return
+    
+    # Skip internal notes
+    if instance.is_internal_note:
+        return
+    
+    try:
+        from notifications.services import NotificationService
+        from notifications.models import Notification
+        
+        enquiry = instance.enquiry
+        customer = enquiry.user
+        
+        # Create notification for customer
+        notification = Notification.objects.create(
+            user=customer,
+            title='Response to Your Enquiry',
+            message=f'Your enquiry "{enquiry.enquiry_id}" has received a response from our team.',
+            notification_type='enquiry_response',
+            content_object=enquiry
+        )
+        
+        # ✅ Push via WebSocket
+        NotificationService.push_to_websocket(customer, notification)
+        
+        logger.info(f"✅ Enquiry response notification sent to {customer.email}")
+        
+    except Exception as e:
+        logger.error(f"❌ Error sending enquiry response notification: {e}")
+        import traceback
+        traceback.print_exc()
+

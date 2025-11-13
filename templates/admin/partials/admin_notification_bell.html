@@ -1,3 +1,4 @@
+{% load static %}
 <style>
     /* ✅ Notification Dropdown System */
     .admin-notif-dropdown {
@@ -22,6 +23,34 @@
         min-height: 44px;
     }
     
+    /* ✅ WebSocket Connection Indicator */
+    #ws-connection-indicator {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        bottom: 8px;
+        right: 8px;
+        transition: all 0.3s ease;
+        pointer-events: none;
+    }
+
+    #ws-connection-indicator.connected {
+        background: #10b981;
+        box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+        animation: pulse-connected 2s ease-in-out infinite;
+    }
+
+    #ws-connection-indicator.disconnected {
+        background: #ef4444;
+        box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+    }
+
+    @keyframes pulse-connected {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+
     .admin-notif-btn:hover {
         background: rgba(8, 127, 194, 0.1);
         border-color: #087fc2;
@@ -60,12 +89,12 @@
         display: block !important;
     }
     
-    /* ✅ CRITICAL FIX: Dropdown must be outside normal flow */
+    /* ✅ Dropdown Positioning */
     .admin-notif-dropdown-menu {
         display: none;
-        position: fixed !important; /* Fixed to viewport */
-        top: 70px !important; /* Below header (adjust if needed) */
-        right: 20px !important; /* From right edge */
+        position: fixed !important;
+        top: 70px !important;
+        right: 20px !important;
         background: white;
         border: 1px solid #e2e8f0;
         border-radius: 0.75rem;
@@ -73,9 +102,9 @@
                     0 10px 10px -5px rgba(0, 0, 0, 0.15),
                     0 0 0 1px rgba(0, 0, 0, 0.05);
         width: 400px;
-        max-height: calc(100vh - 90px); /* Don't overflow viewport */
+        max-height: calc(100vh - 90px);
         overflow: hidden;
-        z-index: 999999 !important; /* Above everything */
+        z-index: 999999 !important;
         animation: slideDown 0.2s ease-out;
         transform-origin: top right;
     }
@@ -97,7 +126,6 @@
         opacity: 1 !important;
     }
     
-    /* Header styling */
     .admin-notif-header {
         padding: 1rem 1.25rem;
         border-bottom: 1px solid #e2e8f0;
@@ -296,7 +324,6 @@
         font-weight: 500;
     }
     
-    /* Backdrop overlay */
     .admin-notif-backdrop {
         display: none;
         position: fixed;
@@ -334,6 +361,441 @@
     }
 </style>
 
+<!-- ✅ WebSocket Real-time Notifications - INLINE VERSION -->
+<script>
+(function() {
+    console.log('🔌 [ADMIN] WebSocket Notification System Loading...');
+    
+    let notificationWS = null;
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT_ATTEMPTS = 5;
+    const RECONNECT_DELAY = 3000;
+    let heartbeatInterval = null;
+    let isConnecting = false;
+    let audioContextUnlocked = false;
+    
+    // ============================================
+    // Audio Context Unlock
+    // ============================================
+    
+    function unlockAudioContext() {
+        if (audioContextUnlocked) return;
+        
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioContext.resume().then(() => {
+                audioContextUnlocked = true;
+                console.log('🔊 [ADMIN] Audio context unlocked!');
+            });
+        } catch(e) {
+            console.log('⚠️ [ADMIN] Could not unlock audio:', e.message);
+        }
+    }
+    
+    // ============================================
+    // WebSocket Connection
+    // ============================================
+    
+    function initWebSocket() {
+        if (isConnecting || (notificationWS && notificationWS.readyState === WebSocket.OPEN)) {
+            console.log('⚠️ [ADMIN] Already connected or connecting');
+            return;
+        }
+        
+        isConnecting = true;
+        
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/notifications/`;
+        
+        console.log(`🔌 [ADMIN] Connecting to: ${wsUrl}`);
+        
+        try {
+            notificationWS = new WebSocket(wsUrl);
+            
+            notificationWS.onopen = function(event) {
+                console.log('✅ [ADMIN] WebSocket connected!');
+                isConnecting = false;
+                reconnectAttempts = 0;
+                startHeartbeat();
+                updateConnectionStatus(true);
+                showConnectionToast('Real-time notifications enabled', 'success');
+            };
+            
+            notificationWS.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleWSMessage(data);
+                } catch (error) {
+                    console.error('❌ [ADMIN] Parse error:', error);
+                }
+            };
+            
+            notificationWS.onerror = function(error) {
+                console.error('❌ [ADMIN] WebSocket error:', error);
+                isConnecting = false;
+                updateConnectionStatus(false);
+            };
+            
+            notificationWS.onclose = function(event) {
+                console.log(`🔌 [ADMIN] WebSocket closed (Code: ${event.code})`);
+                isConnecting = false;
+                stopHeartbeat();
+                updateConnectionStatus(false);
+                
+                if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                    reconnectAttempts++;
+                    const delay = RECONNECT_DELAY * reconnectAttempts;
+                    console.log(`🔄 [ADMIN] Reconnecting in ${delay/1000}s... (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+                    
+                    setTimeout(() => {
+                        initWebSocket();
+                    }, delay);
+                } else {
+                    console.error('❌ [ADMIN] Max reconnect attempts reached');
+                    showConnectionToast('Disconnected - Please refresh page', 'error');
+                }
+            };
+            
+        } catch (error) {
+            console.error('❌ [ADMIN] Failed to create WebSocket:', error);
+            isConnecting = false;
+            updateConnectionStatus(false);
+        }
+    }
+    
+    function handleWSMessage(data) {
+        console.log('📨 [ADMIN] Received:', data.type);
+        
+        switch(data.type) {
+            case 'connection_established':
+                console.log(`✅ [ADMIN] Connected as ${data.user_type} (ID: ${data.user_id})`);
+                console.log(`📋 [ADMIN] Groups:`, data.groups);
+                updateUnreadBadge(data.unread_count);
+                break;
+            
+            case 'new_notification':
+                console.log('🔔 [ADMIN] NEW NOTIFICATION:', data.notification.title);
+                handleNewNotification(data.notification);
+                break;
+            
+            case 'unread_count':
+                console.log('🔢 [ADMIN] Unread count update:', data.count);
+                updateUnreadBadge(data.count);
+                break;
+            
+            case 'mark_read_response':
+                console.log('✓ [ADMIN] Mark read response');
+                break;
+            
+            case 'mark_all_read_response':
+                console.log(`✓ [ADMIN] Mark all read: ${data.count} notifications`);
+                updateUnreadBadge(0);
+                loadNotificationList();
+                break;
+            
+            case 'pong':
+                console.log('💓 [ADMIN] Heartbeat OK');
+                break;
+            
+            default:
+                console.warn('⚠️ [ADMIN] Unknown message type:', data.type);
+        }
+    }
+    
+    function handleNewNotification(notification) {
+        console.log('🎯 [ADMIN] Processing new notification...');
+        
+        // Update badge
+        const badge = document.getElementById('adminNotifBadge');
+        if (badge) {
+            const currentCount = parseInt(badge.textContent || '0');
+            updateUnreadBadge(currentCount + 1);
+        }
+        
+        // ✅ Play sound
+        playNotificationSound();
+        
+        // Show toast
+        showNotificationToast(notification);
+        
+        // Browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(notification.title, {
+                body: notification.message,
+                icon: '/static/img/logo.png',
+                tag: `notification-${notification.id}`,
+                requireInteraction: false
+            });
+        }
+        
+        // Reload list if dropdown open
+        const menu = document.getElementById('adminNotifMenu');
+        if (menu && menu.classList.contains('show')) {
+            console.log('🔄 [ADMIN] Reloading notifications list...');
+            loadNotificationList();
+        }
+    }
+    
+    // ✅ Sound Function with Audio Context Resume
+    function playNotificationSound() {
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // ✅ CRITICAL: Resume context (unlock if needed)
+            audioContext.resume().then(() => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+                
+                console.log('🔊 [ADMIN] Notification sound played');
+            }).catch(err => {
+                console.log('🔇 [ADMIN] Audio context suspended:', err.message);
+            });
+            
+        } catch (e) {
+            console.log('🔇 [ADMIN] Sound failed:', e.message);
+        }
+    }
+    
+    function showNotificationToast(notification) {
+        let container = document.getElementById('admin-ws-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'admin-ws-toast-container';
+            container.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                z-index: 99999;
+                max-width: 400px;
+            `;
+            document.body.appendChild(container);
+        }
+        
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            background: white;
+            border-left: 4px solid #087fc2;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 10px;
+            cursor: pointer;
+            animation: slideInRight 0.3s ease-out;
+        `;
+        
+        toast.innerHTML = `
+            <div style="font-weight: 600; color: #1f2937; margin-bottom: 5px; display: flex; align-items: center;">
+                <span style="font-size: 1.2em; margin-right: 8px;">🔔</span>
+                ${escapeHtml(notification.title)}
+            </div>
+            <div style="font-size: 0.875rem; color: #6b7280;">
+                ${escapeHtml(notification.message.substring(0, 100))}${notification.message.length > 100 ? '...' : ''}
+            </div>
+        `;
+        
+        container.appendChild(toast);
+        
+        toast.addEventListener('click', () => {
+            if (notification.link) {
+                window.location.href = notification.link;
+            }
+            toast.remove();
+        });
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+    
+    function showConnectionToast(message, type) {
+        const colors = {
+            success: '#10b981',
+            error: '#ef4444',
+            info: '#087fc2'
+        };
+        
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${colors[type] || colors.info};
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 99999;
+            font-weight: 500;
+            font-size: 0.875rem;
+            animation: slideInRight 0.3s ease-out;
+        `;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+    
+    function updateConnectionStatus(isConnected) {
+        const indicator = document.getElementById('ws-connection-indicator');
+        if (!indicator) return;
+        
+        if (isConnected) {
+            indicator.classList.remove('disconnected');
+            indicator.classList.add('connected');
+            indicator.title = 'Real-time connected';
+            console.log('🟢 [ADMIN] Indicator: Connected');
+        } else {
+            indicator.classList.remove('connected');
+            indicator.classList.add('disconnected');
+            indicator.title = 'Disconnected';
+            console.log('🔴 [ADMIN] Indicator: Disconnected');
+        }
+    }
+    
+    function updateUnreadBadge(count) {
+        const badge = document.getElementById('adminNotifBadge');
+        if (!badge) return;
+        
+        console.log(`🔢 [ADMIN] Updating badge: ${count}`);
+        
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.add('show');
+            badge.style.display = 'block';
+        } else {
+            badge.classList.remove('show');
+            badge.style.display = 'none';
+        }
+    }
+    
+    function loadNotificationList() {
+        const list = document.getElementById('adminNotifList');
+        if (list) {
+            console.log('📋 [ADMIN] Reloading notification list via API...');
+            if (typeof loadNotifications === 'function') {
+                loadNotifications();
+            }
+        }
+    }
+    
+    function startHeartbeat() {
+        heartbeatInterval = setInterval(() => {
+            if (notificationWS && notificationWS.readyState === WebSocket.OPEN) {
+                notificationWS.send(JSON.stringify({ action: 'ping' }));
+            }
+        }, 30000);
+    }
+    
+    function stopHeartbeat() {
+        if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+            heartbeatInterval = null;
+        }
+    }
+    
+    window.markNotificationAsRead = function(notificationId) {
+        if (notificationWS && notificationWS.readyState === WebSocket.OPEN) {
+            notificationWS.send(JSON.stringify({
+                action: 'mark_read',
+                notification_id: notificationId
+            }));
+        }
+    };
+    
+    window.markAllNotificationsAsRead = function() {
+        if (notificationWS && notificationWS.readyState === WebSocket.OPEN) {
+            notificationWS.send(JSON.stringify({
+                action: 'mark_all_read'
+            }));
+        }
+    };
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // ============================================
+    // Initialize on Page Load
+    // ============================================
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 [ADMIN] Initializing WebSocket...');
+        initWebSocket();
+        
+        // Request browser notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+                console.log('📢 [ADMIN] Notification permission:', permission);
+            });
+        }
+        
+        // ✅ CRITICAL: Unlock audio on first user interaction
+        document.addEventListener('click', unlockAudioContext, { once: true });
+        document.addEventListener('keydown', unlockAudioContext, { once: true });
+        console.log('🔊 [ADMIN] Audio will unlock on first click/key press');
+        
+        // Hook mark all button
+        const markAllBtn = document.getElementById('adminMarkAllBtn');
+        if (markAllBtn) {
+            markAllBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (notificationWS && notificationWS.readyState === WebSocket.OPEN) {
+                    console.log('✔️ [ADMIN] Marking all as read via WebSocket...');
+                    window.markAllNotificationsAsRead();
+                }
+            });
+        }
+        
+        console.log('✅ [ADMIN] WebSocket notification system ready!');
+    });
+    
+})();
+</script>
+
+<style>
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+</style>
+
 <!-- Backdrop for visual separation -->
 <div class="admin-notif-backdrop" id="adminNotifBackdrop"></div>
 
@@ -341,6 +803,7 @@
     <button class="admin-notif-btn" id="adminNotifBtn" type="button" aria-label="Notifications">
         <i class="fas fa-bell"></i>
         <span class="admin-notif-badge" id="adminNotifBadge">0</span>
+        <span id="ws-connection-indicator" class="disconnected" title="WebSocket disconnected"></span>
     </button>
     
     <div class="admin-notif-dropdown-menu" id="adminNotifMenu">
@@ -388,7 +851,6 @@
         backdrop: !!backdrop
     });
     
-    // Django URL endpoints
     const API_URLS = {
         unreadCount: "{% url 'notifications:api_admin_unread_count' %}",
         list: "{% url 'notifications:api_admin_list' %}",
@@ -399,7 +861,6 @@
     
     console.log('📡 API URLs configured:', API_URLS);
     
-    // Toggle dropdown
     if (btn) {
         btn.addEventListener('click', function(e) {
             console.log('🖱️ Bell icon clicked!');
@@ -421,7 +882,6 @@
         menu.classList.add('show');
         backdrop.classList.add('show');
         console.log('📂 New state: OPEN');
-        console.log('📥 Loading notifications...');
         loadNotifications();
     }
     
@@ -431,12 +891,10 @@
         console.log('📂 New state: CLOSED');
     }
     
-    // Close on backdrop click
     if (backdrop) {
         backdrop.addEventListener('click', closeDropdown);
     }
     
-    // Close on outside click
     document.addEventListener('click', function(e) {
         if (!menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
             if (menu.classList.contains('show')) {
@@ -446,7 +904,6 @@
         }
     });
     
-    // Close on ESC key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && menu.classList.contains('show')) {
             console.log('🚪 Closing dropdown (ESC key)');
@@ -454,7 +911,6 @@
         }
     });
     
-    // Load unread count
     function loadUnreadCount() {
         console.log('📊 Loading unread count...');
         
@@ -499,7 +955,6 @@
         });
     }
     
-    // Load recent notifications
     function loadNotifications() {
         console.log('📋 Loading notification list...');
         
@@ -550,13 +1005,11 @@
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
                     <div class="admin-notif-empty-text">Error loading notifications</div>
-                    <div style="font-size: 0.75rem; margin-top: 0.5rem; color: #6b7280;">${err.message}</div>
                 </div>
             `;
         });
     }
     
-    // Render notifications
     function renderNotifications(notifications) {
         console.log('🎨 Rendering notifications...');
         
@@ -568,9 +1021,7 @@
             return `
                 <a href="${redirectUrl}" class="admin-notif-item ${n.is_read ? '' : 'unread'}" 
                    data-id="${n.id}" 
-                   data-url="${redirectUrl}"
-                   role="button"
-                   aria-label="${escapeHtml(n.title)}">
+                   data-url="${redirectUrl}">
                     <div class="admin-notif-item-content">
                         <div class="admin-notif-icon ${iconClass}">
                             ${iconEmoji}
@@ -587,19 +1038,17 @@
         
         console.log('✅ Notifications rendered');
         
-        // Add click handlers
         list.querySelectorAll('.admin-notif-item').forEach(item => {
             item.addEventListener('click', function(e) {
                 e.preventDefault();
                 const id = this.dataset.id;
                 const url = this.dataset.url;
-                console.log(`🖱️ Notification clicked: ID=${id}, URL=${url}`);
+                console.log(`🖱️ Notification clicked: ID=${id}`);
                 markAsReadAndRedirect(id, url);
             });
         });
     }
     
-    // Mark as read and redirect
     function markAsReadAndRedirect(id, url) {
         console.log(`✔️ Marking notification ${id} as read...`);
         const markReadUrl = API_URLS.markRead.replace('{id}', id);
@@ -618,17 +1067,14 @@
             if (data.success) {
                 loadUnreadCount();
             }
-            console.log(`🔗 Redirecting to: ${url}`);
             window.location.href = url;
         })
         .catch(err => {
             console.error('❌ Error marking as read:', err);
-            // Still redirect even if there's an error
             window.location.href = url;
         });
     }
     
-    // Mark all as read
     if (markAllBtn) {
         markAllBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -662,7 +1108,6 @@
         });
     }
     
-    // Helper functions
     function getIconClass(type) {
         const map = {
             'new_customer': 'customer',
@@ -708,24 +1153,11 @@
         return div.innerHTML;
     }
     
-    // Initial load
     console.log('🚀 Initializing notification system...');
     loadUnreadCount();
     
-    // Manual test on page load
-    setTimeout(() => {
-        console.log('🧪 Running manual badge test...');
-        console.log('Badge element:', badge);
-        console.log('Badge classes:', badge.className);
-        console.log('Badge display:', window.getComputedStyle(badge).display);
-        console.log('Badge text:', badge.textContent);
-    }, 1000);
-    
-    // Poll every 30 seconds
-    setInterval(() => {
-        console.log('🔄 Polling for new notifications...');
-        loadUnreadCount();
-    }, 30000);
+    // ✅ DISABLE old polling - WebSocket handles it now
+    console.log('⏸️ Polling disabled - using WebSocket for real-time updates');
     
     console.log('✅ Notification Bell Script Loaded Successfully!');
 })();

@@ -26,6 +26,7 @@ ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
 
 # Application definition
 DJANGO_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -36,6 +37,7 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    'channels',
     'rest_framework',
     'corsheaders',
     'storages',
@@ -533,3 +535,34 @@ WEBGL_EXTRACT_DIR = WEBGL_EXTRACT_ROOT
 #     "'self'",
 #     "https://embed.tawk.to",  # ✅ For Tawk chat widget
 # )
+
+# ============================================
+# ASGI & WEBSOCKET CONFIGURATION
+# ============================================
+
+# ASGI Application
+ASGI_APPLICATION = 'demo_portal.asgi.application'
+
+# Channel Layers (Redis for WebSocket)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('redis', 6379)],  # 'redis' is Docker container name
+        },
+    },
+}
+
+# WebSocket Settings
+WEBSOCKET_SETTINGS = {
+    'HEARTBEAT_INTERVAL': 30,  # seconds
+    'DISCONNECT_TIMEOUT': 60,  # seconds
+    'MAX_RECONNECT_ATTEMPTS': 5,
+}
+
+print("\n" + "="*60)
+print("🐳 DOCKER MODE - WEBSOCKET ENABLED")
+print("🔌 WebSocket: Enabled")
+print("📡 Channel Layer: Redis (redis:6379)")
+print("🚀 Server: Daphne (ASGI)")
+print("="*60 + "\n")

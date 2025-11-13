@@ -1,51 +1,50 @@
-from django.shortcuts import render
-from django.http import JsonResponse
-from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.http import require_http_methods
-from django.urls import reverse
-from .models import Notification
-from accounts.models import CustomUser as User
+# notifications/admin_api_views.py
+"""
+Admin Notification API Endpoints - FINAL FIXED VERSION
+✅ Correct timezone handling
+✅ Fixed variable name typo
+✅ Function names match existing URLs
+✅ WebSocket integration
+"""
 
-@staff_member_required
-@require_http_methods(["GET"])
-def admin_notification_list(request):
-    """Get admin notifications list"""
-    limit = int(request.GET.get('limit', 20))
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+from django.urls import reverse
+from django.utils import timezone
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from .models import Notification
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+# ============================================
+# HELPER FUNCTIONS
+# ============================================
+
+def should_show_notification(user, notification):
+    """Check if user should see notification based on permissions"""
+    permission_map = {
+        'new_customer': 'view_customers',
+        'demo_request': 'view_demo_requests',
+        'demo_cancellation': 'view_demo_requests',
+        'enquiry': 'view_enquiries',
+        'milestone': None,
+        'system_announcement': None,
+    }
     
-    # ✅ FIXED: Change recipient to user
-    notifications = Notification.objects.filter(
-        user__is_staff=True
-    ).select_related('user').order_by('-created_at')[:limit]
+    required_permission = permission_map.get(notification.notification_type)
     
-    notifications_data = []
-    for notif in notifications:
-        url = get_notification_url(notif)
-        
-        data = {
-            'id': notif.id,
-            'title': notif.title,
-            'message': notif.message,
-            'notification_type': notif.notification_type,
-            'is_read': notif.is_read,
-            'created_at': notif.created_at.strftime('%b %d, %Y %I:%M %p'),
-            'link': url,
-            'object_id': notif.object_id,
-            'content_type': notif.content_type.model if notif.content_type else None,
-            'email_sent': notif.email_sent if hasattr(notif, 'email_sent') else False,
-            # ✅ ADD: User information
-            'user_name': notif.user.get_full_name() if notif.user else 'N/A',
-            'user_email': notif.user.email if notif.user else 'N/A',
-        }
-        notifications_data.append(data)
+    if not required_permission:
+        return True
     
-    return JsonResponse({
-        'success': True,
-        'notifications': notifications_data
-    })
+    return user.has_permission(required_permission)
 
 
 def get_notification_url(notification):
-    """Generate URL for notification based on type"""
+    """Generate URL based on notification type"""
     obj_id = notification.object_id
     notif_type = notification.notification_type
     
@@ -80,85 +79,234 @@ def get_notification_url(notification):
             return reverse('notifications:admin_notifications')
             
     except Exception as e:
-        print(f"Error generating notification URL: {e}")
+        logger.error(f"Error generating URL: {e}")
         return reverse('notifications:admin_notifications')
 
 
-@staff_member_required
+def send_websocket_update(user_id, count):
+    """Send WebSocket unread count update"""
+    try:
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'user_{user_id}',
+            {
+                'type': 'unread_count_update',
+                'count': count
+            }
+        )
+        logger.info(f"WebSocket: Sent count to user_{user_id}: {count}")
+        return True
+    except Exception as e:
+        logger.warning(f"WebSocket failed: {e}")
+        return False
+
+
+# ============================================
+# API ENDPOINTS (Names match existing URLs)
+# ============================================
+
+@login_required
 @require_http_methods(["GET"])
 def admin_unread_count(request):
-    """Get unread notification count for admin"""
-    # ✅ FIXED: Change recipient to user
-    count = Notification.objects.filter(
-        user=request.user,
-        is_read=False
-    ).count()
-    
-    return JsonResponse({
-        'success': True,
-        'count': count
-    })
+    """
+    API: Get unread notification count
+    URL: /notifications/api/admin/unread-count/
+    """
+    try:
+        count = Notification.objects.filter(
+            user=request.user,
+            is_read=False
+        ).count()
+        
+        return JsonResponse({
+            'success': True,
+            'count': count
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in admin_unread_count: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
-@staff_member_required
+@login_required
+@require_http_methods(["GET"])
+def admin_notification_list(request):
+    """
+    API: Get admin notifications list
+    URL: /notifications/api/admin/list/
+    ✅ FIXED: Correct timezone handling + variable name
+    """
+    try:
+        limit = min(int(request.GET.get('limit', 20)), 100)
+        
+        notifications = Notification.objects.filter(
+            user=request.user
+        ).select_related('user', 'content_type').order_by('-created_at')[:limit]
+        
+        notifications_data = []
+        for notif in notifications:
+            if should_show_notification(request.user, notif):
+                url = get_notification_url(notif)
+                
+                # ✅ FIX: Use timezone.localtime() + correct variable name 'notif'
+                created_at_local = timezone.localtime(notif.created_at)
+                
+                data = {
+                    'id': notif.id,
+                    'title': notif.title,
+                    'message': notif.message,
+                    'notification_type': notif.notification_type,
+                    'is_read': notif.is_read,
+                    'created_at': created_at_local.strftime('%b %d, %Y %I:%M %p'),  # ✅ FIXED
+                    'link': url,
+                    'object_id': notif.object_id,
+                }
+                notifications_data.append(data)
+        
+        return JsonResponse({
+            'success': True,
+            'notifications': notifications_data,
+            'count': len(notifications_data)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in admin_notification_list: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
 @require_http_methods(["POST"])
 def admin_mark_as_read(request, notification_id):
-    """Mark a notification as read"""
+    """
+    API: Mark notification as read
+    URL: /notifications/api/admin/<id>/read/
+    ✅ Sends WebSocket update
+    """
     try:
-        # ✅ FIXED: Change recipient to user
         notification = Notification.objects.get(
             id=notification_id,
             user=request.user
         )
-        notification.is_read = True
-        notification.save()
         
-        return JsonResponse({
-            'success': True,
-            'message': 'Notification marked as read'
-        })
+        if not notification.is_read:
+            notification.is_read = True
+            notification.read_at = timezone.now()
+            notification.save()
+            
+            # Get updated count
+            unread_count = Notification.objects.filter(
+                user=request.user,
+                is_read=False
+            ).count()
+            
+            # ✅ Send WebSocket update
+            send_websocket_update(request.user.id, unread_count)
+            
+            return JsonResponse({
+                'success': True,
+                'unread_count': unread_count,
+                'message': 'Notification marked as read'
+            })
+        else:
+            return JsonResponse({
+                'success': True,
+                'message': 'Already marked as read'
+            })
+        
     except Notification.DoesNotExist:
         return JsonResponse({
             'success': False,
             'message': 'Notification not found'
         }, status=404)
+    except Exception as e:
+        logger.error(f"Error in admin_mark_as_read: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
-@staff_member_required
+@login_required
 @require_http_methods(["POST"])
 def admin_mark_all_as_read(request):
-    """Mark all notifications as read for admin"""
-    # ✅ FIXED: Change recipient to user
-    count = Notification.objects.filter(
-        user=request.user,
-        is_read=False
-    ).update(is_read=True)
-    
-    return JsonResponse({
-        'success': True,
-        'message': f'{count} notifications marked as read',
-        'count': count
-    })
+    """
+    API: Mark all notifications as read
+    URL: /notifications/api/admin/mark-all-read/
+    ✅ Sends WebSocket update
+    """
+    try:
+        count = Notification.objects.filter(
+            user=request.user,
+            is_read=False
+        ).update(
+            is_read=True,
+            read_at=timezone.now()
+        )
+        
+        # ✅ Send WebSocket update
+        send_websocket_update(request.user.id, 0)
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'{count} notification(s) marked as read',
+            'count': count
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in admin_mark_all_as_read: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
-@staff_member_required
+@login_required
 @require_http_methods(["DELETE", "POST"])
 def admin_delete_notification(request, notification_id):
-    """Delete a notification"""
+    """
+    API: Delete a notification
+    URL: /notifications/api/admin/<id>/delete/
+    ✅ Sends WebSocket update if unread
+    """
     try:
-        # ✅ FIXED: Change recipient to user
         notification = Notification.objects.get(
             id=notification_id,
             user=request.user
         )
+        
+        was_unread = not notification.is_read
         notification.delete()
+        
+        # Get updated count
+        unread_count = Notification.objects.filter(
+            user=request.user,
+            is_read=False
+        ).count()
+        
+        # ✅ Send WebSocket if unread deleted
+        if was_unread:
+            send_websocket_update(request.user.id, unread_count)
         
         return JsonResponse({
             'success': True,
-            'message': 'Notification deleted successfully'
+            'message': 'Notification deleted',
+            'unread_count': unread_count
         })
+        
     except Notification.DoesNotExist:
         return JsonResponse({
             'success': False,
             'message': 'Notification not found'
         }, status=404)
+    except Exception as e:
+        logger.error(f"Error in admin_delete_notification: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

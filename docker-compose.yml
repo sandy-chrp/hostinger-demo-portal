@@ -1,11 +1,25 @@
 version: '3.8'
 
 services:
+  # ✅ NEW: Redis for WebSocket
+  redis:
+    image: redis:7-alpine
+    container_name: redis_server
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - app_network
+
+  # ✅ UPDATED: Django with Daphne
   web:
     build: .
     container_name: django_app
-    # ✅ INCREASED to 600 seconds (10 minutes)
-    command: gunicorn demo_portal.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 600 --worker-class sync --no-sendfile --max-requests 1000 --max-requests-jitter 50
+    # ✅ CHANGED: daphne instead of gunicorn
+    command: daphne -b 0.0.0.0 -p 8000 demo_portal.asgi:application
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
@@ -14,8 +28,13 @@ services:
       - "8000"
     env_file:
       - .env
+    depends_on:
+      - redis
     restart: unless-stopped
+    networks:
+      - app_network
     
+  # ✅ UPDATED: Nginx with WebSocket support
   nginx:
     image: nginx:latest
     container_name: nginx_server
@@ -27,8 +46,16 @@ services:
       - media_volume:/app/media:ro
     depends_on:
       - web
+      - redis
     restart: unless-stopped
+    networks:
+      - app_network
     
 volumes:
   static_volume:
   media_volume:
+  redis_data:  # ✅ NEW
+
+networks:
+  app_network:
+    driver: bridge
